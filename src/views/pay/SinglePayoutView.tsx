@@ -30,6 +30,7 @@ import { TokenSelectButton } from "./components/TokenSelectButton";
 import { YouPaySection } from "./components/YouPaySection";
 import {
   AMOUNT_MAX_DECIMALS,
+  EMAIL_MAX_LENGTH,
   MEMO_MAX_LENGTH,
   MEMO_TOOLTIP,
   PRIVATE_BY_DEFAULT_LABEL,
@@ -111,7 +112,7 @@ export function SinglePayoutView() {
 
   useEffect(() => {
     if (matched?.email) {
-      setEmail(matched.email);
+      setEmail(matched.email.slice(0, EMAIL_MAX_LENGTH));
       setNotify(true);
     }
   }, [matched?.id, matched?.email]);
@@ -244,6 +245,8 @@ export function SinglePayoutView() {
   });
 
   const sending = settleMutation.isPending || phase === "quoting" || phase === "sending";
+  const quoteLoading = Boolean(amountForQuote && canQuoteDestination && originToken && walletReady)
+    && (dryQuoteStale || dryQuoteQuery.isFetching);
   const canSend = Boolean(
     destinationAddress
     && destToken
@@ -341,6 +344,7 @@ export function SinglePayoutView() {
           <input
             type="email"
             value={email}
+            maxLength={EMAIL_MAX_LENGTH}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="email@example.com"
             className="h-9 min-w-0 flex-1 rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-3 font-montserrat text-sm text-black outline-none placeholder:text-black/30"
@@ -350,7 +354,7 @@ export function SinglePayoutView() {
         <Button
           size="xl"
           className="mt-8 w-full"
-          loading={sending}
+          loading={sending || quoteLoading}
           disabled={!canSend && Boolean(connectedAddress)}
           onClick={handleSend}
         >
@@ -376,7 +380,7 @@ export function SinglePayoutView() {
         onSelect={(contact) => {
           setAddressInput(contact.address);
           if (contact.email) {
-            setEmail(contact.email);
+            setEmail(contact.email.slice(0, EMAIL_MAX_LENGTH));
             setNotify(true);
           }
           setBookOpen(false);

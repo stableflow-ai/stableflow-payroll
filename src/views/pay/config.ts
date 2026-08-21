@@ -20,6 +20,8 @@ export const QUOTE_DEBOUNCE_MS = 900;
 export const QUICK_PAY_SLIPPAGE_TOLERANCE = 5;
 export const ORIGIN_BALANCE_POLL_MS = 20_000;
 export const MEMO_MAX_LENGTH = 200;
+export const CONTACT_NAME_MAX_LENGTH = 50;
+export const EMAIL_MAX_LENGTH = 50;
 export const PRIVATE_BY_DEFAULT_LABEL = "Private by default";
 export const MEMO_TOOLTIP = "The memo will be displayed in the history, visible only to you";
 

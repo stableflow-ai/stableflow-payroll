@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button/Button";
 import { Dialog } from "@/components/ui/dialog/Dialog";
 import type { Contact } from "@/hooks/use-contacts";
 import { detectAddressChainKind, isValidEmail } from "../utils";
+import { CONTACT_NAME_MAX_LENGTH, EMAIL_MAX_LENGTH } from "../config";
 import { isAddressValid } from "@/utils";
 
 const FIELD_CLASS =
@@ -30,9 +31,9 @@ export function ContactFormDialog(props: {
   }, [open, contact]);
 
   function handleSubmit() {
-    const trimmedName = name.trim();
+    const trimmedName = name.trim().slice(0, CONTACT_NAME_MAX_LENGTH);
     const trimmedAddress = address.trim();
-    const trimmedEmail = email.trim();
+    const trimmedEmail = email.trim().slice(0, EMAIL_MAX_LENGTH);
     if (!trimmedName) {
       setError("Name is required");
       return;
@@ -57,7 +58,12 @@ export function ContactFormDialog(props: {
     <Dialog open={open} onClose={onClose} title={isEdit ? "Edit" : "Add"} cardClassName="w-full md:w-[500px]">
       <label className="block">
         <span className="font-montserrat text-sm font-medium text-[#606060]">Name</span>
-        <input className={FIELD_CLASS} value={name} onChange={(event) => setName(event.target.value)} />
+        <input
+          className={FIELD_CLASS}
+          value={name}
+          maxLength={CONTACT_NAME_MAX_LENGTH}
+          onChange={(event) => setName(event.target.value)}
+        />
       </label>
       <label className="mt-6 block">
         <span className="font-montserrat text-sm font-medium text-[#606060]">Wallet Address</span>
@@ -70,6 +76,7 @@ export function ContactFormDialog(props: {
           className={FIELD_CLASS}
           type="email"
           value={email}
+          maxLength={EMAIL_MAX_LENGTH}
           onChange={(event) => setEmail(event.target.value)}
         />
       </label>
