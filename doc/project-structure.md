@@ -6,7 +6,7 @@ Stableflow Pay is a Vite 8 + React 19 frontend for USDC/USDT payroll. Wallet pro
 
 - **Runtime:** Vite 8 (Rolldown), React 19, TypeScript
 - **Styling:** Tailwind CSS 4, `cn()` (`clsx` + `tailwind-merge`), `class-variance-authority`
-- **State:** Zustand (wallet store), TanStack Query
+- **State:** Zustand (wallet + auth session), TanStack Query (server cache)
 - **Routing:** `react-router-dom`
 - **Path alias:** `@/` → `src/`
 
@@ -34,10 +34,12 @@ src/
     ui/                   # Public, non-business UI (see doc/components)
     icons/                # Shared SVG icon components
     WalletConnect.tsx     # Wallet connect dialog (business)
-  hooks/                  # Shared hooks (`use-wallet`, `use-media-query`)
+  hooks/                  # Shared hooks (`use-wallet`, `use-auth-api`, `use-media-query`)
   wallet/                 # Multi-chain wallet adapters and providers
-  stores/                 # Zustand stores
-  lib/                    # Infra: RPC clients, `cn()`, logo URLs
+  stores/                 # Zustand stores (wallet, auth session)
+  api/                    # Backend wrappers by domain (`auth.ts`, `config.ts`, `query-keys.ts`)
+  types/                  # Shared API / domain types
+  lib/                    # Infra: HTTP client, QueryClient, RPC, `cn()`, logo URLs
   utils/                  # Shared helpers (address, date, amount) — see doc/utils.md
   config/                 # App-level config (chains)
 doc/                      # Agent-facing docs (English)
@@ -52,8 +54,12 @@ doc/                      # Agent-facing docs (English)
 | Page | `src/views/` + register in `src/router/index.tsx` |
 | Feature widget | `src/components/<feature>/` (not under `ui/`) |
 | Hook | `src/hooks/` |
+| API function | `src/api/<domain>.ts` — call `http()` only; see [api.md](api.md) |
+| API types | `src/types/<domain>.ts` |
+| Query keys | `src/api/query-keys.ts` |
+| Zustand store | `src/stores/` — session / global UI, not server lists |
 | Shared util | `src/utils/` + [doc/utils.md](utils.md) |
-| Infra helper (`cn`, RPC, logo) | `src/lib/` |
+| Infra helper (`cn`, HTTP, RPC, logo) | `src/lib/` |
 | Constants for a module | sibling `config.ts` |
 
 ## Public UI import paths

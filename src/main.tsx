@@ -17,28 +17,20 @@ globalRef.Buffer = Buffer;
 globalRef.process = process;
 
 const [
-  { QueryClient, QueryClientProvider },
+  { QueryClientProvider },
+  { queryClient },
   { StrictMode },
   { createRoot },
   { default: App },
   { WalletProvider },
 ] = await Promise.all([
   import("@tanstack/react-query"),
+  import("./lib/query-client"),
   import("react"),
   import("react-dom/client"),
   import("./App"),
   import("./wallet"),
 ]);
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 30_000,
-      retry: 1,
-      refetchOnWindowFocus: false,
-    },
-  },
-});
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>

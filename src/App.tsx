@@ -1,5 +1,7 @@
 import { RouterProvider } from "react-router-dom";
 import { ToastContainer } from "react-toastify";
+/** Hydrates the session and registers HTTP 401 → logout. */
+import "@/stores/auth";
 import { router } from "./router";
 
 export default function App() {
