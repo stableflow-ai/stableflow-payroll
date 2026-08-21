@@ -22,6 +22,7 @@ export function Dialog(props: DialogProps) {
     titleClassName,
     closeClassName,
     closeIcon,
+    headerAction,
   } = props;
   const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
 
@@ -50,8 +51,9 @@ export function Dialog(props: DialogProps) {
             titleClassName={titleClassName}
             closeClassName={closeClassName}
             closeIcon={closeIcon}
+            headerAction={headerAction}
             onClose={onClose}
-            cardClassName={cn("w-[min(100%,500px)] max-h-[90vh]", cardClassName)}
+            cardClassName={cn("w-full md:w-[500px] max-h-[90vh]", cardClassName)}
           >
             {children}
           </OverlayPanel>

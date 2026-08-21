@@ -21,6 +21,7 @@ export function Drawer(props: DrawerProps) {
     titleClassName,
     closeClassName,
     closeIcon,
+    headerAction,
     side = DRAWER_SIDE.Right,
   } = props;
 
@@ -37,6 +38,7 @@ export function Drawer(props: DrawerProps) {
         titleClassName={titleClassName}
         closeClassName={closeClassName}
         closeIcon={closeIcon}
+        headerAction={headerAction}
         onClose={onClose}
         cardClassName={cn(getDrawerPanelClassName(side), cardClassName)}
       >

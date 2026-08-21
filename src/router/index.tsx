@@ -3,7 +3,10 @@ import { LoginView } from "@/views/auth/LoginView";
 import { RegisterView } from "@/views/auth/RegisterView";
 import { HowItWorksView } from "@/views/how-it-works/HowItWorksView";
 import { HomeView } from "@/views/home/HomeView";
+import { PayPlaceholderView } from "@/views/pay/PayPlaceholderView";
+import { SinglePayoutView } from "@/views/pay/SinglePayoutView";
 import { AppLayout } from "@/layouts/AppLayout";
+import { PayLayout } from "@/layouts/PayLayout";
 import { RedirectIfAuthed, RequireAuth } from "./guards";
 
 export const router = createBrowserRouter([
@@ -36,6 +39,16 @@ export const router = createBrowserRouter([
           {
             path: "/",
             element: <HomeView />,
+          },
+          {
+            element: <PayLayout />,
+            children: [
+              { path: "/pay", element: <SinglePayoutView /> },
+              { path: "/pay/batch", element: <PayPlaceholderView /> },
+              { path: "/pay/request", element: <PayPlaceholderView /> },
+              { path: "/pay/pending", element: <PayPlaceholderView /> },
+              { path: "/pay/history", element: <PayPlaceholderView /> },
+            ],
           },
         ],
       },

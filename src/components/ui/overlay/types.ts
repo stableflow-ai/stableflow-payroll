@@ -12,4 +12,5 @@ export type OverlayChromeProps = {
   titleClassName?: string;
   closeClassName?: string;
   closeIcon?: ReactNode;
+  headerAction?: ReactNode;
 };

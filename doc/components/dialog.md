@@ -21,6 +21,7 @@ The panel uses [Card](card.md) defaults. The title row is always rendered (style
 | `closeOnMaskClick` | `boolean` | `true` | Click backdrop to close |
 | `cardClassName` | `string` | — | Panel / Card classes |
 | `titleClassName` | `string` | — | Title `<h2>` |
+| `headerAction` | `ReactNode` | — | Optional control next to the title (not inside `<h2>`), before the close button |
 | `closeClassName` | `string` | — | Close button |
 | `closeIcon` | `ReactNode` | `IconClose` | Replace the default close icon |
 

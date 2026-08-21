@@ -13,7 +13,7 @@ The previous app (`stableflow-pay-old`) is a visual and payout-flow reference on
 | Auth | `/login`, `/register` | shipped | Email + password. Register body: `name`, `email`, `password`, `inviteCode`. Guest forgot password: email, verification code, and new password in a dialog. Authed users reset from the header avatar menu. APIs are not wired yet. |
 | Marketing | `/howitworks` | shipped | Public. Linked from the auth shell. |
 | Home | `/` | shipped | Dashboard: summary, charts, pending. Behind `RequireAuth` + `AppLayout`. Data is mock until the API exists. |
-| Pay | `/pay`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request`, `/pay/contacts` | planned | See [Pay](#pay). |
+| Pay | `/pay`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request` | in progress | See [Pay](#pay). |
 | Analytics | `/analytics` | planned | More charts on one page. |
 | Partner | `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | planned | See [Partner](#partner). |
 
@@ -37,18 +37,17 @@ One authenticated page at `/`. Summary, payment volume chart, pending payouts, a
 
 ## Pay
 
-Secondary nav:
+`PayLayout` secondary nav (left sidebar on desktop, horizontal chips on mobile):
 
 | Menu | Route | Notes |
 | --- | --- | --- |
-| Single Payout | `/pay` | One address, one payment. |
-| Batch Payout | `/pay/batch` | CSV import, Google Sheets import, and a manual editable table. |
-| Pending Payouts | `/pay/pending` | |
-| Transaction History | `/pay/history` | |
-| Request Payment | `/pay/request` | |
-| Address book | `/pay/contacts` | Saved addresses (not employees). |
+| Single Payout | `/pay` | One address, one payment. Recipients address book is a dialog on this page (mock data). |
+| Batch Payout | `/pay/batch` | Placeholder until the batch UI ships. |
+| Request Payment | `/pay/request` | Placeholder. |
+| Pending Payouts | `/pay/pending` | Placeholder. |
+| Transaction History | `/pay/history` | Placeholder. |
 
-Payout execution (single and batch) already exists in `stableflow-pay-old` (`quick-pay`, `batch-payout`, `import-payout`, `payout-flow`). Port those flows later: drop employee / org fields, keep **address** as the payee.
+Single payout uses `POST /v1/pay/quick/quote|swap|submit`. Origin broadcast is EVM-only. Recipients are wallet addresses (not employees). The address book is not a route.
 
 ## Analytics
 
@@ -86,5 +85,10 @@ Registration fields (when that screen is built):
 /register         RedirectIfAuthed → RegisterView
 /howitworks       public → HowItWorksView
 /                 RequireAuth → AppLayout → HomeView
+/pay              RequireAuth → AppLayout → PayLayout → SinglePayoutView
+/pay/batch        PayLayout placeholder
+/pay/request      PayLayout placeholder
+/pay/pending      PayLayout placeholder
+/pay/history      PayLayout placeholder
 *                 → /
 ```

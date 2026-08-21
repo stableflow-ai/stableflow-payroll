@@ -106,7 +106,7 @@ export function HeaderAccountMenu() {
                   type="button"
                   role="menuitem"
                   onClick={openResetPassword}
-                  className="flex h-10 w-full items-center gap-2.5 px-[19px] font-montserrat text-sm font-medium text-[#606060]"
+                  className="flex h-10 w-full duration-150 hover:text-black items-center gap-2.5 px-[19px] font-montserrat text-sm font-medium text-[#606060]"
                 >
                   <IconResetPassword className="shrink-0" />
                   Reset Password
@@ -115,7 +115,7 @@ export function HeaderAccountMenu() {
                   type="button"
                   role="menuitem"
                   onClick={closeAndLogout}
-                  className="flex h-10 w-full items-center gap-2.5 px-[19px] font-montserrat text-sm font-medium text-[#606060]"
+                  className="flex h-10 w-full duration-150 hover:text-danger items-center gap-2.5 px-[19px] font-montserrat text-sm font-medium text-[#606060]"
                 >
                   <IconLogout className="shrink-0" />
                   Logout

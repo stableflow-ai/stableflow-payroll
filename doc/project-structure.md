@@ -35,7 +35,8 @@ src/
     auth/                 # Login, register, AuthShell, ResetPasswordDialog
     how-it-works/         # Public marketing page
     home/                 # Authenticated Home dashboard
-  layouts/                # AppLayout (header + outlet)
+    pay/                  # Pay layout pages (Single Payout + placeholders)
+  layouts/                # AppLayout (header + outlet), PayLayout (sidebar)
   components/
     ui/                   # Public, non-business UI (see doc/components)
     icons/                # Shared SVG icon components

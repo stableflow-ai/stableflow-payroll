@@ -4,6 +4,7 @@ Record every create/update of components under `src/components/ui/` so other age
 
 ## 2026-08-21
 
+- **Dialog / OverlayPanel / Drawer:** optional `headerAction` next to the title (outside `<h2>`).
 - **UI styles:** Tailwind class names live in the component files (not `config.ts`) so they are easier to maintain.
 - **Card:** Initial public card primitive (`rounded-[20px]`, white border, `#FDFDFD`, 20px padding, shadow).
 - **Dialog:** Centered modal on desktop; bottom drawer on viewports below 768px. Stacking overlays, mask, optional title, scrollable body.

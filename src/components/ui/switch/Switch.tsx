@@ -49,7 +49,7 @@ export function Switch(props: SwitchProps) {
         toggle();
       }}
       className={cn(
-        "relative h-5 w-[33.333px] shrink-0 cursor-pointer rounded-full border border-[#e3e3e3] outline-none select-none",
+        "relative h-5 w-[34px] p-[1px] shrink-0 cursor-pointer rounded-full border border-[#e3e3e3] outline-none select-none",
         "disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-30",
         className,
       )}
@@ -60,7 +60,7 @@ export function Switch(props: SwitchProps) {
         initial={false}
         animate={{ x: isChecked ? SWITCH_THUMB_TRAVEL_PX : 0 }}
         transition={{ type: "spring", stiffness: 500, damping: 32 }}
-        className="absolute top-[2.5px] left-[2.5px] block size-[15px] rounded-full border border-[#d9d9d9] bg-white"
+        className="absolute top-[1px] left-[1px] block size-4 rounded-full border border-[#d9d9d9] bg-white"
       />
     </motion.button>
   );

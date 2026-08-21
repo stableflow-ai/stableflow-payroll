@@ -11,4 +11,8 @@ export const queryKeys = {
   auth: {
     all: ["auth"] as const,
   },
+  payout: {
+    all: ["payout"] as const,
+    quickQuote: (body: unknown) => [...queryKeys.payout.all, "quick-quote", body] as const,
+  },
 } as const;

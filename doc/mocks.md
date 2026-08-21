@@ -56,6 +56,7 @@ Every mock reader must include this comment:
 | Domain | Flag | Fixtures | Hook |
 | --- | --- | --- | --- |
 | home | `MOCK_ENABLED.home` | `src/mocks/home.ts` | `useHomeDashboard` |
+| contacts | `MOCK_ENABLED.contacts` | `src/mocks/contacts.ts` | `useContacts` |
 
 ## Constraints
 

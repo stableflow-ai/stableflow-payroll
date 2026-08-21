@@ -8,6 +8,7 @@ export type OverlayPanelProps = {
   titleClassName?: string;
   closeClassName?: string;
   closeIcon?: ReactNode;
+  headerAction?: ReactNode;
   onClose?: () => void;
   cardClassName?: string;
   children?: ReactNode;
@@ -20,6 +21,7 @@ export function OverlayPanel(props: OverlayPanelProps) {
     titleClassName,
     closeClassName,
     closeIcon,
+    headerAction,
     onClose,
     cardClassName,
     children,
@@ -34,7 +36,7 @@ export function OverlayPanel(props: OverlayPanelProps) {
       style={style}
       onClick={(event) => event.stopPropagation()}
     >
-      <div className="flex shrink-0 items-center justify-between gap-4">
+      <div className="flex shrink-0 items-center gap-3">
         <h2
           className={cn(
             "min-h-5 font-montserrat text-[20px] font-semibold leading-normal text-black",
@@ -43,11 +45,12 @@ export function OverlayPanel(props: OverlayPanelProps) {
         >
           {title}
         </h2>
+        {headerAction}
         <button
           type="button"
           aria-label="Close"
           onClick={onClose}
-          className={cn("shrink-0 cursor-pointer text-black", closeClassName)}
+          className={cn("ml-auto shrink-0 cursor-pointer text-black", closeClassName)}
         >
           {closeIcon ?? <IconClose className="size-3.25" />}
         </button>
