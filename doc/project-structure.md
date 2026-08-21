@@ -32,7 +32,7 @@ src/
   styles.css              # Tailwind entry, fonts, global tokens
   router/                 # Route table + auth guards (no roles)
   views/
-    auth/                 # Login, register, AuthShell, ResetPasswordDialog, ResetPasswordView
+    auth/                 # Login, register, AuthShell, ResetPasswordDialog
     how-it-works/         # Public marketing page
     home/                 # Authenticated Home dashboard
   layouts/                # AppLayout (header + outlet)

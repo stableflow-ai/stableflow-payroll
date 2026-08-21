@@ -63,14 +63,12 @@ export function ResetPasswordDialog({
 
   const submitGuest = (event: FormEvent) => {
     event.preventDefault();
-    const ruleError = guestResetFormError(email, code);
+    const ruleError = guestResetFormError(email, code, newPassword, confirmPassword);
     if (ruleError) {
       toast.fail({ title: ruleError });
       return;
     }
-    // TODO(api): verify the code; only if it is valid, send a reset email whose link is
-    // `{origin}/reset-password?token=` when the backend contract is ready.
-    toast.success({ title: "Check your email" });
+    // TODO(api): verify the code and set the new password when the backend contract is ready.
     onClose();
   };
 
@@ -97,8 +95,7 @@ export function ResetPasswordDialog({
       {variant === RESET_PASSWORD_VARIANT.Guest ? (
         <form onSubmit={submitGuest}>
           <p className="font-montserrat text-sm font-medium text-[#909090]">
-            Enter your email address and we will send you a verification code. After the code is
-            verified, we will email you a link to reset your password.
+            Enter your email and verification code, then set a new password.
           </p>
           <AuthField
             id="reset-email"
@@ -127,6 +124,24 @@ export function ResetPasswordDialog({
                 {cooldownLeft > 0 ? `${cooldownLeft}s` : "Send Code"}
               </button>
             }
+          />
+          <AuthPasswordField
+            id="reset-guest-new-password"
+            label="New Password"
+            value={newPassword}
+            onChange={setNewPassword}
+            placeholder="At least 8 characters"
+            autoComplete="new-password"
+            maxLength={PASSWORD_MAX_LENGTH}
+          />
+          <AuthPasswordField
+            id="reset-guest-confirm-password"
+            label="Confirm New Password"
+            value={confirmPassword}
+            onChange={setConfirmPassword}
+            placeholder="Keep the same with the new password"
+            autoComplete="new-password"
+            maxLength={PASSWORD_MAX_LENGTH}
           />
           <Button type="submit" size="lg" className="mt-6 w-full">
             Continue

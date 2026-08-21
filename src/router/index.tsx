@@ -4,7 +4,6 @@ import { RegisterView } from "@/views/auth/RegisterView";
 import { HowItWorksView } from "@/views/how-it-works/HowItWorksView";
 import { HomeView } from "@/views/home/HomeView";
 import { AppLayout } from "@/layouts/AppLayout";
-import { ResetPasswordView } from "@/views/auth/ResetPasswordView";
 import { RedirectIfAuthed, RequireAuth } from "./guards";
 
 export const router = createBrowserRouter([
@@ -27,10 +26,6 @@ export const router = createBrowserRouter([
   {
     path: "/howitworks",
     element: <HowItWorksView />,
-  },
-  {
-    path: "/reset-password",
-    element: <ResetPasswordView />,
   },
   {
     element: <RequireAuth />,

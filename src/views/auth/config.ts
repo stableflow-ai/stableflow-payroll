@@ -112,8 +112,18 @@ export function registerFormError(
   );
 }
 
-export function guestResetFormError(email: string, code: string): string | null {
-  return emailRuleError(email) ?? (code.trim() ? null : "Verification code is required");
+export function guestResetFormError(
+  email: string,
+  code: string,
+  newPassword: string,
+  confirmPassword: string,
+): string | null {
+  return (
+    emailRuleError(email) ??
+    (code.trim() ? null : "Verification code is required") ??
+    passwordRuleError(newPassword) ??
+    (confirmPassword === newPassword ? null : "Passwords do not match")
+  );
 }
 
 export function authedResetFormError(
@@ -123,16 +133,6 @@ export function authedResetFormError(
 ): string | null {
   return (
     passwordRuleError(currentPassword) ??
-    passwordRuleError(newPassword) ??
-    (confirmPassword === newPassword ? null : "Passwords do not match")
-  );
-}
-
-export function linkResetFormError(
-  newPassword: string,
-  confirmPassword: string,
-): string | null {
-  return (
     passwordRuleError(newPassword) ??
     (confirmPassword === newPassword ? null : "Passwords do not match")
   );
