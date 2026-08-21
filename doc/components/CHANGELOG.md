@@ -13,3 +13,4 @@ Record every create/update of components under `src/components/ui/` so other age
 - **SearchInput:** Pill search field with `IconSearch` and custom clear control (native clear hidden).
 - **Table:** CSS Grid compound table with sticky header and a single scroll container (no header/body column drift).
 - **Dropdown:** Select-style menu; arrow rotates when open; panel portaled to `document.body`. First-open position uses an off-flow measure so the panel is not clamped to the left of the viewport.
+- **Switch:** Pill toggle (`33.333×20`). Off track `#F6F6F6`, on track `#6284F5`. Thumb slides with Motion.

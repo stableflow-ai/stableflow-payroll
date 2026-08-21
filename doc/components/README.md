@@ -15,6 +15,7 @@ Non-business primitives in `src/components/ui/`. Read the matching doc before us
 | Toast | `src/components/ui/toast/Toast.tsx` | (existing; no dedicated doc yet) |
 | Pagination | `src/components/ui/pagination/Pagination.tsx` | (existing; no dedicated doc yet) |
 | InputNumber | `src/components/ui/input-number/InputNumber.tsx` | (existing; no dedicated doc yet) |
+| Switch | `src/components/ui/switch/Switch.tsx` | [switch.md](switch.md) |
 
 `src/components/ui/overlay/` is **internal**. Dialog and Drawer own the public overlay API. Do not import Overlay from feature code unless you are extending those primitives.
 
