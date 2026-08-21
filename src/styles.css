@@ -1,0 +1,151 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./shadcn-tailwind.css";
+@import "@fontsource/montserrat/400.css";
+@import "@fontsource/montserrat/500.css";
+@import "@fontsource/montserrat/600.css";
+@import "react-toastify/dist/ReactToastify.css";
+
+@custom-variant dark (&:is(.dark *));
+
+:root {
+  color-scheme: light;
+  font-family: "Montserrat", "PingFang SC", system-ui, sans-serif;
+  color: oklch(0.21 0.025 255);
+  background: oklch(0.985 0.003 247);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  --toastify-toast-right: 0px !important;
+  --toastify-toast-top: 65px !important;
+  --background: oklch(0.985 0.003 247);
+  --foreground: oklch(0.21 0.025 255);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.025 255);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.025 255);
+  --primary: #4DA0FF;
+  --primary-foreground: #000000;
+  --secondary: oklch(0.955 0.007 247);
+  --secondary-foreground: oklch(0.25 0.035 255);
+  --muted: oklch(0.96 0.005 247);
+  --muted-foreground: oklch(0.52 0.02 255);
+  --accent: oklch(0.95 0.012 250);
+  --accent-foreground: oklch(0.25 0.04 255);
+  --destructive: oklch(0.58 0.22 27);
+  --border: oklch(0.91 0.008 247);
+  --input: oklch(0.89 0.01 247);
+  --ring: oklch(0.55 0.11 255);
+  --radius: 0.625rem;
+}
+
+@theme inline {
+  --font-heading: "Montserrat", sans-serif;
+  --font-sans: "Montserrat", sans-serif;
+  --font-montserrat: "Montserrat", sans-serif;
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    min-width: 320px;
+    scroll-behavior: smooth;
+    @apply font-sans;
+  }
+
+  body {
+    min-width: 320px;
+    min-height: 100dvh;
+    margin: 0;
+    @apply bg-background text-foreground antialiased;
+  }
+
+  button:not(:disabled),
+  [role="button"]:not([aria-disabled="true"]) {
+    cursor: pointer;
+  }
+}
+
+@layer components {
+  .splash-screen {
+    @apply grid min-h-svh place-items-center bg-background;
+  }
+
+  .splash-screen > div {
+    @apply flex flex-col items-center gap-3 text-sm text-muted-foreground;
+  }
+
+  .splash-mark {
+    @apply h-7 w-auto;
+  }
+}
+
+/* Wallet portals need clicks even when a local overlay is open. */
+[data-rk],
+.wallet-adapter-modal,
+#near-wallet-selector-modal,
+.nws-modal,
+.nws-modal-wrapper,
+.picker-dialog,
+.picker-dialog-bg {
+  pointer-events: auto !important;
+}
+
+.picker-dialog,
+.picker-dialog-bg {
+  z-index: 10000 !important;
+}
+
+.Toastify__toast-container--top-right .decash-toast-top-right.Toastify__toast {
+  padding: 0 0 0 22px;
+  margin-bottom: 10px;
+  min-height: unset;
+}
+
+.Toastify__toast-container--top-right .decash-toast-top-right.Toastify__toast > .Toastify__progress-bar--wrp {
+  pointer-events: none;
+}
+
+@media screen and (max-width: 768px) {
+  .Toastify__toast-container--top-right .decash-toast-top-right.Toastify__toast {
+    padding: 0 var(--toastify-toast-padding);
+    top: 65px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
