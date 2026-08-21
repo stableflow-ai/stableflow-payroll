@@ -18,3 +18,8 @@ export * from "./shield";
 export * from "./node";
 export * from "./search";
 export * from "./arrow-down";
+export * from "./logout";
+export * from "./menu";
+export * from "./to-right";
+export * from "./eye";
+export * from "./reset-password";

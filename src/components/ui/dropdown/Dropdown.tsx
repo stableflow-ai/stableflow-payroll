@@ -132,7 +132,7 @@ export function Dropdown(props: DropdownProps) {
               role="listbox"
               style={{ ...panelStyle, minWidth: triggerWidth }}
               className={cn(
-                "z-1100 overflow-hidden rounded-[12px] border border-[#E0E0E0] bg-[#FDFDFD] py-1 font-montserrat text-base font-medium leading-normal text-black shadow-[0_0_20px_0_rgba(0,0,0,0.06)]",
+                "z-1100 w-max overflow-hidden rounded-[12px] border border-[#E0E0E0] bg-[#FDFDFD] py-1 font-montserrat text-base font-medium leading-normal text-black shadow-[0_0_20px_0_rgba(0,0,0,0.06)]",
                 panelClassName,
               )}
             >

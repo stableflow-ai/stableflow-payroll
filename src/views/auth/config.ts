@@ -7,7 +7,7 @@ export const AUTH_CARD_CLASS =
 export const AUTH_LABEL_CLASS = "font-montserrat text-[14px] font-medium text-[#909090]";
 
 export const AUTH_INPUT_CLASS =
-  "mt-2.5 h-[42px] w-full rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-4 font-montserrat text-sm font-medium text-black outline-none placeholder:text-black/30 focus:border-[#c8c8c8]";
+  "h-[42px] w-full rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-4 font-montserrat text-sm font-medium text-black outline-none placeholder:text-black/30 focus:border-[#c8c8c8]";
 
 export const AUTH_LINK_CLASS =
   "mt-5 text-center font-montserrat text-sm font-medium text-[#909090]";
@@ -47,6 +47,17 @@ export const NAME_MAX_LENGTH = 50;
 export const INVITE_CODE_MAX_LENGTH = 10;
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 50;
+export const SEND_CODE_COOLDOWN_SECONDS = 60;
+export const SEND_CODE_TEXT_CLASS =
+  "font-montserrat text-sm font-medium text-[#6284F5] disabled:opacity-30";
+export const RESET_PASSWORD_VARIANT = {
+  Guest: "guest",
+  Authed: "authed",
+} as const;
+export type ResetPasswordVariant =
+  (typeof RESET_PASSWORD_VARIANT)[keyof typeof RESET_PASSWORD_VARIANT];
+export const RESET_PASSWORD_DIALOG_CARD_CLASS =
+  "w-[min(100%,420px)] rounded-[20px] border-white bg-[#fdfdfd] px-7 py-8 shadow-[0_0_20px_rgba(0,0,0,0.06)]";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -98,5 +109,31 @@ export function registerFormError(
     emailRuleError(email) ??
     passwordRuleError(password) ??
     inviteCodeRuleError(inviteCode)
+  );
+}
+
+export function guestResetFormError(email: string, code: string): string | null {
+  return emailRuleError(email) ?? (code.trim() ? null : "Verification code is required");
+}
+
+export function authedResetFormError(
+  currentPassword: string,
+  newPassword: string,
+  confirmPassword: string,
+): string | null {
+  return (
+    passwordRuleError(currentPassword) ??
+    passwordRuleError(newPassword) ??
+    (confirmPassword === newPassword ? null : "Passwords do not match")
+  );
+}
+
+export function linkResetFormError(
+  newPassword: string,
+  confirmPassword: string,
+): string | null {
+  return (
+    passwordRuleError(newPassword) ??
+    (confirmPassword === newPassword ? null : "Passwords do not match")
   );
 }

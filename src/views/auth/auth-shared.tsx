@@ -1,5 +1,8 @@
+import type { ReactNode } from "react";
+import { useState } from "react";
 import { ApiError } from "@/lib/api-error";
-import { IconAlert } from "@/components/icons";
+import { IconAlert, IconEye, IconEyeHidden } from "@/components/icons";
+import { cn } from "@/lib/utils";
 import {
   AUTH_BRAND,
   AUTH_CARD_CLASS,
@@ -34,6 +37,8 @@ export function AuthField({
   readOnly = false,
   autoComplete,
   maxLength,
+  trailing,
+  className,
 }: {
   id: string;
   label: string;
@@ -45,25 +50,78 @@ export function AuthField({
   readOnly?: boolean;
   autoComplete?: string;
   maxLength?: number;
+  trailing?: ReactNode;
+  className?: string;
 }) {
   return (
-    <div className="mt-5">
+    <div className={cn("mt-5", className)}>
       <label htmlFor={id} className={AUTH_LABEL_CLASS}>
         {label}
       </label>
-      <input
-        id={id}
-        type={type}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        placeholder={placeholder}
-        autoFocus={autoFocus}
-        readOnly={readOnly}
-        maxLength={maxLength}
-        autoComplete={autoComplete ?? (type === "password" ? "current-password" : "on")}
-        className={AUTH_INPUT_CLASS}
-      />
+      <div className="relative mt-2.5">
+        <input
+          id={id}
+          type={type}
+          value={value}
+          onChange={(event) => onChange(event.target.value)}
+          placeholder={placeholder}
+          autoFocus={autoFocus}
+          readOnly={readOnly}
+          maxLength={maxLength}
+          autoComplete={autoComplete ?? (type === "password" ? "current-password" : "on")}
+          className={cn(AUTH_INPUT_CLASS, trailing && "pr-12")}
+        />
+        {trailing ? (
+          <div className="absolute inset-y-0 right-3 flex items-center">{trailing}</div>
+        ) : null}
+      </div>
     </div>
+  );
+}
+
+export function AuthPasswordField({
+  id,
+  label,
+  value,
+  onChange,
+  placeholder,
+  autoComplete,
+  maxLength,
+  className,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  autoComplete?: string;
+  maxLength?: number;
+  className?: string;
+}) {
+  const [visible, setVisible] = useState(false);
+
+  return (
+    <AuthField
+      id={id}
+      label={label}
+      type={visible ? "text" : "password"}
+      value={value}
+      onChange={onChange}
+      placeholder={placeholder}
+      autoComplete={autoComplete}
+      maxLength={maxLength}
+      className={className}
+      trailing={
+        <button
+          type="button"
+          aria-label={visible ? "Hide password" : "Show password"}
+          onClick={() => setVisible((current) => !current)}
+          className="text-[#909090]"
+        >
+          {visible ? <IconEye /> : <IconEyeHidden />}
+        </button>
+      }
+    />
   );
 }
 

@@ -14,6 +14,8 @@ The trigger uses `IconArrowDown`; the icon rotates `180deg` while open. The pane
 
 Closes on outside click, Escape, and scroll.
 
+The panel is `position: fixed`. `useFloatingPosition` measures it off-flow (`width: max-content`) before clamping, so the first open is not pinned to the left edge of the viewport.
+
 ## Trigger defaults
 
 - Height 36px, `border-radius: 6px`

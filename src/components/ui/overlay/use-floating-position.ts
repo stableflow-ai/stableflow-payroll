@@ -20,6 +20,15 @@ export type FloatingAlign = (typeof FLOATING_ALIGN)[keyof typeof FLOATING_ALIGN]
 
 const VIEWPORT_PADDING = 8;
 
+const HIDDEN_STYLE: CSSProperties = {
+  position: "fixed",
+  top: 0,
+  left: 0,
+  width: "max-content",
+  visibility: "hidden",
+  pointerEvents: "none",
+};
+
 export function useFloatingPosition(options: {
   open: boolean;
   triggerRef: RefObject<HTMLElement | null>;
@@ -36,27 +45,60 @@ export function useFloatingPosition(options: {
     align = FLOATING_ALIGN.Start,
     offset = 8,
   } = options;
-  const [style, setStyle] = useState<CSSProperties>({});
+  const [style, setStyle] = useState<CSSProperties>(HIDDEN_STYLE);
 
   const update = useCallback(() => {
     const trigger = triggerRef.current;
     const panel = panelRef.current;
-    if (!trigger || !panel) return;
+    if (!trigger || !panel) return false;
 
     const triggerRect = trigger.getBoundingClientRect();
-    const panelRect = panel.getBoundingClientRect();
-    const next = getFloatingStyle(triggerRect, panelRect, side, align, offset);
-    setStyle(next);
+    const panelRect = measurePanelRect(panel);
+    setStyle(getFloatingStyle(triggerRect, panelRect, side, align, offset));
+    return true;
   }, [align, offset, panelRef, side, triggerRef]);
 
   useLayoutEffect(() => {
+    if (!open) {
+      setStyle(HIDDEN_STYLE);
+      return;
+    }
+    if (update()) return;
+    const frame = window.requestAnimationFrame(() => {
+      update();
+    });
+    return () => window.cancelAnimationFrame(frame);
+  }, [open, update]);
+
+  useLayoutEffect(() => {
     if (!open) return;
-    update();
     window.addEventListener("resize", update);
     return () => window.removeEventListener("resize", update);
   }, [open, update]);
 
   return style;
+}
+
+function measurePanelRect(panel: HTMLElement): DOMRect {
+  const previous = {
+    position: panel.style.position,
+    top: panel.style.top,
+    left: panel.style.left,
+    width: panel.style.width,
+    visibility: panel.style.visibility,
+  };
+  panel.style.position = "fixed";
+  panel.style.top = "0px";
+  panel.style.left = "0px";
+  panel.style.width = "max-content";
+  panel.style.visibility = "hidden";
+  const rect = panel.getBoundingClientRect();
+  panel.style.position = previous.position;
+  panel.style.top = previous.top;
+  panel.style.left = previous.left;
+  panel.style.width = previous.width;
+  panel.style.visibility = previous.visibility;
+  return rect;
 }
 
 function getFloatingStyle(
@@ -92,6 +134,7 @@ function getFloatingStyle(
     position: "fixed",
     top,
     left,
+    visibility: "visible",
   };
 }
 

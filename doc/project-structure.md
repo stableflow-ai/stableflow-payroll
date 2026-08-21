@@ -32,18 +32,21 @@ src/
   styles.css              # Tailwind entry, fonts, global tokens
   router/                 # Route table + auth guards (no roles)
   views/
-    auth/                 # Login, register, AuthShell
+    auth/                 # Login, register, AuthShell, ResetPasswordDialog, ResetPasswordView
     how-it-works/         # Public marketing page
-    PlaceholderHome.tsx   # Temporary authenticated Home
+    home/                 # Authenticated Home dashboard
+  layouts/                # AppLayout (header + outlet)
   components/
     ui/                   # Public, non-business UI (see doc/components)
     icons/                # Shared SVG icon components
+    layout/               # AppHeader, wallet capsule, account menu
     WalletConnect.tsx     # Wallet connect dialog (business)
-  hooks/                  # Shared hooks (`use-wallet`, `use-auth-api`, `use-toast`, `use-media-query`)
+  hooks/                  # Shared hooks (`use-wallet`, `use-auth-api`, `use-toast`, `use-media-query`, `use-home-dashboard`)
   wallet/                 # Multi-chain wallet adapters and providers
   stores/                 # Zustand stores (wallet, auth session)
   api/                    # Backend wrappers by domain (`auth.ts`, `config.ts`, `query-keys.ts`)
   types/                  # Shared API / domain types
+  mocks/                  # UI fixtures while an API contract is missing — see doc/mocks.md
   lib/                    # Infra: HTTP client, QueryClient, RPC, `cn()`, logo URLs
   utils/                  # Shared helpers (address, date, amount) — see doc/utils.md
   config/                 # App-level config (chains)
@@ -66,6 +69,7 @@ doc/                      # Agent-facing docs (English)
 | Shared util | `src/utils/` + [doc/utils.md](utils.md) |
 | Infra helper (`cn`, HTTP, RPC, logo) | `src/lib/` |
 | Constants for a module | sibling `config.ts` |
+| Mock fixtures (API not ready) | `src/mocks/<domain>.ts` + [mocks.md](mocks.md) |
 
 ## Public UI import paths
 

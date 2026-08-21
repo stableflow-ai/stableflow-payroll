@@ -1,9 +1,11 @@
 import { type FormEvent, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button/Button";
+import { Icon2Right } from "@/components/icons/to-right";
 import { useLoginMutation } from "@/hooks/use-auth-api";
 import useToast from "@/hooks/use-toast";
 import { AuthShell } from "./AuthShell";
+import { ResetPasswordDialog } from "./ResetPasswordDialog";
 import {
   AuthBetaBanner,
   AuthField,
@@ -14,6 +16,7 @@ import {
   AUTH_LINK_ACCENT_CLASS,
   AUTH_LINK_CLASS,
   PASSWORD_MAX_LENGTH,
+  RESET_PASSWORD_VARIANT,
   loginFormError,
 } from "./config";
 
@@ -24,6 +27,7 @@ export function LoginView() {
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [resetOpen, setResetOpen] = useState(false);
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -78,16 +82,29 @@ export function LoginView() {
           Sign in
         </Button>
 
+        <button
+          type="button"
+          onClick={() => setResetOpen(true)}
+          className="mt-5 inline-flex w-full items-center justify-center font-montserrat text-sm font-medium text-[#3f8afb] hover:text-[#3f8afb]/90"
+        >
+          Forgot Password?
+          <Icon2Right className="ml-1" />
+        </button>
+
         <p className={`block ${AUTH_LINK_CLASS}`}>
           New to Stableflow Pay?{" "}
-          <Link to="/register" className={AUTH_LINK_ACCENT_CLASS}>
+          <Link to="/register" className={`inline-flex items-center ${AUTH_LINK_ACCENT_CLASS}`}>
             Create an account
+            <Icon2Right className="ml-1" />
           </Link>
-          <span aria-hidden className={`ml-1 ${AUTH_LINK_ACCENT_CLASS}`}>
-            →
-          </span>
         </p>
       </form>
+
+      <ResetPasswordDialog
+        open={resetOpen}
+        onClose={() => setResetOpen(false)}
+        variant={RESET_PASSWORD_VARIANT.Guest}
+      />
     </AuthShell>
   );
 }

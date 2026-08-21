@@ -12,4 +12,4 @@ Record every create/update of components under `src/components/ui/` so other age
 - **Tooltip:** Portal to `document.body`, closes on scroll, `leaveDelay` default `0`.
 - **SearchInput:** Pill search field with `IconSearch` and custom clear control (native clear hidden).
 - **Table:** CSS Grid compound table with sticky header and a single scroll container (no header/body column drift).
-- **Dropdown:** Select-style menu; arrow rotates when open; panel portaled to `document.body`.
+- **Dropdown:** Select-style menu; arrow rotates when open; panel portaled to `document.body`. First-open position uses an off-flow measure so the panel is not clamped to the left of the viewport.

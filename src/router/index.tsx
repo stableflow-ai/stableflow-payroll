@@ -2,7 +2,9 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { LoginView } from "@/views/auth/LoginView";
 import { RegisterView } from "@/views/auth/RegisterView";
 import { HowItWorksView } from "@/views/how-it-works/HowItWorksView";
-import { PlaceholderHome } from "@/views/PlaceholderHome";
+import { HomeView } from "@/views/home/HomeView";
+import { AppLayout } from "@/layouts/AppLayout";
+import { ResetPasswordView } from "@/views/auth/ResetPasswordView";
 import { RedirectIfAuthed, RequireAuth } from "./guards";
 
 export const router = createBrowserRouter([
@@ -27,11 +29,20 @@ export const router = createBrowserRouter([
     element: <HowItWorksView />,
   },
   {
+    path: "/reset-password",
+    element: <ResetPasswordView />,
+  },
+  {
     element: <RequireAuth />,
     children: [
       {
-        path: "/",
-        element: <PlaceholderHome />,
+        element: <AppLayout />,
+        children: [
+          {
+            path: "/",
+            element: <HomeView />,
+          },
+        ],
       },
     ],
   },

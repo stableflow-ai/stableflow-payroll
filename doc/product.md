@@ -10,9 +10,9 @@ The previous app (`stableflow-pay-old`) is a visual and payout-flow reference on
 
 | Area | Routes | Status | Notes |
 | --- | --- | --- | --- |
-| Auth | `/login`, `/register` | shipped | Email + password. Register body: `name`, `email`, `password`, `inviteCode`. |
+| Auth | `/login`, `/register`, `/reset-password` | shipped | Email + password. Register body: `name`, `email`, `password`, `inviteCode`. Guest forgot password: verify email code, then a reset email with `/reset-password?token=`. Authed users reset from the header avatar menu. APIs are not wired yet. |
 | Marketing | `/howitworks` | shipped | Public. Linked from the auth shell. |
-| Home | `/` | placeholder | Dashboard: summary, charts, pending. Today this is `PlaceholderHome` behind `RequireAuth`. |
+| Home | `/` | shipped | Dashboard: summary, charts, pending. Behind `RequireAuth` + `AppLayout`. Data is mock until the API exists. |
 | Pay | `/pay`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request`, `/pay/contacts` | planned | See [Pay](#pay). |
 | Analytics | `/analytics` | planned | More charts on one page. |
 | Partner | `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | planned | See [Partner](#partner). |
@@ -24,12 +24,17 @@ The previous app (`stableflow-pay-old`) is a visual and payout-flow reference on
 - Session: Zustand `useAuthStore` + `localStorage`. Types: `AuthUser` (`id`, `email`, `name`) — no `role` or `org_id`.
 - Unauthenticated `/` redirects to `/login`. Authenticated `/login` or `/register` redirects to `/`.
 - After login or register, navigate to `/`.
+- Reset password:
+  - Guest: Login `Forgot Password?` opens a dialog. Send Code emails a verification code. Continue verifies the code; only then does the backend send a reset email whose link is `{origin}/reset-password?token=` (APIs not wired).
+  - Public page `/reset-password`: set New Password + Confirm, then go to `/login`. Not wrapped in `RequireAuth` or `RedirectIfAuthed`.
+  - Authed: header avatar menu opens `ResetPasswordDialog` (`variant="authed"`).
+  - Send-code / verify-code / reset-email / token-reset / change-password APIs are not wired yet.
 
 Guards live in `src/router/guards.tsx`: `RequireAuth`, `RedirectIfAuthed`. Do not add admin/employee guards.
 
 ## Home
 
-One page. Data summary, charts, and pending items. Replace `PlaceholderHome` when this screen is built. Keep the `/` route.
+One authenticated page at `/`. Summary, payment volume chart, pending payouts, and recent payouts. Shared chrome is `AppLayout` + `AppHeader`, not the page itself. Dashboard numbers currently come from `src/mocks/home.ts` (see [mocks.md](mocks.md)).
 
 ## Pay
 
@@ -78,9 +83,10 @@ Registration fields (when that screen is built):
 ## Routing today
 
 ```
-/login          RedirectIfAuthed → LoginView
-/register       RedirectIfAuthed → RegisterView
-/howitworks     public → HowItWorksView
-/               RequireAuth → PlaceholderHome (temporary Home)
-*               → /
+/login            RedirectIfAuthed → LoginView
+/register         RedirectIfAuthed → RegisterView
+/reset-password   public → ResetPasswordView (`?token=`)
+/howitworks       public → HowItWorksView
+/                 RequireAuth → AppLayout → HomeView
+*                 → /
 ```
