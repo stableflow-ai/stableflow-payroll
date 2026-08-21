@@ -1,5 +1,5 @@
 import type { Address, Hash, Hex } from "viem";
-import { getWalletClient, switchChain } from "wagmi/actions";
+import { getWalletClient, switchChain, waitForTransactionReceipt } from "wagmi/actions";
 import { wagmiConfig } from "./evm/config";
 
 type SupportedEvmChainId = (typeof wagmiConfig)["chains"][number]["id"];
@@ -24,5 +24,28 @@ export async function broadcastQuickPayCallData(input: {
     data: toHexData(input.callData),
     value: 0n,
     chain: client.chain,
+  });
+}
+
+export async function broadcastBatchPayCallData(input: {
+  chainId: number;
+  tokenAddress: string;
+  approvals: string[];
+  callData: string;
+}): Promise<Hash> {
+  const chainId = input.chainId as SupportedEvmChainId;
+  for (const approval of input.approvals) {
+    if (!approval.trim()) continue;
+    const hash = await broadcastQuickPayCallData({
+      chainId: input.chainId,
+      tokenAddress: input.tokenAddress,
+      callData: approval,
+    });
+    await waitForTransactionReceipt(wagmiConfig, { hash, chainId });
+  }
+  return broadcastQuickPayCallData({
+    chainId: input.chainId,
+    tokenAddress: input.tokenAddress,
+    callData: input.callData,
   });
 }

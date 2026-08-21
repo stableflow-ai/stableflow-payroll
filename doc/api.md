@@ -129,8 +129,11 @@ export function useOrderQuery(id: string) {
 | POST | `/v1/pay/quick/quote` | yes | `PayQuickQuoteParam` | `PayQuickQuoteResp` | `quickQuote` | `useQuickPayQuote` |
 | POST | `/v1/pay/quick/swap` | yes | `PayQuickQuoteParam` | `PayQuickSwapResp` | `quickSwap` | `useQuickPaySwap` |
 | POST | `/v1/pay/quick/submit` | yes | `PayQuickSubmitParam` | `void` | `quickSubmit` | commit queue |
+| POST | `/v1/pay/batch/quote` | yes | `PayBatchQuoteParam` | `PayBatchQuoteResp` | `batchQuote` | `useBatchPayQuote` |
+| POST | `/v1/pay/batch/swap` | yes | `PayBatchQuoteParam` | `PayBatchSwapResp` | `batchSwap` | `useBatchPaySwap` |
+| POST | `/v1/pay/batch/submit` | yes | `PayBatchSubmitParam` | `void` | `batchSubmit` | commit queue |
 
-Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`). Payout types: `src/types/payout.ts`. `PayQuickQuoteParam.notification` is an optional email string; omit the field when notify is off.
+Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`). Payout types: `src/types/payout.ts`. `PayQuickQuoteParam.notification` is an optional email string; omit the field when notify is off. Batch receives are wallet addresses (no `employeeId`).
 
 Public files:
 
@@ -144,9 +147,10 @@ Public files:
 | `src/api/config.ts` | `PAY_API_PREFIX` |
 | `src/api/query-keys.ts` | Query key factory |
 | `src/api/auth.ts` | Login / register |
-| `src/api/payout.ts` | Quick quote / swap / submit |
+| `src/api/payout.ts` | Quick and batch quote / swap / submit |
 | `src/hooks/use-auth-api.ts` | Auth mutations |
 | `src/hooks/use-single-payout-api.ts` | Quick quote query + swap mutation |
+| `src/hooks/use-batch-payout-api.ts` | Batch quote query + swap mutation |
 | `src/stores/auth.ts` | Session store |
 | `src/types/auth.ts` | Auth types |
-| `src/types/payout.ts` | Quick payout types |
+| `src/types/payout.ts` | Quick and batch payout types |

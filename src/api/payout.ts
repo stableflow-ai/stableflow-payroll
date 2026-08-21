@@ -1,6 +1,10 @@
 import { http } from "@/lib/http";
 import { PAY_API_PREFIX } from "@/api/config";
 import type {
+  PayBatchQuoteParam,
+  PayBatchQuoteResp,
+  PayBatchSubmitParam,
+  PayBatchSwapResp,
   PayQuickQuoteParam,
   PayQuickQuoteResp,
   PayQuickSubmitParam,
@@ -17,4 +21,16 @@ export function quickSwap(body: PayQuickQuoteParam) {
 
 export function quickSubmit(body: PayQuickSubmitParam) {
   return http<void>(`${PAY_API_PREFIX}/quick/submit`, { method: "POST", body });
+}
+
+export function batchQuote(body: PayBatchQuoteParam) {
+  return http<PayBatchQuoteResp>(`${PAY_API_PREFIX}/batch/quote`, { method: "POST", body });
+}
+
+export function batchSwap(body: PayBatchQuoteParam) {
+  return http<PayBatchSwapResp>(`${PAY_API_PREFIX}/batch/swap`, { method: "POST", body });
+}
+
+export function batchSubmit(body: PayBatchSubmitParam) {
+  return http<void>(`${PAY_API_PREFIX}/batch/submit`, { method: "POST", body });
 }

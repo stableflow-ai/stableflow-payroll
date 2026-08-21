@@ -27,3 +27,37 @@ export interface PayQuickSubmitParam {
   orderId: string;
   txHash: string;
 }
+
+export interface PayBatchReceive {
+  amount: string;
+  destinationAddress: string;
+  destinationAsset: string;
+  memo?: string;
+}
+
+export interface PayBatchQuoteParam {
+  originAsset: string;
+  refundTo: string;
+  slippageTolerance: number;
+  receives: PayBatchReceive[];
+  payer?: string;
+}
+
+export interface PayBatchQuoteResp {
+  deadline: string;
+  totalAmountIn: string;
+  totalAmountInFormatted: string;
+  totalAmountInUsd: string;
+}
+
+export interface PayBatchSwapResp extends PayBatchQuoteResp {
+  orderId: string;
+  approvals: string[];
+  callData: string;
+  spender: string;
+}
+
+export interface PayBatchSubmitParam {
+  orderId: string;
+  txHash: string;
+}

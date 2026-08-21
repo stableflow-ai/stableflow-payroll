@@ -37,7 +37,7 @@ function HeaderNav({ className }: { className?: string }) {
 export function AppHeader() {
   return (
     <header className="border-b border-black/10">
-      <div className="mx-auto flex h-[63px] max-w-[1512px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-[150px]">
+      <div className="mx-auto max-w-[1512px] flex h-[63px] items-center justify-between gap-4 pl-2 md:pl-[35px] pr-2 md:pr-4">
         <img src="/logo.svg" alt="Stableflow Pay" className="h-[29px] w-auto" />
         <HeaderNav className="hidden flex-1 items-center justify-center gap-10 md:flex" />
         <div className="flex items-center gap-2.5">

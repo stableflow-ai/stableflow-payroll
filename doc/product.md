@@ -42,12 +42,12 @@ One authenticated page at `/`. Summary, payment volume chart, pending payouts, a
 | Menu | Route | Notes |
 | --- | --- | --- |
 | Single Payout | `/pay` | One address, one payment. Recipients address book is a dialog on this page (mock data). |
-| Batch Payout | `/pay/batch` | Placeholder until the batch UI ships. |
+| Batch Payout | `/pay/batch` | CSV / Google Sheets / manual rows. Validate then preview. `POST /v1/pay/batch/quote\|swap\|submit`. Recipients are wallet addresses. |
 | Request Payment | `/pay/request` | Placeholder. |
 | Pending Payouts | `/pay/pending` | Placeholder. |
 | Transaction History | `/pay/history` | Placeholder. |
 
-Single payout uses `POST /v1/pay/quick/quote|swap|submit`. Origin broadcast is EVM-only. Recipients are wallet addresses (not employees). The address book is not a route.
+Single payout uses `POST /v1/pay/quick/quote|swap|submit`. Batch payout uses `POST /v1/pay/batch/quote|swap|submit`. Origin broadcast is EVM-only. Recipients are wallet addresses (not employees). The address book is not a route.
 
 ## Analytics
 
@@ -86,7 +86,7 @@ Registration fields (when that screen is built):
 /howitworks       public → HowItWorksView
 /                 RequireAuth → AppLayout → HomeView
 /pay              RequireAuth → AppLayout → PayLayout → SinglePayoutView
-/pay/batch        PayLayout placeholder
+/pay/batch        PayLayout → BatchPayoutView
 /pay/request      PayLayout placeholder
 /pay/pending      PayLayout placeholder
 /pay/history      PayLayout placeholder

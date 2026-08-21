@@ -4,15 +4,15 @@ import { cn } from "@/lib/utils";
 
 export function AppLayout() {
   const { pathname } = useLocation();
-  const isPay = pathname === "/pay" || pathname.startsWith("/pay/");
+  const isHomePage = pathname === "/";
 
   return (
     <div className="min-h-svh bg-[#f6f6f6]">
       <AppHeader />
       <main
         className={cn(
-          "mx-auto w-full max-w-[1512px] py-6 lg:py-8",
-          isPay ? "px-4 sm:px-6 lg:px-8" : "px-4 sm:px-6 lg:px-[150px]",
+          "mx-auto w-full py-6 lg:py-8 px-2 md:px-5",
+          isHomePage ? "max-w-[1252px]" : "max-w-[1512px]",
         )}
       >
         <Outlet />
