@@ -92,7 +92,7 @@ function LoginForm() {
     try {
       await loginMutation.mutateAsync({ email, password });
       // Session is already in the auth store (hook onSuccess → applySession).
-      navigate("/pay", { replace: true });
+      navigate("/", { replace: true });
     } catch {
       // Read loginMutation.error (ApiError) for the message.
     }

@@ -3,6 +3,7 @@
 Read these documents before changing this repository:
 
 - [doc/conventions.md](doc/conventions.md) — coding and documentation rules
+- [doc/product.md](doc/product.md) — product areas, routes, and constraints
 - [doc/project-structure.md](doc/project-structure.md) — folder map and stack
 - [doc/api.md](doc/api.md) — HTTP client, TanStack Query, Zustand session, adding endpoints
 - [doc/utils.md](doc/utils.md) — shared helpers (`@/utils`)

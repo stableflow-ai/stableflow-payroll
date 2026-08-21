@@ -1,6 +1,8 @@
 # Project Structure
 
-Stableflow Pay is a Vite 8 + React 19 frontend for USDC/USDT payroll. Wallet providers for EVM, Near, Solana, and Tron are wired; product pages and APIs are still being built.
+Stableflow Pay is a Vite 8 + React 19 frontend for confidential USDC/USDT payouts. There are no admin/employee roles. Wallet providers for EVM, Near, Solana, and Tron are wired; most product pages are still being built.
+
+Product areas, planned routes, and constraints: [product.md](product.md).
 
 ## Stack
 
@@ -28,13 +30,16 @@ src/
   App.tsx                 # Router + toast container
   main.tsx                # Boot: Buffer polyfill, QueryClient, WalletProvider
   styles.css              # Tailwind entry, fonts, global tokens
-  router/                 # Route table
-  views/                  # Route-level pages (currently PlaceholderHome)
+  router/                 # Route table + auth guards (no roles)
+  views/
+    auth/                 # Login, register, AuthShell
+    how-it-works/         # Public marketing page
+    PlaceholderHome.tsx   # Temporary authenticated Home
   components/
     ui/                   # Public, non-business UI (see doc/components)
     icons/                # Shared SVG icon components
     WalletConnect.tsx     # Wallet connect dialog (business)
-  hooks/                  # Shared hooks (`use-wallet`, `use-auth-api`, `use-media-query`)
+  hooks/                  # Shared hooks (`use-wallet`, `use-auth-api`, `use-toast`, `use-media-query`)
   wallet/                 # Multi-chain wallet adapters and providers
   stores/                 # Zustand stores (wallet, auth session)
   api/                    # Backend wrappers by domain (`auth.ts`, `config.ts`, `query-keys.ts`)
