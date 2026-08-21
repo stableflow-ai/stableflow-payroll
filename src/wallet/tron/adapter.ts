@@ -1,7 +1,7 @@
 import { useWallet as useTronAdapter } from "@tronweb3/tronwallet-adapter-react-hooks";
 import { useWalletModal as useTronWalletModal } from "@tronweb3/tronwallet-adapter-react-ui";
 import { useCallback, useMemo } from "react";
-import { isAddressValid } from "@/lib/address-validation";
+import { isAddressValid } from "@/utils";
 import type { UseWalletResult, WalletAccount } from "../types";
 
 export function useTronWallet(): UseWalletResult {

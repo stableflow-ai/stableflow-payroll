@@ -1,6 +1,6 @@
 import { useMemo, useState, type MouseEvent } from "react";
 import { useConnectedWallets, useWallet } from "@/hooks/use-wallet";
-import { formatAddress } from "@/lib/address";
+import { formatAddress } from "@/utils";
 import { cn } from "@/lib/utils";
 import type { ChainKind } from "@/wallet/types";
 

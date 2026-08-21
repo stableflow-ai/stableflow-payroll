@@ -1,7 +1,7 @@
 import { useWallet as useSolanaAdapter } from "@solana/wallet-adapter-react";
 import { useWalletModal as useSolanaWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useCallback, useMemo } from "react";
-import { isAddressValid } from "@/lib/address-validation";
+import { isAddressValid } from "@/utils";
 import type { UseWalletResult, WalletAccount } from "../types";
 
 export function useSolanaWallet(): UseWalletResult {

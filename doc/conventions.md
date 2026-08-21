@@ -13,10 +13,17 @@ Rules for humans and agents working in this repository. Additional rules may be 
 - Business widgets stay next to their feature (for example `src/components/WalletConnect.tsx` or a future feature folder). Do not put business logic in `src/components/ui/`.
 - Reuse existing public components. Do not duplicate Card, Dialog, Button, Table, and similar primitives.
 - Constants (enums, breakpoints, copy defaults) belong in a sibling `config.ts` using `UPPER_SNAKE_CASE`.
-- Shared helpers belong in `utils.ts` or `src/lib/`. Check for an existing helper before adding a new one.
 - After creating or changing a public component:
   1. Update `doc/components/<name>.md` (props, examples, caveats).
   2. Append an entry to `doc/components/CHANGELOG.md` so others can discover the change.
+
+## Shared utils
+
+- Before adding a helper, search `src/utils/` (`@/utils`) and `src/lib/`. Do not reimplement an existing function.
+- Put a helper in `src/utils/` only if it is generally reusable across features. Feature-specific helpers belong in that feature's `utils.ts`.
+- Split files by purpose and re-export from `src/utils/index.ts`.
+- After adding or changing a public util, update [doc/utils.md](utils.md).
+- `cn()` stays in `src/lib/utils.ts` (shadcn alias). RPC clients and logo helpers stay in `src/lib/`.
 
 ## Styling
 

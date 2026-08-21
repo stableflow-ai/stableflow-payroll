@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { isAddressValid } from "@/lib/address-validation";
+import { isAddressValid } from "@/utils";
 import type { UseWalletResult, WalletAccount } from "../types";
 import { useNearWalletContext } from "./provider";
 

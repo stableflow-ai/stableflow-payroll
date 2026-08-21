@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { WalletConnectDialog } from "@/components/WalletConnect";
 import { useConnectedWallets } from "@/hooks/use-wallet";
-import { formatAddress } from "@/lib/address";
+import { formatAddress } from "@/utils";
 
 const CHAIN_ROWS = [
   { kind: "evm" as const, label: "EVM" },

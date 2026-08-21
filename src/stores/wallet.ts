@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { isAddressValid } from "@/lib/address-validation";
+import { isAddressValid } from "@/utils";
 import { CHAIN_KINDS, type ChainKind, type ChainOwners, type WalletAccount } from "@/wallet/types";
 
 export interface ChainWalletState {

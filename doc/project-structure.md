@@ -37,7 +37,8 @@ src/
   hooks/                  # Shared hooks (`use-wallet`, `use-media-query`)
   wallet/                 # Multi-chain wallet adapters and providers
   stores/                 # Zustand stores
-  lib/                    # Address helpers, RPC clients, `cn()`
+  lib/                    # Infra: RPC clients, `cn()`, logo URLs
+  utils/                  # Shared helpers (address, date, amount) — see doc/utils.md
   config/                 # App-level config (chains)
 doc/                      # Agent-facing docs (English)
 ```
@@ -51,7 +52,8 @@ doc/                      # Agent-facing docs (English)
 | Page | `src/views/` + register in `src/router/index.tsx` |
 | Feature widget | `src/components/<feature>/` (not under `ui/`) |
 | Hook | `src/hooks/` |
-| Pure helper | `src/lib/` |
+| Shared util | `src/utils/` + [doc/utils.md](utils.md) |
+| Infra helper (`cn`, RPC, logo) | `src/lib/` |
 | Constants for a module | sibling `config.ts` |
 
 ## Public UI import paths
@@ -61,4 +63,10 @@ Import from the component file (no barrel file):
 ```ts
 import { Button } from "@/components/ui/button/Button";
 import { Dialog } from "@/components/ui/dialog/Dialog";
+```
+
+Shared utils use the barrel:
+
+```ts
+import { formatAmount, formatDate, isAddressValid } from "@/utils";
 ```
