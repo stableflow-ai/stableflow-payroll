@@ -2,8 +2,9 @@
  * Client session store (Zustand).
  *
  * Server state belongs in TanStack Query. Keep this store for the JWT session
- * (`token` + `user`) only. There is no `/auth/me` yet — hydrate from
- * localStorage. When `/auth/me` exists, validate the stored token on boot.
+ * (`token` + `user`) only. Hydrate from localStorage on first import.
+ * `GET /v1/pay/profile` (`useProfileQuery`) validates the stored token in the
+ * background; HTTP 401 clears the session.
  */
 import { create } from "zustand";
 import {

@@ -9,12 +9,14 @@ import { ResetPasswordDialog } from "./ResetPasswordDialog";
 import {
   AuthBetaBanner,
   AuthField,
+  AuthPasswordField,
   authErrorMessage,
   AUTH_CARD_CLASS,
 } from "./auth-shared";
 import {
   AUTH_LINK_ACCENT_CLASS,
   AUTH_LINK_CLASS,
+  EMAIL_MAX_LENGTH,
   PASSWORD_MAX_LENGTH,
   RESET_PASSWORD_VARIANT,
   loginFormError,
@@ -62,14 +64,15 @@ export function LoginView() {
           placeholder="you@company.com"
           autoFocus
           autoComplete="email"
+          maxLength={EMAIL_MAX_LENGTH}
         />
-        <AuthField
+        <AuthPasswordField
           id="password"
           label="Password"
-          type="password"
           value={password}
           onChange={setPassword}
           placeholder="At least 8 characters"
+          autoComplete="current-password"
           maxLength={PASSWORD_MAX_LENGTH}
         />
 

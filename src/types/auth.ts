@@ -20,3 +20,18 @@ export interface AuthSession {
   token: string;
   user: AuthUser;
 }
+
+export interface ChangePasswordBody {
+  currentPassword: string;
+  newPassword: string;
+}
+
+export interface ResetPasswordCodeBody {
+  email: string;
+}
+
+export interface ResetPasswordBody {
+  email: string;
+  code: string;
+  newPassword: string;
+}

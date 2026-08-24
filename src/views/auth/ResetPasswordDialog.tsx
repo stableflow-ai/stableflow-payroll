@@ -2,9 +2,16 @@ import { type FormEvent, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button/Button";
 import { Dialog } from "@/components/ui/dialog/Dialog";
 import { Icon2Right } from "@/components/icons/to-right";
-import useToast from "@/hooks/use-toast";
-import { AuthField, AuthPasswordField } from "./auth-shared";
 import {
+  useChangePasswordMutation,
+  useResetPasswordMutation,
+  useSendResetPasswordCodeMutation,
+} from "@/hooks/use-auth-api";
+import useToast from "@/hooks/use-toast";
+import { AuthField, AuthPasswordField, authErrorMessage } from "./auth-shared";
+import {
+  CODE_MAX_LENGTH,
+  EMAIL_MAX_LENGTH,
   PASSWORD_MAX_LENGTH,
   RESET_PASSWORD_DIALOG_CARD_CLASS,
   RESET_PASSWORD_VARIANT,
@@ -26,6 +33,9 @@ export function ResetPasswordDialog({
   variant: ResetPasswordVariant;
 }) {
   const toast = useToast();
+  const sendCodeMutation = useSendResetPasswordCodeMutation();
+  const resetPasswordMutation = useResetPasswordMutation();
+  const changePasswordMutation = useChangePasswordMutation();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
   const [currentPassword, setCurrentPassword] = useState("");
@@ -51,36 +61,64 @@ export function ResetPasswordDialog({
     return () => window.clearInterval(timer);
   }, [cooldownLeft]);
 
-  const sendCode = () => {
+  const sendCode = async () => {
     const ruleError = emailRuleError(email);
     if (ruleError) {
       toast.fail({ title: ruleError });
       return;
     }
-    // TODO(api): send a verification code to the email when the backend contract is ready.
-    setCooldownLeft(SEND_CODE_COOLDOWN_SECONDS);
+    try {
+      await sendCodeMutation.mutateAsync({ email: email.trim() });
+      setCooldownLeft(SEND_CODE_COOLDOWN_SECONDS);
+      toast.success({ title: "Verification code sent" });
+    } catch (cause) {
+      toast.fail({
+        title: authErrorMessage(cause, "Unable to send verification code"),
+      });
+    }
   };
 
-  const submitGuest = (event: FormEvent) => {
+  const submitGuest = async (event: FormEvent) => {
     event.preventDefault();
     const ruleError = guestResetFormError(email, code, newPassword, confirmPassword);
     if (ruleError) {
       toast.fail({ title: ruleError });
       return;
     }
-    // TODO(api): verify the code and set the new password when the backend contract is ready.
-    onClose();
+    try {
+      await resetPasswordMutation.mutateAsync({
+        email: email.trim(),
+        code: code.trim(),
+        newPassword,
+      });
+      toast.success({ title: "Password updated" });
+      onClose();
+    } catch (cause) {
+      toast.fail({
+        title: authErrorMessage(cause, "Unable to reset password"),
+      });
+    }
   };
 
-  const submitAuthed = (event: FormEvent) => {
+  const submitAuthed = async (event: FormEvent) => {
     event.preventDefault();
     const ruleError = authedResetFormError(currentPassword, newPassword, confirmPassword);
     if (ruleError) {
       toast.fail({ title: ruleError });
       return;
     }
-    // TODO(api): change the password when the backend contract is ready.
-    onClose();
+    try {
+      await changePasswordMutation.mutateAsync({
+        currentPassword,
+        newPassword,
+      });
+      toast.success({ title: "Password updated" });
+      onClose();
+    } catch (cause) {
+      toast.fail({
+        title: authErrorMessage(cause, "Unable to change password"),
+      });
+    }
   };
 
   return (
@@ -106,6 +144,7 @@ export function ResetPasswordDialog({
             placeholder="you@company.com"
             autoComplete="email"
             autoFocus
+            maxLength={EMAIL_MAX_LENGTH}
           />
           <AuthField
             id="reset-code"
@@ -114,11 +153,14 @@ export function ResetPasswordDialog({
             onChange={setCode}
             placeholder="Code"
             autoComplete="one-time-code"
+            maxLength={CODE_MAX_LENGTH}
             trailing={
               <button
                 type="button"
-                disabled={cooldownLeft > 0}
-                onClick={sendCode}
+                disabled={cooldownLeft > 0 || sendCodeMutation.isPending}
+                onClick={() => {
+                  void sendCode();
+                }}
                 className={SEND_CODE_TEXT_CLASS}
               >
                 {cooldownLeft > 0 ? `${cooldownLeft}s` : "Send Code"}
@@ -143,7 +185,12 @@ export function ResetPasswordDialog({
             autoComplete="new-password"
             maxLength={PASSWORD_MAX_LENGTH}
           />
-          <Button type="submit" size="lg" className="mt-6 w-full">
+          <Button
+            type="submit"
+            size="lg"
+            loading={resetPasswordMutation.isPending}
+            className="mt-6 w-full"
+          >
             Continue
           </Button>
           <button
@@ -187,7 +234,12 @@ export function ResetPasswordDialog({
             autoComplete="new-password"
             maxLength={PASSWORD_MAX_LENGTH}
           />
-          <Button type="submit" size="lg" className="mt-6 w-full">
+          <Button
+            type="submit"
+            size="lg"
+            loading={changePasswordMutation.isPending}
+            className="mt-6 w-full"
+          >
             Continue
           </Button>
         </form>

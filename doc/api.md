@@ -38,11 +38,11 @@ Every response is:
 
 `http()` sends `Authorization: Bearer {token}` **by default**.
 
-- Pass `auth: false` only for public routes (login, register).
+- Pass `auth: false` only for public routes (login, register, reset password).
 - If `auth` is true and no token is stored, `http()` throws `ApiError` 401 `UNAUTHENTICATED` without hitting the network.
 - HTTP 401 on an authenticated request clears the stored session, notifies the auth store (`logout` + `queryClient.clear()`).
 
-There is no `GET /auth/me` yet. The auth store hydrates `{ token, user }` from `localStorage` on first import. When `/auth/me` exists, validate the stored token on boot instead of trusting localStorage alone.
+The auth store hydrates `{ token, user }` from `localStorage` on first import. `GET /v1/pay/profile` (`useProfileQuery`, mounted in `App`) then validates that token in the background. A 401 clears the session. Do not block navigation while the profile query is in flight.
 
 ## Adding an endpoint
 
@@ -126,6 +126,10 @@ export function useOrderQuery(id: string) {
 | --- | --- | --- | --- | --- | --- | --- |
 | POST | `/v1/pay/auth/login` | no | `LoginBody` | `AuthSession` | `login` | `useLoginMutation` |
 | POST | `/v1/pay/auth/register` | no | `RegisterBody` | `AuthSession` | `register` | `useRegisterMutation` |
+| POST | `/v1/pay/change-password` | yes | `ChangePasswordBody` | `void` | `changePassword` | `useChangePasswordMutation` |
+| POST | `/v1/pay/reset-password` | no | `ResetPasswordBody` | `void` | `resetPassword` | `useResetPasswordMutation` |
+| POST | `/v1/pay/reset-password/code` | no | `ResetPasswordCodeBody` | `void` | `sendResetPasswordCode` | `useSendResetPasswordCodeMutation` |
+| GET | `/v1/pay/profile` | yes | — | `AuthUser` | `getProfile` | `useProfileQuery` |
 | POST | `/v1/pay/quick/quote` | yes | `PayQuickQuoteParam` | `PayQuickQuoteResp` | `quickQuote` | `useQuickPayQuote` |
 | POST | `/v1/pay/quick/swap` | yes | `PayQuickQuoteParam` | `PayQuickSwapResp` | `quickSwap` | `useQuickPaySwap` |
 | POST | `/v1/pay/quick/submit` | yes | `PayQuickSubmitParam` | `void` | `quickSubmit` | commit queue |
@@ -134,7 +138,7 @@ export function useOrderQuery(id: string) {
 | POST | `/v1/pay/batch/submit` | yes | `PayBatchSubmitParam` | `void` | `batchSubmit` | commit queue |
 | GET | `/v1/pay/payments/pending` | yes | — | `PayPending[]` | `getPendingPayments` | `usePendingPaymentsQuery` |
 
-Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`). Payout types: `src/types/payout.ts`. `PayQuickQuoteParam.notification` is an optional email string; omit the field when notify is off. Batch receives are wallet addresses (no `employeeId`). `GET /v1/pay/payments/pending` unwraps either `PayPending[]` or `{ payments: PayPending[] }`.
+Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`, `ChangePasswordBody`, `ResetPasswordBody`, `ResetPasswordCodeBody`). Payout types: `src/types/payout.ts`. `PayQuickQuoteParam.notification` is an optional email string; omit the field when notify is off. Batch receives are wallet addresses (no `employeeId`). `GET /v1/pay/payments/pending` unwraps either `PayPending[]` or `{ payments: PayPending[] }`.
 
 Public files:
 
@@ -147,9 +151,9 @@ Public files:
 | `src/lib/query-client.ts` | Shared `QueryClient` |
 | `src/api/config.ts` | `PAY_API_PREFIX` |
 | `src/api/query-keys.ts` | Query key factory |
-| `src/api/auth.ts` | Login / register |
+| `src/api/auth.ts` | Login, register, profile, change / reset password |
 | `src/api/payout.ts` | Quick and batch quote / swap / submit; pending list |
-| `src/hooks/use-auth-api.ts` | Auth mutations |
+| `src/hooks/use-auth-api.ts` | Auth mutations + profile query |
 | `src/hooks/use-single-payout-api.ts` | Quick quote query + swap mutation |
 | `src/hooks/use-batch-payout-api.ts` | Batch quote query + swap mutation |
 | `src/hooks/use-pending-payments.ts` | Pending payouts query |

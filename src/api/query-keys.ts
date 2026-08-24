@@ -10,6 +10,7 @@
 export const queryKeys = {
   auth: {
     all: ["auth"] as const,
+    profile: ["auth", "profile"] as const,
   },
   payout: {
     all: ["payout"] as const,

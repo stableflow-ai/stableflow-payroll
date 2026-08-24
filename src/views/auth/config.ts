@@ -19,6 +19,8 @@ export type AuthFeatureIconKey = (typeof AUTH_FEATURE_ICON_KEYS)[number];
 
 export const NAME_MAX_LENGTH = 50;
 export const INVITE_CODE_MAX_LENGTH = 10;
+export const EMAIL_MAX_LENGTH = 100;
+export const CODE_MAX_LENGTH = 20;
 export const PASSWORD_MIN_LENGTH = 8;
 export const PASSWORD_MAX_LENGTH = 50;
 export const SEND_CODE_COOLDOWN_SECONDS = 60;
@@ -47,7 +49,19 @@ export function nameRuleError(name: string): string | null {
 export function emailRuleError(email: string): string | null {
   const trimmed = email.trim();
   if (!trimmed) return "Email is required";
+  if (trimmed.length > EMAIL_MAX_LENGTH) {
+    return `Email must be at most ${EMAIL_MAX_LENGTH} characters`;
+  }
   if (!EMAIL_PATTERN.test(trimmed)) return "Enter a valid email";
+  return null;
+}
+
+export function codeRuleError(code: string): string | null {
+  const trimmed = code.trim();
+  if (!trimmed) return "Verification code is required";
+  if (trimmed.length > CODE_MAX_LENGTH) {
+    return `Verification code must be at most ${CODE_MAX_LENGTH} characters`;
+  }
   return null;
 }
 
@@ -68,6 +82,13 @@ export function inviteCodeRuleError(inviteCode: string): string | null {
   return null;
 }
 
+export function confirmPasswordRuleError(
+  password: string,
+  confirmPassword: string,
+): string | null {
+  return confirmPassword === password ? null : "Passwords do not match";
+}
+
 export function loginFormError(email: string, password: string): string | null {
   return emailRuleError(email) ?? passwordRuleError(password);
 }
@@ -76,12 +97,14 @@ export function registerFormError(
   name: string,
   email: string,
   password: string,
+  confirmPassword: string,
   inviteCode: string,
 ): string | null {
   return (
     nameRuleError(name) ??
     emailRuleError(email) ??
     passwordRuleError(password) ??
+    confirmPasswordRuleError(password, confirmPassword) ??
     inviteCodeRuleError(inviteCode)
   );
 }
@@ -94,9 +117,9 @@ export function guestResetFormError(
 ): string | null {
   return (
     emailRuleError(email) ??
-    (code.trim() ? null : "Verification code is required") ??
+    codeRuleError(code) ??
     passwordRuleError(newPassword) ??
-    (confirmPassword === newPassword ? null : "Passwords do not match")
+    confirmPasswordRuleError(newPassword, confirmPassword)
   );
 }
 
@@ -108,6 +131,6 @@ export function authedResetFormError(
   return (
     passwordRuleError(currentPassword) ??
     passwordRuleError(newPassword) ??
-    (confirmPassword === newPassword ? null : "Passwords do not match")
+    confirmPasswordRuleError(newPassword, confirmPassword)
   );
 }

@@ -7,12 +7,14 @@ import { AuthShell } from "./AuthShell";
 import {
   AuthBetaBanner,
   AuthField,
+  AuthPasswordField,
   authErrorMessage,
   AUTH_CARD_CLASS,
 } from "./auth-shared";
 import {
   AUTH_LINK_ACCENT_CLASS,
   AUTH_LINK_CLASS,
+  EMAIL_MAX_LENGTH,
   INVITE_CODE_MAX_LENGTH,
   NAME_MAX_LENGTH,
   PASSWORD_MAX_LENGTH,
@@ -28,11 +30,12 @@ export function RegisterView() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [inviteCode, setInviteCode] = useState("");
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    const ruleError = registerFormError(name, email, password, inviteCode);
+    const ruleError = registerFormError(name, email, password, confirmPassword, inviteCode);
     if (ruleError) {
       toast.fail({ title: ruleError });
       return;
@@ -77,14 +80,23 @@ export function RegisterView() {
           onChange={setEmail}
           placeholder="you@company.com"
           autoComplete="email"
+          maxLength={EMAIL_MAX_LENGTH}
         />
-        <AuthField
+        <AuthPasswordField
           id="password"
           label="Password"
-          type="password"
           value={password}
           onChange={setPassword}
           placeholder={`${PASSWORD_MIN_LENGTH}–${PASSWORD_MAX_LENGTH} characters`}
+          autoComplete="new-password"
+          maxLength={PASSWORD_MAX_LENGTH}
+        />
+        <AuthPasswordField
+          id="confirm-password"
+          label="Confirm Password"
+          value={confirmPassword}
+          onChange={setConfirmPassword}
+          placeholder="Keep the same with the password"
           autoComplete="new-password"
           maxLength={PASSWORD_MAX_LENGTH}
         />

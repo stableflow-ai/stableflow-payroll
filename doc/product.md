@@ -10,7 +10,7 @@ The previous app (`stableflow-pay-old`) is a visual and payout-flow reference on
 
 | Area | Routes | Status | Notes |
 | --- | --- | --- | --- |
-| Auth | `/login`, `/register` | shipped | Email + password. Register body: `name`, `email`, `password`, `inviteCode`. Guest forgot password: email, verification code, and new password in a dialog. Authed users reset from the header avatar menu. APIs are not wired yet. |
+| Auth | `/login`, `/register` | shipped | Email + password. Register body: `name`, `email`, `password`, `inviteCode`. Guest forgot password: email, verification code, and new password in a dialog. Authed users change password from the header avatar menu. |
 | Marketing | `/howitworks` | shipped | Public. Linked from the auth shell. |
 | Home | `/` | shipped | Dashboard: summary, charts, pending. Behind `RequireAuth` + `AppLayout`. Data is mock until the API exists. |
 | Pay | `/pay`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request` | in progress | See [Pay](#pay). Pending list uses `GET /v1/pay/payments/pending`. History is mock until the API exists. |
@@ -20,14 +20,14 @@ The previous app (`stableflow-pay-old`) is a visual and payout-flow reference on
 ## Auth
 
 - Login: `email` + `password`.
-- Register: `name` (max 50), `email`, `password` (8–50), `inviteCode` (max 10).
+- Register: `name` (max 50), `email` (max 100), `password` (8–50), confirm password must match, `inviteCode` (max 10).
 - Session: Zustand `useAuthStore` + `localStorage`. Types: `AuthUser` (`id`, `email`, `name`) — no `role` or `org_id`.
 - Unauthenticated `/` redirects to `/login`. Authenticated `/login` or `/register` redirects to `/`.
 - After login or register, navigate to `/`.
+- Boot: hydrate `{ token, user }` from `localStorage`, then `GET /v1/pay/profile` in the background. HTTP 401 logs the user out. Navigation is not blocked while the profile request is in flight.
 - Reset password:
-  - Guest: Login `Forgot Password?` opens a dialog (email, verification code, new password, confirm). Continue verifies the code and sets the password, then closes back to login (APIs not wired).
-  - Authed: header avatar menu opens `ResetPasswordDialog` (`variant="authed"`).
-  - Send-code / verify-code / change-password APIs are not wired yet.
+  - Guest: Login `Forgot Password?` opens a dialog. Send Code calls `POST /v1/pay/reset-password/code`. Continue calls `POST /v1/pay/reset-password` (`email`, `code`, `newPassword`), then closes back to login.
+  - Authed: header avatar menu opens `ResetPasswordDialog` (`variant="authed"`). Continue calls `POST /v1/pay/change-password` (`currentPassword`, `newPassword`). The session stays; the dialog closes.
 
 Guards live in `src/router/guards.tsx`: `RequireAuth`, `RedirectIfAuthed`. Do not add admin/employee guards.
 

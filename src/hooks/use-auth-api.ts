@@ -1,14 +1,33 @@
 /**
- * Auth mutations.
+ * Auth mutations and profile query.
  *   POST /v1/pay/auth/login
  *   POST /v1/pay/auth/register
+ *   POST /v1/pay/change-password
+ *   POST /v1/pay/reset-password
+ *   POST /v1/pay/reset-password/code
+ *   GET  /v1/pay/profile
  *
- * On success the session is written to the Zustand auth store (and localStorage).
- * Views should still `mutateAsync` and then navigate.
+ * Login / register / profile success writes the session to the Zustand auth
+ * store (and localStorage). Views should still `mutateAsync` and then navigate.
  */
-import { useMutation } from "@tanstack/react-query";
-import { login, register } from "@/api/auth";
+import { useEffect } from "react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import {
+  changePassword,
+  getProfile,
+  login,
+  register,
+  resetPassword,
+  sendResetPasswordCode,
+} from "@/api/auth";
+import { queryKeys } from "@/api/query-keys";
+import { ApiError } from "@/lib/api-error";
 import { useAuthStore } from "@/stores/auth";
+import type { AuthUser } from "@/types/auth";
+
+function isSameUser(left: AuthUser, right: AuthUser): boolean {
+  return left.id === right.id && left.email === right.email && left.name === right.name;
+}
 
 export function useLoginMutation() {
   const applySession = useAuthStore((state) => state.applySession);
@@ -28,4 +47,46 @@ export function useRegisterMutation() {
       applySession(session.token, session.user);
     },
   });
+}
+
+export function useChangePasswordMutation() {
+  return useMutation({
+    mutationFn: changePassword,
+  });
+}
+
+export function useSendResetPasswordCodeMutation() {
+  return useMutation({
+    mutationFn: sendResetPasswordCode,
+  });
+}
+
+export function useResetPasswordMutation() {
+  return useMutation({
+    mutationFn: resetPassword,
+  });
+}
+
+export function useProfileQuery() {
+  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
+  const applySession = useAuthStore((state) => state.applySession);
+
+  const query = useQuery({
+    queryKey: queryKeys.auth.profile,
+    queryFn: getProfile,
+    enabled: Boolean(token),
+    retry: (failureCount, error) => {
+      if (error instanceof ApiError && error.status === 401) return false;
+      return failureCount < 1;
+    },
+  });
+
+  useEffect(() => {
+    if (!token || !query.data) return;
+    if (user && isSameUser(user, query.data)) return;
+    applySession(token, query.data);
+  }, [applySession, query.data, token, user]);
+
+  return query;
 }
