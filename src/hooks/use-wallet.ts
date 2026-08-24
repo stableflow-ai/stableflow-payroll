@@ -4,13 +4,14 @@
  */
 
 import { useWalletStore, walletAddressValid } from "@/stores/wallet";
-import type { ChainKind, ChainOwners, UseWalletResult } from "@/wallet/types";
+import type { ChainKind, ChainOwners, GeneratedIntent, UseWalletResult } from "@/wallet/types";
 
 export function useWallet(chainKind: ChainKind = "evm"): UseWalletResult {
   const slice = useWalletStore((state) => state.chains[chainKind]);
   const connect = useWalletStore((state) => state.connect);
   const disconnect = useWalletStore((state) => state.disconnect);
   const signMessage = useWalletStore((state) => state.signMessage);
+  const signGeneratedIntent = useWalletStore((state) => state.signGeneratedIntent);
 
   return {
     kind: chainKind,
@@ -21,6 +22,7 @@ export function useWallet(chainKind: ChainKind = "evm"): UseWalletResult {
     connect: () => connect(chainKind),
     disconnect: () => disconnect(chainKind),
     signMessage: (input) => signMessage(chainKind, input),
+    signGeneratedIntent: (intent: GeneratedIntent) => signGeneratedIntent(chainKind, intent),
     isAddressValid: (address) => walletAddressValid(chainKind, address),
   };
 }

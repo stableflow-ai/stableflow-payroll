@@ -13,6 +13,11 @@ export interface HttpOptions {
   query?: Record<string, HttpQueryValue>;
   /** When true, send `Authorization: Bearer {token}`. Default true. */
   auth?: boolean;
+  /**
+   * When true (default), require `{ code: 200, data }`.
+   * `/v1/nearintents/*` proxies 1Click and may return the upstream JSON as-is.
+   */
+  envelope?: boolean;
 }
 
 interface Envelope<T> {
@@ -51,8 +56,12 @@ function readMessage(payload: Envelope<unknown> | null, fallback: string): strin
   return message || fallback;
 }
 
+function isEnvelope(payload: Envelope<unknown> | null): payload is Envelope<unknown> {
+  return payload != null && typeof payload.code === "number";
+}
+
 export async function http<T>(path: string, options: HttpOptions = {}): Promise<T> {
-  const { method = "GET", body, query, auth = true } = options;
+  const { method = "GET", body, query, auth = true, envelope = true } = options;
   const headers: Record<string, string> = { Accept: "application/json" };
   if (body !== undefined) {
     headers["Content-Type"] = "application/json";
@@ -94,6 +103,20 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
       res.status,
       payload?.code != null ? String(payload.code) : undefined,
     );
+  }
+
+  if (!envelope) {
+    if (isEnvelope(payload) && payload.code !== SUCCESS_CODE) {
+      throw new ApiError(
+        message,
+        res.status,
+        payload.code != null ? String(payload.code) : undefined,
+      );
+    }
+    if (isEnvelope(payload) && payload.code === SUCCESS_CODE) {
+      return payload.data as T;
+    }
+    return payload as T;
   }
 
   if (payload?.code !== SUCCESS_CODE) {

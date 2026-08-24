@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import bs58 from "bs58";
-import { encodeEd25519, encodeSecp256k1Signature } from "./intents-sign";
+import { encodeEd25519, encodeSecp256k1Signature, parseNep413Payload, payloadAsText } from "./intents-sign";
 
 describe("encodeSecp256k1Signature", () => {
   it("normalizes v from 27 to 0 and prefixes secp256k1", () => {
@@ -30,5 +30,24 @@ describe("encodeEd25519", () => {
 
   it("keeps an existing ed25519 prefix", () => {
     expect(encodeEd25519("ed25519:abc")).toBe("ed25519:abc");
+  });
+});
+
+describe("generated intent payload helpers", () => {
+  it("stringifies object payloads", () => {
+    expect(payloadAsText({ a: 1 })).toBe("{\"a\":1}");
+    expect(payloadAsText("raw")).toBe("raw");
+  });
+
+  it("reads NEP-413 message, nonce, and recipient", () => {
+    const nonce = Buffer.from("hello-nonce-bytes-pad-ok!!!!").toString("base64");
+    const parsed = parseNep413Payload({
+      message: "{\"intents\":[]}",
+      nonce,
+      recipient: "intents.near",
+    });
+    expect(parsed.message).toBe("{\"intents\":[]}");
+    expect(parsed.recipient).toBe("intents.near");
+    expect(Buffer.from(parsed.nonce).toString("base64")).toBe(nonce);
   });
 });

@@ -8,6 +8,11 @@ export interface PaySingleQuoteParam {
   slippageTolerance: number;
   token: string;
   payer?: string;
+  memo?: string;
+  notifyEmail?: string;
+  mode?: string;
+  privateDestinationAddress?: string;
+  request_user_id?: number;
 }
 
 export interface PaySingleSwapParam extends PaySingleQuoteParam {
@@ -62,6 +67,7 @@ export interface PayBatchSwapResp extends PayBatchQuoteResp {
   approvals: string[];
   callData: string;
   spender: string;
+  contract: string;
 }
 
 export interface PayBatchSubmitParam {

@@ -7,9 +7,10 @@ import { ReceivedPaymentRow } from "./ReceivedPaymentRow";
 export function ReceivedPaymentList(props: {
   rows: ReceivedPayment[];
   pendingWithdrawCount: number;
+  withdrawingId?: string | null;
   onWithdraw: (row: ReceivedPayment) => void;
 }) {
-  const { rows, pendingWithdrawCount, onWithdraw } = props;
+  const { rows, pendingWithdrawCount, withdrawingId = null, onWithdraw } = props;
   const [onlyPending, setOnlyPending] = useState(true);
 
   const visible = useMemo(() => {
@@ -53,7 +54,13 @@ export function ReceivedPaymentList(props: {
           ) : (
             <div className="flex flex-col gap-2">
               {visible.map((row) => (
-                <ReceivedPaymentRow key={row.id} row={row} onWithdraw={() => onWithdraw(row)} />
+                <ReceivedPaymentRow
+                  key={row.id}
+                  row={row}
+                  withdrawing={withdrawingId === row.id}
+                  withdrawDisabled={Boolean(withdrawingId)}
+                  onWithdraw={() => onWithdraw(row)}
+                />
               ))}
             </div>
           )}

@@ -88,3 +88,38 @@ export function encodeEd25519(value: string | Uint8Array): string {
 export function walletDoesNotSupportSigning(kind: string): Error {
   return new Error(`Connected ${kind} wallet does not support message signing`);
 }
+
+export function payloadAsText(payload: unknown): string {
+  return typeof payload === "string" ? payload : JSON.stringify(payload);
+}
+
+function asRecord(payload: unknown): Record<string, unknown> | null {
+  if (payload && typeof payload === "object") return payload as Record<string, unknown>;
+  if (typeof payload !== "string") return null;
+  try {
+    const parsed: unknown = JSON.parse(payload);
+    if (parsed && typeof parsed === "object") return parsed as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+  return null;
+}
+
+export function parseNep413Payload(payload: unknown): {
+  message: string;
+  nonce: Uint8Array;
+  recipient: string;
+} {
+  const record = asRecord(payload);
+  if (!record || typeof record.message !== "string") {
+    throw new Error("Invalid NEP-413 intent payload");
+  }
+  if (typeof record.nonce !== "string") {
+    throw new Error("NEP-413 intent payload is missing a nonce");
+  }
+  return {
+    message: record.message,
+    nonce: Buffer.from(record.nonce, "base64"),
+    recipient: typeof record.recipient === "string" ? record.recipient : INTENTS_RECIPIENT,
+  };
+}

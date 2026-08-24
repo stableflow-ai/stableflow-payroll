@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button/Button";
+import { BUTTON_SIZE, BUTTON_VARIANT } from "@/components/ui/button/config";
 import { IconGuard } from "@/components/icons/guard";
 import { tokenLogoUrl } from "@/lib/logo";
 import { cn } from "@/lib/utils";
@@ -7,9 +9,11 @@ import { RECEIVED_STATUS } from "@/mocks/request-payment";
 
 export function ReceivedPaymentRow(props: {
   row: ReceivedPayment;
+  withdrawing?: boolean;
+  withdrawDisabled?: boolean;
   onWithdraw: () => void;
 }) {
-  const { row, onWithdraw } = props;
+  const { row, withdrawing = false, withdrawDisabled = false, onWithdraw } = props;
   const amountLabel = `${formatAmount(row.amount, { prefix: "", maxDecimals: 6 })} ${row.symbol} · ${row.network}`;
 
   return (
@@ -30,13 +34,17 @@ export function ReceivedPaymentRow(props: {
       <p className="truncate font-montserrat text-sm text-[#606060]">{formatAddress(row.address)}</p>
       <div className="flex justify-end">
         {row.status === RECEIVED_STATUS.Withdraw ? (
-          <button
+          <Button
             type="button"
+            variant={BUTTON_VARIANT.Normal}
+            size={BUTTON_SIZE.Sm}
+            loading={withdrawing}
+            disabled={withdrawDisabled}
             onClick={onWithdraw}
-            className="inline-flex h-7 items-center rounded-full border border-black/10 bg-white px-3 font-montserrat text-xs font-medium text-black"
+            className="h-7 rounded-full px-3 text-xs"
           >
             Withdraw
-          </button>
+          </Button>
         ) : (
           <span
             className={cn(
@@ -51,4 +59,3 @@ export function ReceivedPaymentRow(props: {
     </div>
   );
 }
-

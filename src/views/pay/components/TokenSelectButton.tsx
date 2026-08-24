@@ -5,13 +5,15 @@ import type { IntentsToken } from "@/stores/intents-tokens";
 export function TokenSelectButton(props: {
   token: IntentsToken | null;
   onClick: () => void;
+  disabled?: boolean;
 }) {
-  const { token, onClick } = props;
+  const { token, onClick, disabled = false } = props;
   return (
     <button
       type="button"
       onClick={onClick}
-      className="inline-flex h-9 shrink-0 items-center gap-2 rounded-[18px] border border-black/10 px-3 font-montserrat text-sm font-medium text-black transition-colors hover:bg-black/5"
+      disabled={disabled}
+      className="inline-flex h-9 shrink-0 items-center gap-2 rounded-[18px] border border-black/10 px-3 font-montserrat text-sm font-medium text-black transition-colors hover:bg-black/5 disabled:pointer-events-none disabled:opacity-60"
     >
       {token ? (
         <>

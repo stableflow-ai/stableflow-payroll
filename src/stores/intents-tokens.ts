@@ -46,7 +46,7 @@ function filterTokens(raw: ProviderToken[]): IntentsToken[] {
   const out: IntentsToken[] = [];
   for (const token of raw) {
     const chain = chainByCode.get(token.blockchain);
-    if (!chain || chain.chainKind === "other") continue;
+    if (!chain) continue;
     const symbol = normalizeSymbol(token.symbol);
     if (!symbol) continue;
     if (!Number.isInteger(token.decimals) || token.decimals < 0) continue;

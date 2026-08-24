@@ -9,8 +9,9 @@ export function RecipientAddressField(props: {
   onChange: (value: string) => void;
   onClear: () => void;
   onOpenBook: () => void;
+  locked?: boolean;
 }) {
-  const { value, matched, onChange, onClear, onOpenBook } = props;
+  const { value, matched, onChange, onClear, onOpenBook, locked = false } = props;
 
   return (
     <div>
@@ -29,11 +30,12 @@ export function RecipientAddressField(props: {
           ) : null}
           <input
             value={value}
+            readOnly={locked}
             onChange={(event) => onChange(event.target.value)}
             className="min-w-0 flex-1 bg-transparent font-montserrat text-sm font-medium text-black outline-none placeholder:text-black/30"
             placeholder="Wallet address"
           />
-          {value ? (
+          {value && !locked ? (
             <button
               type="button"
               aria-label="Clear address"
@@ -44,14 +46,16 @@ export function RecipientAddressField(props: {
             </button>
           ) : null}
         </div>
-        <button
-          type="button"
-          aria-label="Open recipients"
-          onClick={onOpenBook}
-          className="inline-flex size-9 shrink-0 items-center justify-center rounded-[8px] border border-black/10 bg-white text-black"
-        >
-          <IconBook className="size-4" />
-        </button>
+        {!locked ? (
+          <button
+            type="button"
+            aria-label="Open recipients"
+            onClick={onOpenBook}
+            className="inline-flex size-9 shrink-0 items-center justify-center rounded-[8px] border border-black/10 bg-white text-black"
+          >
+            <IconBook className="size-4" />
+          </button>
+        ) : null}
       </div>
     </div>
   );

@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button/Button";
 import { Icon2Right } from "@/components/icons/to-right";
 import { useLoginMutation } from "@/hooks/use-auth-api";
@@ -21,9 +21,12 @@ import {
   RESET_PASSWORD_VARIANT,
   loginFormError,
 } from "./config";
+import { registerPathWithReturnTo, returnToFromSearch } from "./return-to";
 
 export function LoginView() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const returnTo = returnToFromSearch(params.toString());
   const toast = useToast();
   const loginMutation = useLoginMutation();
 
@@ -40,7 +43,7 @@ export function LoginView() {
     }
     try {
       await loginMutation.mutateAsync({ email: email.trim(), password });
-      navigate("/", { replace: true });
+      navigate(returnTo ?? "/", { replace: true });
     } catch (cause) {
       toast.fail({
         title: authErrorMessage(cause, "Unable to sign in"),
@@ -96,7 +99,7 @@ export function LoginView() {
 
         <p className={`block ${AUTH_LINK_CLASS}`}>
           New to Stableflow Pay?{" "}
-          <Link to="/register" className={`inline-flex items-center ${AUTH_LINK_ACCENT_CLASS}`}>
+          <Link to={registerPathWithReturnTo(returnTo)} className={`inline-flex items-center ${AUTH_LINK_ACCENT_CLASS}`}>
             Create an account
             <Icon2Right className="ml-1" />
           </Link>

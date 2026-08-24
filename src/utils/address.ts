@@ -6,10 +6,10 @@
 
 import { TronWeb } from "tronweb";
 import { getAddress, isAddress } from "viem";
-import type { ChainKind } from "@/config/chains";
 import { getChainByNetwork } from "@/config/chains";
+import type { ChainKind } from "@/wallet/types";
 
-export type WalletChainKind = Exclude<ChainKind, "other">;
+export type WalletChainKind = ChainKind;
 
 export interface AddressValidationResult {
   isValid: boolean;
@@ -52,7 +52,7 @@ export function resolveChainKind(networkOrKind: string | null | undefined): Wall
   if (lower === "sol") return "solana";
   if (lower === "trx") return "tron";
   const chain = getChainByNetwork(raw);
-  if (!chain || chain.chainKind === "other") return null;
+  if (!chain) return null;
   return chain.chainKind;
 }
 

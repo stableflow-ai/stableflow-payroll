@@ -1,5 +1,5 @@
 import { type FormEvent, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button/Button";
 import { useRegisterMutation } from "@/hooks/use-auth-api";
 import useToast from "@/hooks/use-toast";
@@ -21,9 +21,12 @@ import {
   PASSWORD_MIN_LENGTH,
   registerFormError,
 } from "./config";
+import { loginPathWithReturnTo, returnToFromSearch } from "./return-to";
 
 export function RegisterView() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const returnTo = returnToFromSearch(params.toString());
   const toast = useToast();
   const registerMutation = useRegisterMutation();
 
@@ -47,7 +50,7 @@ export function RegisterView() {
         password,
         inviteCode: inviteCode.trim(),
       });
-      navigate("/", { replace: true });
+      navigate(returnTo ?? "/", { replace: true });
     } catch (cause) {
       toast.fail({
         title: authErrorMessage(cause, "Unable to create account"),
@@ -121,7 +124,7 @@ export function RegisterView() {
 
         <p className={`block ${AUTH_LINK_CLASS}`}>
           Already have an account?{" "}
-          <Link to="/login" className={AUTH_LINK_ACCENT_CLASS}>
+          <Link to={loginPathWithReturnTo(returnTo)} className={AUTH_LINK_ACCENT_CLASS}>
             Sign in
           </Link>
         </p>

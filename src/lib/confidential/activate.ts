@@ -1,14 +1,15 @@
 import type { ChainKind, IntentSignInput, IntentSignedPayload } from "@/wallet";
 import { INTENT_SIGN_TTL_MS, INTENTS_RECIPIENT } from "@/wallet/intents-sign";
-import { authenticateUser, OneClickAuthError, probePrivateBalances, refreshUserSession } from "./one-click-auth";
+import { authenticateUser, OneClickAuthError, probePrivateBalances } from "./one-click-auth";
 import { createAuthNonce, getIntentsContractSalt } from "./versioned-nonce";
 import {
-  hasUsableSession,
-  readUserSession,
+  getNearintentsAccessToken,
+  hasUsableNearintentsUserSession,
+  readNearintentsUserSession,
   sessionNeedsRefresh,
-  writeUserSession,
-  type UserSession,
-} from "./session";
+  useNearintentsUserSessionStore,
+  type NearintentsUserSession,
+} from "@/stores/nearintents-user-session";
 import { toIntentsAccountId } from "./to-intents-account-id";
 
 export interface ActivateConfidentialInput {
@@ -18,7 +19,7 @@ export interface ActivateConfidentialInput {
 }
 
 export interface ActivateConfidentialResult {
-  session: UserSession;
+  session: NearintentsUserSession;
   corsFallback: boolean;
 }
 
@@ -26,7 +27,7 @@ function sessionFromAuth(
   intentsAccountId: string,
   auth: { accessToken: string; refreshToken: string; expiresIn: number; refreshExpiresIn: number },
   now = Date.now(),
-): UserSession {
+): NearintentsUserSession {
   return {
     intentsAccountId,
     accessToken: auth.accessToken,
@@ -38,42 +39,33 @@ function sessionFromAuth(
 }
 
 export async function getAccessToken(intentsAccountId: string): Promise<string | null> {
-  const session = readUserSession(intentsAccountId);
-  if (!session) return null;
-  if (session.signedLocally) return null;
-  if (!sessionNeedsRefresh(session)) return session.accessToken;
-  if (!session.refreshToken) return null;
-  try {
-    const next = await refreshUserSession(session.refreshToken);
-    const updated: UserSession = {
-      ...session,
-      accessToken: next.accessToken,
-      accessExpiresAt: Date.now() + Math.max(next.expiresIn, 1) * 1000,
-    };
-    writeUserSession(updated);
-    return updated.accessToken;
-  } catch {
-    return null;
-  }
+  return getNearintentsAccessToken(intentsAccountId);
 }
 
 /**
  * Prove ownership with an empty-intents MultiPayload, then exchange it for a
- * User-Session. Existing unexpired sessions skip the wallet prompt.
+ * Near Intents User-Session. Existing unexpired sessions skip the wallet prompt.
  */
 export async function activateConfidentialAccount(
   input: ActivateConfidentialInput,
 ): Promise<ActivateConfidentialResult> {
   const intentsAccountId = toIntentsAccountId(input.address, input.chainKind);
+  const store = useNearintentsUserSessionStore.getState();
 
-  if (hasUsableSession(intentsAccountId)) {
-    const existing = readUserSession(intentsAccountId);
+  if (hasUsableNearintentsUserSession(intentsAccountId)) {
+    const existing = readNearintentsUserSession(intentsAccountId);
     if (existing) {
       if (sessionNeedsRefresh(existing)) {
-        await getAccessToken(intentsAccountId);
+        const token = await getNearintentsAccessToken(intentsAccountId);
+        if (!token && !existing.signedLocally) {
+          // Refresh failed; fall through to re-sign.
+        } else {
+          const latest = readNearintentsUserSession(intentsAccountId) ?? existing;
+          return { session: latest, corsFallback: latest.signedLocally };
+        }
+      } else {
+        return { session: existing, corsFallback: existing.signedLocally };
       }
-      const latest = readUserSession(intentsAccountId) ?? existing;
-      return { session: latest, corsFallback: latest.signedLocally };
     }
   }
 
@@ -91,7 +83,7 @@ export async function activateConfidentialAccount(
   try {
     const auth = await authenticateUser(signed);
     const session = sessionFromAuth(intentsAccountId, auth);
-    writeUserSession(session);
+    store.upsert(session);
     if (session.accessToken) {
       void probePrivateBalances(session.accessToken);
     }
@@ -101,7 +93,7 @@ export async function activateConfidentialAccount(
     // requires a successful wallet signature; do not treat CORS as success
     // without signing. Add a same-origin proxy or CORS allowlist later.
     if (error instanceof OneClickAuthError && error.corsLikely) {
-      const session: UserSession = {
+      const session: NearintentsUserSession = {
         intentsAccountId,
         accessToken: null,
         refreshToken: null,
@@ -109,7 +101,7 @@ export async function activateConfidentialAccount(
         refreshExpiresAt: 0,
         signedLocally: true,
       };
-      writeUserSession(session);
+      store.upsert(session);
       return { session, corsFallback: true };
     }
     throw error;

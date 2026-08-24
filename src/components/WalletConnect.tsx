@@ -3,13 +3,27 @@ import { useConnectedWallets, useWallet } from "@/hooks/use-wallet";
 import { formatAddress } from "@/utils";
 import { cn } from "@/lib/utils";
 import type { ChainKind } from "@/wallet/types";
+import { FIXED_CHAINS, type ChainConfig } from "@/config/chains";
 
-const CHAIN_OPTIONS: Array<{ kind: ChainKind; label: string }> = [
-  { kind: "evm", label: "EVM" },
-  { kind: "near", label: "Near" },
-  { kind: "solana", label: "Solana" },
-  { kind: "tron", label: "Tron" },
-];
+const CHAIN_KIND_LEBALS: Record<ChainKind, string> = {
+  "evm": "EVM",
+  "near": "Near",
+  "solana": "Solana",
+  "tron": "Tron",
+};
+const CHAIN_OPTIONS = new Map<ChainKind, { chainKindLabel: string; payerEnabled: boolean; chainKind: ChainKind; }>();
+for (const chain of FIXED_CHAINS) {
+  if (CHAIN_OPTIONS.has(chain.chainKind)) {
+    continue;
+  }
+  CHAIN_OPTIONS.set(chain.chainKind, {
+    chainKind: chain.chainKind,
+    chainKindLabel: CHAIN_KIND_LEBALS[chain.chainKind as ChainKind] || chain.chainKind,
+    payerEnabled: chain.payerEnabled,
+  })
+}
+
+console.log("CHAIN_OPTIONS: %o", CHAIN_OPTIONS)
 
 function chainLabel(kind: ChainKind): string {
   if (kind === "near") return "Near";
@@ -81,21 +95,21 @@ export function WalletConnectDialog({
 
         <div className="space-y-4 px-6 pb-6">
           <div className="flex flex-wrap gap-2">
-            {CHAIN_OPTIONS.map((option) => {
-              const isConnected = Boolean(connected[option.kind]);
+            {Array.from(CHAIN_OPTIONS.values()).filter((option) => option.payerEnabled).map((option) => {
+              const isConnected = Boolean(connected[option.chainKind]);
               return (
                 <button
-                  key={option.kind}
+                  key={option.chainKind}
                   type="button"
-                  onClick={() => setSelectedKind(option.kind)}
+                  onClick={() => setSelectedKind(option.chainKind)}
                   className={cn(
                     "inline-flex h-9 min-w-[72px] flex-1 items-center justify-center rounded-[16px] border font-montserrat text-[12px] font-medium sm:text-[13px]",
-                    selectedKind === option.kind
+                    selectedKind === option.chainKind
                       ? "border-black bg-black text-white"
                       : "border-black/15 bg-white text-black hover:bg-black/5",
                   )}
                 >
-                  {option.label}
+                  {option.chainKindLabel}
                   {isConnected ? <span className="ml-1 size-1.5 rounded-full bg-current opacity-70" /> : null}
                 </button>
               );

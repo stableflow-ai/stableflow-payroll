@@ -22,8 +22,8 @@ The previous app (`stableflow-pay-old`) is a visual and payout-flow reference on
 - Login: `email` + `password`.
 - Register: `name` (max 50), `email` (max 100), `password` (8–50), confirm password must match, `inviteCode` (max 10).
 - Session: Zustand `useAuthStore` + `localStorage`. Types: `AuthUser` (`id`, `email`, `name`) — no `role` or `org_id`.
-- Unauthenticated `/` redirects to `/login`. Authenticated `/login` or `/register` redirects to `/`.
-- After login or register, navigate to `/`.
+- Unauthenticated `/` redirects to `/login`. Authenticated `/login` or `/register` redirects to `/`, or to a safe `returnTo` query when present.
+- After login or register, navigate to a safe `returnTo` (in-app path with search) or `/`.
 - Boot: hydrate `{ token, user }` from `localStorage`, then `GET /v1/pay/profile` in the background. HTTP 401 logs the user out. Navigation is not blocked while the profile request is in flight.
 - Reset password:
   - Guest: Login `Forgot Password?` opens a dialog. Send Code calls `POST /v1/pay/reset-password/code`. Continue calls `POST /v1/pay/reset-password` (`email`, `code`, `newPassword`), then closes back to login.
@@ -43,15 +43,15 @@ One authenticated page at `/`. Summary, payment volume chart, pending payouts, a
 | --- | --- | --- |
 | Single Payout | `/pay` | One address, one payment. Recipients address book is a dialog on this page (`/v1/pay/recipient*`). Origin tokens are limited to `payerEnabled` chains. |
 | Batch Payout | `/pay/batch` | CSV / Google Sheets / manual rows. Validate then preview. `POST /v1/pay/batch/quote\|swap\|submit`. Recipients are wallet addresses. Origin tokens are limited to `payerEnabled` chains. |
-| Request Payment | `/pay/request` | Create a payment request (receiving address, amount, token, optional private receive). Received Payment list is mock until the API exists. Payer-open `/pay?request=:id` is planned. |
+| Request Payment | `/pay/request` | Create a payment request (receiving address, amount, token, optional private receive). Generate Payment Link builds `/pay?addr=&amount=&token=&network=&uid=` (optional `memo`, `private=1`). Received Payment list and pending-withdraw count are mock until those APIs exist. |
 | Pending Payouts | `/pay/pending` | In-flight payouts from `GET /v1/pay/payments/pending`. Amount/Asset use destination fields. Time uses `submitted_at`. Sidebar badge is the list length. |
 | Transaction History | `/pay/history` | `GET /v1/pay/payments`. Search `q`, status `completed`/`failed`, token USDT/USDC, `start_time`/`end_time` unix seconds via DateRangePicker. Export CSV is UI-only. |
 
 Single payout uses `POST /v1/pay/single/quote|swap|submit`. Memo and notify-recipient email are sent on swap only, not on quote. Batch payout uses `POST /v1/pay/batch/quote|swap|submit`. Origin broadcast is EVM-only (`payerEnabled` on `FIXED_CHAINS`). Recipients are wallet addresses (not employees). The address book is not a route.
 
-Request Payment (`/pay/request`) lets the logged-in user set a receiving address (autofilled from the connected wallet for the selected token chain), amount, dest token, optional description, and **Receive Privately**. Private receive signs an empty-intents MultiPayload (V1 versioned nonce from `intents.near` `current_salt`) on the matching chain wallet, then `POST https://1click.chaindefuser.com/v0/auth/authenticate` to store a User-Session (refresh via `/v0/auth/refresh`). Generate Payment Link and Withdraw are UI-only until product APIs exist.
+Request Payment (`/pay/request`) lets the logged-in user set a receiving address (autofilled from the connected wallet for the selected token chain), amount, dest token, optional description, and **Receive Privately**. Private receive signs an empty-intents MultiPayload (V1 versioned nonce from `intents.near` `current_salt`) on the matching chain wallet, then `POST https://1click.chaindefuser.com/v0/auth/authenticate` to store a Near Intents User-Session in `useNearintentsUserSessionStore` (refresh via `/v0/auth/refresh`). Generate Payment Link concatenates payer params onto `/pay?...`. The payer must be logged in (`/login?returnTo=` keeps pathname + search). Single Payout prefills and locks address / amount / dest token, sends `request_user_id`, and when private adds `mode: "private"` plus `privateDestinationAddress` (intentsAccountId). After a successful send, the query is `replace`d away. Withdraw uses `/v1/nearintents/quote` then `generate-intent`, wallet-signs the returned payload, then `submit-intent` / `status` until the product withdraw-submit API records the row.
 
-Payer-open of a request link is **planned**: `/pay?request=:id` on Single Payout (must be logged in; unauthenticated → `/login?returnTo=`). Non-private reuses single quote/swap/submit; private uses `recipientType: CONFIDENTIAL_INTENTS`. Do not change Login / guards until that API exists.
+Unauthenticated visits to a payment link go to `/login?returnTo=` (pathname + search). After login or register, that `returnTo` is used when it is a safe in-app path.
 
 ## Analytics
 

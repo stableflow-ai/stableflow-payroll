@@ -7,13 +7,14 @@
 import { useCallback, useMemo } from "react";
 import { isAddress } from "viem";
 import { useAccount, useDisconnect, useSignMessage } from "wagmi";
-import type { IntentSignInput, IntentSignedPayload, UseWalletResult, WalletAccount } from "../types";
+import type { GeneratedIntent, IntentSignInput, IntentSignedPayload, UseWalletResult, WalletAccount } from "../types";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
 import {
   buildEvmFamilyPayload,
   encodeSecp256k1Signature,
   isoDeadline,
   nonceToBase64,
+  payloadAsText,
   walletDoesNotSupportSigning,
 } from "../intents-sign";
 
@@ -55,6 +56,25 @@ export function useEvmWallet(): UseWalletResult {
     [address, signMessageAsync],
   );
 
+  const signGeneratedIntent = useCallback(
+    async (intent: GeneratedIntent): Promise<IntentSignedPayload> => {
+      if (!address) {
+        throw new Error("[wallet:evm] No connected account to sign with.");
+      }
+      if (typeof signMessageAsync !== "function") {
+        throw walletDoesNotSupportSigning("EVM");
+      }
+      const payload = payloadAsText(intent.payload);
+      const signature = await signMessageAsync({ message: payload });
+      return {
+        standard: "erc191",
+        payload,
+        signature: encodeSecp256k1Signature(signature),
+      };
+    },
+    [address, signMessageAsync],
+  );
+
   return useMemo<UseWalletResult>(() => ({
     kind: "evm",
     account,
@@ -63,6 +83,7 @@ export function useEvmWallet(): UseWalletResult {
     connect: () => openConnectModal?.(),
     disconnect,
     signMessage,
+    signGeneratedIntent,
     isAddressValid: isAddress,
   }), [
     account,
@@ -73,5 +94,6 @@ export function useEvmWallet(): UseWalletResult {
     isReconnecting,
     openConnectModal,
     signMessage,
+    signGeneratedIntent,
   ]);
 }

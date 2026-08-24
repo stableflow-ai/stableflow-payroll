@@ -4,6 +4,7 @@ import {
   CHAIN_KINDS,
   type ChainKind,
   type ChainOwners,
+  type GeneratedIntent,
   type IntentSignInput,
   type IntentSignedPayload,
   type WalletAccount,
@@ -19,6 +20,7 @@ export interface ChainWalletActions {
   connect: () => void;
   disconnect: () => void;
   signMessage: (input: IntentSignInput) => Promise<IntentSignedPayload>;
+  signGeneratedIntent: (intent: GeneratedIntent) => Promise<IntentSignedPayload>;
 }
 
 const EMPTY_CHAIN: ChainWalletState = {
@@ -54,6 +56,7 @@ interface WalletStore {
   connect: (kind: ChainKind) => void;
   disconnect: (kind: ChainKind) => void;
   signMessage: (kind: ChainKind, input: IntentSignInput) => Promise<IntentSignedPayload>;
+  signGeneratedIntent: (kind: ChainKind, intent: GeneratedIntent) => Promise<IntentSignedPayload>;
 }
 
 export const useWalletStore = create<WalletStore>((set, get) => ({
@@ -83,6 +86,13 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
       throw new Error(`[wallet] Chain "${kind}" is not ready to sign messages.`);
     }
     return signMessage(input);
+  },
+  signGeneratedIntent: (kind, intent) => {
+    const signGeneratedIntent = get().actions[kind]?.signGeneratedIntent;
+    if (!signGeneratedIntent) {
+      throw new Error(`[wallet] Chain "${kind}" is not ready to sign generated intents.`);
+    }
+    return signGeneratedIntent(intent);
   },
 }));
 

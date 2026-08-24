@@ -141,4 +141,36 @@ describe("http", () => {
     expect(() => clearStoredSession()).not.toThrow();
     expect(getAuthToken()).toBeNull();
   });
+
+  it("returns 1Click JSON as-is when envelope is false", async () => {
+    setStoredSession("tok-1", SAMPLE_USER);
+    const quote = {
+      correlationId: "aa85",
+      quote: { depositAddress: "27fb", amountInFormatted: "1.0" },
+    };
+    fetchMock.mockResolvedValueOnce(jsonResponse(quote));
+    const data = await http<typeof quote>("/v1/nearintents/quote", {
+      method: "POST",
+      body: {},
+      envelope: false,
+    });
+    expect(data).toEqual(quote);
+  });
+
+  it("throws the upstream message when envelope is false and HTTP fails", async () => {
+    setStoredSession("tok-1", SAMPLE_USER);
+    fetchMock.mockResolvedValueOnce(
+      jsonResponse(
+        { message: "Amount is too low for bridge, try at least 18634672511199040" },
+        400,
+      ),
+    );
+    await expect(
+      http("/v1/nearintents/quote", { method: "POST", body: {}, envelope: false }),
+    ).rejects.toMatchObject({
+      name: "ApiError",
+      message: "Amount is too low for bridge, try at least 18634672511199040",
+      status: 400,
+    });
+  });
 });

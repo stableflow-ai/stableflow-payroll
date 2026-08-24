@@ -86,17 +86,75 @@ export async function refreshUserSession(refreshToken: string): Promise<UserRefr
   return postJson<UserRefreshResponse>("/v0/auth/refresh", { refreshToken });
 }
 
-/**
- * Optional private-balance probe. Failures must not block activation.
- * Do not use this for withdraw (Partner-key quote path is required).
- */
-export async function probePrivateBalances(accessToken: string): Promise<unknown | null> {
+export interface PrivateBalance {
+  tokenId: string;
+  available: string;
+  source: string;
+}
+
+export interface PrivateBalancesResp {
+  balances: PrivateBalance[];
+}
+
+function parsePrivateBalances(payload: unknown): PrivateBalance[] {
+  if (!payload || typeof payload !== "object") return [];
+  const rows = (payload as { balances?: unknown }).balances;
+  if (!Array.isArray(rows)) return [];
+  const out: PrivateBalance[] = [];
+  for (const row of rows) {
+    if (!row || typeof row !== "object") continue;
+    const record = row as Record<string, unknown>;
+    if (typeof record.tokenId !== "string") continue;
+    const available = typeof record.available === "string" || typeof record.available === "number"
+      ? String(record.available)
+      : "";
+    if (!available) continue;
+    out.push({
+      tokenId: record.tokenId,
+      available,
+      source: typeof record.source === "string" ? record.source : "",
+    });
+  }
+  return out;
+}
+
+export function privateAvailableForToken(balances: PrivateBalance[], tokenId: string): string {
+  const privateMatch = balances.find((row) => row.tokenId === tokenId && row.source === "private");
+  if (privateMatch) return privateMatch.available;
+  const anyMatch = balances.find((row) => row.tokenId === tokenId);
+  return anyMatch?.available ?? "0";
+}
+
+export async function getPrivateBalances(
+  accessToken: string,
+  tokenIds?: string[],
+): Promise<PrivateBalance[]> {
+  const query = tokenIds?.length ? `?tokenIds=${encodeURIComponent(tokenIds.join(","))}` : "";
+  let res: Response;
   try {
-    const res = await fetch(`${ONE_CLICK_API_URL}/v0/account/balances`, {
+    res = await fetch(`${ONE_CLICK_API_URL}/v0/account/balances${query}`, {
       headers: { Accept: "application/json", Authorization: `Bearer ${accessToken}` },
     });
-    if (!res.ok) return null;
-    return parseJson(res);
+  } catch (error) {
+    throw new OneClickAuthError(
+      error instanceof Error ? error.message : "Network error",
+      0,
+      isCorsFailure(error),
+    );
+  }
+  const payload = await parseJson(res);
+  if (!res.ok) {
+    throw new OneClickAuthError(readErrorMessage(payload, `Request failed (${res.status})`), res.status);
+  }
+  return parsePrivateBalances(payload);
+}
+
+/**
+ * Optional private-balance probe. Failures must not block activation.
+ */
+export async function probePrivateBalances(accessToken: string): Promise<PrivateBalance[] | null> {
+  try {
+    return await getPrivateBalances(accessToken);
   } catch {
     return null;
   }

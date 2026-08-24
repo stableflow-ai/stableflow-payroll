@@ -46,8 +46,8 @@ src/
     WalletConnect.tsx     # Wallet connect dialog (business)
   hooks/                  # Shared hooks (`use-wallet`, `use-auth-api`, `use-toast`, `use-media-query`, `use-payout-api`, `use-analytics-api`, `use-partner`, `use-partner-reports`)
   wallet/                 # Multi-chain wallet adapters and providers
-  stores/                 # Zustand stores (wallet, auth session)
-  api/                    # Backend wrappers by domain (`auth.ts`, `config.ts`, `query-keys.ts`)
+  stores/                 # Zustand stores (wallet, auth session, nearintents-user-session)
+  api/                    # Backend wrappers by domain (`auth.ts`, `nearintents.ts`, `config.ts`, `query-keys.ts`)
   types/                  # Shared API / domain types
   mocks/                  # UI fixtures while an API contract is missing — see doc/mocks.md
   lib/                    # Infra: HTTP client, QueryClient, RPC, `cn()`, logo URLs

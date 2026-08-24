@@ -2,11 +2,12 @@ import { useWallet as useSolanaAdapter } from "@solana/wallet-adapter-react";
 import { useWalletModal as useSolanaWalletModal } from "@solana/wallet-adapter-react-ui";
 import { useCallback, useMemo } from "react";
 import { isAddressValid } from "@/utils";
-import type { IntentSignInput, IntentSignedPayload, UseWalletResult, WalletAccount } from "../types";
+import type { GeneratedIntent, IntentSignInput, IntentSignedPayload, UseWalletResult, WalletAccount } from "../types";
 import {
   buildSolanaPayload,
   encodeEd25519,
   nonceToBase64,
+  payloadAsText,
   unixTimestamp,
   walletDoesNotSupportSigning,
 } from "../intents-sign";
@@ -65,6 +66,26 @@ export function useSolanaWallet(): UseWalletResult {
     [adapterSignMessage, address, publicKey],
   );
 
+  const signGeneratedIntent = useCallback(
+    async (intent: GeneratedIntent): Promise<IntentSignedPayload> => {
+      if (!address || !publicKey) {
+        throw new Error("[wallet:solana] No connected account to sign with.");
+      }
+      if (typeof adapterSignMessage !== "function") {
+        throw walletDoesNotSupportSigning("Solana");
+      }
+      const payload = payloadAsText(intent.payload);
+      const signature = await adapterSignMessage(new TextEncoder().encode(payload));
+      return {
+        standard: "raw_ed25519",
+        payload,
+        public_key: encodeEd25519(publicKey.toBytes()),
+        signature: encodeEd25519(signature),
+      };
+    },
+    [adapterSignMessage, address, publicKey],
+  );
+
   const isAddressValidFn = useCallback((value: string) => isAddressValid(value, "solana"), []);
 
   return useMemo<UseWalletResult>(() => ({
@@ -76,6 +97,7 @@ export function useSolanaWallet(): UseWalletResult {
     connect,
     disconnect,
     signMessage,
+    signGeneratedIntent,
     isAddressValid: isAddressValidFn,
   }), [
     account,
@@ -85,6 +107,7 @@ export function useSolanaWallet(): UseWalletResult {
     connecting,
     disconnect,
     isAddressValidFn,
+    signGeneratedIntent,
     signMessage,
     visible,
   ]);

@@ -217,6 +217,7 @@ export function BatchPayoutView() {
         tokenAddress: originToken.contractAddress,
         approvals: swapped.approvals ?? [],
         callData: swapped.callData,
+        contract: swapped.contract,
       });
       enqueueBatchPayoutCommit({ orderId: swapped.orderId, txHash });
     },

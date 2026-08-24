@@ -41,6 +41,18 @@ export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const DESCRIPTION_MAX_LENGTH = 200;
 export const DESCRIPTION_MAX_ROWS = 3;
 
+export const PAYMENT_REQUEST_QUERY = {
+  Addr: "addr",
+  Amount: "amount",
+  Token: "token",
+  Network: "network",
+  Uid: "uid",
+  Memo: "memo",
+  Private: "private",
+} as const;
+
+export const PAYMENT_REQUEST_PRIVATE_VALUE = "1";
+
 export const IMPORT_MAX_ROWS = 500;
 export const IMPORT_CSV_ACCEPT = ".csv,text/csv";
 export const IMPORT_CSV_TEMPLATE_FILENAME = "payout-import-template.csv";

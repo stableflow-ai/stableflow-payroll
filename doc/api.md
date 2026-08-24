@@ -2,7 +2,7 @@
 
 How to call the Stableflow Pay backend. Read this before adding or changing an endpoint.
 
-The browser calls `VITE_API_BASE_URL` directly (no Vite proxy). Default: `https://test-api.stableflow.ai`. All product APIs live under `/v1/pay/` and are **GET**, **POST**, or **DELETE**.
+The browser calls `VITE_API_BASE_URL` directly (no Vite proxy). Default: `https://test-api.stableflow.ai`. Product APIs live under `/v1/pay/` and `/v1/nearintents/` and are **GET**, **POST**, or **DELETE**.
 
 ## Layers
 
@@ -22,7 +22,7 @@ View / feature
 | Other global UI state | Zustand (new store or existing) | Keep it small |
 | Server lists, details, quotes | TanStack Query only | Do **not** copy into Zustand |
 
-`http()` is the only function that may call `fetch` for `/v1/pay/*`. Do not add axios.
+`http()` is the only function that may call `fetch` for `/v1/pay/*` and `/v1/nearintents/*`. Do not add axios. `/v1/nearintents/*` uses `envelope: false` because the backend proxies 1Click JSON (no `{ code, data }` wrapper). 1Click `/v0/auth/*` and `/v0/account/balances` are a different host (no product envelope) and stay in `src/lib/confidential/one-click-auth.ts`.
 
 ## Envelope
 
@@ -75,6 +75,7 @@ http<T>(path, {
   body?: unknown;          // JSON body (POST)
   query?: Record<string, string | number | boolean | null | undefined>;
   auth?: boolean;          // default true
+  envelope?: boolean;      // default true; false for `/v1/nearintents/*` 1Click passthrough
 })
 ```
 
@@ -146,8 +147,12 @@ export function useOrderQuery(id: string) {
 | POST | `/v1/pay/recipient` | yes | `PayRecipientBody` | `PayRecipient` | `createRecipient` | `useRecipientMutations` |
 | POST | `/v1/pay/recipient/{id}` | yes | `PayRecipientBody` | `PayRecipient` | `updateRecipient` | `useRecipientMutations` |
 | DELETE | `/v1/pay/recipient/{id}` | yes | — | `void` | `deleteRecipient` | `useRecipientMutations` |
+| POST | `/v1/nearintents/quote` | yes | `NearintentsQuoteParam` | `NearintentsQuoteResp` | `nearintentsQuote` | `useRequestWithdraw` |
+| POST | `/v1/nearintents/generate-intent` | yes | `NearintentsGenerateIntentParam` | `NearintentsGenerateIntentResp` | `nearintentsGenerateIntent` | `useRequestWithdraw` |
+| POST | `/v1/nearintents/submit-intent` | yes | `NearintentsSubmitIntentParam` | `NearintentsSubmitIntentResp` | `nearintentsSubmitIntent` | `useRequestWithdraw` |
+| GET | `/v1/nearintents/status` | yes | `depositAddress` | `NearintentsStatusResp` | `nearintentsStatus` | `useRequestWithdraw` |
 
-Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`, `ChangePasswordBody`, `ResetPasswordBody`, `ResetPasswordCodeBody`). Payout types: `src/types/payout.ts`. Analytics: `src/types/analytics.ts`. Recipients: `src/types/recipient.ts`. Single and batch quote bodies use 1Click `network` codes (`eth`, `arb`, `sol`, …) plus `token` (`USDT` / `USDC`), not 1Click `assetId`. Single `memo` and `notifyEmail` belong on `PaySingleSwapParam` only, not on quote. Batch `receives` use `address` (wallet, no `employeeId`). Payment list rows are snake_case (`submitted_at`, `destination_*`); mappers produce `PayPaymentItem`. Amount/Asset use destination fields. History `start_time` / `end_time` are unix seconds (start of first day, end of last day). Volume `period` is `day` / `week` / `month`; points may use `start_at` + `total_payment` instead of `label` / `value`. Request Payment and non-EVM origin broadcast are not wired. Origin token pickers are limited by `payerEnabled` on `FIXED_CHAINS`.
+Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`, `ChangePasswordBody`, `ResetPasswordBody`, `ResetPasswordCodeBody`). Payout types: `src/types/payout.ts`. Analytics: `src/types/analytics.ts`. Recipients: `src/types/recipient.ts`. Near Intents proxy: `src/types/nearintents.ts`. Single and batch quote bodies use 1Click `network` codes (`eth`, `arb`, `sol`, …) plus `token` (`USDT` / `USDC`), not 1Click `assetId`. Single `memo` and `notifyEmail` belong on swap (and are optional on the shared quote type). Request Payment payer quotes may add `request_user_id`, and when private `mode: "private"` plus `privateDestinationAddress`. Batch `receives` use `address` (wallet, no `employeeId`). Payment list rows are snake_case (`submitted_at`, `destination_*`); mappers produce `PayPaymentItem`. Amount/Asset use destination fields. History `start_time` / `end_time` are unix seconds (start of first day, end of last day). Volume `period` is `day` / `week` / `month`; points may use `start_at` + `total_payment` instead of `label` / `value`. Origin token pickers are limited by `payerEnabled` on `FIXED_CHAINS`. `/v1/nearintents/*` is our Partner-key proxy of 1Click `/v0`. TODO: replace withdraw `submit-intent` + status with a product withdraw-submit that records the row.
 
 Public files:
 
@@ -158,12 +163,13 @@ Public files:
 | `src/lib/api-error.ts` | `ApiError` |
 | `src/lib/auth-session.ts` | `localStorage` session + 401 callback |
 | `src/lib/query-client.ts` | Shared `QueryClient` |
-| `src/api/config.ts` | `PAY_API_PREFIX` |
+| `src/api/config.ts` | `PAY_API_PREFIX`, `NEARINTENTS_API_PREFIX` |
 | `src/api/query-keys.ts` | Query key factory |
 | `src/api/auth.ts` | Login, register, profile, change / reset password |
 | `src/api/payout.ts` | Single and batch quote / swap / submit; overview, volume, pending, recent, payments |
 | `src/api/analytics.ts` | Analytics month query |
 | `src/api/recipient.ts` | Address book list / create / update / delete |
+| `src/api/nearintents.ts` | 1Click proxy: quote, generate-intent, submit-intent, status |
 | `src/hooks/use-auth-api.ts` | Auth mutations + profile query |
 | `src/hooks/use-single-payout-api.ts` | Single quote query + swap mutation |
 | `src/hooks/use-batch-payout-api.ts` | Batch quote query + swap mutation |
@@ -171,8 +177,11 @@ Public files:
 | `src/hooks/use-pending-payments.ts` | Pending payouts query |
 | `src/hooks/use-analytics-api.ts` | Analytics month query |
 | `src/hooks/use-recipient-api.ts` | Recipient list + mutations |
-| `src/stores/auth.ts` | Session store |
+| `src/hooks/use-request-withdraw.ts` | Confidential withdraw mutation |
+| `src/stores/auth.ts` | Product JWT session store |
+| `src/stores/nearintents-user-session.ts` | 1Click / Near Intents User-Session (not the product JWT) |
 | `src/types/auth.ts` | Auth types |
 | `src/types/payout.ts` | Quick, batch, overview, volume, and payment list types |
 | `src/types/analytics.ts` | Analytics response types |
 | `src/types/recipient.ts` | Address book types |
+| `src/types/nearintents.ts` | `/v1/nearintents` quote / generate-intent / submit / status |

@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconLock } from "@/components/icons/lock";
 import { IconQuestion } from "@/components/icons/question";
@@ -36,6 +37,11 @@ import {
   QUOTE_DEBOUNCE_MS,
 } from "./config";
 import {
+  applyRequestPayoutFields,
+  parsePaymentRequestSearch,
+  tokenChainKind,
+} from "./request-utils";
+import {
   detectAddressChainKind,
   formatQuoteErrorMessage,
   isDryQuoteStale,
@@ -67,17 +73,15 @@ function matchContact(address: string, contacts: Contact[]): Contact | null {
 }
 
 export function SinglePayoutView() {
-  // TODO(api): when GET /v1/pay/request/:id exists, read `?request=` from this
-  // route (`/pay?request=:id`), prefill and lock recipient address / amount /
-  // dest token, then settle via existing quickQuote/swap/submit (non-private) or
-  // payConfidentialRequest (receivePrivately → CONFIDENTIAL_INTENTS).
-  // Unauthenticated payers should hit `/login?returnTo=` (pathname + search).
-  // Do not change Login / Register / guards in this sprint.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const request = useMemo(() => parsePaymentRequestSearch(searchParams.toString()), [searchParams]);
+  const requestLocked = Boolean(request);
   const queryClient = useQueryClient();
   const toast = useToast();
   const { contacts, addContact, updateContact, deleteContact } = useContacts();
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const tokens = useIntentsTokensStore((s) => s.tokens);
+  const findByChainAndSymbol = useIntentsTokensStore((s) => s.findByChainAndSymbol);
   const { originToken, setOriginToken } = usePayOriginToken();
   const originKind: ChainKind =
     originToken?.chain.chainKind === "near" || originToken?.chain.chainKind === "solana"
@@ -103,10 +107,34 @@ export function SinglePayoutView() {
   const [deleting, setDeleting] = useState<Contact | null>(null);
   const [walletDialogOpen, setWalletDialogOpen] = useState(false);
   const [phase, setPhase] = useState<"idle" | "quoting" | "sending" | "done" | "error">("idle");
+  const appliedRequestKeyRef = useRef<string | null>(null);
+  const invalidLinkToastRef = useRef(false);
 
   useEffect(() => {
     void ensureFresh();
   }, [ensureFresh]);
+
+  useEffect(() => {
+    if (!searchParams.toString() || request || invalidLinkToastRef.current) return;
+    invalidLinkToastRef.current = true;
+    toast.fail({ title: "This payment link is invalid" });
+  }, [request, searchParams, toast]);
+
+  useEffect(() => {
+    if (!request) return;
+    const key = searchParams.toString();
+    if (appliedRequestKeyRef.current === key) return;
+    appliedRequestKeyRef.current = key;
+    setAddressInput(request.addr);
+    setAmount(request.amount);
+    if (request.memo) setMemo(request.memo);
+  }, [request, searchParams]);
+
+  useEffect(() => {
+    if (!request) return;
+    const next = findByChainAndSymbol(request.network, request.token);
+    if (next) setDestToken(next);
+  }, [findByChainAndSymbol, request, tokens]);
 
   const matched = useMemo(() => matchContact(addressInput, contacts), [addressInput, contacts]);
   const destLockChainKind = detectAddressChainKind(addressInput);
@@ -122,17 +150,18 @@ export function SinglePayoutView() {
   }, [matched?.id, matched?.email]);
 
   useEffect(() => {
+    if (requestLocked) return;
     if (!destToken || !destLockChainKind) return;
     if (destToken.chain.chainKind !== destLockChainKind) setDestToken(null);
-  }, [destLockChainKind, destToken]);
+  }, [destLockChainKind, destToken, requestLocked]);
 
   useEffect(() => {
-    if (destToken || !destLockChainKind || tokens.length === 0) return;
+    if (requestLocked || destToken || !destLockChainKind || tokens.length === 0) return;
     const next =
       tokens.find((token) => token.symbol === "USDT" && token.chain.chainKind === destLockChainKind)
       || tokens.find((token) => token.symbol === "USDC" && token.chain.chainKind === destLockChainKind);
     if (next) setDestToken(next);
-  }, [destLockChainKind, destToken, tokens]);
+  }, [destLockChainKind, destToken, requestLocked, tokens]);
 
   const canQuoteDestination = Boolean(destinationAddress && destToken);
 
@@ -142,7 +171,8 @@ export function SinglePayoutView() {
     }
     const origin = payoutNetworkToken(originToken);
     const dest = payoutNetworkToken(destToken);
-    return {
+    const destKind = tokenChainKind(destToken);
+    const body: PaySingleQuoteParam = {
       amount: debouncedAmountForQuote,
       destinationAddress,
       destinationNetwork: dest.network,
@@ -153,6 +183,12 @@ export function SinglePayoutView() {
       slippageTolerance: QUICK_PAY_SLIPPAGE_TOLERANCE,
       payer: connectedAddress,
     };
+    if (!request || !destKind) return body;
+    try {
+      return applyRequestPayoutFields(body, request, destKind);
+    } catch {
+      return null;
+    }
   }, [
     originToken,
     destToken,
@@ -161,6 +197,7 @@ export function SinglePayoutView() {
     walletReady,
     connectedAddress,
     destinationAddress,
+    request,
   ]);
 
   const dryQuoteQuery = useSinglePayQuote(quoteBody);
@@ -208,7 +245,8 @@ export function SinglePayoutView() {
       setPhase("quoting");
       const origin = payoutNetworkToken(originToken);
       const dest = payoutNetworkToken(destToken);
-      const swapBody: PaySingleSwapParam = {
+      const destKind = tokenChainKind(destToken);
+      let swapBody: PaySingleSwapParam = {
         amount: amountForQuote,
         destinationAddress,
         destinationNetwork: dest.network,
@@ -220,6 +258,9 @@ export function SinglePayoutView() {
         payer: paymentWalletAddress,
         notifyEmail: notifyEmailParam(notify, email),
       };
+      if (request && destKind) {
+        swapBody = applyRequestPayoutFields(swapBody, request, destKind);
+      }
       const memoValue = memo.trim();
       if (memoValue) swapBody.memo = memoValue;
 
@@ -237,7 +278,7 @@ export function SinglePayoutView() {
       setPhase("sending");
       const txHash = await broadcastQuickPayCallData({
         chainId: originToken.chain.chainId,
-        tokenAddress: originToken.contractAddress,
+        contract: originToken.contractAddress,
         callData: swapped.callData,
       });
       enqueueQuickPayCommit({ orderId: swapped.orderId, txHash });
@@ -245,6 +286,10 @@ export function SinglePayoutView() {
     onSuccess: () => {
       setPhase("done");
       toast.success({ title: "Payment submitted" });
+      if (requestLocked) {
+        appliedRequestKeyRef.current = null;
+        setSearchParams({}, { replace: true });
+      }
       resetForm();
       window.setTimeout(() => setPhase("idle"), 1500);
     },
@@ -286,6 +331,7 @@ export function SinglePayoutView() {
         <RecipientAddressField
           value={addressInput}
           matched={matched}
+          locked={requestLocked}
           onChange={setAddressInput}
           onClear={() => {
             setAddressInput("");
@@ -302,9 +348,16 @@ export function SinglePayoutView() {
               decimals={AMOUNT_MAX_DECIMALS}
               onNumberChange={setAmount}
               placeholder="0"
+              readOnly={requestLocked}
               className="min-w-0 flex-1 bg-transparent font-montserrat text-[26px] font-medium text-black outline-none"
             />
-            <TokenSelectButton token={destToken} onClick={() => setDestDialogOpen(true)} />
+            <TokenSelectButton
+              token={destToken}
+              disabled={requestLocked}
+              onClick={() => {
+                if (!requestLocked) setDestDialogOpen(true);
+              }}
+            />
           </div>
           <div className="mt-4 h-px w-full bg-[#e3e3e3]" />
         </div>

@@ -4,8 +4,7 @@
  */
 
 import { chainLogoUrl } from "@/lib/logo";
-
-export type ChainKind = "evm" | "near" | "solana" | "tron" | "other";
+import type { ChainKind } from "@/wallet/types";
 
 export interface ChainConfig {
   /** 1Click blockchain code (e.g. arb, base). */

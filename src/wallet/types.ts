@@ -26,6 +26,11 @@ export interface IntentSignInput {
   recipient?: string;
 }
 
+export interface GeneratedIntent {
+  standard: string;
+  payload: unknown;
+}
+
 export type IntentSignedPayload =
   | {
       standard: "erc191";
@@ -66,6 +71,7 @@ export interface UseWalletResult {
   connect: () => void;
   disconnect: () => void;
   signMessage: (input: IntentSignInput) => Promise<IntentSignedPayload>;
+  signGeneratedIntent: (intent: GeneratedIntent) => Promise<IntentSignedPayload>;
   isAddressValid: (address: string) => boolean;
   isModalOpen?: boolean;
 }
