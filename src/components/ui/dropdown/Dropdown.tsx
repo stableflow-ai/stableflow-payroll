@@ -154,7 +154,7 @@ export function Dropdown(props: DropdownProps) {
                       selectValue(option.value);
                     }}
                     className={cn(
-                      "flex w-full px-3 py-2 text-left text-base font-medium text-black hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-30",
+                      "flex w-full px-3 py-2 text-left text-sm font-medium text-black hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-30",
                       selected && "bg-black/5",
                     )}
                   >
