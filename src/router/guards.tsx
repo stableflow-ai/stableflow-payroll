@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { usePartner } from "@/hooks/use-partner";
 import { useAuthStore } from "@/stores/auth";
 
 export function RequireAuth() {
@@ -8,6 +9,16 @@ export function RequireAuth() {
 
   if (!user) {
     return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
+
+  return <Outlet />;
+}
+
+export function RequirePartner() {
+  const { isPartner } = usePartner();
+
+  if (!isPartner) {
+    return <Navigate to="/partner" replace />;
   }
 
   return <Outlet />;

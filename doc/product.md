@@ -15,7 +15,7 @@ The previous app (`stableflow-pay-old`) is a visual and payout-flow reference on
 | Home | `/` | shipped | Dashboard: summary, charts, pending. Behind `RequireAuth` + `AppLayout`. Data is mock until the API exists. |
 | Pay | `/pay`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request` | in progress | See [Pay](#pay). Pending list uses `GET /v1/pay/payments/pending`. History is mock until the API exists. |
 | Analytics | `/analytics` | shipped | Month selector, Total Payment chart, latest payouts, calendar, asset mix, top networks. Data is mock until the API exists. |
-| Partner | `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | planned | See [Partner](#partner). |
+| Partner | `/partner`, `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | shipped | See [Partner](#partner). Registration and API Keys are mock until the API exists. Reports / Support / Terms / Docs are placeholders. |
 
 ## Auth
 
@@ -69,18 +69,19 @@ For SDK users. Submenus:
 | Terms of Service | `/partner/terms` | Always available. |
 | Developer Docs | `/partner/docs` | Always available. |
 
-Until Partner status is active, API Keys and Reports must not open. After the user is a Partner, hide the registration form; do not show it again. Partner status comes from the API.
+Until Partner status is active, API Keys and Reports must not open. Header **Developer** goes to `/partner`: registration when the user is not a Partner, `/partner/api-keys` after they are. After the user is a Partner, hide the registration form; do not show it again. Partner status is mock until the API exists.
 
-Registration fields (when that screen is built):
+Registration fields:
 
 | Field | Constraints |
 | --- | --- |
 | `first_name` | required, max 100 |
 | `last_name` | required, max 100 |
-| `company` | required, max 255, default `""` |
-| `website` | required, max 500, default `""` |
-| `telegram` | required, max 128, default `""` |
-| `purpose` | optional, max 5000, default `""` |
+| `company` | required, max 255 |
+| `purpose` | required, max 5000 |
+| `website` | optional, max 500, default `""` |
+| `telegram` | optional, max 128, default `""` |
+| `additional_details` | optional, max 5000, default `""` |
 
 ## Routing today
 
@@ -95,5 +96,11 @@ Registration fields (when that screen is built):
 /pay/request      PayLayout → RequestPaymentView
 /pay/pending      PayLayout → PendingPayoutsView
 /pay/history      PayLayout → TransactionHistoryView
+/partner          PartnerLayout → PartnerRegistrationView (redirects to api-keys if Partner)
+/partner/api-keys RequirePartner → ApiKeysView
+/partner/reports  RequirePartner → placeholder
+/partner/support  PartnerPlaceholderView
+/partner/terms    PartnerPlaceholderView
+/partner/docs     PartnerPlaceholderView
 *                 → /
 ```

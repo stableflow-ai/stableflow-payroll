@@ -37,13 +37,14 @@ src/
     home/                 # Authenticated Home dashboard
     analytics/            # Authenticated Analytics page
     pay/                  # Pay layout pages (Single, Batch, Request, Pending, History)
-  layouts/                # AppLayout (header + outlet), PayLayout (sidebar)
+    partner/              # Partner layout pages (registration, API keys, placeholders)
+  layouts/                # AppLayout (header + outlet), PayLayout / PartnerLayout (sidebar)
   components/
     ui/                   # Public, non-business UI (see doc/components)
     icons/                # Shared SVG icon components
     layout/               # AppHeader, wallet capsule, account menu
     WalletConnect.tsx     # Wallet connect dialog (business)
-  hooks/                  # Shared hooks (`use-wallet`, `use-auth-api`, `use-toast`, `use-media-query`, `use-home-dashboard`, `use-analytics`)
+  hooks/                  # Shared hooks (`use-wallet`, `use-auth-api`, `use-toast`, `use-media-query`, `use-home-dashboard`, `use-analytics`, `use-partner`)
   wallet/                 # Multi-chain wallet adapters and providers
   stores/                 # Zustand stores (wallet, auth session)
   api/                    # Backend wrappers by domain (`auth.ts`, `config.ts`, `query-keys.ts`)

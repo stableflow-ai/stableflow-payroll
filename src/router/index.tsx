@@ -10,8 +10,12 @@ import { RequestPaymentView } from "@/views/pay/RequestPaymentView";
 import { SinglePayoutView } from "@/views/pay/SinglePayoutView";
 import { TransactionHistoryView } from "@/views/pay/TransactionHistoryView";
 import { AppLayout } from "@/layouts/AppLayout";
+import { PartnerLayout } from "@/layouts/PartnerLayout";
 import { PayLayout } from "@/layouts/PayLayout";
-import { RedirectIfAuthed, RequireAuth } from "./guards";
+import { ApiKeysView } from "@/views/partner/ApiKeysView";
+import { PartnerPlaceholderView } from "@/views/partner/PartnerPlaceholderView";
+import { PartnerRegistrationView } from "@/views/partner/PartnerRegistrationView";
+import { RedirectIfAuthed, RequireAuth, RequirePartner } from "./guards";
 
 export const router = createBrowserRouter([
   {
@@ -56,6 +60,22 @@ export const router = createBrowserRouter([
               { path: "/pay/request", element: <RequestPaymentView /> },
               { path: "/pay/pending", element: <PendingPayoutsView /> },
               { path: "/pay/history", element: <TransactionHistoryView /> },
+            ],
+          },
+          {
+            element: <PartnerLayout />,
+            children: [
+              { path: "/partner", element: <PartnerRegistrationView /> },
+              {
+                element: <RequirePartner />,
+                children: [
+                  { path: "/partner/api-keys", element: <ApiKeysView /> },
+                  { path: "/partner/reports", element: <PartnerPlaceholderView /> },
+                ],
+              },
+              { path: "/partner/support", element: <PartnerPlaceholderView /> },
+              { path: "/partner/terms", element: <PartnerPlaceholderView /> },
+              { path: "/partner/docs", element: <PartnerPlaceholderView /> },
             ],
           },
         ],

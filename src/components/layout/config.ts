@@ -7,7 +7,7 @@ export const HEADER_NAV_ITEMS = [
   { label: "Home", to: "/" },
   { label: "Pay", to: "/pay" },
   { label: "Analytics", to: "/analytics" },
-  { label: "Developer", to: "/partner/docs" },
+  { label: "Developer", to: "/partner" },
 ] as const;
 
 export const HEADER_CHAIN_LOGO: Record<ChainKind, string> = {

@@ -4,6 +4,7 @@ export const MOCK_ENABLED = {
   request: true,
   history: true,
   analytics: true,
+  partner: true,
 } as const;
 
 export type MockDomain = keyof typeof MOCK_ENABLED;
