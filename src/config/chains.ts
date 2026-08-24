@@ -108,3 +108,27 @@ export function txExplorerUrl(network: string, txHash: string | null | undefined
   if (!prefix) return null;
   return `${prefix}${hash}`;
 }
+
+export const CHAIN_KIND_LEBALS: Record<ChainKind, string> = {
+  "evm": "EVM",
+  "near": "Near",
+  "solana": "Solana",
+  "tron": "Tron",
+};
+export function chainLabel(kind: ChainKind): string {
+  return CHAIN_KIND_LEBALS[kind] || kind;
+}
+
+export const FIXED_CHAIN_KINDS = new Map<ChainKind, { chainKindLabel: string; chainKind: ChainKind; }>();
+for (const chain of FIXED_CHAINS) {
+  if (FIXED_CHAIN_KINDS.has(chain.chainKind)) {
+    continue;
+  }
+  if (!chain.payerEnabled) {
+    continue;
+  }
+  FIXED_CHAIN_KINDS.set(chain.chainKind, {
+    chainKind: chain.chainKind,
+    chainKindLabel: chainLabel(chain.chainKind),
+  })
+}

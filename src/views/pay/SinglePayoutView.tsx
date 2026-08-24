@@ -9,7 +9,6 @@ import { InputNumber } from "@/components/ui/input-number/InputNumber";
 import { Switch } from "@/components/ui/switch/Switch";
 import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { TokenNetworkDialog } from "@/components/token-network-dialog/TokenNetworkDialog";
-import { WalletConnectDialog } from "@/components/WalletConnect";
 import { queryKeys } from "@/api/query-keys";
 import { useContacts, type Contact } from "@/hooks/use-contacts";
 import { usePayOriginToken } from "@/hooks/use-pay-origin-token";
@@ -105,7 +104,6 @@ export function SinglePayoutView() {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Contact | null>(null);
   const [deleting, setDeleting] = useState<Contact | null>(null);
-  const [walletDialogOpen, setWalletDialogOpen] = useState(false);
   const [phase, setPhase] = useState<"idle" | "quoting" | "sending" | "done" | "error">("idle");
   const appliedRequestKeyRef = useRef<string | null>(null);
   const invalidLinkToastRef = useRef(false);
@@ -233,7 +231,7 @@ export function SinglePayoutView() {
         throw new Error("Missing payment inputs");
       }
       if (!wallet.isConnected || !wallet.account?.address) {
-        setWalletDialogOpen(true);
+        paymentWallet.connectWallet();
         throw new Error("Connect your payment wallet first");
       }
       if (originToken.chain.chainKind !== "evm" || !originToken.chain.chainId || !originToken.contractAddress) {
@@ -319,7 +317,7 @@ export function SinglePayoutView() {
 
   function handleSend() {
     if (!connectedAddress) {
-      setWalletDialogOpen(true);
+      paymentWallet.connectWallet();
       return;
     }
     void settleMutation.mutateAsync();
@@ -371,7 +369,7 @@ export function SinglePayoutView() {
             walletConnected={wallet.isConnected}
             walletIcon={originKind === "evm" ? paymentWallet.walletInfo.icon : null}
             connecting={wallet.isConnecting}
-            onConnectWallet={() => setWalletDialogOpen(true)}
+            onConnectWallet={() => paymentWallet.connectWallet()}
           />
           <div className="mt-4 h-px w-full bg-[#e3e3e3]" />
         </div>
@@ -504,8 +502,6 @@ export function SinglePayoutView() {
           setDeleting(null);
         }}
       />
-
-      {walletDialogOpen ? <WalletConnectDialog onClose={() => setWalletDialogOpen(false)} /> : null}
     </>
   );
 }

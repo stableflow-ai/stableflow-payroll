@@ -1,3 +1,4 @@
+import { FIXED_CHAIN_KINDS } from "@/config/chains";
 import type { ChainKind, ChainOwners } from "@/wallet/types";
 
 export const HEADER_AVATAR_SRC = "/avatar/avatar-1.png";
@@ -23,9 +24,9 @@ export function isHeaderNavActive(pathname: string, to: string): boolean {
 }
 
 export function primaryConnectedKind(owners: ChainOwners): ChainKind | null {
-  if (owners.evm) return "evm";
-  if (owners.solana) return "solana";
-  if (owners.near) return "near";
-  if (owners.tron) return "tron";
+  if (owners.evm && FIXED_CHAIN_KINDS.has("evm")) return "evm";
+  if (owners.solana && FIXED_CHAIN_KINDS.has("solana")) return "solana";
+  if (owners.near && FIXED_CHAIN_KINDS.has("near")) return "near";
+  if (owners.tron && FIXED_CHAIN_KINDS.has("tron")) return "tron";
   return null;
 }

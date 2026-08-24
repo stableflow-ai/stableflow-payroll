@@ -2,7 +2,6 @@ import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOutletContext } from "react-router-dom";
 import { TokenNetworkDialog } from "@/components/token-network-dialog/TokenNetworkDialog";
-import { WalletConnectDialog } from "@/components/WalletConnect";
 import { PAYER_BLOCKCHAINS } from "@/config/chains";
 import { queryKeys } from "@/api/query-keys";
 import { useBatchPayQuote, useBatchPaySwap } from "@/hooks/use-batch-payout-api";
@@ -80,7 +79,6 @@ export function BatchPayoutView() {
   const [showErrors, setShowErrors] = useState(false);
   const [originDialogOpen, setOriginDialogOpen] = useState(false);
   const [destRowId, setDestRowId] = useState<string | null>(null);
-  const [walletDialogOpen, setWalletDialogOpen] = useState(false);
   const [phase, setPhase] = useState<"idle" | "quoting" | "sending" | "done">("idle");
 
   useEffect(() => {
@@ -191,7 +189,7 @@ export function BatchPayoutView() {
         throw new Error("Missing payment inputs");
       }
       if (!wallet.isConnected || !wallet.account?.address) {
-        setWalletDialogOpen(true);
+        paymentWallet.connectWallet();
         throw new BalanceGateError("Connect your payment wallet first");
       }
       if (!isEvmOriginToken(originToken) || !originToken.chain.chainId || !originToken.contractAddress) {
@@ -248,7 +246,7 @@ export function BatchPayoutView() {
 
   function handleConfirm() {
     if (!connectedAddress) {
-      setWalletDialogOpen(true);
+      paymentWallet.connectWallet();
       return;
     }
     void settleMutation.mutateAsync();
@@ -352,8 +350,6 @@ export function BatchPayoutView() {
           setDestRowId(null);
         }}
       />
-
-      {walletDialogOpen ? <WalletConnectDialog onClose={() => setWalletDialogOpen(false)} /> : null}
     </>
   );
 }

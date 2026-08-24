@@ -3,6 +3,7 @@
  * React API for UI (connect / disconnect / current account per chain).
  */
 
+import { FIXED_CHAIN_KINDS } from "@/config/chains";
 import { useWalletStore, walletAddressValid } from "@/stores/wallet";
 import type { ChainKind, ChainOwners, GeneratedIntent, UseWalletResult } from "@/wallet/types";
 
@@ -32,5 +33,17 @@ export function useConnectedWallets(): ChainOwners {
 }
 
 export function primaryConnectedAddress(owners: ChainOwners): string | null {
-  return owners.evm || owners.solana || owners.near || owners.tron || null;
+  if (owners.evm && FIXED_CHAIN_KINDS.has("evm")) {
+    return owners.evm;
+  }
+  if (owners.solana && FIXED_CHAIN_KINDS.has("solana")) {
+    return owners.solana;
+  }
+  if (owners.near && FIXED_CHAIN_KINDS.has("near")) {
+    return owners.near;
+  }
+  if (owners.tron && FIXED_CHAIN_KINDS.has("tron")) {
+    return owners.tron;
+  }
+  return null;
 }

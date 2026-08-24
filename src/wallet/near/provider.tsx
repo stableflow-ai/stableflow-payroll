@@ -2,11 +2,12 @@ import {
   setupWalletSelector,
   type WalletSelector,
 } from "@near-wallet-selector/core";
+import { setupIntearWallet } from "@near-wallet-selector/intear-wallet";
 import { setupHotWallet } from "@near-wallet-selector/hot-wallet";
 import { setupMeteorWallet } from "@near-wallet-selector/meteor-wallet";
 import { setupModal, type WalletSelectorModal } from "@near-wallet-selector/modal-ui";
+import { setupWalletConnect } from "rhea-wallet-connect";
 import "@near-wallet-selector/modal-ui/styles.css";
-import { setupMyNearWallet } from "@near-wallet-selector/my-near-wallet";
 import {
   createContext,
   useContext,
@@ -15,6 +16,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { getLogo } from "@/lib/logo";
 
 interface NearWalletContextValue {
   selector: WalletSelector | null;
@@ -46,9 +48,19 @@ export function NearWalletProvider({ children }: { children: ReactNode }) {
           network: "mainnet",
           debug: false,
           modules: [
-            setupMyNearWallet(),
+            setupIntearWallet(),
             setupMeteorWallet(),
             setupHotWallet() as never,
+            setupWalletConnect({
+              projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "",
+              metadata: {
+                name: "StableFlow Pay",
+                description: "Pay with stablecoins anywhere.",
+                url: "https://pay.stableflow.ai",
+                icons: [getLogo("/stableflow/logos/logo-stableflow.svg")]
+              },
+              chainId: "near:mainnet"
+            }),
           ],
         });
         if (cancelled) return;
