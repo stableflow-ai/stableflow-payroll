@@ -82,8 +82,8 @@ async function processCommit(id: string, item: QuickPayCommitItem, retryCount = 
   taskMetaMap.set(id, { ...meta, inFlight: true });
 
   try {
-    const { quickSubmit } = await import("@/api/payout");
-    await quickSubmit({ orderId: item.orderId, txHash: item.txHash });
+    const { singleSubmit } = await import("@/api/payout");
+    await singleSubmit({ orderId: item.orderId, txHash: item.txHash });
     useQuickPayCommitQueueStore.getState().remove(id);
     clearTaskMeta(id);
     notifySuccessListeners();

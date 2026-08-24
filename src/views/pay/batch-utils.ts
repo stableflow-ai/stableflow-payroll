@@ -294,9 +294,10 @@ export function toBatchReceives(rows: BatchDraft[]): PayBatchReceive[] {
     const amount = parsePositiveDecimal(row.amount, AMOUNT_MAX_DECIMALS);
     if (!amount || !row.token) return [];
     const receive: PayBatchReceive = {
+      address: row.address.trim(),
       amount,
-      destinationAddress: row.address.trim(),
-      destinationAsset: row.token.assetId,
+      network: row.token.blockchain,
+      token: row.token.symbol,
     };
     const memo = row.memo.trim();
     if (memo) receive.memo = memo;

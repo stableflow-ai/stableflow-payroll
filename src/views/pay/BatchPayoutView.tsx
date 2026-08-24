@@ -117,7 +117,8 @@ export function BatchPayoutView() {
   const quoteBody = useMemo((): PayBatchQuoteParam | null => {
     if (pageStep !== "preview" || !receives.length || !originToken || !connectedAddress) return null;
     return {
-      originAsset: originToken.assetId,
+      network: originToken.blockchain,
+      token: originToken.symbol,
       payer: connectedAddress,
       refundTo: connectedAddress,
       slippageTolerance: QUICK_PAY_SLIPPAGE_TOLERANCE,

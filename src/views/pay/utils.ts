@@ -1,5 +1,6 @@
 import Big from "big.js";
 import { ApiError } from "@/lib/api-error";
+import type { IntentsToken } from "@/stores/intents-tokens";
 import { isAddressValid, type WalletChainKind } from "@/utils";
 import { EMAIL_PATTERN } from "./config";
 
@@ -13,6 +14,16 @@ const USER_REJECTED_PATTERNS = [
 
 export function isValidEmail(value: string): boolean {
   return EMAIL_PATTERN.test(value.trim());
+}
+
+export function payoutNetworkToken(token: IntentsToken): { network: string; token: string } {
+  return { network: token.blockchain, token: token.symbol };
+}
+
+export function notifyEmailParam(notify: boolean, email: string): string | undefined {
+  const trimmed = email.trim();
+  if (!notify || !isValidEmail(trimmed)) return undefined;
+  return trimmed;
 }
 
 export function detectAddressChainKind(address: string): WalletChainKind | null {

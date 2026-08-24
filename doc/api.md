@@ -130,15 +130,15 @@ export function useOrderQuery(id: string) {
 | POST | `/v1/pay/reset-password` | no | `ResetPasswordBody` | `void` | `resetPassword` | `useResetPasswordMutation` |
 | POST | `/v1/pay/reset-password/code` | no | `ResetPasswordCodeBody` | `void` | `sendResetPasswordCode` | `useSendResetPasswordCodeMutation` |
 | GET | `/v1/pay/profile` | yes | — | `AuthUser` | `getProfile` | `useProfileQuery` |
-| POST | `/v1/pay/quick/quote` | yes | `PayQuickQuoteParam` | `PayQuickQuoteResp` | `quickQuote` | `useQuickPayQuote` |
-| POST | `/v1/pay/quick/swap` | yes | `PayQuickQuoteParam` | `PayQuickSwapResp` | `quickSwap` | `useQuickPaySwap` |
-| POST | `/v1/pay/quick/submit` | yes | `PayQuickSubmitParam` | `void` | `quickSubmit` | commit queue |
+| POST | `/v1/pay/single/quote` | yes | `PaySingleQuoteParam` | `PaySingleQuoteResp` | `singleQuote` | `useSinglePayQuote` |
+| POST | `/v1/pay/single/swap` | yes | `PaySingleSwapParam` | `PaySingleSwapResp` | `singleSwap` | `useSinglePaySwap` |
+| POST | `/v1/pay/single/submit` | yes | `PaySingleSubmitParam` | `void` | `singleSubmit` | commit queue |
 | POST | `/v1/pay/batch/quote` | yes | `PayBatchQuoteParam` | `PayBatchQuoteResp` | `batchQuote` | `useBatchPayQuote` |
 | POST | `/v1/pay/batch/swap` | yes | `PayBatchQuoteParam` | `PayBatchSwapResp` | `batchSwap` | `useBatchPaySwap` |
 | POST | `/v1/pay/batch/submit` | yes | `PayBatchSubmitParam` | `void` | `batchSubmit` | commit queue |
 | GET | `/v1/pay/payments/pending` | yes | — | `PayPending[]` | `getPendingPayments` | `usePendingPaymentsQuery` |
 
-Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`, `ChangePasswordBody`, `ResetPasswordBody`, `ResetPasswordCodeBody`). Payout types: `src/types/payout.ts`. `PayQuickQuoteParam.notification` is an optional email string; omit the field when notify is off. Batch receives are wallet addresses (no `employeeId`). `GET /v1/pay/payments/pending` unwraps either `PayPending[]` or `{ payments: PayPending[] }`.
+Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`, `ChangePasswordBody`, `ResetPasswordBody`, `ResetPasswordCodeBody`). Payout types: `src/types/payout.ts`. Single and batch quote bodies use 1Click `network` codes (`eth`, `arb`, `sol`, …) plus `token` (`USDT` / `USDC`), not 1Click `assetId`. Single `memo` and `notifyEmail` belong on `PaySingleSwapParam` only, not on quote. Batch `receives` use `address` (wallet, no `employeeId`). `GET /v1/pay/payments/pending` unwraps either `PayPending[]` or `{ payments: PayPending[] }`. Request Payment and non-EVM origin broadcast are not wired.
 
 Public files:
 
@@ -152,9 +152,9 @@ Public files:
 | `src/api/config.ts` | `PAY_API_PREFIX` |
 | `src/api/query-keys.ts` | Query key factory |
 | `src/api/auth.ts` | Login, register, profile, change / reset password |
-| `src/api/payout.ts` | Quick and batch quote / swap / submit; pending list |
+| `src/api/payout.ts` | Single and batch quote / swap / submit; pending list |
 | `src/hooks/use-auth-api.ts` | Auth mutations + profile query |
-| `src/hooks/use-single-payout-api.ts` | Quick quote query + swap mutation |
+| `src/hooks/use-single-payout-api.ts` | Single quote query + swap mutation |
 | `src/hooks/use-batch-payout-api.ts` | Batch quote query + swap mutation |
 | `src/hooks/use-pending-payments.ts` | Pending payouts query |
 | `src/stores/auth.ts` | Session store |

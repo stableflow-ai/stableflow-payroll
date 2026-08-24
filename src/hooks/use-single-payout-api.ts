@@ -1,20 +1,20 @@
 import { keepPreviousData, useMutation, useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/api/query-keys";
 import * as payoutApi from "@/api/payout";
-import type { PayQuickQuoteParam } from "@/types/payout";
+import type { PaySingleQuoteParam, PaySingleSwapParam } from "@/types/payout";
 
-export function useQuickPayQuote(body: PayQuickQuoteParam | null) {
+export function useSinglePayQuote(body: PaySingleQuoteParam | null) {
   return useQuery({
-    queryKey: queryKeys.payout.quickQuote(body),
-    queryFn: () => payoutApi.quickQuote(body!),
+    queryKey: queryKeys.payout.singleQuote(body),
+    queryFn: () => payoutApi.singleQuote(body!),
     enabled: Boolean(body),
     placeholderData: keepPreviousData,
     refetchInterval: 60_000,
   });
 }
 
-export function useQuickPaySwap() {
+export function useSinglePaySwap() {
   return useMutation({
-    mutationFn: (body: PayQuickQuoteParam) => payoutApi.quickSwap(body),
+    mutationFn: (body: PaySingleSwapParam) => payoutApi.singleSwap(body),
   });
 }

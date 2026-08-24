@@ -6,22 +6,23 @@ import type {
   PayBatchSubmitParam,
   PayBatchSwapResp,
   PayPending,
-  PayQuickQuoteParam,
-  PayQuickQuoteResp,
-  PayQuickSubmitParam,
-  PayQuickSwapResp,
+  PaySingleQuoteParam,
+  PaySingleQuoteResp,
+  PaySingleSubmitParam,
+  PaySingleSwapParam,
+  PaySingleSwapResp,
 } from "@/types/payout";
 
-export function quickQuote(body: PayQuickQuoteParam) {
-  return http<PayQuickQuoteResp>(`${PAY_API_PREFIX}/quick/quote`, { method: "POST", body });
+export function singleQuote(body: PaySingleQuoteParam) {
+  return http<PaySingleQuoteResp>(`${PAY_API_PREFIX}/single/quote`, { method: "POST", body });
 }
 
-export function quickSwap(body: PayQuickQuoteParam) {
-  return http<PayQuickSwapResp>(`${PAY_API_PREFIX}/quick/swap`, { method: "POST", body });
+export function singleSwap(body: PaySingleSwapParam) {
+  return http<PaySingleSwapResp>(`${PAY_API_PREFIX}/single/swap`, { method: "POST", body });
 }
 
-export function quickSubmit(body: PayQuickSubmitParam) {
-  return http<void>(`${PAY_API_PREFIX}/quick/submit`, { method: "POST", body });
+export function singleSubmit(body: PaySingleSubmitParam) {
+  return http<void>(`${PAY_API_PREFIX}/single/submit`, { method: "POST", body });
 }
 
 export function batchQuote(body: PayBatchQuoteParam) {

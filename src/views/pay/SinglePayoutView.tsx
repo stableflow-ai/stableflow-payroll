@@ -13,11 +13,11 @@ import { queryKeys } from "@/api/query-keys";
 import { useContacts, type Contact } from "@/hooks/use-contacts";
 import { usePayOriginToken } from "@/hooks/use-pay-origin-token";
 import { usePaymentWallet } from "@/hooks/use-payment-wallet";
-import { useQuickPayQuote, useQuickPaySwap } from "@/hooks/use-single-payout-api";
+import { useSinglePayQuote, useSinglePaySwap } from "@/hooks/use-single-payout-api";
 import { useTokenBalancesStore } from "@/stores/token-balances";
 import useToast from "@/hooks/use-toast";
 import { formatAmount, sameAddress } from "@/utils";
-import type { PayQuickQuoteParam } from "@/types/payout";
+import type { PaySingleQuoteParam, PaySingleSwapParam } from "@/types/payout";
 import { enqueueQuickPayCommit } from "@/stores/quick-pay-commit-queue";
 import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
 import { broadcastQuickPayCallData } from "@/wallet/broadcast-quick-pay";
@@ -39,8 +39,9 @@ import {
   detectAddressChainKind,
   formatQuoteErrorMessage,
   isDryQuoteStale,
-  isValidEmail,
+  notifyEmailParam,
   parsePositiveDecimal,
+  payoutNetworkToken,
 } from "./utils";
 
 class BalanceGateError extends Error {
@@ -135,17 +136,22 @@ export function SinglePayoutView() {
 
   const canQuoteDestination = Boolean(destinationAddress && destToken);
 
-  const quoteBody = useMemo((): PayQuickQuoteParam | null => {
+  const quoteBody = useMemo((): PaySingleQuoteParam | null => {
     if (!originToken || !destToken || !debouncedAmountForQuote || !canQuoteDestination || !walletReady || !connectedAddress) {
       return null;
     }
+    const origin = payoutNetworkToken(originToken);
+    const dest = payoutNetworkToken(destToken);
     return {
       amount: debouncedAmountForQuote,
-      destinationAddress: destinationAddress || undefined,
-      destinationAsset: destToken.assetId,
-      originAsset: originToken.assetId,
+      destinationAddress,
+      destinationNetwork: dest.network,
+      destinationToken: dest.token,
+      network: origin.network,
+      token: origin.token,
       refundTo: connectedAddress,
       slippageTolerance: QUICK_PAY_SLIPPAGE_TOLERANCE,
+      payer: connectedAddress,
     };
   }, [
     originToken,
@@ -157,8 +163,8 @@ export function SinglePayoutView() {
     destinationAddress,
   ]);
 
-  const dryQuoteQuery = useQuickPayQuote(quoteBody);
-  const swapMutation = useQuickPaySwap();
+  const dryQuoteQuery = useSinglePayQuote(quoteBody);
+  const swapMutation = useSinglePaySwap();
   const quote = amountForQuote && canQuoteDestination ? dryQuoteQuery.data : undefined;
   const dryQuoteStale = isDryQuoteStale({
     amountForQuote,
@@ -200,17 +206,22 @@ export function SinglePayoutView() {
       }
       const paymentWalletAddress = wallet.account.address;
       setPhase("quoting");
-      const swapBody: PayQuickQuoteParam = {
+      const origin = payoutNetworkToken(originToken);
+      const dest = payoutNetworkToken(destToken);
+      const swapBody: PaySingleSwapParam = {
         amount: amountForQuote,
         destinationAddress,
-        destinationAsset: destToken.assetId,
-        originAsset: originToken.assetId,
+        destinationNetwork: dest.network,
+        destinationToken: dest.token,
+        network: origin.network,
+        token: origin.token,
         refundTo: paymentWalletAddress,
         slippageTolerance: QUICK_PAY_SLIPPAGE_TOLERANCE,
+        payer: paymentWalletAddress,
+        notifyEmail: notifyEmailParam(notify, email),
       };
       const memoValue = memo.trim();
       if (memoValue) swapBody.memo = memoValue;
-      if (notify && isValidEmail(email)) swapBody.notification = email.trim();
 
       const swapped = await swapMutation.mutateAsync(swapBody);
       const amountIn = BigInt(swapped.amountIn || "0");

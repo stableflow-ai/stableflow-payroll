@@ -47,11 +47,11 @@ One authenticated page at `/`. Summary, payment volume chart, pending payouts, a
 | Pending Payouts | `/pay/pending` | In-flight payouts from `GET /v1/pay/payments/pending`. Sidebar badge is the list length. |
 | Transaction History | `/pay/history` | Mock list until the API exists. Search, status/asset/time filters, pagination. Export CSV is UI-only. |
 
-Single payout uses `POST /v1/pay/quick/quote|swap|submit`. Batch payout uses `POST /v1/pay/batch/quote|swap|submit`. Origin broadcast is EVM-only. Recipients are wallet addresses (not employees). The address book is not a route.
+Single payout uses `POST /v1/pay/single/quote|swap|submit`. Memo and notify-recipient email are sent on swap only, not on quote. Batch payout uses `POST /v1/pay/batch/quote|swap|submit`. Origin broadcast is EVM-only. Recipients are wallet addresses (not employees). The address book is not a route.
 
 Request Payment (`/pay/request`) lets the logged-in user set a receiving address (autofilled from the connected wallet for the selected token chain), amount, dest token, optional description, and **Receive Privately**. Private receive signs an empty-intents MultiPayload (V1 versioned nonce from `intents.near` `current_salt`) on the matching chain wallet, then `POST https://1click.chaindefuser.com/v0/auth/authenticate` to store a User-Session (refresh via `/v0/auth/refresh`). Generate Payment Link and Withdraw are UI-only until product APIs exist.
 
-Payer-open of a request link is **planned**: `/pay?request=:id` on Single Payout (must be logged in; unauthenticated → `/login?returnTo=`). Non-private reuses quick quote/swap/submit; private uses `recipientType: CONFIDENTIAL_INTENTS`. Do not change Login / guards until that API exists.
+Payer-open of a request link is **planned**: `/pay?request=:id` on Single Payout (must be logged in; unauthenticated → `/login?returnTo=`). Non-private reuses single quote/swap/submit; private uses `recipientType: CONFIDENTIAL_INTENTS`. Do not change Login / guards until that API exists.
 
 ## Analytics
 

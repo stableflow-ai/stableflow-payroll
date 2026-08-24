@@ -1,16 +1,21 @@
-export interface PayQuickQuoteParam {
+export interface PaySingleQuoteParam {
   amount: string;
-  destinationAsset: string;
-  originAsset: string;
+  destinationAddress: string;
+  destinationNetwork: string;
+  destinationToken: string;
+  network: string;
   refundTo: string;
   slippageTolerance: number;
-  destinationAddress?: string;
-  memo?: string;
-  /** Recipient notification email. Omit when notify is off. */
-  notification?: string;
+  token: string;
+  payer?: string;
 }
 
-export interface PayQuickQuoteResp {
+export interface PaySingleSwapParam extends PaySingleQuoteParam {
+  memo?: string;
+  notifyEmail?: string;
+}
+
+export interface PaySingleQuoteResp {
   amountIn: string;
   amountInFormatted: string;
   amountInUsd: string;
@@ -18,25 +23,27 @@ export interface PayQuickQuoteResp {
   timeEstimate: number;
 }
 
-export interface PayQuickSwapResp extends PayQuickQuoteResp {
+export interface PaySingleSwapResp extends PaySingleQuoteResp {
   callData: string;
   orderId: string;
 }
 
-export interface PayQuickSubmitParam {
+export interface PaySingleSubmitParam {
   orderId: string;
   txHash: string;
 }
 
 export interface PayBatchReceive {
+  address: string;
   amount: string;
-  destinationAddress: string;
-  destinationAsset: string;
+  network: string;
+  token: string;
   memo?: string;
 }
 
 export interface PayBatchQuoteParam {
-  originAsset: string;
+  network: string;
+  token: string;
   refundTo: string;
   slippageTolerance: number;
   receives: PayBatchReceive[];
