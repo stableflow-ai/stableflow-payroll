@@ -110,3 +110,28 @@ export function formatQuoteErrorMessage(error: unknown, decimals = 6): string {
   if (message.length > 80 || /Cross-chain quote failed/i.test(message)) return "Quote failed";
   return message;
 }
+
+export function paymentRowId(row: { id: string; recipient: string; submittedAt: string }, index: number) {
+  return row.id || [row.recipient, row.submittedAt, index].join("|");
+}
+
+export function paymentDisplayAmount(item: {
+  destinationAmount: string;
+  amount: string;
+}) {
+  return item.destinationAmount || item.amount;
+}
+
+export function paymentDisplayToken(item: {
+  destinationToken: string;
+  token: string;
+}) {
+  return item.destinationToken || item.token;
+}
+
+export function paymentDisplayNetwork(item: {
+  destinationNetwork: string;
+  network: string;
+}) {
+  return item.destinationNetwork || item.network;
+}

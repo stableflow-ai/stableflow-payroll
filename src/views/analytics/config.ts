@@ -1,7 +1,45 @@
-import { DEFAULT_ANALYTICS_MONTH, VOLUME_RANGE } from "@/mocks/analytics";
+import { format } from "date-fns";
+import { VOLUME_PERIOD, type VolumePeriod } from "@/types/payout";
 
-export const DEFAULT_MONTH = DEFAULT_ANALYTICS_MONTH;
-export const DEFAULT_VOLUME_RANGE = VOLUME_RANGE.Monthly;
+export type CalendarDay = {
+  date: string;
+  paymentUsd: number;
+  payouts: number;
+};
+
+export type AssetShare = {
+  symbol: string;
+  percent: number;
+};
+
+export type NetworkShare = {
+  network: string;
+  percent: number;
+};
+
+export type AnalyticsVolumePoint = {
+  label: string;
+  value: number;
+  changePercent: number | null;
+};
+
+export type AssetToken = {
+  symbol: string;
+  network: string;
+};
+
+export type LatestPayout = {
+  id: string;
+  statusLabel: string;
+  time: string;
+  origin: AssetToken;
+  dest: AssetToken;
+};
+
+export const DEFAULT_MONTH = format(new Date(), "yyyy-MM");
+export const DEFAULT_VOLUME_PERIOD = VOLUME_PERIOD.Monthly;
+export const PAYOUT_NETWORKS_LIMIT = 5;
+export const LATEST_PAYOUTS_LIMIT = 6;
 
 export const ASSET_COLORS: Record<string, string> = {
   USDT: "#000000",
@@ -34,9 +72,8 @@ export const MONTH_SHORT_LABELS = [
   "Dec",
 ] as const;
 
-export const VOLUME_RANGE_OPTIONS = [
-  { value: VOLUME_RANGE.Daily, label: "Daily" },
-  { value: VOLUME_RANGE.Weekly, label: "Weekly" },
-  { value: VOLUME_RANGE.Monthly, label: "Monthly" },
-  { value: VOLUME_RANGE.All, label: "All" },
-] as const;
+export const VOLUME_PERIOD_OPTIONS = [
+  { value: VOLUME_PERIOD.Daily, label: "Daily" },
+  { value: VOLUME_PERIOD.Weekly, label: "Weekly" },
+  { value: VOLUME_PERIOD.Monthly, label: "Monthly" },
+] as const satisfies ReadonlyArray<{ value: VolumePeriod; label: string }>;

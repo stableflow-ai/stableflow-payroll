@@ -2,7 +2,7 @@
 
 How to call the Stableflow Pay backend. Read this before adding or changing an endpoint.
 
-The browser calls `VITE_API_BASE_URL` directly (no Vite proxy). Default: `https://test-api.stableflow.ai`. All product APIs live under `/v1/pay/` and are **GET** or **POST**.
+The browser calls `VITE_API_BASE_URL` directly (no Vite proxy). Default: `https://test-api.stableflow.ai`. All product APIs live under `/v1/pay/` and are **GET**, **POST**, or **DELETE**.
 
 ## Layers
 
@@ -71,7 +71,7 @@ Use `queryKeys.order.detail(id)` in `useQuery` and `queryClient.invalidateQuerie
 
 ```ts
 http<T>(path, {
-  method?: "GET" | "POST"; // default GET
+  method?: "GET" | "POST" | "DELETE"; // default GET
   body?: unknown;          // JSON body (POST)
   query?: Record<string, string | number | boolean | null | undefined>;
   auth?: boolean;          // default true
@@ -136,9 +136,18 @@ export function useOrderQuery(id: string) {
 | POST | `/v1/pay/batch/quote` | yes | `PayBatchQuoteParam` | `PayBatchQuoteResp` | `batchQuote` | `useBatchPayQuote` |
 | POST | `/v1/pay/batch/swap` | yes | `PayBatchQuoteParam` | `PayBatchSwapResp` | `batchSwap` | `useBatchPaySwap` |
 | POST | `/v1/pay/batch/submit` | yes | `PayBatchSubmitParam` | `void` | `batchSubmit` | commit queue |
-| GET | `/v1/pay/payments/pending` | yes | — | `PayPending[]` | `getPendingPayments` | `usePendingPaymentsQuery` |
+| GET | `/v1/pay/payments/pending` | yes | — | `PayPaymentItem[]` | `getPendingPayments` | `usePendingPaymentsQuery` |
+| GET | `/v1/pay/payments/recent` | yes | — | `PayPaymentItem[]` | `getRecentPayments` | `useRecentPaymentsQuery` |
+| GET | `/v1/pay/payments/volume` | yes | `period` | `VolumePoint[]` | `getPaymentVolume` | `usePaymentVolumeQuery` |
+| GET | `/v1/pay/payments` | yes | `page`, `pageSize`, `q`, `status`, `token`, `start_time`, `end_time` | `PayPaymentsResp` | `getPayments` | `usePaymentsQuery` |
+| GET | `/v1/pay/overview` | yes | — | `PayOverview` | `getPayOverview` | `usePayOverviewQuery` (404 falls back to current-month analytics stats) |
+| GET | `/v1/pay/analytics` | yes | `month` | `PayAnalyticsResp` | `getPayAnalytics` | `useAnalyticsQuery` |
+| GET | `/v1/pay/recipient/list` | yes | — | `PayRecipient[]` | `listRecipients` | `useRecipientsQuery` |
+| POST | `/v1/pay/recipient` | yes | `PayRecipientBody` | `PayRecipient` | `createRecipient` | `useRecipientMutations` |
+| POST | `/v1/pay/recipient/{id}` | yes | `PayRecipientBody` | `PayRecipient` | `updateRecipient` | `useRecipientMutations` |
+| DELETE | `/v1/pay/recipient/{id}` | yes | — | `void` | `deleteRecipient` | `useRecipientMutations` |
 
-Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`, `ChangePasswordBody`, `ResetPasswordBody`, `ResetPasswordCodeBody`). Payout types: `src/types/payout.ts`. Single and batch quote bodies use 1Click `network` codes (`eth`, `arb`, `sol`, …) plus `token` (`USDT` / `USDC`), not 1Click `assetId`. Single `memo` and `notifyEmail` belong on `PaySingleSwapParam` only, not on quote. Batch `receives` use `address` (wallet, no `employeeId`). `GET /v1/pay/payments/pending` returns snake_case rows (`submitted_at`, `network` as 1Click codes); `getPendingPayments` maps them to `PayPending`. The pending table shows Asset as `token · chainName` and Time from `submitted_at`. Request Payment and non-EVM origin broadcast are not wired.
+Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`, `ChangePasswordBody`, `ResetPasswordBody`, `ResetPasswordCodeBody`). Payout types: `src/types/payout.ts`. Analytics: `src/types/analytics.ts`. Recipients: `src/types/recipient.ts`. Single and batch quote bodies use 1Click `network` codes (`eth`, `arb`, `sol`, …) plus `token` (`USDT` / `USDC`), not 1Click `assetId`. Single `memo` and `notifyEmail` belong on `PaySingleSwapParam` only, not on quote. Batch `receives` use `address` (wallet, no `employeeId`). Payment list rows are snake_case (`submitted_at`, `destination_*`); mappers produce `PayPaymentItem`. Amount/Asset use destination fields. History `start_time` / `end_time` are unix seconds (start of first day, end of last day). Volume `period` is `day` / `week` / `month`; points may use `start_at` + `total_payment` instead of `label` / `value`. Request Payment and non-EVM origin broadcast are not wired. Origin token pickers are limited by `payerEnabled` on `FIXED_CHAINS`.
 
 Public files:
 
@@ -152,11 +161,18 @@ Public files:
 | `src/api/config.ts` | `PAY_API_PREFIX` |
 | `src/api/query-keys.ts` | Query key factory |
 | `src/api/auth.ts` | Login, register, profile, change / reset password |
-| `src/api/payout.ts` | Single and batch quote / swap / submit; pending list |
+| `src/api/payout.ts` | Single and batch quote / swap / submit; overview, volume, pending, recent, payments |
+| `src/api/analytics.ts` | Analytics month query |
+| `src/api/recipient.ts` | Address book list / create / update / delete |
 | `src/hooks/use-auth-api.ts` | Auth mutations + profile query |
 | `src/hooks/use-single-payout-api.ts` | Single quote query + swap mutation |
 | `src/hooks/use-batch-payout-api.ts` | Batch quote query + swap mutation |
+| `src/hooks/use-payout-api.ts` | Overview, volume, recent, payments queries |
 | `src/hooks/use-pending-payments.ts` | Pending payouts query |
+| `src/hooks/use-analytics-api.ts` | Analytics month query |
+| `src/hooks/use-recipient-api.ts` | Recipient list + mutations |
 | `src/stores/auth.ts` | Session store |
 | `src/types/auth.ts` | Auth types |
-| `src/types/payout.ts` | Quick and batch payout types |
+| `src/types/payout.ts` | Quick, batch, overview, volume, and payment list types |
+| `src/types/analytics.ts` | Analytics response types |
+| `src/types/recipient.ts` | Address book types |

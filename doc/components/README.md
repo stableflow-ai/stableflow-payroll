@@ -16,6 +16,7 @@ Non-business primitives in `src/components/ui/`. Read the matching doc before us
 | Pagination | `src/components/ui/pagination/Pagination.tsx` | [pagination.md](pagination.md) |
 | InputNumber | `src/components/ui/input-number/InputNumber.tsx` | (existing; no dedicated doc yet) |
 | Switch | `src/components/ui/switch/Switch.tsx` | [switch.md](switch.md) |
+| DateRangePicker | `src/components/date-range-picker/DateRangePicker.tsx` | [date-range-picker.md](date-range-picker.md) |
 
 `src/components/ui/overlay/` is **internal**. Dialog and Drawer own the public overlay API. Do not import Overlay from feature code unless you are extending those primitives.
 

@@ -1,6 +1,6 @@
 import { Card } from "@/components/ui/card/Card";
 import { formatDate } from "@/utils";
-import type { LatestPayout } from "@/mocks/analytics";
+import type { LatestPayout } from "../config";
 import { TokenPair } from "./TokenPair";
 
 export function LatestPayoutsCard({ items }: { items: LatestPayout[] }) {
@@ -22,7 +22,7 @@ export function LatestPayoutsCard({ items }: { items: LatestPayout[] }) {
           >
             <span className="min-w-0">
               <span className="block font-montserrat text-sm font-medium text-black">
-                In Progress
+                {item.statusLabel}
               </span>
               <span className="mt-0.5 block font-montserrat text-xs text-[#aaa]">
                 {formatDate(item.time)}

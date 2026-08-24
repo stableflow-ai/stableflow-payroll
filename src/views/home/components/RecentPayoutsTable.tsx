@@ -8,8 +8,18 @@ import {
 } from "@/components/ui/table/Table";
 import { IconCheck2 } from "@/components/icons/check";
 import { IconOutLink } from "@/components/icons/link";
+import { chainDisplayName, txExplorerUrl } from "@/config/chains";
 import { formatAddress, formatAmount, formatDate } from "@/utils";
-import { PAYOUT_STATUS, type RecentPayout } from "@/mocks/home";
+import type { PayPaymentItem } from "@/types/payout";
+import {
+  PAYOUT_ROW_STATUS,
+  paymentRowStatus,
+} from "@/views/pay/components/payout-table/PayoutStatusCell";
+import {
+  paymentDisplayAmount,
+  paymentDisplayNetwork,
+  paymentDisplayToken,
+} from "@/views/pay/utils";
 import {
   HOME_STATUS_COMPLETE_CLASS,
   HOME_STATUS_FAILED_CLASS,
@@ -17,18 +27,23 @@ import {
 } from "../config";
 import { ViewAllLink } from "./ViewAllLink";
 
-function StatusCell({ item }: { item: RecentPayout }) {
-  if (item.status === PAYOUT_STATUS.Failed) {
+function StatusCell({ item }: { item: PayPaymentItem }) {
+  const status = paymentRowStatus(item.status);
+  const explorer = txExplorerUrl(paymentDisplayNetwork(item), item.destinationTxHash);
+  if (status === PAYOUT_ROW_STATUS.Failed) {
     return <span className={`font-montserrat text-sm font-medium ${HOME_STATUS_FAILED_CLASS}`}>Failed</span>;
+  }
+  if (status === PAYOUT_ROW_STATUS.Pending) {
+    return <span className="font-montserrat text-sm font-medium text-[#6284F5]">Pending</span>;
   }
 
   return (
     <span className={`inline-flex items-center gap-1.5 font-montserrat text-sm font-medium ${HOME_STATUS_COMPLETE_CLASS}`}>
-      Complete
       <IconCheck2 className={HOME_STATUS_COMPLETE_CLASS} />
-      {item.txUrl ? (
+      Complete
+      {explorer ? (
         <a
-          href={item.txUrl}
+          href={explorer}
           target="_blank"
           rel="noreferrer"
           className={HOME_STATUS_COMPLETE_CLASS}
@@ -41,7 +56,7 @@ function StatusCell({ item }: { item: RecentPayout }) {
   );
 }
 
-export function RecentPayoutsTable({ items }: { items: RecentPayout[] }) {
+export function RecentPayoutsTable({ items }: { items: PayPaymentItem[] }) {
   return (
     <Table columns={RECENT_PAYOUTS_COLUMNS}>
       <div className="mb-4 flex min-w-max items-center justify-between gap-3">
@@ -58,14 +73,14 @@ export function RecentPayoutsTable({ items }: { items: RecentPayout[] }) {
         <TableHead>Status</TableHead>
       </TableHeader>
       <TableBody>
-        {items.map((item) => (
-          <TableRow key={item.id}>
+        {items.map((item, index) => (
+          <TableRow key={item.id || `${item.recipient}-${index}`}>
             <TableCell>{formatAddress(item.recipient)}</TableCell>
-            <TableCell>{formatAmount(item.amount, { prefix: "" })}</TableCell>
+            <TableCell>{formatAmount(paymentDisplayAmount(item), { prefix: "" })}</TableCell>
             <TableCell>
-              {item.symbol} · {item.network}
+              {paymentDisplayToken(item)} · {chainDisplayName(paymentDisplayNetwork(item))}
             </TableCell>
-            <TableCell>{formatDate(item.time)}</TableCell>
+            <TableCell>{formatDate(item.submittedAt)}</TableCell>
             <TableCell>
               <StatusCell item={item} />
             </TableCell>

@@ -17,8 +17,9 @@ export function useEnsureTokenBalances(opts: {
   owners: ChainOwners;
   tokens: IntentsToken[];
   enabled?: boolean;
+  pollMs?: number;
 }) {
-  const { owners, tokens, enabled = true } = opts;
+  const { owners, tokens, enabled = true, pollMs } = opts;
   const fetchAll = useTokenBalancesStore((s) => s.fetchAll);
   const clear = useTokenBalancesStore((s) => s.clear);
   const tokenKey = useMemo(
@@ -32,7 +33,12 @@ export function useEnsureTokenBalances(opts: {
   useEffect(() => {
     if (!enabled || !ready || !tokenKey) return;
     void fetchAll(owners, tokens);
-  }, [enabled, ready, ownerKey, tokenKey, fetchAll, owners, tokens]);
+    if (!pollMs) return;
+    const id = window.setInterval(() => {
+      void fetchAll(owners, tokens);
+    }, pollMs);
+    return () => window.clearInterval(id);
+  }, [enabled, ready, ownerKey, tokenKey, fetchAll, owners, tokens, pollMs]);
 
   useEffect(() => {
     if (wasReadyRef.current && !ready) clear();

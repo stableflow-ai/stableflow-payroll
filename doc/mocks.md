@@ -55,11 +55,7 @@ Every mock reader must include this comment:
 
 | Domain | Flag | Fixtures | Hook |
 | --- | --- | --- | --- |
-| home | `MOCK_ENABLED.home` | `src/mocks/home.ts` | `useHomeDashboard` |
-| contacts | `MOCK_ENABLED.contacts` | `src/mocks/contacts.ts` | `useContacts` |
 | request | `MOCK_ENABLED.request` | `src/mocks/request-payment.ts` | `useRequestPayment` |
-| history | `MOCK_ENABLED.history` | `src/mocks/history.ts` | `useTransactionHistory` |
-| analytics | `MOCK_ENABLED.analytics` | `src/mocks/analytics.ts` | `useAnalytics` |
 | partner | `MOCK_ENABLED.partner` | `src/mocks/partner.ts` | `usePartner`, `usePartnerReports` (`getPartnerReports`) |
 
 ## Constraints

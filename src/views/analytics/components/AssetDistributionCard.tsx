@@ -1,6 +1,6 @@
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from "recharts";
 import { Card } from "@/components/ui/card/Card";
-import type { AssetShare } from "@/mocks/analytics";
+import type { AssetShare } from "../config";
 import { ASSET_COLOR_FALLBACK, ASSET_COLORS } from "../config";
 
 function assetColor(symbol: string, index: number) {

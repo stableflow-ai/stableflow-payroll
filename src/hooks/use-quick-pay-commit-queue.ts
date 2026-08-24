@@ -12,7 +12,8 @@ export function useQuickPayCommitQueue() {
   useEffect(() => {
     processAllPendingQuickPayCommits();
     return onQuickPayCommitSuccess(() => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.payout.pending });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.payout.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
     });
   }, [queryClient]);
 }

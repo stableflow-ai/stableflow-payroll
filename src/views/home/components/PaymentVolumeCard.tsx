@@ -10,8 +10,8 @@ import {
 import { Card } from "@/components/ui/card/Card";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { formatAmount } from "@/utils";
-import { VOLUME_RANGE, type VolumePoint, type VolumeRange } from "@/mocks/home";
-import { HOME_CHART_LINE_COLOR } from "../config";
+import { type VolumePeriod, type VolumePoint } from "@/types/payout";
+import { HOME_CHART_LINE_COLOR, VOLUME_PERIOD_OPTIONS } from "../config";
 
 function formatVolumeTick(value: number) {
   if (value === 0) return "$0";
@@ -45,8 +45,8 @@ export function PaymentVolumeCard({
   onRangeChange,
   points,
 }: {
-  range: VolumeRange;
-  onRangeChange: (range: VolumeRange) => void;
+  range: VolumePeriod;
+  onRangeChange: (range: VolumePeriod) => void;
   points: VolumePoint[];
 }) {
   return (
@@ -57,13 +57,8 @@ export function PaymentVolumeCard({
         </h2>
         <Dropdown
           value={range}
-          onChange={(value) => onRangeChange(value as VolumeRange)}
-          options={[
-            { value: VOLUME_RANGE.Daily, label: "Daily" },
-            { value: VOLUME_RANGE.Weekly, label: "Weekly" },
-            { value: VOLUME_RANGE.Monthly, label: "Monthly" },
-            { value: VOLUME_RANGE.All, label: "All" },
-          ]}
+          onChange={(value) => onRangeChange(value as VolumePeriod)}
+          options={[...VOLUME_PERIOD_OPTIONS]}
           triggerClassName="h-9 w-[118px] rounded-[18px] border-black/10 bg-transparent px-4"
         />
       </div>

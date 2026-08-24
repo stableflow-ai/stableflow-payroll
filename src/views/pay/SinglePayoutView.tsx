@@ -418,8 +418,12 @@ export function SinglePayoutView() {
         }}
         contact={editing}
         onSave={(input) => {
-          if (editing) updateContact(editing.id, input);
-          else addContact(input);
+          const save = editing ? updateContact(editing.id, input) : addContact(input);
+          void save.catch((error) => {
+            toast.fail({
+              title: error instanceof Error ? error.message : "Failed to save recipient",
+            });
+          });
           setFormOpen(false);
           setEditing(null);
         }}
@@ -430,7 +434,13 @@ export function SinglePayoutView() {
         onClose={() => setDeleting(null)}
         contact={deleting}
         onConfirm={() => {
-          if (deleting) deleteContact(deleting.id);
+          if (deleting) {
+            void deleteContact(deleting.id).catch((error) => {
+              toast.fail({
+                title: error instanceof Error ? error.message : "Failed to delete recipient",
+              });
+            });
+          }
           setDeleting(null);
         }}
       />

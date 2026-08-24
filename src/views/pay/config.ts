@@ -20,13 +20,13 @@ export const PAYOUT_TABLE_COLUMNS =
 export const HISTORY_PAGE_SIZE = 10;
 export const HISTORY_STATUS_FILTER = {
   All: "all",
-  Complete: "complete",
+  Complete: "completed",
   Failed: "failed",
 } as const;
-export const HISTORY_TIME_FILTER = {
+export const HISTORY_ASSET_FILTER = {
   All: "all",
-  Days30: "30d",
-  Days90: "90d",
+  USDT: "USDT",
+  USDC: "USDC",
 } as const;
 
 export const AMOUNT_MAX_DECIMALS = 6;

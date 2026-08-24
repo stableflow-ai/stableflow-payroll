@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { resolvePayOriginToken } from "@/components/you-pay/utils";
+import { PAYER_BLOCKCHAINS } from "@/config/chains";
 import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
 import { useQuickPayPrefsStore } from "@/stores/quick-pay-prefs";
 
-export function usePayOriginToken(allowedBlockchains?: string[] | null) {
+export function usePayOriginToken(allowedBlockchains: string[] | null = PAYER_BLOCKCHAINS) {
   const savedOriginAssetId = useQuickPayPrefsStore((s) => s.originAssetId);
   const setSavedOriginAssetId = useQuickPayPrefsStore((s) => s.setOriginAssetId);
   const findByAssetId = useIntentsTokensStore((s) => s.findByAssetId);

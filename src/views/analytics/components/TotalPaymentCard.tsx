@@ -12,14 +12,15 @@ import {
 import { Card } from "@/components/ui/card/Card";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { formatAmount } from "@/utils";
-import { type AnalyticsVolumePoint, type VolumeRange } from "@/mocks/analytics";
+import { type VolumePeriod } from "@/types/payout";
 import { cn } from "@/lib/utils";
 import {
   CHANGE_DOWN_BG,
   CHANGE_UP_BG,
   CHART_BAR_ACTIVE,
   CHART_BAR_MUTED,
-  VOLUME_RANGE_OPTIONS,
+  VOLUME_PERIOD_OPTIONS,
+  type AnalyticsVolumePoint,
 } from "../config";
 import { ChartTooltip } from "./ChartTooltip";
 
@@ -98,11 +99,11 @@ function BarTopLabel(props: {
 }
 
 export function TotalPaymentCard(props: {
-  totalPaymentUsd: number | null;
+  totalPaymentUsd: string | number | null;
   totalPayouts: number | null;
   recipients: number | null;
-  range: VolumeRange;
-  onRangeChange: (range: VolumeRange) => void;
+  range: VolumePeriod;
+  onRangeChange: (range: VolumePeriod) => void;
   points: AnalyticsVolumePoint[];
   showBarLabels: boolean;
 }) {
@@ -168,8 +169,8 @@ export function TotalPaymentCard(props: {
         </h2>
         <Dropdown
           value={range}
-          onChange={(value) => onRangeChange(value as VolumeRange)}
-          options={[...VOLUME_RANGE_OPTIONS]}
+          onChange={(value) => onRangeChange(value as VolumePeriod)}
+          options={[...VOLUME_PERIOD_OPTIONS]}
           triggerClassName="h-9 w-[118px] rounded-[18px] border-black/10 bg-transparent px-4"
         />
       </div>

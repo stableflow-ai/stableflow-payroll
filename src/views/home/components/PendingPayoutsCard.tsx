@@ -2,13 +2,19 @@ import { Link } from "react-router-dom";
 import { Card } from "@/components/ui/card/Card";
 import { IconArrowDown } from "@/components/icons/arrow-down";
 import { IconLoading } from "@/components/icons/loading";
+import { chainDisplayName } from "@/config/chains";
 import { formatAddress, formatAmount } from "@/utils";
-import type { PendingPayout } from "@/mocks/home";
+import type { PayPaymentItem } from "@/types/payout";
+import {
+  paymentDisplayAmount,
+  paymentDisplayNetwork,
+  paymentDisplayToken,
+} from "@/views/pay/utils";
 import { ViewAllLink } from "./ViewAllLink";
 
 const PENDING_HREF = "/pay/pending";
 
-export function PendingPayoutsCard({ items }: { items: PendingPayout[] }) {
+export function PendingPayoutsCard({ items }: { items: PayPaymentItem[] }) {
   return (
     <Card className="flex min-h-[388px] flex-col">
       <div className="flex items-center justify-between gap-3">
@@ -19,7 +25,7 @@ export function PendingPayoutsCard({ items }: { items: PendingPayout[] }) {
       </div>
       <ul className="mt-4 flex flex-col">
         {items.map((item) => (
-          <li key={item.id} className="border-b border-black/10 last:border-b-0">
+          <li key={item.id || item.submittedAt} className="border-b border-black/10 last:border-b-0">
             <Link
               to={PENDING_HREF}
               className="flex items-center gap-2.5 py-3.5"
@@ -29,10 +35,10 @@ export function PendingPayoutsCard({ items }: { items: PendingPayout[] }) {
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block font-montserrat text-sm font-medium text-black">
-                  {formatAmount(item.amount, { prefix: "" })} {item.symbol} · {item.network}
+                  {formatAmount(paymentDisplayAmount(item), { prefix: "" })} {paymentDisplayToken(item)} · {chainDisplayName(paymentDisplayNetwork(item))}
                 </span>
                 <span className="mt-0.5 block font-montserrat text-[10px] text-[#606060]">
-                  To {formatAddress(item.toAddress)}
+                  To {formatAddress(item.recipient)}
                 </span>
               </span>
               <IconArrowDown className="-rotate-90 text-black" />

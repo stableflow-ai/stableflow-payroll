@@ -21,7 +21,7 @@ import { usePartnerReports } from "@/hooks/use-partner-reports";
 import useToast from "@/hooks/use-toast";
 import { tokenLogoUrl } from "@/lib/logo";
 import { formatAmount, formatDate } from "@/utils";
-import { DateRangePicker } from "./components/DateRangePicker";
+import { DateRangePicker } from "@/components/date-range-picker/DateRangePicker";
 import { ReportsAddressCell } from "./components/ReportsAddressCell";
 import { ReportsAssetCell } from "./components/ReportsAssetCell";
 import { ReportsLineChart } from "./components/ReportsLineChart";

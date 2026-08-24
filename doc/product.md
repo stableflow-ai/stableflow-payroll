@@ -12,9 +12,9 @@ The previous app (`stableflow-pay-old`) is a visual and payout-flow reference on
 | --- | --- | --- | --- |
 | Auth | `/login`, `/register` | shipped | Email + password. Register body: `name`, `email`, `password`, `inviteCode`. Guest forgot password: email, verification code, and new password in a dialog. Authed users change password from the header avatar menu. |
 | Marketing | `/howitworks` | shipped | Public. Linked from the auth shell. |
-| Home | `/` | shipped | Dashboard: summary, charts, pending. Behind `RequireAuth` + `AppLayout`. Data is mock until the API exists. |
-| Pay | `/pay`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request` | in progress | See [Pay](#pay). Pending list uses `GET /v1/pay/payments/pending`. History is mock until the API exists. |
-| Analytics | `/analytics` | shipped | Month selector, Total Payment chart, latest payouts, calendar, asset mix, top networks. Data is mock until the API exists. |
+| Home | `/` | shipped | Dashboard: summary, charts, pending. Behind `RequireAuth` + `AppLayout`. Overview, volume, pending, and recent use `/v1/pay/*`. Balance is summed on-chain from connected payer-chain USDT/USDC. |
+| Pay | `/pay`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request` | in progress | See [Pay](#pay). Pending list uses `GET /v1/pay/payments/pending`. History uses `GET /v1/pay/payments`. Address book uses `/v1/pay/recipient*`. |
+| Analytics | `/analytics` | shipped | Month selector, Total Payment chart (`/v1/pay/payments/volume`, day/week/month), latest payouts (`/payments/recent`), calendar / asset mix / networks from `GET /v1/pay/analytics`. Shows a skeleton while analytics loads. |
 | Partner | `/partner`, `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | shipped | See [Partner](#partner). Registration, API Keys, and Reports are mock until the API exists. Support / Terms / Docs are placeholders. |
 
 ## Auth
@@ -33,7 +33,7 @@ Guards live in `src/router/guards.tsx`: `RequireAuth`, `RedirectIfAuthed`. Do no
 
 ## Home
 
-One authenticated page at `/`. Summary, payment volume chart, pending payouts, and recent payouts. Shared chrome is `AppLayout` + `AppHeader`, not the page itself. Dashboard numbers currently come from `src/mocks/home.ts` (see [mocks.md](mocks.md)).
+One authenticated page at `/`. Summary, payment volume chart, pending payouts, and recent payouts. Shared chrome is `AppLayout` + `AppHeader`, not the page itself. Total Payment and Recipients come from `GET /v1/pay/overview`. Volume uses `GET /v1/pay/payments/volume` (`day` / `week` / `month`). Pending and recent lists use `/v1/pay/payments/pending` and `/recent` (max 6). Balance is summed client-side from connected wallets on `payerEnabled` chains.
 
 ## Pay
 
@@ -41,13 +41,13 @@ One authenticated page at `/`. Summary, payment volume chart, pending payouts, a
 
 | Menu | Route | Notes |
 | --- | --- | --- |
-| Single Payout | `/pay` | One address, one payment. Recipients address book is a dialog on this page (mock data). |
-| Batch Payout | `/pay/batch` | CSV / Google Sheets / manual rows. Validate then preview. `POST /v1/pay/batch/quote\|swap\|submit`. Recipients are wallet addresses. |
+| Single Payout | `/pay` | One address, one payment. Recipients address book is a dialog on this page (`/v1/pay/recipient*`). Origin tokens are limited to `payerEnabled` chains. |
+| Batch Payout | `/pay/batch` | CSV / Google Sheets / manual rows. Validate then preview. `POST /v1/pay/batch/quote\|swap\|submit`. Recipients are wallet addresses. Origin tokens are limited to `payerEnabled` chains. |
 | Request Payment | `/pay/request` | Create a payment request (receiving address, amount, token, optional private receive). Received Payment list is mock until the API exists. Payer-open `/pay?request=:id` is planned. |
-| Pending Payouts | `/pay/pending` | In-flight payouts from `GET /v1/pay/payments/pending`. Asset shows `token · chainName`. Time uses `submitted_at`. Sidebar badge is the list length. |
-| Transaction History | `/pay/history` | Mock list until the API exists. Search, status/asset/time filters, pagination. Export CSV is UI-only. |
+| Pending Payouts | `/pay/pending` | In-flight payouts from `GET /v1/pay/payments/pending`. Amount/Asset use destination fields. Time uses `submitted_at`. Sidebar badge is the list length. |
+| Transaction History | `/pay/history` | `GET /v1/pay/payments`. Search `q`, status `completed`/`failed`, token USDT/USDC, `start_time`/`end_time` unix seconds via DateRangePicker. Export CSV is UI-only. |
 
-Single payout uses `POST /v1/pay/single/quote|swap|submit`. Memo and notify-recipient email are sent on swap only, not on quote. Batch payout uses `POST /v1/pay/batch/quote|swap|submit`. Origin broadcast is EVM-only. Recipients are wallet addresses (not employees). The address book is not a route.
+Single payout uses `POST /v1/pay/single/quote|swap|submit`. Memo and notify-recipient email are sent on swap only, not on quote. Batch payout uses `POST /v1/pay/batch/quote|swap|submit`. Origin broadcast is EVM-only (`payerEnabled` on `FIXED_CHAINS`). Recipients are wallet addresses (not employees). The address book is not a route.
 
 Request Payment (`/pay/request`) lets the logged-in user set a receiving address (autofilled from the connected wallet for the selected token chain), amount, dest token, optional description, and **Receive Privately**. Private receive signs an empty-intents MultiPayload (V1 versioned nonce from `intents.near` `current_salt`) on the matching chain wallet, then `POST https://1click.chaindefuser.com/v0/auth/authenticate` to store a User-Session (refresh via `/v0/auth/refresh`). Generate Payment Link and Withdraw are UI-only until product APIs exist.
 
@@ -55,7 +55,7 @@ Payer-open of a request link is **planned**: `/pay?request=:id` on Single Payout
 
 ## Analytics
 
-One authenticated page at `/analytics`. Title-row year-month picker (year arrows + 12-month grid, trigger `YYYY MMM`) drives the summary numbers, Payment Calendar, Asset Distribution, and Payout Networks (top 5). Total Payment bars use the same Daily / Weekly / Monthly / All range as Home. Latest Payouts is a global recent list. Data is mock until the API exists (see [mocks.md](mocks.md)).
+One authenticated page at `/analytics`. Title-row year-month picker (year arrows + 12-month grid, trigger `YYYY MMM`) drives `GET /v1/pay/analytics` (stats, Payment Calendar, Asset Distribution, Payout Networks top 5). Total Payment bars use Daily / Weekly / Monthly via `GET /v1/pay/payments/volume`. Latest Payouts uses `GET /v1/pay/payments/recent`. The page shows a skeleton while analytics is loading.
 
 ## Partner
 

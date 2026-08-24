@@ -4,6 +4,7 @@ Record every create/update of components under `src/components/ui/` so other age
 
 ## 2026-08-24
 
+- **DateRangePicker:** Shared time-range calendar (presets + two-click range). Extracted from Partner Reports for History.
 - **Table:** Scroll children wrap in `w-max min-w-full` so the header spans the horizontal overflow; `toolbar` / `footer` sit outside the scroller; cells use `min-w-0`.
 - **Dropdown:** Optional `label` prefix on the trigger (gray, left; selected value stays right-aligned). Narrow triggers truncate label/value and keep the chevron inside (`overflow-hidden`).
 - **Pagination:** Restyled to Montserrat / currentColor; typed `page`, `totalPage`, `onPageChange`.

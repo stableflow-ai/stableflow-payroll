@@ -1,6 +1,6 @@
 import { Icon2Right } from "@/components/icons/to-right";
 import { chainLogoUrl, tokenLogoUrl } from "@/lib/logo";
-import type { AssetToken } from "@/mocks/analytics";
+import type { AssetToken } from "../config";
 
 function TokenMark({ token }: { token: AssetToken }) {
   return (

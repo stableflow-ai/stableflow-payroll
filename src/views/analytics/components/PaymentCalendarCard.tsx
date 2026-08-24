@@ -10,7 +10,7 @@ import { Card } from "@/components/ui/card/Card";
 import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { DATE_FORMAT, formatAmount, formatDate } from "@/utils";
 import { cn } from "@/lib/utils";
-import type { CalendarDay } from "@/mocks/analytics";
+import type { CalendarDay } from "../config";
 import { CALENDAR_PAYOUT_BG, WEEKDAY_LABELS } from "../config";
 
 function monthStart(month: string) {

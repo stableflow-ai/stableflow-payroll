@@ -9,8 +9,6 @@ export function PayoutMemoCell({ memo }: { memo?: string | null }) {
   const truncated = text.length > MEMO_PREVIEW_MAX;
   const preview = truncated ? `${text.slice(0, MEMO_PREVIEW_MAX)}...` : text;
 
-  if (!truncated) return <span className="truncate">{preview}</span>;
-
   return (
     <Tooltip
       content={

@@ -69,12 +69,55 @@ export interface PayBatchSubmitParam {
   txHash: string;
 }
 
-export interface PayPending {
-  id?: string;
+export interface PayPaymentItem {
+  id: string;
   recipient: string;
   amount: string;
   token: string;
   network: string;
+  destinationAmount: string;
+  destinationToken: string;
+  destinationNetwork: string;
+  destinationTxHash: string;
+  txHash: string;
+  status: string;
   submittedAt: string;
+  paidAt: string;
   memo?: string | null;
+}
+
+export type PayPending = PayPaymentItem;
+
+export const VOLUME_PERIOD = {
+  Daily: "day",
+  Weekly: "week",
+  Monthly: "month",
+} as const;
+
+export type VolumePeriod = (typeof VOLUME_PERIOD)[keyof typeof VOLUME_PERIOD];
+
+export type VolumePoint = {
+  label: string;
+  value: number;
+};
+
+export interface PayOverview {
+  totalPayment: string | null;
+  recipients: number | null;
+}
+
+export interface PayPaymentsQuery {
+  page: number;
+  pageSize: number;
+  q?: string;
+  status?: string;
+  token?: string;
+  start_time?: number;
+  end_time?: number;
+}
+
+export interface PayPaymentsResp {
+  total: number;
+  totalPage: number;
+  list: PayPaymentItem[];
 }

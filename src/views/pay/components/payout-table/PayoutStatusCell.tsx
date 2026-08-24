@@ -11,6 +11,13 @@ export const PAYOUT_ROW_STATUS = {
 
 export type PayoutRowStatus = (typeof PAYOUT_ROW_STATUS)[keyof typeof PAYOUT_ROW_STATUS];
 
+export function paymentRowStatus(status: string): PayoutRowStatus {
+  const key = status.toLowerCase();
+  if (key === "completed" || key === "complete") return PAYOUT_ROW_STATUS.Complete;
+  if (key === "failed") return PAYOUT_ROW_STATUS.Failed;
+  return PAYOUT_ROW_STATUS.Pending;
+}
+
 function ExplorerLink({ href, className }: { href: string | null; className?: string }) {
   if (!href) return null;
   return (

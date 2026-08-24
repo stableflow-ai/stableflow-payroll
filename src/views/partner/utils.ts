@@ -1,12 +1,10 @@
-import {
-  differenceInCalendarDays,
-  endOfDay,
-  format,
-  isSameDay,
-  startOfDay,
-  subDays,
-} from "date-fns";
+import { differenceInCalendarDays, format, startOfDay, subDays } from "date-fns";
 import { getChainByNetwork } from "@/config/chains";
+import {
+  isInDateRange,
+  lastNDaysRange,
+  type DateRangeValue,
+} from "@/components/date-range-picker/utils";
 import {
   ADDITIONAL_DETAILS_MAX_LENGTH,
   COMPANY_MAX_LENGTH,
@@ -14,15 +12,12 @@ import {
   LAST_NAME_MAX_LENGTH,
   PURPOSE_MAX_LENGTH,
   REPORT_AMOUNT_FILTER,
-  REPORT_TIME_PRESET_OPTIONS,
   TELEGRAM_MAX_LENGTH,
   WEBSITE_MAX_LENGTH,
 } from "./config";
 
-export type DateRangeValue = {
-  from: Date;
-  to: Date;
-};
+export { isInDateRange, lastNDaysRange };
+export type { DateRangeValue };
 
 export function maskApiKey(key: string): string {
   if (key.length <= 11) return key;
@@ -61,32 +56,6 @@ export function partnerRegistrationError(input: {
     optionalTrimmed(input.telegram, "Telegram handle", TELEGRAM_MAX_LENGTH) ??
     optionalTrimmed(input.additionalDetails, "Additional details", ADDITIONAL_DETAILS_MAX_LENGTH)
   );
-}
-
-export function lastNDaysRange(days: number, now: Date = new Date()): DateRangeValue {
-  return {
-    from: startOfDay(subDays(now, days - 1)),
-    to: endOfDay(now),
-  };
-}
-
-export function matchesLastNDays(range: DateRangeValue, days: number, now: Date = new Date()) {
-  const expected = lastNDaysRange(days, now);
-  return isSameDay(range.from, expected.from) && isSameDay(range.to, expected.to);
-}
-
-export function formatDateRangeLabel(range: DateRangeValue, now: Date = new Date()) {
-  const preset = REPORT_TIME_PRESET_OPTIONS.find((option) =>
-    matchesLastNDays(range, option.days, now),
-  );
-  if (preset) return preset.label;
-  return `${format(range.from, "MMM d, yyyy")} – ${format(range.to, "MMM d, yyyy")}`;
-}
-
-export function isInDateRange(iso: string, range: DateRangeValue) {
-  const time = new Date(iso).getTime();
-  if (Number.isNaN(time)) return true;
-  return time >= range.from.getTime() && time <= range.to.getTime();
 }
 
 export function matchesAmountFilter(amount: number, filter: string) {

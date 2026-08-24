@@ -21,12 +21,12 @@ import {
   useFloatingPosition,
 } from "@/components/ui/overlay/use-floating-position";
 import { cn } from "@/lib/utils";
-import { REPORT_TIME_PRESET_OPTIONS, REPORT_WEEKDAY_LABELS } from "../config";
+import { DATE_RANGE_PRESET_OPTIONS, DATE_RANGE_WEEKDAY_LABELS } from "./config";
 import {
   formatDateRangeLabel,
   lastNDaysRange,
   type DateRangeValue,
-} from "../utils";
+} from "./utils";
 
 export function DateRangePicker(props: {
   value: DateRangeValue;
@@ -155,7 +155,7 @@ export function DateRangePicker(props: {
               </div>
 
               <div className="mb-1 grid grid-cols-7 gap-1">
-                {REPORT_WEEKDAY_LABELS.map((label) => (
+                {DATE_RANGE_WEEKDAY_LABELS.map((label) => (
                   <div
                     key={label}
                     className="text-center text-[11px] font-medium text-[#aaa]"
@@ -194,7 +194,7 @@ export function DateRangePicker(props: {
               </div>
 
               <div className="mt-3 flex flex-col gap-1 border-t border-black/10 pt-2">
-                {REPORT_TIME_PRESET_OPTIONS.map((option) => (
+                {DATE_RANGE_PRESET_OPTIONS.map((option) => (
                   <button
                     key={option.days}
                     type="button"

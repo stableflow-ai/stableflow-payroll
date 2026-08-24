@@ -3,6 +3,7 @@ import { Dialog } from "@/components/ui/dialog/Dialog";
 import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { FLOATING_SIDE } from "@/components/ui/overlay/use-floating-position";
 import { useEnsureTokenBalances } from "@/hooks/use-token-balances";
+import { TOKEN_BALANCE_POLL_MS } from "./config";
 import type { WalletChainKind } from "@/utils";
 import { formatAmount } from "@/utils";
 import type { ChainOwners } from "@/wallet";
@@ -97,10 +98,19 @@ export function TokenNetworkDialog({
     });
   }, [tokens, symbol, allowed]);
 
+  const balanceTokens = useMemo(() => {
+    return tokens.filter((token) => {
+      if (token.symbol !== "USDT" && token.symbol !== "USDC") return false;
+      if (!allowed) return true;
+      return allowed.has(token.blockchain.toLowerCase());
+    });
+  }, [tokens, allowed]);
+
   useEnsureTokenBalances({
     owners,
-    tokens: chainsForSymbol,
-    enabled: showBalances && open && hasAnyOwner(owners) && chainsForSymbol.length > 0,
+    tokens: balanceTokens,
+    enabled: showBalances && open && hasAnyOwner(owners) && balanceTokens.length > 0,
+    pollMs: TOKEN_BALANCE_POLL_MS,
   });
 
   const sortedChains = useMemo(() => {

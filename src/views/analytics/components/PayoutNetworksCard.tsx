@@ -1,5 +1,5 @@
 import { Card } from "@/components/ui/card/Card";
-import type { NetworkShare } from "@/mocks/analytics";
+import type { NetworkShare } from "../config";
 
 export function PayoutNetworksCard({ items }: { items: NetworkShare[] }) {
   return (

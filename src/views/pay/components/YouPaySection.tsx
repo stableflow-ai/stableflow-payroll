@@ -5,6 +5,7 @@ import type { IntentsToken } from "@/stores/intents-tokens";
 import { useTokenBalance } from "@/hooks/use-token-balances";
 import { useTokenBalancesStore } from "@/stores/token-balances";
 import { useConnectedWallets } from "@/hooks/use-wallet";
+import { PAYER_BLOCKCHAINS } from "@/config/chains";
 import { ORIGIN_BALANCE_POLL_MS } from "@/views/pay/config";
 import { TokenSelectButton } from "@/views/pay/components/TokenSelectButton";
 
@@ -93,6 +94,7 @@ export function YouPaySection(props: {
         selectedAssetId={originToken?.assetId}
         showBalances
         balanceOwners={balanceOwners}
+        allowedBlockchains={PAYER_BLOCKCHAINS}
         onSelect={({ token }) => {
           onOriginTokenChange(token);
           const kind = token.chain.chainKind;

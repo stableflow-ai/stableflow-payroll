@@ -3,7 +3,7 @@ import { clearStoredSession, getAuthToken, notifyUnauthorized } from "@/lib/auth
 
 const SUCCESS_CODE = 200;
 
-type HttpMethod = "GET" | "POST";
+type HttpMethod = "GET" | "POST" | "DELETE";
 
 export type HttpQueryValue = string | number | boolean | null | undefined;
 
@@ -97,6 +97,9 @@ export async function http<T>(path: string, options: HttpOptions = {}): Promise<
   }
 
   if (payload?.code !== SUCCESS_CODE) {
+    if (res.ok && payload == null && method === "DELETE") {
+      return undefined as T;
+    }
     throw new ApiError(
       message,
       res.status,

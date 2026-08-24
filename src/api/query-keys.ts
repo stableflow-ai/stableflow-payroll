@@ -15,7 +15,18 @@ export const queryKeys = {
   payout: {
     all: ["payout"] as const,
     pending: ["payout", "pending"] as const,
+    overview: ["payout", "overview"] as const,
+    volume: (period: string) => [...queryKeys.payout.all, "volume", period] as const,
+    recent: ["payout", "recent"] as const,
+    payments: (params: unknown) => [...queryKeys.payout.all, "payments", params] as const,
     singleQuote: (body: unknown) => [...queryKeys.payout.all, "single-quote", body] as const,
     batchQuote: (body: unknown) => [...queryKeys.payout.all, "batch-quote", body] as const,
+  },
+  recipient: {
+    all: ["recipient"] as const,
+  },
+  analytics: {
+    all: ["analytics"] as const,
+    month: (month: string) => [...queryKeys.analytics.all, "month", month] as const,
   },
 } as const;

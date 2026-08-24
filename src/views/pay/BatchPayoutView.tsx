@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOutletContext } from "react-router-dom";
 import { TokenNetworkDialog } from "@/components/token-network-dialog/TokenNetworkDialog";
 import { WalletConnectDialog } from "@/components/WalletConnect";
+import { PAYER_BLOCKCHAINS } from "@/config/chains";
 import { queryKeys } from "@/api/query-keys";
 import { useBatchPayQuote, useBatchPaySwap } from "@/hooks/use-batch-payout-api";
 import { usePayOriginToken } from "@/hooks/use-pay-origin-token";
@@ -325,6 +326,7 @@ export function BatchPayoutView() {
         selectedAssetId={originToken?.assetId}
         showBalances
         balanceOwners={balanceOwners}
+        allowedBlockchains={PAYER_BLOCKCHAINS}
         onSelect={({ token }) => {
           setOriginToken(token);
           setOriginDialogOpen(false);
