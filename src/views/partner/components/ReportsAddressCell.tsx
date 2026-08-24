@@ -1,0 +1,42 @@
+import { IconCopy } from "@/components/icons/copy";
+import { IconOutLink } from "@/components/icons/link";
+import useToast from "@/hooks/use-toast";
+import { formatAddress } from "@/utils";
+
+export function ReportsAddressCell(props: {
+  address: string;
+  href: string;
+}) {
+  const { address, href } = props;
+  const toast = useToast();
+
+  return (
+    <span className="inline-flex min-w-0 items-center gap-1.5">
+      <span className="truncate">{formatAddress(address)}</span>
+      <button
+        type="button"
+        className="shrink-0 cursor-pointer text-[#909090] hover:text-black"
+        aria-label="Copy address"
+        onClick={async () => {
+          try {
+            await navigator.clipboard.writeText(address);
+            toast.success({ title: "Copied" });
+          } catch {
+            toast.fail({ title: "Could not copy" });
+          }
+        }}
+      >
+        <IconCopy className="size-3" />
+      </button>
+      <a
+        href={href}
+        target="_blank"
+        rel="noreferrer"
+        className="shrink-0 text-[#909090] hover:text-black"
+        aria-label="Open in explorer"
+      >
+        <IconOutLink />
+      </a>
+    </span>
+  );
+}

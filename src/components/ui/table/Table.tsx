@@ -24,11 +24,22 @@ function columnsStyle(columns: string): CSSProperties {
 export type TableProps = HTMLAttributes<HTMLDivElement> & {
   columns: string;
   scrollClassName?: string;
+  toolbar?: ReactNode;
+  footer?: ReactNode;
   children?: ReactNode;
 };
 
 export function Table(props: TableProps) {
-  const { columns, className, scrollClassName, children, style, ...restProps } = props;
+  const {
+    columns,
+    className,
+    scrollClassName,
+    toolbar,
+    footer,
+    children,
+    style,
+    ...restProps
+  } = props;
 
   return (
     <TableContext.Provider value={{ columns }}>
@@ -37,12 +48,14 @@ export function Table(props: TableProps) {
         style={style}
         {...restProps}
       >
+        {toolbar ? <div className="shrink-0">{toolbar}</div> : null}
         <div
           className={cn("min-h-0 flex-1 overflow-auto", scrollClassName)}
           style={{ scrollbarGutter: "stable" }}
         >
-          {children}
+          <div className="w-max min-w-full">{children}</div>
         </div>
+        {footer ? <div className="shrink-0">{footer}</div> : null}
       </Card>
     </TableContext.Provider>
   );
@@ -57,7 +70,7 @@ export function TableHeader(props: TableHeaderProps) {
   return (
     <div
       className={cn(
-        "sticky top-0 z-10 grid w-full min-w-max border-b border-black/10 bg-[#FDFDFD] font-montserrat text-sm font-medium capitalize text-[#aaa]",
+        "sticky top-0 z-10 grid w-full min-w-min border-b border-black/10 bg-[#FDFDFD] font-montserrat text-sm font-medium capitalize text-[#aaa]",
         className,
       )}
       style={{ ...columnsStyle(columns), ...style }}
@@ -70,7 +83,7 @@ export type TableBodyProps = HTMLAttributes<HTMLDivElement>;
 
 export function TableBody(props: TableBodyProps) {
   const { className, ...restProps } = props;
-  return <div className={cn("min-w-max", className)} {...restProps} />;
+  return <div className={cn("w-full", className)} {...restProps} />;
 }
 
 export type TableRowProps = HTMLAttributes<HTMLDivElement>;
@@ -82,7 +95,7 @@ export function TableRow(props: TableRowProps) {
   return (
     <div
       className={cn(
-        "grid w-full min-w-max border-b border-black/10 font-montserrat text-sm font-medium text-black last:border-b-0",
+        "grid w-full min-w-min border-b border-black/10 font-montserrat text-sm font-medium text-black last:border-b-0",
         className,
       )}
       style={{ ...columnsStyle(columns), ...style }}
@@ -96,7 +109,7 @@ export type TableHeadProps = HTMLAttributes<HTMLDivElement>;
 export function TableHead(props: TableHeadProps) {
   const { className, ...restProps } = props;
   return (
-    <div className={cn("flex items-center px-2 py-3.5 first:pl-0 last:pr-0", className)} {...restProps} />
+    <div className={cn("flex min-w-0 items-center px-2 py-3.5 first:pl-0 last:pr-0", className)} {...restProps} />
   );
 }
 
@@ -105,7 +118,7 @@ export type TableCellProps = HTMLAttributes<HTMLDivElement>;
 export function TableCell(props: TableCellProps) {
   const { className, ...restProps } = props;
   return (
-    <div className={cn("flex items-center px-2 py-3.5 first:pl-0 last:pr-0", className)} {...restProps} />
+    <div className={cn("flex min-w-0 items-center px-2 py-3.5 first:pl-0 last:pr-0", className)} {...restProps} />
   );
 }
 

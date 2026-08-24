@@ -6,7 +6,7 @@ Figma: DapDap V2 `41560:283`.
 
 CSS Grid compound component. Header and body rows share one `columns` template, so a scrollbar cannot shift header cells relative to body cells.
 
-Scroll model: **one** `overflow-auto` container. `TableHeader` is `position: sticky; top: 0`. Horizontal and vertical scrolling happen together. `scrollbar-gutter: stable` is set on the scroller as a fallback.
+Scroll model: **one** `overflow-auto` container. Header and body sit in a `w-max min-w-full` wrapper so a horizontal scrollbar also covers the header. `TableHeader` is `position: sticky; top: 0`. `scrollbar-gutter: stable` is set on the scroller as a fallback. Cells use `min-w-0` so header and body share the same `columns` track sizes.
 
 The root is a [Card](card.md). Set a max height on `className` or `scrollClassName` to enable vertical scrolling.
 
@@ -28,6 +28,8 @@ The root is a [Card](card.md). Set a max height on `className` or `scrollClassNa
 | `columns` | `string` | required | e.g. `"minmax(160px,1.4fr) minmax(80px,0.7fr) minmax(140px,1fr)"` |
 | `className` | `string` | — | Card (set `max-h-[480px]` here for vertical scroll) |
 | `scrollClassName` | `string` | — | Inner overflow container |
+| `toolbar` | `ReactNode` | — | Above the scroller (title, filters). Does not scroll horizontally with rows. |
+| `footer` | `ReactNode` | — | Below the scroller (pagination). |
 | ...rest | div attributes | — | |
 
 **TableHeader / TableBody / TableRow / TableHead / TableCell**

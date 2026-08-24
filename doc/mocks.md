@@ -60,7 +60,7 @@ Every mock reader must include this comment:
 | request | `MOCK_ENABLED.request` | `src/mocks/request-payment.ts` | `useRequestPayment` |
 | history | `MOCK_ENABLED.history` | `src/mocks/history.ts` | `useTransactionHistory` |
 | analytics | `MOCK_ENABLED.analytics` | `src/mocks/analytics.ts` | `useAnalytics` |
-| partner | `MOCK_ENABLED.partner` | `src/mocks/partner.ts` | `usePartner` |
+| partner | `MOCK_ENABLED.partner` | `src/mocks/partner.ts` | `usePartner`, `usePartnerReports` (`getPartnerReports`) |
 
 ## Constraints
 

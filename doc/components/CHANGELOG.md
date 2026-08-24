@@ -4,6 +4,8 @@ Record every create/update of components under `src/components/ui/` so other age
 
 ## 2026-08-24
 
+- **Table:** Scroll children wrap in `w-max min-w-full` so the header spans the horizontal overflow; `toolbar` / `footer` sit outside the scroller; cells use `min-w-0`.
+- **Dropdown:** Optional `label` prefix on the trigger (gray, left; selected value stays right-aligned). Narrow triggers truncate label/value and keep the chevron inside (`overflow-hidden`).
 - **Pagination:** Restyled to Montserrat / currentColor; typed `page`, `totalPage`, `onPageChange`.
 - **SearchInput / Dropdown:** Default placeholders (`Search` / `Select`) live on the component, not sibling `config.ts`.
 - **Tooltip:** `leaveDelay` `0` (default) sets `pointer-events: none` on the panel so it cannot cover the trigger and flicker.

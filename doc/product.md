@@ -15,7 +15,7 @@ The previous app (`stableflow-pay-old`) is a visual and payout-flow reference on
 | Home | `/` | shipped | Dashboard: summary, charts, pending. Behind `RequireAuth` + `AppLayout`. Data is mock until the API exists. |
 | Pay | `/pay`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request` | in progress | See [Pay](#pay). Pending list uses `GET /v1/pay/payments/pending`. History is mock until the API exists. |
 | Analytics | `/analytics` | shipped | Month selector, Total Payment chart, latest payouts, calendar, asset mix, top networks. Data is mock until the API exists. |
-| Partner | `/partner`, `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | shipped | See [Partner](#partner). Registration and API Keys are mock until the API exists. Reports / Support / Terms / Docs are placeholders. |
+| Partner | `/partner`, `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | shipped | See [Partner](#partner). Registration, API Keys, and Reports are mock until the API exists. Support / Terms / Docs are placeholders. |
 
 ## Auth
 
@@ -64,7 +64,7 @@ For SDK users. Submenus:
 | Menu | Route | Access |
 | --- | --- | --- |
 | API Keys | `/partner/api-keys` | Only after the user is a Partner. Default landing once they are. |
-| Reports | `/partner/reports` | Only after the user is a Partner. API key usage analytics. |
+| Reports | `/partner/reports` | Only after the user is a Partner. Time / API key / network filters, volume and transaction charts, and a paginated usage table. Mock until the API exists. |
 | Support | `/partner/support` | Contact. Always available. |
 | Terms of Service | `/partner/terms` | Always available. |
 | Developer Docs | `/partner/docs` | Always available. |
@@ -98,7 +98,7 @@ Registration fields:
 /pay/history      PayLayout → TransactionHistoryView
 /partner          PartnerLayout → PartnerRegistrationView (redirects to api-keys if Partner)
 /partner/api-keys RequirePartner → ApiKeysView
-/partner/reports  RequirePartner → placeholder
+/partner/reports  RequirePartner → ReportsView
 /partner/support  PartnerPlaceholderView
 /partner/terms    PartnerPlaceholderView
 /partner/docs     PartnerPlaceholderView

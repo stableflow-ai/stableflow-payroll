@@ -21,12 +21,14 @@ The panel is `position: fixed`. `useFloatingPosition` measures it off-flow (hidd
 - Height 36px, `border-radius: 6px`
 - Border `#E3E3E3`, background `#FFF`
 - Montserrat Medium 14px / `#000`
+- Trigger is `overflow-hidden`; label and value truncate so the chevron stays inside when the control is narrow.
 
 ## Props
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
 | `options` | `{ value: string; label: ReactNode; disabled?: boolean }[]` | required | |
+| `label` | `ReactNode` | — | Optional prefix on the trigger (gray, left-aligned) |
 | `value` | `string` | — | Controlled value |
 | `defaultValue` | `string` | — | Uncontrolled initial value |
 | `onChange` | `(value: string) => void` | — | Fired on select |

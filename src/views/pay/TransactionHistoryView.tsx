@@ -127,8 +127,8 @@ export function TransactionHistoryView() {
               setStatus(value);
               setPage(1);
             }}
-            className="flex-1"
-            triggerClassName="w-full md:w-[141px]"
+            className="flex-1 md:w-[141px]"
+            triggerClassName="w-full"
             options={[
               { value: HISTORY_STATUS_FILTER.All, label: "All Status" },
               { value: HISTORY_STATUS_FILTER.Complete, label: "Complete" },
@@ -141,8 +141,8 @@ export function TransactionHistoryView() {
               setAsset(value);
               setPage(1);
             }}
-            className="flex-1"
-            triggerClassName="w-full md:w-[141px]"
+            className="flex-1 md:w-[141px]"
+            triggerClassName="w-full"
             options={assetOptions}
           />
           <Dropdown
@@ -151,8 +151,8 @@ export function TransactionHistoryView() {
               setTime(value);
               setPage(1);
             }}
-            className="flex-1"
-            triggerClassName="w-full md:w-[141px]"
+            className="flex-1 md:w-[141px]"
+            triggerClassName="w-full"
             options={[
               { value: HISTORY_TIME_FILTER.All, label: "All Time" },
               { value: HISTORY_TIME_FILTER.Days30, label: "Last 30 days" },

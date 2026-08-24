@@ -20,6 +20,7 @@ export type DropdownProps = {
   defaultValue?: string;
   onChange?: (value: string) => void;
   options: DropdownOption[];
+  label?: ReactNode;
   placeholder?: string;
   disabled?: boolean;
   className?: string;
@@ -33,6 +34,7 @@ export function Dropdown(props: DropdownProps) {
     defaultValue,
     onChange,
     options,
+    label,
     placeholder = "Select",
     disabled = false,
     className,
@@ -99,7 +101,7 @@ export function Dropdown(props: DropdownProps) {
   }, [open]);
 
   return (
-    <div className={cn("relative inline-block", className)}>
+    <div className={cn("relative inline-block min-w-0", className)}>
       <button
         ref={triggerRef}
         type="button"
@@ -111,12 +113,15 @@ export function Dropdown(props: DropdownProps) {
           setOpen((current) => !current);
         }}
         className={cn(
-          "inline-flex h-9 w-full items-center justify-between gap-3 rounded-[6px] border border-[#E3E3E3] bg-white px-3 font-montserrat text-sm font-medium text-black outline-none",
+          "inline-flex h-9 w-full min-w-0 items-center justify-between gap-2 overflow-hidden rounded-[6px] border border-[#E3E3E3] bg-white px-3 font-montserrat text-sm font-medium text-black outline-none",
           disabled && "cursor-not-allowed opacity-30",
           triggerClassName,
         )}
       >
-        <span className="min-w-0 truncate">{selectedOption?.label ?? placeholder}</span>
+        {label ? <span className="min-w-0 shrink truncate text-[#aaa]">{label}</span> : null}
+        <span className={cn("min-w-0 truncate", label && "flex-1 text-right")}>
+          {selectedOption?.label ?? placeholder}
+        </span>
         <IconArrowDown
           className={cn(
             "h-1.5 w-2.75 shrink-0 text-black transition-transform",

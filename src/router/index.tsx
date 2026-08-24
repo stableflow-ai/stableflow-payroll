@@ -15,6 +15,7 @@ import { PayLayout } from "@/layouts/PayLayout";
 import { ApiKeysView } from "@/views/partner/ApiKeysView";
 import { PartnerPlaceholderView } from "@/views/partner/PartnerPlaceholderView";
 import { PartnerRegistrationView } from "@/views/partner/PartnerRegistrationView";
+import { ReportsView } from "@/views/partner/ReportsView";
 import { RedirectIfAuthed, RequireAuth, RequirePartner } from "./guards";
 
 export const router = createBrowserRouter([
@@ -70,7 +71,7 @@ export const router = createBrowserRouter([
                 element: <RequirePartner />,
                 children: [
                   { path: "/partner/api-keys", element: <ApiKeysView /> },
-                  { path: "/partner/reports", element: <PartnerPlaceholderView /> },
+                  { path: "/partner/reports", element: <ReportsView /> },
                 ],
               },
               { path: "/partner/support", element: <PartnerPlaceholderView /> },
