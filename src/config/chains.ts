@@ -86,6 +86,10 @@ export function getChainByNetwork(network: string): ChainConfig | undefined {
     || (aliased ? byBlockchain.get(aliased) ?? byChainName.get(aliased) : undefined);
 }
 
+export function chainDisplayName(network: string): string {
+  return getChainByNetwork(network)?.chainName ?? String(network || "").trim();
+}
+
 export function networkToChainId(network: string): number | null {
   return getChainByNetwork(network)?.chainId ?? null;
 }

@@ -138,7 +138,7 @@ export function useOrderQuery(id: string) {
 | POST | `/v1/pay/batch/submit` | yes | `PayBatchSubmitParam` | `void` | `batchSubmit` | commit queue |
 | GET | `/v1/pay/payments/pending` | yes | — | `PayPending[]` | `getPendingPayments` | `usePendingPaymentsQuery` |
 
-Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`, `ChangePasswordBody`, `ResetPasswordBody`, `ResetPasswordCodeBody`). Payout types: `src/types/payout.ts`. Single and batch quote bodies use 1Click `network` codes (`eth`, `arb`, `sol`, …) plus `token` (`USDT` / `USDC`), not 1Click `assetId`. Single `memo` and `notifyEmail` belong on `PaySingleSwapParam` only, not on quote. Batch `receives` use `address` (wallet, no `employeeId`). `GET /v1/pay/payments/pending` unwraps either `PayPending[]` or `{ payments: PayPending[] }`. Request Payment and non-EVM origin broadcast are not wired.
+Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`, `ChangePasswordBody`, `ResetPasswordBody`, `ResetPasswordCodeBody`). Payout types: `src/types/payout.ts`. Single and batch quote bodies use 1Click `network` codes (`eth`, `arb`, `sol`, …) plus `token` (`USDT` / `USDC`), not 1Click `assetId`. Single `memo` and `notifyEmail` belong on `PaySingleSwapParam` only, not on quote. Batch `receives` use `address` (wallet, no `employeeId`). `GET /v1/pay/payments/pending` returns snake_case rows (`submitted_at`, `network` as 1Click codes); `getPendingPayments` maps them to `PayPending`. The pending table shows Asset as `token · chainName` and Time from `submitted_at`. Request Payment and non-EVM origin broadcast are not wired.
 
 Public files:
 

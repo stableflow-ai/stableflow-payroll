@@ -44,7 +44,7 @@ One authenticated page at `/`. Summary, payment volume chart, pending payouts, a
 | Single Payout | `/pay` | One address, one payment. Recipients address book is a dialog on this page (mock data). |
 | Batch Payout | `/pay/batch` | CSV / Google Sheets / manual rows. Validate then preview. `POST /v1/pay/batch/quote\|swap\|submit`. Recipients are wallet addresses. |
 | Request Payment | `/pay/request` | Create a payment request (receiving address, amount, token, optional private receive). Received Payment list is mock until the API exists. Payer-open `/pay?request=:id` is planned. |
-| Pending Payouts | `/pay/pending` | In-flight payouts from `GET /v1/pay/payments/pending`. Sidebar badge is the list length. |
+| Pending Payouts | `/pay/pending` | In-flight payouts from `GET /v1/pay/payments/pending`. Asset shows `token · chainName`. Time uses `submitted_at`. Sidebar badge is the list length. |
 | Transaction History | `/pay/history` | Mock list until the API exists. Search, status/asset/time filters, pagination. Export CSV is UI-only. |
 
 Single payout uses `POST /v1/pay/single/quote|swap|submit`. Memo and notify-recipient email are sent on swap only, not on quote. Batch payout uses `POST /v1/pay/batch/quote|swap|submit`. Origin broadcast is EVM-only. Recipients are wallet addresses (not employees). The address book is not a route.

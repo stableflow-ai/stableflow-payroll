@@ -7,10 +7,6 @@ function pendingRowId(row: PayPending, index: number) {
   return row.id || [row.recipient, row.submittedAt, row.amount, row.token, row.network, index].join("|");
 }
 
-function explorerUrl(row: PayPending) {
-  return row.explorerUrl || row.txUrl || null;
-}
-
 export function PendingPayoutsView() {
   const query = usePendingPaymentsQuery();
   const rows = (query.data ?? []).map((item, index) => ({
@@ -22,7 +18,6 @@ export function PendingPayoutsView() {
     memo: item.memo,
     time: item.submittedAt,
     status: PAYOUT_ROW_STATUS.Pending,
-    explorerUrl: explorerUrl(item),
   }));
 
   if (query.isError) {

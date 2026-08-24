@@ -6,6 +6,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/Table";
+import { chainDisplayName } from "@/config/chains";
 import { formatAmount, formatDate } from "@/utils";
 import { PAYOUT_TABLE_COLUMNS } from "../../config";
 import { PayoutMemoCell } from "./PayoutMemoCell";
@@ -43,7 +44,7 @@ export function PayoutsTable(props: {
       </TableHeader>
       <TableBody>
         {rows.length === 0 ? (
-          <p className="py-8 font-montserrat text-sm text-[#909090]">{empty}</p>
+          <p className="py-8 font-montserrat text-sm text-[#909090] text-center">{empty}</p>
         ) : (
           rows.map((row) => (
             <TableRow key={row.id}>
@@ -52,7 +53,7 @@ export function PayoutsTable(props: {
               </TableCell>
               <TableCell>{formatAmount(row.amount, { prefix: "" })}</TableCell>
               <TableCell>
-                {row.token} · {row.network}
+                {row.token} · {chainDisplayName(row.network)}
               </TableCell>
               <TableCell>
                 <PayoutMemoCell memo={row.memo} />

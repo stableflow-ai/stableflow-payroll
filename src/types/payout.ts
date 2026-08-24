@@ -70,13 +70,11 @@ export interface PayBatchSubmitParam {
 }
 
 export interface PayPending {
+  id?: string;
   recipient: string;
   amount: string;
   token: string;
   network: string;
   submittedAt: string;
   memo?: string | null;
-  explorerUrl?: string | null;
-  txUrl?: string | null;
-  id?: string;
 }
