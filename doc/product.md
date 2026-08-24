@@ -14,7 +14,7 @@ The previous app (`stableflow-pay-old`) is a visual and payout-flow reference on
 | Marketing | `/howitworks` | shipped | Public. Linked from the auth shell. |
 | Home | `/` | shipped | Dashboard: summary, charts, pending. Behind `RequireAuth` + `AppLayout`. Data is mock until the API exists. |
 | Pay | `/pay`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request` | in progress | See [Pay](#pay). Pending list uses `GET /v1/pay/payments/pending`. History is mock until the API exists. |
-| Analytics | `/analytics` | planned | More charts on one page. |
+| Analytics | `/analytics` | shipped | Month selector, Total Payment chart, latest payouts, calendar, asset mix, top networks. Data is mock until the API exists. |
 | Partner | `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | planned | See [Partner](#partner). |
 
 ## Auth
@@ -55,7 +55,7 @@ Payer-open of a request link is **planned**: `/pay?request=:id` on Single Payout
 
 ## Analytics
 
-One authenticated page at `/analytics` with additional charts beyond Home.
+One authenticated page at `/analytics`. Title-row year-month picker (year arrows + 12-month grid, trigger `YYYY MMM`) drives the summary numbers, Payment Calendar, Asset Distribution, and Payout Networks (top 5). Total Payment bars use the same Daily / Weekly / Monthly / All range as Home. Latest Payouts is a global recent list. Data is mock until the API exists (see [mocks.md](mocks.md)).
 
 ## Partner
 
@@ -89,6 +89,7 @@ Registration fields (when that screen is built):
 /register         RedirectIfAuthed → RegisterView
 /howitworks       public → HowItWorksView
 /                 RequireAuth → AppLayout → HomeView
+/analytics        RequireAuth → AppLayout → AnalyticsView
 /pay              RequireAuth → AppLayout → PayLayout → SinglePayoutView
 /pay/batch        PayLayout → BatchPayoutView
 /pay/request      PayLayout → RequestPaymentView

@@ -3,6 +3,7 @@ import { LoginView } from "@/views/auth/LoginView";
 import { RegisterView } from "@/views/auth/RegisterView";
 import { HowItWorksView } from "@/views/how-it-works/HowItWorksView";
 import { HomeView } from "@/views/home/HomeView";
+import { AnalyticsView } from "@/views/analytics/AnalyticsView";
 import { BatchPayoutView } from "@/views/pay/BatchPayoutView";
 import { PendingPayoutsView } from "@/views/pay/PendingPayoutsView";
 import { RequestPaymentView } from "@/views/pay/RequestPaymentView";
@@ -42,6 +43,10 @@ export const router = createBrowserRouter([
           {
             path: "/",
             element: <HomeView />,
+          },
+          {
+            path: "/analytics",
+            element: <AnalyticsView />,
           },
           {
             element: <PayLayout />,

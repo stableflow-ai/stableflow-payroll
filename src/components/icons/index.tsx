@@ -34,3 +34,6 @@ export * from "./copy";
 export * from "./up";
 export * from "./duration";
 export * from "./records";
+export * from "./key";
+export * from "./support";
+export * from "./code";

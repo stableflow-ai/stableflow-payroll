@@ -35,6 +35,7 @@ src/
     auth/                 # Login, register, AuthShell, ResetPasswordDialog
     how-it-works/         # Public marketing page
     home/                 # Authenticated Home dashboard
+    analytics/            # Authenticated Analytics page
     pay/                  # Pay layout pages (Single, Batch, Request, Pending, History)
   layouts/                # AppLayout (header + outlet), PayLayout (sidebar)
   components/
@@ -42,7 +43,7 @@ src/
     icons/                # Shared SVG icon components
     layout/               # AppHeader, wallet capsule, account menu
     WalletConnect.tsx     # Wallet connect dialog (business)
-  hooks/                  # Shared hooks (`use-wallet`, `use-auth-api`, `use-toast`, `use-media-query`, `use-home-dashboard`)
+  hooks/                  # Shared hooks (`use-wallet`, `use-auth-api`, `use-toast`, `use-media-query`, `use-home-dashboard`, `use-analytics`)
   wallet/                 # Multi-chain wallet adapters and providers
   stores/                 # Zustand stores (wallet, auth session)
   api/                    # Backend wrappers by domain (`auth.ts`, `config.ts`, `query-keys.ts`)
