@@ -13,7 +13,7 @@ The previous app (`stableflow-pay-old`) is a visual and payout-flow reference on
 | Auth | `/login`, `/register` | shipped | Email + password. Register body: `name`, `email`, `password`, `inviteCode`. Guest forgot password: email, verification code, and new password in a dialog. Authed users reset from the header avatar menu. APIs are not wired yet. |
 | Marketing | `/howitworks` | shipped | Public. Linked from the auth shell. |
 | Home | `/` | shipped | Dashboard: summary, charts, pending. Behind `RequireAuth` + `AppLayout`. Data is mock until the API exists. |
-| Pay | `/pay`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request` | in progress | See [Pay](#pay). |
+| Pay | `/pay`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request` | in progress | See [Pay](#pay). Pending list uses `GET /v1/pay/payments/pending`. History is mock until the API exists. |
 | Analytics | `/analytics` | planned | More charts on one page. |
 | Partner | `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | planned | See [Partner](#partner). |
 
@@ -44,8 +44,8 @@ One authenticated page at `/`. Summary, payment volume chart, pending payouts, a
 | Single Payout | `/pay` | One address, one payment. Recipients address book is a dialog on this page (mock data). |
 | Batch Payout | `/pay/batch` | CSV / Google Sheets / manual rows. Validate then preview. `POST /v1/pay/batch/quote\|swap\|submit`. Recipients are wallet addresses. |
 | Request Payment | `/pay/request` | Create a payment request (receiving address, amount, token, optional private receive). Received Payment list is mock until the API exists. Payer-open `/pay?request=:id` is planned. |
-| Pending Payouts | `/pay/pending` | Placeholder. |
-| Transaction History | `/pay/history` | Placeholder. |
+| Pending Payouts | `/pay/pending` | In-flight payouts from `GET /v1/pay/payments/pending`. Sidebar badge is the list length. |
+| Transaction History | `/pay/history` | Mock list until the API exists. Search, status/asset/time filters, pagination. Export CSV is UI-only. |
 
 Single payout uses `POST /v1/pay/quick/quote|swap|submit`. Batch payout uses `POST /v1/pay/batch/quote|swap|submit`. Origin broadcast is EVM-only. Recipients are wallet addresses (not employees). The address book is not a route.
 
@@ -92,7 +92,7 @@ Registration fields (when that screen is built):
 /pay              RequireAuth → AppLayout → PayLayout → SinglePayoutView
 /pay/batch        PayLayout → BatchPayoutView
 /pay/request      PayLayout → RequestPaymentView
-/pay/pending      PayLayout placeholder
-/pay/history      PayLayout placeholder
+/pay/pending      PayLayout → PendingPayoutsView
+/pay/history      PayLayout → TransactionHistoryView
 *                 → /
 ```

@@ -2,7 +2,6 @@ import { IconLock } from "@/components/icons/lock";
 import { Button } from "@/components/ui/button/Button";
 import { Card } from "@/components/ui/card/Card";
 import { formatAddress, formatAmount } from "@/utils";
-import { BATCH_COPY, PRIVATE_BY_DEFAULT_LABEL } from "../../config";
 import { formatTokenNetwork } from "../../batch-utils";
 import type { IntentsToken } from "@/stores/intents-tokens";
 
@@ -39,14 +38,14 @@ export function BatchPreviewStep(props: {
 
   return (
     <Card className="mx-auto w-full max-w-[600px] px-5 py-6 sm:px-8 sm:py-8">
-      <h2 className="font-montserrat text-xl font-semibold text-black">{BATCH_COPY.PREVIEW_TITLE}</h2>
-      <p className="mt-2 font-montserrat text-sm text-[#606060]">{BATCH_COPY.PREVIEW_HINT}</p>
+      <h2 className="font-montserrat text-xl font-semibold text-black">Preview & Confirm</h2>
+      <p className="mt-2 font-montserrat text-sm text-[#606060]">Send a private payment from your organization's treasury.</p>
 
       <div className="mt-8 flex flex-col gap-4">
-        <PreviewRow label={BATCH_COPY.TOTAL_VALUED} value={formatAmount(totalValued, { maxDecimals: 6 })} />
+        <PreviewRow label="Total Valued" value={formatAmount(totalValued, { maxDecimals: 6 })} />
 
         <div>
-          <p className="font-montserrat text-sm font-medium text-[#606060]">{BATCH_COPY.TOKEN_BREAKDOWN}</p>
+          <p className="font-montserrat text-sm font-medium text-[#606060]">Token Breakdown</p>
           <div className="mt-2 flex flex-col gap-2">
             {breakdown.map((row) => (
               <div
@@ -62,14 +61,14 @@ export function BatchPreviewStep(props: {
           </div>
         </div>
 
-        <PreviewRow label={BATCH_COPY.TOTAL_PAYOUTS} value={String(payoutCount)} />
+        <PreviewRow label="Total Payouts" value={String(payoutCount)} />
 
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 flex-wrap items-center gap-2">
-            <span className="font-montserrat text-sm font-medium text-[#606060]">{BATCH_COPY.PAY_FROM}</span>
+            <span className="font-montserrat text-sm font-medium text-[#606060]">Pay from</span>
             <span className="inline-flex h-[26px] items-center gap-1.5 rounded-[13px] border border-[#d0f348] bg-[rgba(208,243,72,0.2)] px-2.5 font-montserrat text-xs font-medium text-[#84a20f]">
               <IconLock className="size-3" />
-              {PRIVATE_BY_DEFAULT_LABEL}
+              Private by default
             </span>
           </div>
           <span className="shrink-0 font-montserrat text-sm text-black">
@@ -78,11 +77,11 @@ export function BatchPreviewStep(props: {
         </div>
 
         <PreviewRow
-          label={BATCH_COPY.PAYING_TOKEN_LABEL}
+          label="Paying Token"
           value={originToken ? formatTokenNetwork(originToken) : "—"}
         />
-        <PreviewRow label={BATCH_COPY.TOTAL_FEES} value={feeLabel} />
-        <PreviewRow label={BATCH_COPY.TOTAL_COST} value={costLabel} />
+        <PreviewRow label="Total Fees" value={feeLabel} />
+        <PreviewRow label="Total Cost" value={costLabel} />
       </div>
 
       {quoteError ? (
@@ -91,7 +90,7 @@ export function BatchPreviewStep(props: {
 
       <div className="mt-8 flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
         <Button variant="normal" size="lg" className="w-full sm:w-[205px]" onClick={onBack} disabled={sending}>
-          {BATCH_COPY.BACK}
+          Back
         </Button>
         <Button
           size="lg"
@@ -100,7 +99,7 @@ export function BatchPreviewStep(props: {
           disabled={Boolean(walletAddress) && !canConfirm && !quoting}
           onClick={onConfirm}
         >
-          {BATCH_COPY.CONFIRM_SEND}
+          Confirm & Send
         </Button>
       </div>
     </Card>

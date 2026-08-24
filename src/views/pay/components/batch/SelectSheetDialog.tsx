@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button/Button";
 import { Dialog } from "@/components/ui/dialog/Dialog";
-import { BATCH_COPY } from "../../config";
 
 export function SelectSheetDialog(props: {
   open: boolean;
@@ -12,7 +11,7 @@ export function SelectSheetDialog(props: {
 }) {
   const { open, spreadsheetName, titles, busy, onClose, onSelect } = props;
   return (
-    <Dialog open={open} onClose={onClose} title={BATCH_COPY.SELECT_SHEET} cardClassName="w-full md:w-[400px]">
+    <Dialog open={open} onClose={onClose} title="Select a sheet" cardClassName="w-full md:w-[400px]">
       <p className="mb-3 font-montserrat text-sm text-[#606060]">{spreadsheetName}</p>
       <div className="flex max-h-[50vh] flex-col gap-2 overflow-y-auto">
         {titles.map((title) => (

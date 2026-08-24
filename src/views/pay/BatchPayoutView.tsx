@@ -19,9 +19,7 @@ import type { ChainKind } from "@/wallet";
 import type { PayBatchQuoteParam } from "@/types/payout";
 import type { PayLayoutOutletContext } from "@/layouts/PayLayout";
 import {
-  BATCH_PAY_TOAST,
   IMPORT_MAX_ROWS,
-  IMPORT_TOAST,
   ORIGIN_BALANCE_POLL_MS,
   QUICK_PAY_SLIPPAGE_TOLERANCE,
 } from "./config";
@@ -149,12 +147,12 @@ export function BatchPayoutView() {
   function applyImported(values: string[][], defaultMemo: string) {
     const parsed = parseImportRows(values, findByChainAndSymbol, defaultMemo);
     if (!parsed.length) {
-      toast.fail({ title: IMPORT_TOAST.EMPTY });
+      toast.fail({ title: "No rows found" });
       return;
     }
     const limited = parsed.slice(0, IMPORT_MAX_ROWS);
     if (parsed.length > IMPORT_MAX_ROWS) {
-      toast.fail({ title: IMPORT_TOAST.MAX_ROWS });
+      toast.fail({ title: `Imported the first ${IMPORT_MAX_ROWS} rows` });
     }
     setRows(limited);
     setShowErrors(false);
@@ -170,7 +168,7 @@ export function BatchPayoutView() {
   function handleContinue() {
     setShowErrors(true);
     if (!originToken) {
-      toast.fail({ title: BATCH_PAY_TOAST.SELECT_PAYING_TOKEN });
+      toast.fail({ title: "Select a paying token" });
       return;
     }
     if (!allDraftsValid(rows)) return;
@@ -195,8 +193,8 @@ export function BatchPayoutView() {
         throw new BalanceGateError("Connect your payment wallet first");
       }
       if (!isEvmOriginToken(originToken) || !originToken.chain.chainId || !originToken.contractAddress) {
-        toast.fail({ title: BATCH_PAY_TOAST.UNSUPPORTED_ORIGIN_CHAIN });
-        throw new BalanceGateError(BATCH_PAY_TOAST.UNSUPPORTED_ORIGIN_CHAIN);
+        toast.fail({ title: "Batch payout currently supports EVM origin tokens only" });
+        throw new BalanceGateError("Batch payout currently supports EVM origin tokens only");
       }
       const payer = wallet.account.address;
       setPhase("quoting");
@@ -204,12 +202,12 @@ export function BatchPayoutView() {
       const amountIn = BigInt(swapped.totalAmountIn || "0");
       const balance = await fetchOneBalance(payer, originToken);
       if (!balance || balance.status !== "success" || balance.raw == null) {
-        toast.fail({ title: BATCH_PAY_TOAST.COULD_NOT_READ_BALANCE });
-        throw new BalanceGateError(BATCH_PAY_TOAST.COULD_NOT_READ_BALANCE);
+        toast.fail({ title: "Could not read wallet balance" });
+        throw new BalanceGateError("Could not read wallet balance");
       }
       if (balance.raw < amountIn) {
-        toast.fail({ title: BATCH_PAY_TOAST.INSUFFICIENT_BALANCE });
-        throw new BalanceGateError(BATCH_PAY_TOAST.INSUFFICIENT_BALANCE);
+        toast.fail({ title: "Insufficient balance" });
+        throw new BalanceGateError("Insufficient balance");
       }
       setPhase("sending");
       const txHash = await broadcastBatchPayCallData({
@@ -222,7 +220,7 @@ export function BatchPayoutView() {
     },
     onSuccess: () => {
       setPhase("done");
-      toast.success({ title: BATCH_PAY_TOAST.PAYMENT_SUBMITTED });
+      toast.success({ title: "Payment submitted" });
       resetFlow();
     },
     onError: (error) => {

@@ -1,13 +1,12 @@
 import { cn } from "@/lib/utils";
-import { BATCH_COPY } from "../../config";
 
 export function BatchStepper(props: { active: 1 | 2 }) {
   const { active } = props;
   return (
     <div className="flex items-center gap-2 font-montserrat text-sm font-medium">
-      <StepBadge n={1} current={active} label={BATCH_COPY.STEP_VALIDATE} />
+      <StepBadge n={1} current={active} label="Validate" />
       <span className="h-px w-[80px] bg-[#d9d9d9]" />
-      <StepBadge n={2} current={active} label={BATCH_COPY.STEP_PREVIEW} />
+      <StepBadge n={2} current={active} label="Preview & Confirm" />
     </div>
   );
 }

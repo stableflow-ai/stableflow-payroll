@@ -13,7 +13,7 @@ Non-business primitives in `src/components/ui/`. Read the matching doc before us
 | Table | `src/components/ui/table/Table.tsx` | [table.md](table.md) |
 | Dropdown | `src/components/ui/dropdown/Dropdown.tsx` | [dropdown.md](dropdown.md) |
 | Toast | `src/components/ui/toast/Toast.tsx` | (existing; no dedicated doc yet) |
-| Pagination | `src/components/ui/pagination/Pagination.tsx` | (existing; no dedicated doc yet) |
+| Pagination | `src/components/ui/pagination/Pagination.tsx` | [pagination.md](pagination.md) |
 | InputNumber | `src/components/ui/input-number/InputNumber.tsx` | (existing; no dedicated doc yet) |
 | Switch | `src/components/ui/switch/Switch.tsx` | [switch.md](switch.md) |
 

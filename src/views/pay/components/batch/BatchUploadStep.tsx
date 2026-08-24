@@ -9,11 +9,9 @@ import { isGoogleAuthCancelled, getDriveFileToken } from "@/lib/google/token-cli
 import { parseCsvFile } from "@/lib/import/csv";
 import { cn } from "@/lib/utils";
 import {
-  BATCH_COPY,
   IMPORT_CSV_ACCEPT,
   IMPORT_CSV_TEMPLATE,
   IMPORT_CSV_TEMPLATE_FILENAME,
-  IMPORT_TOAST,
 } from "../../config";
 import { SelectSheetDialog } from "./SelectSheetDialog";
 
@@ -46,7 +44,7 @@ export function BatchUploadStep(props: {
     if (!file || busySource === "google") return;
     const name = file.name.toLowerCase();
     if (!name.endsWith(".csv") && file.type !== "text/csv") {
-      onError(IMPORT_TOAST.CSV_TYPE);
+      onError("Please upload a CSV file");
       return;
     }
     setBusySource("csv");
@@ -54,7 +52,7 @@ export function BatchUploadStep(props: {
       const values = await parseCsvFile(file);
       onImported(values, file.name);
     } catch {
-      onError(IMPORT_TOAST.PARSE_FAILED);
+      onError("Could not parse the file");
     } finally {
       setBusySource(null);
       if (inputRef.current) inputRef.current.value = "";
@@ -64,7 +62,7 @@ export function BatchUploadStep(props: {
   async function handleGoogle() {
     if (busySource === "csv") return;
     if (!isGoogleImportConfigured()) {
-      onError(IMPORT_TOAST.GOOGLE_NOT_CONFIGURED);
+      onError("Google Sheets import is not configured");
       return;
     }
     setBusySource("google");
@@ -80,7 +78,7 @@ export function BatchUploadStep(props: {
       setPendingSheets({ id: picked.id, name: picked.name, titles });
     } catch (error) {
       if (isGoogleAuthCancelled(error) || isGooglePickerCancelled(error)) return;
-      onError(error instanceof Error ? error.message : IMPORT_TOAST.GOOGLE_FAILED);
+      onError(error instanceof Error ? error.message : "Could not read Google Sheet");
     } finally {
       setBusySource(null);
     }
@@ -96,7 +94,7 @@ export function BatchUploadStep(props: {
       setPendingSheets(null);
       onImported(values, memo);
     } catch (error) {
-      onError(error instanceof Error ? error.message : IMPORT_TOAST.GOOGLE_FAILED);
+      onError(error instanceof Error ? error.message : "Could not read Google Sheet");
     } finally {
       setBusySource(null);
     }
@@ -123,23 +121,23 @@ export function BatchUploadStep(props: {
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="font-montserrat text-base font-semibold text-black sm:text-lg">
-              {BATCH_COPY.UPLOAD_TITLE}
+              Upload a CSV File
             </h2>
-            <p className="mt-2 font-montserrat text-sm text-[#606060]">{BATCH_COPY.UPLOAD_HINT}</p>
+            <p className="mt-2 font-montserrat text-sm text-[#606060]">Privately execute payments from your organization's treasury.</p>
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
             <Button variant="normal" size="md" onClick={onEnterManually}>
-              {BATCH_COPY.ENTER_MANUALLY}
+              Enter Manually
             </Button>
             <Button variant="normal" size="md" onClick={downloadTemplate}>
-              {BATCH_COPY.DOWNLOAD_TEMPLATE}
+              Download Template
             </Button>
           </div>
         </div>
 
         <div className="mt-10 flex flex-col items-center gap-4 py-8 sm:mt-16 sm:py-14">
           <IconCloud className="size-10 text-[#c4c4c4] sm:h-[26px] sm:w-8" />
-          <p className="font-montserrat text-base font-semibold text-black">{BATCH_COPY.DROP}</p>
+          <p className="font-montserrat text-base font-semibold text-black">Drop CSV file here</p>
           <Button
             size="md"
             className="w-[152px]"
@@ -147,7 +145,7 @@ export function BatchUploadStep(props: {
             disabled={busySource === "google"}
             onClick={() => inputRef.current?.click()}
           >
-            {BATCH_COPY.CHOOSE_FILE}
+            Choose file
           </Button>
           <button
             type="button"

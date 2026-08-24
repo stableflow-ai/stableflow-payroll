@@ -1,7 +1,6 @@
 import { IconClose } from "@/components/icons/close";
 import { BatchFieldStatus } from "@/views/pay/components/batch/BatchFieldStatus";
 import { cn } from "@/lib/utils";
-import { REQUEST_PAYMENT_COPY } from "../../config";
 
 export function ReceivingAddressField(props: {
   value: string;
@@ -17,7 +16,7 @@ export function ReceivingAddressField(props: {
   return (
     <div>
       <p className="font-montserrat text-sm font-medium text-[#606060]">
-        {REQUEST_PAYMENT_COPY.RECEIVING_ADDRESS}
+        Receiving Address
       </p>
       <div
         className={cn(

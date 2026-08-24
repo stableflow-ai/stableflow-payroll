@@ -61,3 +61,15 @@ export interface PayBatchSubmitParam {
   orderId: string;
   txHash: string;
 }
+
+export interface PayPending {
+  recipient: string;
+  amount: string;
+  token: string;
+  network: string;
+  submittedAt: string;
+  memo?: string | null;
+  explorerUrl?: string | null;
+  txUrl?: string | null;
+  id?: string;
+}

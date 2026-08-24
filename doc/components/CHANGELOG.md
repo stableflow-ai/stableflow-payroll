@@ -4,6 +4,8 @@ Record every create/update of components under `src/components/ui/` so other age
 
 ## 2026-08-24
 
+- **Pagination:** Restyled to Montserrat / currentColor; typed `page`, `totalPage`, `onPageChange`.
+- **SearchInput / Dropdown:** Default placeholders (`Search` / `Select`) live on the component, not sibling `config.ts`.
 - **Tooltip:** `leaveDelay` `0` (default) sets `pointer-events: none` on the panel so it cannot cover the trigger and flicker.
 - **Overlay (`useFloatingPosition`):** Measure the panel without forcing `width: max-content`, so className widths such as `w-[285px]` are used for placement.
 

@@ -1,12 +1,7 @@
 import type { ComponentType, CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { IconLock, IconNode, IconShield } from "@/components/icons";
-import {
-  AUTH_BRAND,
-  AUTH_BRAND_BG,
-  AUTH_PANEL_BG,
-  type AuthFeatureIconKey,
-} from "./config";
+import { AUTH_BRAND_BG, AUTH_PANEL_BG, type AuthFeatureIconKey } from "./config";
 
 const FEATURE_ICONS: Record<
   AuthFeatureIconKey,
@@ -49,14 +44,32 @@ export function AuthShell({
           />
 
           <h1 className="mt-10 max-w-[558px] font-montserrat text-[32px] font-semibold capitalize leading-tight text-white md:mt-16 md:text-[46px]">
-            {AUTH_BRAND.headline}
+            Confidential Payments.
           </h1>
           <p className="mt-4 max-w-[558px] font-montserrat text-[16px] font-normal leading-[1.5] text-white md:mt-5 md:text-[20px]">
-            {AUTH_BRAND.subhead}
+            Send across chains without creating a direct public link between sender and recipient.
           </p>
 
           <ul className="mt-8 hidden flex-col gap-8 md:mt-12 md:flex">
-            {AUTH_BRAND.features.map((feature) => {
+            {(
+              [
+                {
+                  icon: "lock" as AuthFeatureIconKey,
+                  title: "Confidential by default",
+                  body: "Reduce direct public sender  recipient linkage.",
+                },
+                {
+                  icon: "shield" as AuthFeatureIconKey,
+                  title: "Self-custodial",
+                  body: "Your wallet. Your funds. You authorize every payment",
+                },
+                {
+                  icon: "node" as AuthFeatureIconKey,
+                  title: "Cross-chain",
+                  body: "Pay across supported network whilethe recipient receives on another.",
+                },
+              ] as const
+            ).map((feature) => {
               const Icon = FEATURE_ICONS[feature.icon];
               return (
                 <li key={feature.title} className="flex max-w-[480px] items-start gap-4">
@@ -80,10 +93,10 @@ export function AuthShell({
           </ul>
 
           <Link
-            to={AUTH_BRAND.howItWorksHref}
+            to="/howitworks"
             className="mt-8 inline-flex items-center gap-1.5 font-montserrat text-sm font-normal text-white transition-opacity hover:opacity-70 md:mt-auto md:pt-10"
           >
-            {AUTH_BRAND.howItWorksLabel}
+            How it works
             <svg
               className="shrink-0"
               width="13"

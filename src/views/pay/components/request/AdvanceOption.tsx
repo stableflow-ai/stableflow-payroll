@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import {
   DESCRIPTION_MAX_LENGTH,
   DESCRIPTION_MAX_ROWS,
-  REQUEST_PAYMENT_COPY,
 } from "../../config";
 
 const LINE_HEIGHT_PX = 20;
@@ -50,7 +49,7 @@ export function AdvanceOption(props: {
         aria-expanded={open}
       >
         <span className="font-montserrat text-sm font-medium text-[#606060]">
-          {REQUEST_PAYMENT_COPY.ADVANCE_OPTION}
+          Advance Option
         </span>
         <IconArrowDown
           className={cn(
@@ -69,7 +68,7 @@ export function AdvanceOption(props: {
         <div className="overflow-hidden">
           <div className="pt-4">
             <p className="font-montserrat text-sm font-medium text-[#606060]">
-              {REQUEST_PAYMENT_COPY.DESCRIPTION}
+              Description
             </p>
             <textarea
               ref={textareaRef}
@@ -77,15 +76,15 @@ export function AdvanceOption(props: {
               maxLength={DESCRIPTION_MAX_LENGTH}
               rows={1}
               onChange={(event) => onDescriptionChange(event.target.value.slice(0, DESCRIPTION_MAX_LENGTH))}
-              placeholder={REQUEST_PAYMENT_COPY.DESCRIPTION_PLACEHOLDER}
+              placeholder="e.g. invoice for business trip"
               className="mt-2 min-h-9 w-full resize-none overflow-y-auto rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-3 py-2 font-montserrat text-sm leading-5 text-black outline-none placeholder:text-black/30"
               style={{ maxHeight: TEXTAREA_MAX_HEIGHT_PX }}
             />
 
             <div className="mt-4 flex flex-wrap items-center justify-between gap-2">
               <span className="inline-flex min-w-0 items-center gap-1 font-montserrat text-sm font-medium text-[#606060]">
-                {REQUEST_PAYMENT_COPY.RECEIVE_PRIVATELY}
-                <Tooltip content={REQUEST_PAYMENT_COPY.RECEIVE_PRIVATELY_TOOLTIP} className="w-[285px]">
+                Receive Privately
+                <Tooltip content="Your payment will receive by a private wallet. You need to manually withdraw after receiving payment." className="w-[285px]">
                   <IconQuestion className="size-3.5 shrink-0 text-[#606060]" />
                 </Tooltip>
               </span>
@@ -93,7 +92,7 @@ export function AdvanceOption(props: {
                 checked={receivePrivately}
                 disabled={privatelyLoading}
                 onCheckedChange={onReceivePrivatelyChange}
-                aria-label={REQUEST_PAYMENT_COPY.RECEIVE_PRIVATELY}
+                aria-label="Receive Privately"
               />
             </div>
           </div>

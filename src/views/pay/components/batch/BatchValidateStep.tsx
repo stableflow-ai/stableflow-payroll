@@ -10,8 +10,6 @@ import type { IntentsToken } from "@/stores/intents-tokens";
 import { formatAmount } from "@/utils";
 import {
   AMOUNT_MAX_DECIMALS,
-  BATCH_COPY,
-  BATCH_LIQUIDITY_HINT,
   IMPORT_MAX_ROWS,
   MEMO_MAX_LENGTH,
 } from "../../config";
@@ -55,13 +53,13 @@ export function BatchValidateStep(props: {
   return (
     <div>
       <Card className="w-full px-5 py-6 sm:px-8 sm:py-8">
-        <h2 className="font-montserrat text-xl font-semibold text-black">{BATCH_COPY.VALIDATE_TITLE}</h2>
-        <p className="mt-2 font-montserrat text-sm text-[#606060]">{BATCH_COPY.VALIDATE_HINT}</p>
+        <h2 className="font-montserrat text-xl font-semibold text-black">Validate</h2>
+        <p className="mt-2 font-montserrat text-sm text-[#606060]">Send a private payment from your organization's treasury.</p>
 
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
             <p className="shrink-0 font-montserrat text-sm font-medium text-[#606060]">
-              {BATCH_COPY.PAYING_TOKEN}
+              Paying Token & Network
             </p>
             <BatchTokenTrigger
               token={originToken}
@@ -81,10 +79,10 @@ export function BatchValidateStep(props: {
         </div>
 
         <div className="mt-8 hidden gap-3 font-montserrat text-sm font-medium text-[#606060] lg:grid lg:grid-cols-[minmax(0,1.4fr)_minmax(160px,0.7fr)_minmax(180px,0.8fr)_minmax(120px,0.55fr)_28px]">
-          <span>{BATCH_COPY.RECIPIENT}</span>
-          <span>{BATCH_COPY.AMOUNT}</span>
-          <span>{BATCH_COPY.PREFER_TOKEN}</span>
-          <span>{BATCH_COPY.MEMO}</span>
+          <span>Recipient</span>
+          <span>Amount</span>
+          <span>Prefer Token, Network</span>
+          <span>Memo</span>
           <span />
         </div>
 
@@ -109,7 +107,7 @@ export function BatchValidateStep(props: {
           className="mt-6 flex h-9 w-full items-center justify-center gap-2 rounded-[8px] border border-dashed border-black/20 font-montserrat text-sm font-medium text-black disabled:opacity-40"
         >
           <IconPlus className="size-3" />
-          {BATCH_COPY.ADD_ONE}
+          Add one
         </button>
       </Card>
 
@@ -119,19 +117,19 @@ export function BatchValidateStep(props: {
             <span className="inline-flex size-4 shrink-0 items-center justify-center rounded-full bg-[#F5A623]/15 text-[#F5A623]">
               <IconAlert className="h-[7px] w-0.5" />
             </span>
-            <p className="font-montserrat text-xs text-[#606060]">{BATCH_LIQUIDITY_HINT}</p>
+            <p className="font-montserrat text-xs text-[#606060]">Batch quotes may lack liquidity for large totals; some recipients might fail.</p>
           </div>
           <p className="shrink-0 font-montserrat text-sm text-[#606060] flex items-center">
-            {BATCH_COPY.TOTAL_AMOUNT}
+            Total Amount:
             <span className="ml-1 text-lg font-semibold text-black">{totalAmountLabel}</span>
           </p>
         </div>
         <div className="flex flex-col-reverse items-stretch gap-3 sm:flex-row sm:items-center sm:justify-end">
           <Button variant="normal" className="w-full sm:w-[152px]" onClick={onBack}>
-            {BATCH_COPY.BACK}
+            Back
           </Button>
           <Button className="w-full sm:w-[160px]" onClick={onContinue}>
-            {BATCH_COPY.CONTINUE}
+            Continue
           </Button>
         </div>
       </div>
@@ -160,7 +158,7 @@ function BatchRow(props: {
       className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(160px,0.7fr)_minmax(180px,0.8fr)_minmax(120px,0.55fr)_28px] lg:items-center"
     >
       <label className="flex min-w-0 flex-col gap-1 lg:block">
-        <span className="font-montserrat text-sm text-[#606060] lg:hidden">{BATCH_COPY.RECIPIENT}</span>
+        <span className="font-montserrat text-sm text-[#606060] lg:hidden">Recipient</span>
         <span
           className={cn(
             "flex h-9 items-center gap-2 rounded-[6px] border bg-[#f6f6f6] px-3",
@@ -181,7 +179,7 @@ function BatchRow(props: {
       </label>
 
       <label className="flex min-w-0 flex-col gap-1 lg:block">
-        <span className="font-montserrat text-sm text-[#606060] lg:hidden">{BATCH_COPY.AMOUNT}</span>
+        <span className="font-montserrat text-sm text-[#606060] lg:hidden">Amount</span>
         <span
           className={cn(
             "flex h-9 items-center gap-2 rounded-[6px] border bg-[#f6f6f6] px-3",
@@ -192,7 +190,7 @@ function BatchRow(props: {
             value={row.amount}
             decimals={AMOUNT_MAX_DECIMALS}
             onNumberChange={(value) => onPatch({ amount: value })}
-            placeholder={showErrors && !row.amount.trim() ? BATCH_COPY.INPUT_AMOUNT : "0"}
+            placeholder={showErrors && !row.amount.trim() ? "Input amount" : "0"}
             className={cn(
               "min-w-0 flex-1 bg-transparent text-left font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
               showAmountStatus && !amountOk ? "text-danger placeholder:text-danger" : "text-black",
@@ -203,7 +201,7 @@ function BatchRow(props: {
       </label>
 
       <label className="flex min-w-0 flex-col gap-1 lg:block">
-        <span className="font-montserrat text-sm text-[#606060] lg:hidden">{BATCH_COPY.PREFER_TOKEN}</span>
+        <span className="font-montserrat text-sm text-[#606060] lg:hidden">Prefer Token, Network</span>
         <BatchTokenTrigger
           token={row.token}
           showLogo
@@ -213,7 +211,7 @@ function BatchRow(props: {
       </label>
 
       <label className="flex min-w-0 flex-col gap-1 lg:block">
-        <span className="font-montserrat text-sm text-[#606060] lg:hidden">{BATCH_COPY.MEMO}</span>
+        <span className="font-montserrat text-sm text-[#606060] lg:hidden">Memo</span>
         <input
           value={row.memo}
           maxLength={MEMO_MAX_LENGTH}

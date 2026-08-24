@@ -2,7 +2,6 @@ import type { InputHTMLAttributes } from "react";
 import { IconClose } from "@/components/icons/close";
 import { IconSearch } from "@/components/icons/search";
 import { cn } from "@/lib/utils";
-import { SEARCH_INPUT_PLACEHOLDER } from "./config";
 
 export type SearchInputProps = Omit<InputHTMLAttributes<HTMLInputElement>, "type" | "value" | "onChange"> & {
   value: string;
@@ -14,7 +13,7 @@ export function SearchInput(props: SearchInputProps) {
   const {
     value,
     onChange,
-    placeholder = SEARCH_INPUT_PLACEHOLDER,
+    placeholder = "Search",
     className,
     inputClassName,
     disabled,

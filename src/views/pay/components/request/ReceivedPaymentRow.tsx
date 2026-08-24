@@ -4,7 +4,6 @@ import { cn } from "@/lib/utils";
 import { formatAddress, formatAmount, formatDate } from "@/utils";
 import type { ReceivedPayment } from "@/mocks/request-payment";
 import { RECEIVED_STATUS } from "@/mocks/request-payment";
-import { REQUEST_PAYMENT_COPY } from "../../config";
 
 export function ReceivedPaymentRow(props: {
   row: ReceivedPayment;
@@ -22,7 +21,7 @@ export function ReceivedPaymentRow(props: {
           {row.private ? (
             <span className="mt-0.5 inline-flex items-center gap-1 font-montserrat text-[10px] text-[#606060]">
               <IconGuard className="h-3 w-2.5 text-[#6284F5]" />
-              {REQUEST_PAYMENT_COPY.PRIVATE}
+              Private
             </span>
           ) : null}
         </div>
@@ -36,7 +35,7 @@ export function ReceivedPaymentRow(props: {
             onClick={onWithdraw}
             className="inline-flex h-7 items-center rounded-full border border-black/10 bg-white px-3 font-montserrat text-xs font-medium text-black"
           >
-            {REQUEST_PAYMENT_COPY.WITHDRAW}
+            Withdraw
           </button>
         ) : (
           <span
@@ -45,9 +44,7 @@ export function ReceivedPaymentRow(props: {
               row.status === RECEIVED_STATUS.Withdrawed ? "text-[#909090]" : "text-[#16a34a]",
             )}
           >
-            {row.status === RECEIVED_STATUS.Withdrawed
-              ? REQUEST_PAYMENT_COPY.WITHDRAWED
-              : REQUEST_PAYMENT_COPY.RECEIVED}
+            {row.status === RECEIVED_STATUS.Withdrawed ? "Withdrawed" : "Received"}
           </span>
         )}
       </div>

@@ -13,6 +13,7 @@ export const queryKeys = {
   },
   payout: {
     all: ["payout"] as const,
+    pending: ["payout", "pending"] as const,
     quickQuote: (body: unknown) => [...queryKeys.payout.all, "quick-quote", body] as const,
     batchQuote: (body: unknown) => [...queryKeys.payout.all, "batch-quote", body] as const,
   },

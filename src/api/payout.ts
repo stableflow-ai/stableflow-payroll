@@ -5,6 +5,7 @@ import type {
   PayBatchQuoteResp,
   PayBatchSubmitParam,
   PayBatchSwapResp,
+  PayPending,
   PayQuickQuoteParam,
   PayQuickQuoteResp,
   PayQuickSubmitParam,
@@ -33,4 +34,13 @@ export function batchSwap(body: PayBatchQuoteParam) {
 
 export function batchSubmit(body: PayBatchSubmitParam) {
   return http<void>(`${PAY_API_PREFIX}/batch/submit`, { method: "POST", body });
+}
+
+export async function getPendingPayments(): Promise<PayPending[]> {
+  const data = await http<PayPending[] | { payments: PayPending[] }>(
+    `${PAY_API_PREFIX}/payments/pending`,
+  );
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.payments)) return data.payments;
+  return [];
 }

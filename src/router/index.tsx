@@ -4,9 +4,10 @@ import { RegisterView } from "@/views/auth/RegisterView";
 import { HowItWorksView } from "@/views/how-it-works/HowItWorksView";
 import { HomeView } from "@/views/home/HomeView";
 import { BatchPayoutView } from "@/views/pay/BatchPayoutView";
-import { PayPlaceholderView } from "@/views/pay/PayPlaceholderView";
+import { PendingPayoutsView } from "@/views/pay/PendingPayoutsView";
 import { RequestPaymentView } from "@/views/pay/RequestPaymentView";
 import { SinglePayoutView } from "@/views/pay/SinglePayoutView";
+import { TransactionHistoryView } from "@/views/pay/TransactionHistoryView";
 import { AppLayout } from "@/layouts/AppLayout";
 import { PayLayout } from "@/layouts/PayLayout";
 import { RedirectIfAuthed, RequireAuth } from "./guards";
@@ -48,8 +49,8 @@ export const router = createBrowserRouter([
               { path: "/pay", element: <SinglePayoutView /> },
               { path: "/pay/batch", element: <BatchPayoutView /> },
               { path: "/pay/request", element: <RequestPaymentView /> },
-              { path: "/pay/pending", element: <PayPlaceholderView /> },
-              { path: "/pay/history", element: <PayPlaceholderView /> },
+              { path: "/pay/pending", element: <PendingPayoutsView /> },
+              { path: "/pay/history", element: <TransactionHistoryView /> },
             ],
           },
         ],

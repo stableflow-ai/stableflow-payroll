@@ -18,11 +18,7 @@ import { AdvanceOption } from "./components/request/AdvanceOption";
 import { GenerateLinkDialog } from "./components/request/GenerateLinkDialog";
 import { ReceivedPaymentList } from "./components/request/ReceivedPaymentList";
 import { ReceivingAddressField } from "./components/request/ReceivingAddressField";
-import {
-  AMOUNT_MAX_DECIMALS,
-  REQUEST_PAYMENT_COPY,
-  REQUEST_PAYMENT_TOAST,
-} from "./config";
+import { AMOUNT_MAX_DECIMALS } from "./config";
 import {
   activateErrorMessage,
   buildRequestPaymentPayload,
@@ -92,13 +88,13 @@ export function RequestPaymentView() {
 
   async function activatePrivateReceive() {
     if (!destKind || !destToken) {
-      toast.fail({ title: REQUEST_PAYMENT_TOAST.SELECT_TOKEN });
+      toast.fail({ title: "Select a receiving token" });
       return false;
     }
     const error = receivingAddressError(addressInput, destKind);
     if (error) {
       setShowAddressErrors(true);
-      toast.fail({ title: error === "Address cannot be empty" ? REQUEST_PAYMENT_TOAST.FIX_ADDRESS : error });
+      toast.fail({ title: error === "Address cannot be empty" ? "Fix the receiving address" : error });
       return false;
     }
     const address = addressInput.trim();
@@ -106,13 +102,13 @@ export function RequestPaymentView() {
     if (!connectedAddress) {
       pendingPrivateRef.current = true;
       setWalletDialogOpen(true);
-      toast.info({ title: REQUEST_PAYMENT_COPY.CONNECT_WALLET });
+      toast.info({ title: "Connect the receiving wallet to activate private receive." });
       return false;
     }
     if (!sameAddress(connectedAddress, address, destKind)) {
       pendingPrivateRef.current = true;
       setWalletDialogOpen(true);
-      toast.info({ title: REQUEST_PAYMENT_COPY.ADDRESS_WALLET_MISMATCH });
+      toast.info({ title: "Connect the same wallet as the receiving address to activate private receive." });
       return false;
     }
 
@@ -125,13 +121,13 @@ export function RequestPaymentView() {
       });
       setReceivePrivately(true);
       if (result.corsFallback) {
-        toast.notice({ title: REQUEST_PAYMENT_TOAST.CORS_FALLBACK });
+        toast.notice({ title: "Signed locally. Session will sync when the auth endpoint is reachable." });
       } else {
-        toast.success({ title: REQUEST_PAYMENT_TOAST.ACTIVATE_OK });
+        toast.success({ title: "Private receive is on" });
       }
       return true;
     } catch (error) {
-      toast.fail({ title: activateErrorMessage(error, REQUEST_PAYMENT_TOAST.ACTIVATE_FAILED) });
+      toast.fail({ title: activateErrorMessage(error, "Could not activate private receive") });
       return false;
     } finally {
       setActivating(false);
@@ -178,16 +174,16 @@ export function RequestPaymentView() {
   function handleGenerate() {
     setShowAddressErrors(true);
     if (!destToken || !destKind) {
-      toast.fail({ title: REQUEST_PAYMENT_TOAST.SELECT_TOKEN });
+      toast.fail({ title: "Select a receiving token" });
       return;
     }
     if (!amountForLink) {
-      toast.fail({ title: REQUEST_PAYMENT_TOAST.ENTER_AMOUNT });
+      toast.fail({ title: "Enter a receiving amount" });
       return;
     }
     const error = receivingAddressError(addressInput, destKind);
     if (error) {
-      toast.fail({ title: error === "Address cannot be empty" ? REQUEST_PAYMENT_TOAST.FIX_ADDRESS : error });
+      toast.fail({ title: error === "Address cannot be empty" ? "Fix the receiving address" : error });
       return;
     }
 
@@ -219,7 +215,7 @@ export function RequestPaymentView() {
 
           <div className="mt-8">
             <p className="font-montserrat text-sm font-medium text-[#606060]">
-              {REQUEST_PAYMENT_COPY.SET_AMOUNT}
+              Set receiving token amount
             </p>
             <div className="mt-2 flex items-end justify-between gap-3">
               <InputNumber
@@ -247,7 +243,7 @@ export function RequestPaymentView() {
           />
 
           <Button size="xl" className="mt-8 w-full" loading={activating} onClick={handleGenerate}>
-            {REQUEST_PAYMENT_COPY.GENERATE}
+            Generate Payment Link
           </Button>
         </Card>
 
@@ -258,7 +254,7 @@ export function RequestPaymentView() {
             onWithdraw={() => {
               // TODO(api): POST /v1/pay/request/received/:id/withdraw then sign
               // the generated intent. See src/lib/confidential/withdraw.ts.
-              toast.info({ title: REQUEST_PAYMENT_TOAST.WITHDRAW_COMING_SOON });
+              toast.info({ title: "Withdraw is coming soon" });
             }}
           />
         </Card>

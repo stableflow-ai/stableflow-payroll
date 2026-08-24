@@ -132,8 +132,9 @@ export function useOrderQuery(id: string) {
 | POST | `/v1/pay/batch/quote` | yes | `PayBatchQuoteParam` | `PayBatchQuoteResp` | `batchQuote` | `useBatchPayQuote` |
 | POST | `/v1/pay/batch/swap` | yes | `PayBatchQuoteParam` | `PayBatchSwapResp` | `batchSwap` | `useBatchPaySwap` |
 | POST | `/v1/pay/batch/submit` | yes | `PayBatchSubmitParam` | `void` | `batchSubmit` | commit queue |
+| GET | `/v1/pay/payments/pending` | yes | — | `PayPending[]` | `getPendingPayments` | `usePendingPaymentsQuery` |
 
-Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`). Payout types: `src/types/payout.ts`. `PayQuickQuoteParam.notification` is an optional email string; omit the field when notify is off. Batch receives are wallet addresses (no `employeeId`).
+Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`). Payout types: `src/types/payout.ts`. `PayQuickQuoteParam.notification` is an optional email string; omit the field when notify is off. Batch receives are wallet addresses (no `employeeId`). `GET /v1/pay/payments/pending` unwraps either `PayPending[]` or `{ payments: PayPending[] }`.
 
 Public files:
 
@@ -147,10 +148,11 @@ Public files:
 | `src/api/config.ts` | `PAY_API_PREFIX` |
 | `src/api/query-keys.ts` | Query key factory |
 | `src/api/auth.ts` | Login / register |
-| `src/api/payout.ts` | Quick and batch quote / swap / submit |
+| `src/api/payout.ts` | Quick and batch quote / swap / submit; pending list |
 | `src/hooks/use-auth-api.ts` | Auth mutations |
 | `src/hooks/use-single-payout-api.ts` | Quick quote query + swap mutation |
 | `src/hooks/use-batch-payout-api.ts` | Batch quote query + swap mutation |
+| `src/hooks/use-pending-payments.ts` | Pending payouts query |
 | `src/stores/auth.ts` | Session store |
 | `src/types/auth.ts` | Auth types |
 | `src/types/payout.ts` | Quick and batch payout types |

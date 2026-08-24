@@ -32,10 +32,7 @@ import {
   AMOUNT_MAX_DECIMALS,
   EMAIL_MAX_LENGTH,
   MEMO_MAX_LENGTH,
-  MEMO_TOOLTIP,
-  PRIVATE_BY_DEFAULT_LABEL,
   QUICK_PAY_SLIPPAGE_TOLERANCE,
-  QUICK_PAY_TOAST,
   QUOTE_DEBOUNCE_MS,
 } from "./config";
 import {
@@ -198,7 +195,7 @@ export function SinglePayoutView() {
       }
       if (originToken.chain.chainKind !== "evm" || !originToken.chain.chainId || !originToken.contractAddress) {
         // TODO: broadcast Near / Solana / Tron origin payouts when the backend supports them.
-        toast.fail({ title: QUICK_PAY_TOAST.UNSUPPORTED_ORIGIN_CHAIN });
+        toast.fail({ title: "Quick Pay currently supports EVM origin tokens only" });
         throw new BalanceGateError("Unsupported origin chain");
       }
       const paymentWalletAddress = wallet.account.address;
@@ -219,11 +216,11 @@ export function SinglePayoutView() {
       const amountIn = BigInt(swapped.amountIn || "0");
       const balance = await fetchOneBalance(paymentWalletAddress, originToken);
       if (!balance || balance.status !== "success" || balance.raw == null) {
-        toast.fail({ title: QUICK_PAY_TOAST.COULD_NOT_READ_BALANCE });
+        toast.fail({ title: "Could not read wallet balance" });
         throw new BalanceGateError("Could not read wallet balance");
       }
       if (balance.raw < amountIn) {
-        toast.fail({ title: QUICK_PAY_TOAST.INSUFFICIENT_BALANCE });
+        toast.fail({ title: "Insufficient balance" });
         throw new BalanceGateError("Insufficient balance");
       }
       setPhase("sending");
@@ -236,7 +233,7 @@ export function SinglePayoutView() {
     },
     onSuccess: () => {
       setPhase("done");
-      toast.success({ title: QUICK_PAY_TOAST.PAYMENT_SUBMITTED });
+      toast.success({ title: "Payment submitted" });
       resetForm();
       window.setTimeout(() => setPhase("idle"), 1500);
     },
@@ -319,7 +316,7 @@ export function SinglePayoutView() {
           <span className="font-montserrat text-xs text-[#70788a]">Est. Cost -</span>
           <span className="inline-flex h-[26px] items-center gap-1.5 rounded-[13px] border border-[#d0f348] bg-[rgba(208,243,72,0.2)] px-2.5 font-montserrat text-xs font-medium text-[#84a20f]">
             <IconLock className="size-3" />
-            {PRIVATE_BY_DEFAULT_LABEL}
+            Private by default
           </span>
         </div>
         {quoteError ? (
@@ -329,7 +326,7 @@ export function SinglePayoutView() {
         <div className="mt-6 flex items-center gap-3">
           <span className="inline-flex shrink-0 items-center gap-1 font-montserrat text-sm font-medium text-[#606060]">
             Memo
-            <Tooltip content={MEMO_TOOLTIP}>
+            <Tooltip content="The memo will be displayed in the history, visible only to you">
               <IconQuestion className="size-3.5 text-[#606060]" />
             </Tooltip>
           </span>

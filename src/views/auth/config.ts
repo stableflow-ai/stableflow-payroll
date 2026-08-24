@@ -17,32 +17,6 @@ export const AUTH_LINK_ACCENT_CLASS = "text-[#3f8afb] hover:text-[#3f8afb]/90";
 export const AUTH_FEATURE_ICON_KEYS = ["lock", "shield", "node"] as const;
 export type AuthFeatureIconKey = (typeof AUTH_FEATURE_ICON_KEYS)[number];
 
-export const AUTH_BRAND = {
-  headline: "Confidential Payments.",
-  subhead:
-    "Send across chains without creating a direct public link between sender and recipient.",
-  features: [
-    {
-      icon: "lock" as AuthFeatureIconKey,
-      title: "Confidential by default",
-      body: "Reduce direct public sender  recipient linkage.",
-    },
-    {
-      icon: "shield" as AuthFeatureIconKey,
-      title: "Self-custodial",
-      body: "Your wallet. Your funds. You authorize every payment",
-    },
-    {
-      icon: "node" as AuthFeatureIconKey,
-      title: "Cross-chain",
-      body: "Pay across supported network whilethe recipient receives on another.",
-    },
-  ],
-  howItWorksLabel: "How it works",
-  howItWorksHref: "/howitworks",
-  betaLabel: "Stableflow Pay is currently in beta.",
-} as const;
-
 export const NAME_MAX_LENGTH = 50;
 export const INVITE_CODE_MAX_LENGTH = 10;
 export const PASSWORD_MIN_LENGTH = 8;

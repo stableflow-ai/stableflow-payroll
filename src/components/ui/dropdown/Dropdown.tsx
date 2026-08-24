@@ -8,7 +8,6 @@ import {
   FLOATING_SIDE,
   useFloatingPosition,
 } from "@/components/ui/overlay/use-floating-position";
-import { DROPDOWN_PLACEHOLDER } from "./config";
 
 export type DropdownOption = {
   value: string;
@@ -34,7 +33,7 @@ export function Dropdown(props: DropdownProps) {
     defaultValue,
     onChange,
     options,
-    placeholder = DROPDOWN_PLACEHOLDER,
+    placeholder = "Select",
     disabled = false,
     className,
     triggerClassName,

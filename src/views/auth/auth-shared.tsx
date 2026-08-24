@@ -4,7 +4,6 @@ import { ApiError } from "@/lib/api-error";
 import { IconAlert, IconEye, IconEyeHidden } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import {
-  AUTH_BRAND,
   AUTH_CARD_CLASS,
   AUTH_INPUT_CLASS,
   AUTH_LABEL_CLASS,
@@ -20,7 +19,7 @@ export function AuthBetaBanner() {
         <IconAlert className="h-[7px] w-[2px]" />
       </span>
       <span className="font-montserrat text-sm font-medium text-[#3f8afb]">
-        {AUTH_BRAND.betaLabel}
+        Stableflow Pay is currently in beta.
       </span>
     </div>
   );

@@ -58,6 +58,7 @@ Every mock reader must include this comment:
 | home | `MOCK_ENABLED.home` | `src/mocks/home.ts` | `useHomeDashboard` |
 | contacts | `MOCK_ENABLED.contacts` | `src/mocks/contacts.ts` | `useContacts` |
 | request | `MOCK_ENABLED.request` | `src/mocks/request-payment.ts` | `useRequestPayment` |
+| history | `MOCK_ENABLED.history` | `src/mocks/history.ts` | `useTransactionHistory` |
 
 ## Constraints
 

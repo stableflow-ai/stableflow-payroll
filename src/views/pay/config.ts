@@ -15,6 +15,20 @@ export const PAY_NAV_ITEMS = [
   iconClassName: string | undefined;
 }>;
 
+export const PAYOUT_TABLE_COLUMNS =
+  "minmax(150px,1.3fr) minmax(72px,0.5fr) minmax(140px,1fr) minmax(130px,1fr) minmax(150px,1fr) minmax(150px,0.95fr)";
+export const HISTORY_PAGE_SIZE = 10;
+export const HISTORY_STATUS_FILTER = {
+  All: "all",
+  Complete: "complete",
+  Failed: "failed",
+} as const;
+export const HISTORY_TIME_FILTER = {
+  All: "all",
+  Days30: "30d",
+  Days90: "90d",
+} as const;
+
 export const AMOUNT_MAX_DECIMALS = 6;
 export const QUOTE_DEBOUNCE_MS = 900;
 export const QUICK_PAY_SLIPPAGE_TOLERANCE = 5;
@@ -22,60 +36,10 @@ export const ORIGIN_BALANCE_POLL_MS = 20_000;
 export const MEMO_MAX_LENGTH = 200;
 export const CONTACT_NAME_MAX_LENGTH = 50;
 export const EMAIL_MAX_LENGTH = 50;
-export const PRIVATE_BY_DEFAULT_LABEL = "Private by default";
-export const MEMO_TOOLTIP = "The memo will be displayed in the history, visible only to you";
-
-export const QUICK_PAY_TOAST = {
-  INSUFFICIENT_BALANCE: "Insufficient balance",
-  COULD_NOT_READ_BALANCE: "Could not read wallet balance",
-  UNSUPPORTED_ORIGIN_CHAIN: "Quick Pay currently supports EVM origin tokens only",
-  PAYMENT_SUBMITTED: "Payment submitted",
-} as const;
-
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export const DESCRIPTION_MAX_LENGTH = 200;
 export const DESCRIPTION_MAX_ROWS = 3;
-
-export const REQUEST_PAYMENT_COPY = {
-  RECEIVING_ADDRESS: "Receiving Address",
-  SET_AMOUNT: "Set receiving token amount",
-  ADVANCE_OPTION: "Advance Option",
-  DESCRIPTION: "Description",
-  DESCRIPTION_PLACEHOLDER: "e.g. invoice for business trip",
-  RECEIVE_PRIVATELY: "Receive Privately",
-  RECEIVE_PRIVATELY_TOOLTIP:
-    "Your payment will receive by a private wallet. You need to manually withdraw after receiving payment.",
-  GENERATE: "Generate Payment Link",
-  RECEIVED_PAYMENT: "Received Payment",
-  TO_BE_WITHDRAW: "To be withdraw",
-  COL_REQUEST: "Request Payment",
-  COL_TIME: "Received Time",
-  COL_ADDRESS: "Received Address",
-  COL_STATUS: "Status",
-  PRIVATE: "Private",
-  WITHDRAW: "Withdraw",
-  WITHDRAWED: "Withdrawed",
-  RECEIVED: "Received",
-  EMPTY_LIST: "No received payments yet",
-  COMING_SOON_TITLE: "Coming soon",
-  COMING_SOON_BODY: "Payment links will be available once the request API is ready.",
-  PAYER_URL_HINT: "Payer URL (not live): /pay?request=:id",
-  CONNECT_WALLET: "Connect the receiving wallet to activate private receive.",
-  ADDRESS_WALLET_MISMATCH: "Connect the same wallet as the receiving address to activate private receive.",
-} as const;
-
-export const REQUEST_PAYMENT_TOAST = {
-  ENTER_AMOUNT: "Enter a receiving amount",
-  SELECT_TOKEN: "Select a receiving token",
-  FIX_ADDRESS: "Fix the receiving address",
-  SIGN_REJECTED: "Signature rejected",
-  ACTIVATE_FAILED: "Could not activate private receive",
-  ACTIVATE_OK: "Private receive is on",
-  CORS_FALLBACK: "Signed locally. Session will sync when the auth endpoint is reachable.",
-  LINK_COMING_SOON: "Payment links are coming soon",
-  WITHDRAW_COMING_SOON: "Withdraw is coming soon",
-} as const;
 
 export const IMPORT_MAX_ROWS = 500;
 export const IMPORT_CSV_ACCEPT = ".csv,text/csv";
@@ -86,57 +50,3 @@ export const IMPORT_CSV_TEMPLATE = [
   "alice.near,50,USDT,near,",
   "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA,25,USDC,solana,bonus",
 ].join("\n");
-
-export const IMPORT_TOAST = {
-  MAX_ROWS: `Imported the first ${IMPORT_MAX_ROWS} rows`,
-  EMPTY: "No rows found",
-  PARSE_FAILED: "Could not parse the file",
-  CSV_TYPE: "Please upload a CSV file",
-  GOOGLE_NOT_CONFIGURED: "Google Sheets import is not configured",
-  GOOGLE_FAILED: "Could not read Google Sheet",
-} as const;
-
-export const BATCH_PAY_TOAST = {
-  INSUFFICIENT_BALANCE: "Insufficient balance",
-  COULD_NOT_READ_BALANCE: "Could not read wallet balance",
-  UNSUPPORTED_ORIGIN_CHAIN: "Batch payout currently supports EVM origin tokens only",
-  PAYMENT_SUBMITTED: "Payment submitted",
-  SELECT_PAYING_TOKEN: "Select a paying token",
-} as const;
-
-export const BATCH_LIQUIDITY_HINT =
-  "Batch quotes may lack liquidity for large totals; some recipients might fail.";
-
-export const BATCH_COPY = {
-  UPLOAD_TITLE: "Upload a CSV File",
-  UPLOAD_HINT: "Privately execute payments from your organization's treasury.",
-  DROP: "Drop CSV file here",
-  CHOOSE_FILE: "Choose file",
-  ENTER_MANUALLY: "Enter Manually",
-  DOWNLOAD_TEMPLATE: "Download Template",
-  VALIDATE_TITLE: "Validate",
-  VALIDATE_HINT: "Send a private payment from your organization's treasury.",
-  PAYING_TOKEN: "Paying Token & Network",
-  RECIPIENT: "Recipient",
-  AMOUNT: "Amount",
-  PREFER_TOKEN: "Prefer Token, Network",
-  MEMO: "Memo",
-  ADD_ONE: "Add one",
-  TOTAL_AMOUNT: "Total Amount:",
-  PREVIEW_TITLE: "Preview & Confirm",
-  PREVIEW_HINT: "Send a private payment from your organization's treasury.",
-  TOTAL_VALUED: "Total Valued",
-  TOKEN_BREAKDOWN: "Token Breakdown",
-  TOTAL_PAYOUTS: "Total Payouts",
-  PAY_FROM: "Pay from",
-  PAYING_TOKEN_LABEL: "Paying Token",
-  TOTAL_FEES: "Total Fees",
-  TOTAL_COST: "Total Cost",
-  CONFIRM_SEND: "Confirm & Send",
-  BACK: "Back",
-  CONTINUE: "Continue",
-  SELECT_SHEET: "Select a sheet",
-  INPUT_AMOUNT: "Input amount",
-  STEP_VALIDATE: "Validate",
-  STEP_PREVIEW: "Preview & Confirm",
-} as const;

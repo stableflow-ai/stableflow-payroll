@@ -2,7 +2,6 @@ import { useMemo, useState } from "react";
 import { Switch } from "@/components/ui/switch/Switch";
 import type { ReceivedPayment } from "@/mocks/request-payment";
 import { RECEIVED_STATUS } from "@/mocks/request-payment";
-import { REQUEST_PAYMENT_COPY } from "../../config";
 import { ReceivedPaymentRow } from "./ReceivedPaymentRow";
 
 export function ReceivedPaymentList(props: {
@@ -22,11 +21,11 @@ export function ReceivedPaymentList(props: {
     <div>
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h2 className="font-montserrat text-base font-medium text-black">
-          {REQUEST_PAYMENT_COPY.RECEIVED_PAYMENT}
+          Received Payment
         </h2>
         <span className="inline-flex items-center gap-2">
           <span className="inline-flex items-center gap-1.5 font-montserrat text-sm text-[#606060]">
-            {REQUEST_PAYMENT_COPY.TO_BE_WITHDRAW}
+            To be withdraw
             {pendingWithdrawCount > 0 ? (
               <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#6284F5] px-1 font-montserrat text-[10px] font-medium text-white">
                 {pendingWithdrawCount}
@@ -36,7 +35,7 @@ export function ReceivedPaymentList(props: {
           <Switch
             checked={onlyPending}
             onCheckedChange={setOnlyPending}
-            aria-label={REQUEST_PAYMENT_COPY.TO_BE_WITHDRAW}
+            aria-label="To be withdraw"
           />
         </span>
       </div>
@@ -44,13 +43,13 @@ export function ReceivedPaymentList(props: {
       <div className="mt-4 overflow-x-auto">
         <div className="min-w-[640px]">
           <div className="grid grid-cols-[minmax(200px,1.6fr)_minmax(140px,0.9fr)_minmax(140px,0.9fr)_minmax(110px,0.7fr)] gap-3 px-3 pb-2">
-            <span className="font-montserrat text-xs text-[#909090]">{REQUEST_PAYMENT_COPY.COL_REQUEST}</span>
-            <span className="font-montserrat text-xs text-[#909090]">{REQUEST_PAYMENT_COPY.COL_TIME}</span>
-            <span className="font-montserrat text-xs text-[#909090]">{REQUEST_PAYMENT_COPY.COL_ADDRESS}</span>
-            <span className="text-right font-montserrat text-xs text-[#909090]">{REQUEST_PAYMENT_COPY.COL_STATUS}</span>
+            <span className="font-montserrat text-xs text-[#909090]">Request Payment</span>
+            <span className="font-montserrat text-xs text-[#909090]">Received Time</span>
+            <span className="font-montserrat text-xs text-[#909090]">Received Address</span>
+            <span className="text-right font-montserrat text-xs text-[#909090]">Status</span>
           </div>
           {visible.length === 0 ? (
-            <p className="px-3 py-6 font-montserrat text-sm text-[#909090]">{REQUEST_PAYMENT_COPY.EMPTY_LIST}</p>
+            <p className="px-3 py-6 font-montserrat text-sm text-[#909090]">No received payments yet</p>
           ) : (
             <div className="flex flex-col gap-2">
               {visible.map((row) => (
