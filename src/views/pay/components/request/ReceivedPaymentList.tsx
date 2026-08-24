@@ -11,7 +11,7 @@ export function ReceivedPaymentList(props: {
   onWithdraw: (row: ReceivedPayment) => void;
 }) {
   const { rows, pendingWithdrawCount, withdrawingId = null, onWithdraw } = props;
-  const [onlyPending, setOnlyPending] = useState(true);
+  const [onlyPending, setOnlyPending] = useState(false);
 
   const visible = useMemo(() => {
     if (!onlyPending) return rows;
