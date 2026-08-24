@@ -4,6 +4,8 @@ export {
   CHAIN_KINDS,
   type ChainKind,
   type ChainOwners,
+  type IntentSignInput,
+  type IntentSignedPayload,
   type UseWalletResult,
   type WalletAccount,
   type WalletAdapter,

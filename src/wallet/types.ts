@@ -18,6 +18,38 @@ export interface WalletAccount {
   chainId?: string | number;
 }
 
+/** Empty-intents ownership proof (or a later withdraw payload) for NEAR Intents. */
+export interface IntentSignInput {
+  signerId: string;
+  nonce: Uint8Array;
+  deadlineMs: number;
+  recipient?: string;
+}
+
+export type IntentSignedPayload =
+  | {
+      standard: "erc191";
+      payload: string;
+      signature: string;
+    }
+  | {
+      standard: "tip191";
+      payload: string;
+      signature: string;
+    }
+  | {
+      standard: "nep413";
+      payload: { recipient: string; nonce: string; message: string };
+      public_key: string;
+      signature: string;
+    }
+  | {
+      standard: "raw_ed25519";
+      payload: string;
+      public_key: string;
+      signature: string;
+    };
+
 export interface WalletAdapter {
   readonly kind: ChainKind;
   connect(): Promise<void> | void;
@@ -33,6 +65,7 @@ export interface UseWalletResult {
   isConnecting: boolean;
   connect: () => void;
   disconnect: () => void;
+  signMessage: (input: IntentSignInput) => Promise<IntentSignedPayload>;
   isAddressValid: (address: string) => boolean;
   isModalOpen?: boolean;
 }

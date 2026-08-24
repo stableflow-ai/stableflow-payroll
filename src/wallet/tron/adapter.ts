@@ -2,7 +2,14 @@ import { useWallet as useTronAdapter } from "@tronweb3/tronwallet-adapter-react-
 import { useWalletModal as useTronWalletModal } from "@tronweb3/tronwallet-adapter-react-ui";
 import { useCallback, useMemo } from "react";
 import { isAddressValid } from "@/utils";
-import type { UseWalletResult, WalletAccount } from "../types";
+import type { IntentSignInput, IntentSignedPayload, UseWalletResult, WalletAccount } from "../types";
+import {
+  buildEvmFamilyPayload,
+  encodeSecp256k1Signature,
+  isoDeadline,
+  nonceToBase64,
+  walletDoesNotSupportSigning,
+} from "../intents-sign";
 
 export function useTronWallet(): UseWalletResult {
   const {
@@ -10,6 +17,7 @@ export function useTronWallet(): UseWalletResult {
     connected,
     connecting,
     disconnect,
+    signMessage: adapterSignMessage,
   } = useTronAdapter();
   const { setVisible, visible } = useTronWalletModal();
 
@@ -27,6 +35,29 @@ export function useTronWallet(): UseWalletResult {
     openModal();
   }, [connected, disconnect, setVisible]);
 
+  const signMessage = useCallback(
+    async (input: IntentSignInput): Promise<IntentSignedPayload> => {
+      if (!address) {
+        throw new Error("[wallet:tron] No connected account to sign with.");
+      }
+      if (typeof adapterSignMessage !== "function") {
+        throw walletDoesNotSupportSigning("Tron");
+      }
+      const payload = buildEvmFamilyPayload(
+        input.signerId,
+        nonceToBase64(input.nonce),
+        isoDeadline(input.deadlineMs),
+      );
+      const signature = await adapterSignMessage(payload);
+      return {
+        standard: "tip191",
+        payload,
+        signature: encodeSecp256k1Signature(signature),
+      };
+    },
+    [adapterSignMessage, address],
+  );
+
   const isAddressValidFn = useCallback((value: string) => isAddressValid(value, "tron"), []);
 
   return useMemo<UseWalletResult>(() => ({
@@ -37,6 +68,7 @@ export function useTronWallet(): UseWalletResult {
     isModalOpen: visible,
     connect,
     disconnect,
+    signMessage,
     isAddressValid: isAddressValidFn,
   }), [
     account,
@@ -46,6 +78,7 @@ export function useTronWallet(): UseWalletResult {
     connecting,
     disconnect,
     isAddressValidFn,
+    signMessage,
     visible,
   ]);
 }

@@ -10,6 +10,7 @@ export function useWallet(chainKind: ChainKind = "evm"): UseWalletResult {
   const slice = useWalletStore((state) => state.chains[chainKind]);
   const connect = useWalletStore((state) => state.connect);
   const disconnect = useWalletStore((state) => state.disconnect);
+  const signMessage = useWalletStore((state) => state.signMessage);
 
   return {
     kind: chainKind,
@@ -19,6 +20,7 @@ export function useWallet(chainKind: ChainKind = "evm"): UseWalletResult {
     isModalOpen: slice.modalOpen,
     connect: () => connect(chainKind),
     disconnect: () => disconnect(chainKind),
+    signMessage: (input) => signMessage(chainKind, input),
     isAddressValid: (address) => walletAddressValid(chainKind, address),
   };
 }

@@ -1,6 +1,13 @@
 import { create } from "zustand";
 import { isAddressValid } from "@/utils";
-import { CHAIN_KINDS, type ChainKind, type ChainOwners, type WalletAccount } from "@/wallet/types";
+import {
+  CHAIN_KINDS,
+  type ChainKind,
+  type ChainOwners,
+  type IntentSignInput,
+  type IntentSignedPayload,
+  type WalletAccount,
+} from "@/wallet/types";
 
 export interface ChainWalletState {
   account: WalletAccount | null;
@@ -11,6 +18,7 @@ export interface ChainWalletState {
 export interface ChainWalletActions {
   connect: () => void;
   disconnect: () => void;
+  signMessage: (input: IntentSignInput) => Promise<IntentSignedPayload>;
 }
 
 const EMPTY_CHAIN: ChainWalletState = {
@@ -45,6 +53,7 @@ interface WalletStore {
   registerActions: (kind: ChainKind, actions: ChainWalletActions) => void;
   connect: (kind: ChainKind) => void;
   disconnect: (kind: ChainKind) => void;
+  signMessage: (kind: ChainKind, input: IntentSignInput) => Promise<IntentSignedPayload>;
 }
 
 export const useWalletStore = create<WalletStore>((set, get) => ({
@@ -67,6 +76,13 @@ export const useWalletStore = create<WalletStore>((set, get) => ({
   },
   disconnect: (kind) => {
     get().actions[kind]?.disconnect();
+  },
+  signMessage: (kind, input) => {
+    const signMessage = get().actions[kind]?.signMessage;
+    if (!signMessage) {
+      throw new Error(`[wallet] Chain "${kind}" is not ready to sign messages.`);
+    }
+    return signMessage(input);
   },
 }));
 

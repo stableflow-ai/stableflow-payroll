@@ -24,7 +24,6 @@ const HIDDEN_STYLE: CSSProperties = {
   position: "fixed",
   top: 0,
   left: 0,
-  width: "max-content",
   visibility: "hidden",
   pointerEvents: "none",
 };
@@ -86,18 +85,22 @@ function measurePanelRect(panel: HTMLElement): DOMRect {
     left: panel.style.left,
     width: panel.style.width,
     visibility: panel.style.visibility,
+    pointerEvents: panel.style.pointerEvents,
   };
   panel.style.position = "fixed";
   panel.style.top = "0px";
   panel.style.left = "0px";
-  panel.style.width = "max-content";
   panel.style.visibility = "hidden";
+  panel.style.pointerEvents = "none";
+  // Drop the helper's inline width so className constraints (e.g. w-[285px]) apply.
+  panel.style.width = "";
   const rect = panel.getBoundingClientRect();
   panel.style.position = previous.position;
   panel.style.top = previous.top;
   panel.style.left = previous.left;
   panel.style.width = previous.width;
   panel.style.visibility = previous.visibility;
+  panel.style.pointerEvents = previous.pointerEvents;
   return rect;
 }
 

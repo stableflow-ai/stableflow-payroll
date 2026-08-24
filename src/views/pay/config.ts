@@ -34,6 +34,49 @@ export const QUICK_PAY_TOAST = {
 
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
+export const DESCRIPTION_MAX_LENGTH = 200;
+export const DESCRIPTION_MAX_ROWS = 3;
+
+export const REQUEST_PAYMENT_COPY = {
+  RECEIVING_ADDRESS: "Receiving Address",
+  SET_AMOUNT: "Set receiving token amount",
+  ADVANCE_OPTION: "Advance Option",
+  DESCRIPTION: "Description",
+  DESCRIPTION_PLACEHOLDER: "e.g. invoice for business trip",
+  RECEIVE_PRIVATELY: "Receive Privately",
+  RECEIVE_PRIVATELY_TOOLTIP:
+    "Your payment will receive by a private wallet. You need to manually withdraw after receiving payment.",
+  GENERATE: "Generate Payment Link",
+  RECEIVED_PAYMENT: "Received Payment",
+  TO_BE_WITHDRAW: "To be withdraw",
+  COL_REQUEST: "Request Payment",
+  COL_TIME: "Received Time",
+  COL_ADDRESS: "Received Address",
+  COL_STATUS: "Status",
+  PRIVATE: "Private",
+  WITHDRAW: "Withdraw",
+  WITHDRAWED: "Withdrawed",
+  RECEIVED: "Received",
+  EMPTY_LIST: "No received payments yet",
+  COMING_SOON_TITLE: "Coming soon",
+  COMING_SOON_BODY: "Payment links will be available once the request API is ready.",
+  PAYER_URL_HINT: "Payer URL (not live): /pay?request=:id",
+  CONNECT_WALLET: "Connect the receiving wallet to activate private receive.",
+  ADDRESS_WALLET_MISMATCH: "Connect the same wallet as the receiving address to activate private receive.",
+} as const;
+
+export const REQUEST_PAYMENT_TOAST = {
+  ENTER_AMOUNT: "Enter a receiving amount",
+  SELECT_TOKEN: "Select a receiving token",
+  FIX_ADDRESS: "Fix the receiving address",
+  SIGN_REJECTED: "Signature rejected",
+  ACTIVATE_FAILED: "Could not activate private receive",
+  ACTIVATE_OK: "Private receive is on",
+  CORS_FALLBACK: "Signed locally. Session will sync when the auth endpoint is reachable.",
+  LINK_COMING_SOON: "Payment links are coming soon",
+  WITHDRAW_COMING_SOON: "Withdraw is coming soon",
+} as const;
+
 export const IMPORT_MAX_ROWS = 500;
 export const IMPORT_CSV_ACCEPT = ".csv,text/csv";
 export const IMPORT_CSV_TEMPLATE_FILENAME = "payout-import-template.csv";

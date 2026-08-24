@@ -14,7 +14,7 @@ The trigger uses `IconArrowDown`; the icon rotates `180deg` while open. The pane
 
 Closes on outside click, Escape, and scroll.
 
-The panel is `position: fixed`. `useFloatingPosition` measures it off-flow (`width: max-content`) before clamping, so the first open is not pinned to the left edge of the viewport.
+The panel is `position: fixed`. `useFloatingPosition` measures it off-flow (hidden, origin `0,0`) before clamping, and keeps CSS width classes such as `w-[285px]` / `w-max` so the first open is not pinned to the left edge of the viewport.
 
 ## Trigger defaults
 

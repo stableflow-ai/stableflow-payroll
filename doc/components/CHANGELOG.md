@@ -2,6 +2,11 @@
 
 Record every create/update of components under `src/components/ui/` so other agents can discover new APIs.
 
+## 2026-08-24
+
+- **Tooltip:** `leaveDelay` `0` (default) sets `pointer-events: none` on the panel so it cannot cover the trigger and flicker.
+- **Overlay (`useFloatingPosition`):** Measure the panel without forcing `width: max-content`, so className widths such as `w-[285px]` are used for placement.
+
 ## 2026-08-21
 
 - **Dialog / OverlayPanel / Drawer:** optional `headerAction` next to the title (outside `<h2>`).

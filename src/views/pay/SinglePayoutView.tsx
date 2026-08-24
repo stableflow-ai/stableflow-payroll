@@ -69,6 +69,12 @@ function matchContact(address: string, contacts: Contact[]): Contact | null {
 }
 
 export function SinglePayoutView() {
+  // TODO(api): when GET /v1/pay/request/:id exists, read `?request=` from this
+  // route (`/pay?request=:id`), prefill and lock recipient address / amount /
+  // dest token, then settle via existing quickQuote/swap/submit (non-private) or
+  // payConfidentialRequest (receivePrivately → CONFIDENTIAL_INTENTS).
+  // Unauthenticated payers should hit `/login?returnTo=` (pathname + search).
+  // Do not change Login / Register / guards in this sprint.
   const queryClient = useQueryClient();
   const toast = useToast();
   const { contacts, addContact, updateContact, deleteContact } = useContacts();

@@ -1,7 +1,16 @@
+import { Buffer } from "buffer";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { isAddressValid } from "@/utils";
-import type { UseWalletResult, WalletAccount } from "../types";
+import type { IntentSignInput, IntentSignedPayload, UseWalletResult, WalletAccount } from "../types";
 import { useNearWalletContext } from "./provider";
+import {
+  INTENTS_RECIPIENT,
+  buildNep413Message,
+  encodeEd25519,
+  isoDeadline,
+  nonceToBase64,
+  walletDoesNotSupportSigning,
+} from "../intents-sign";
 
 export function useNearWallet(): UseWalletResult {
   const { selector, modal, accountId, connecting } = useNearWalletContext();
@@ -52,6 +61,40 @@ export function useNearWallet(): UseWalletResult {
     })();
   }, [selector]);
 
+  const signMessage = useCallback(
+    async (input: IntentSignInput): Promise<IntentSignedPayload> => {
+      if (!selector || !accountId) {
+        throw new Error("[wallet:near] No connected account to sign with.");
+      }
+      const wallet = await selector.wallet();
+      if (typeof wallet.signMessage !== "function") {
+        throw walletDoesNotSupportSigning("NEAR");
+      }
+      const recipient = input.recipient || INTENTS_RECIPIENT;
+      const nonce = Buffer.from(input.nonce);
+      const message = buildNep413Message(input.signerId, isoDeadline(input.deadlineMs));
+      const signed = await wallet.signMessage({
+        message,
+        recipient,
+        nonce,
+      });
+      if (!signed?.signature || !signed.publicKey) {
+        throw new Error("[wallet:near] Wallet did not return a signature.");
+      }
+      return {
+        standard: "nep413",
+        payload: {
+          recipient,
+          nonce: nonceToBase64(input.nonce),
+          message,
+        },
+        public_key: encodeEd25519(signed.publicKey),
+        signature: encodeEd25519(signed.signature),
+      };
+    },
+    [accountId, selector],
+  );
+
   const isAddressValidFn = useCallback((value: string) => isAddressValid(value, "near"), []);
 
   return useMemo<UseWalletResult>(() => ({
@@ -62,6 +105,7 @@ export function useNearWallet(): UseWalletResult {
     isModalOpen: modalOpen,
     connect,
     disconnect,
+    signMessage,
     isAddressValid: isAddressValidFn,
-  }), [account, accountId, connect, connecting, disconnect, isAddressValidFn, modalOpen]);
+  }), [account, accountId, connect, connecting, disconnect, isAddressValidFn, modalOpen, signMessage]);
 }

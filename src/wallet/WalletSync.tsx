@@ -22,8 +22,9 @@ function useSyncChainWallet(kind: ChainKind, wallet: UseWalletResult) {
     registerActions(kind, {
       connect: wallet.connect,
       disconnect: wallet.disconnect,
+      signMessage: wallet.signMessage,
     });
-  }, [kind, registerActions, wallet.connect, wallet.disconnect]);
+  }, [kind, registerActions, wallet.connect, wallet.disconnect, wallet.signMessage]);
 }
 
 /** Subscribes to all chain adapters once at the root and writes into the Zustand store. */

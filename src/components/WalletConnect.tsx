@@ -22,13 +22,15 @@ export function WalletConnectDialog({
   onClose,
   title = "Payment wallet",
   description = "Connect a wallet per chain. EVM, Near, Solana, and Tron can stay connected at the same time. The connected wallet is used when you send payouts.",
+  preferredKind = "evm",
 }: {
   onClose: () => void;
   title?: string;
   description?: string;
+  preferredKind?: ChainKind;
 }) {
   const connected = useConnectedWallets();
-  const [selectedKind, setSelectedKind] = useState<ChainKind>("evm");
+  const [selectedKind, setSelectedKind] = useState<ChainKind>(preferredKind);
   const wallet = useWallet(selectedKind);
   const address = wallet.account?.address || null;
 

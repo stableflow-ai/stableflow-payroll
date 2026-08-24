@@ -92,6 +92,7 @@ export function Tooltip(props: TooltipProps) {
               style={panelStyle}
               className={cn(
                 "z-1100 rounded-[12px] border border-[#E0E0E0] bg-[#FDFDFD] px-[15px] py-2.5 font-montserrat text-sm font-normal leading-normal text-black shadow-[0_0_20px_0_rgba(0,0,0,0.06)]",
+                leaveDelay <= 0 && "pointer-events-none",
                 className,
               )}
               onMouseEnter={leaveDelay > 0 ? show : undefined}

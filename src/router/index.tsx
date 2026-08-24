@@ -5,6 +5,7 @@ import { HowItWorksView } from "@/views/how-it-works/HowItWorksView";
 import { HomeView } from "@/views/home/HomeView";
 import { BatchPayoutView } from "@/views/pay/BatchPayoutView";
 import { PayPlaceholderView } from "@/views/pay/PayPlaceholderView";
+import { RequestPaymentView } from "@/views/pay/RequestPaymentView";
 import { SinglePayoutView } from "@/views/pay/SinglePayoutView";
 import { AppLayout } from "@/layouts/AppLayout";
 import { PayLayout } from "@/layouts/PayLayout";
@@ -46,7 +47,7 @@ export const router = createBrowserRouter([
             children: [
               { path: "/pay", element: <SinglePayoutView /> },
               { path: "/pay/batch", element: <BatchPayoutView /> },
-              { path: "/pay/request", element: <PayPlaceholderView /> },
+              { path: "/pay/request", element: <RequestPaymentView /> },
               { path: "/pay/pending", element: <PayPlaceholderView /> },
               { path: "/pay/history", element: <PayPlaceholderView /> },
             ],

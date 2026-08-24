@@ -43,11 +43,15 @@ One authenticated page at `/`. Summary, payment volume chart, pending payouts, a
 | --- | --- | --- |
 | Single Payout | `/pay` | One address, one payment. Recipients address book is a dialog on this page (mock data). |
 | Batch Payout | `/pay/batch` | CSV / Google Sheets / manual rows. Validate then preview. `POST /v1/pay/batch/quote\|swap\|submit`. Recipients are wallet addresses. |
-| Request Payment | `/pay/request` | Placeholder. |
+| Request Payment | `/pay/request` | Create a payment request (receiving address, amount, token, optional private receive). Received Payment list is mock until the API exists. Payer-open `/pay?request=:id` is planned. |
 | Pending Payouts | `/pay/pending` | Placeholder. |
 | Transaction History | `/pay/history` | Placeholder. |
 
 Single payout uses `POST /v1/pay/quick/quote|swap|submit`. Batch payout uses `POST /v1/pay/batch/quote|swap|submit`. Origin broadcast is EVM-only. Recipients are wallet addresses (not employees). The address book is not a route.
+
+Request Payment (`/pay/request`) lets the logged-in user set a receiving address (autofilled from the connected wallet for the selected token chain), amount, dest token, optional description, and **Receive Privately**. Private receive signs an empty-intents MultiPayload (V1 versioned nonce from `intents.near` `current_salt`) on the matching chain wallet, then `POST https://1click.chaindefuser.com/v0/auth/authenticate` to store a User-Session (refresh via `/v0/auth/refresh`). Generate Payment Link and Withdraw are UI-only until product APIs exist.
+
+Payer-open of a request link is **planned**: `/pay?request=:id` on Single Payout (must be logged in; unauthenticated → `/login?returnTo=`). Non-private reuses quick quote/swap/submit; private uses `recipientType: CONFIDENTIAL_INTENTS`. Do not change Login / guards until that API exists.
 
 ## Analytics
 
@@ -87,7 +91,7 @@ Registration fields (when that screen is built):
 /                 RequireAuth → AppLayout → HomeView
 /pay              RequireAuth → AppLayout → PayLayout → SinglePayoutView
 /pay/batch        PayLayout → BatchPayoutView
-/pay/request      PayLayout placeholder
+/pay/request      PayLayout → RequestPaymentView
 /pay/pending      PayLayout placeholder
 /pay/history      PayLayout placeholder
 *                 → /
