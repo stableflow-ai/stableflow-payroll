@@ -1,12 +1,12 @@
 export interface PayRecipient {
   id: string;
   name: string;
-  address: string;
+  wallet: string;
   email: string | null;
 }
 
 export interface PayRecipientBody {
   name: string;
-  address: string;
+  wallet: string;
   email?: string | null;
 }

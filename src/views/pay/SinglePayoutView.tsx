@@ -63,7 +63,7 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
 function matchContact(address: string, contacts: Contact[]): Contact | null {
   const kind = detectAddressChainKind(address);
   if (!kind) return null;
-  return contacts.find((row) => sameAddress(row.address, address, kind)) ?? null;
+  return contacts.find((row) => sameAddress(row.wallet, address, kind)) ?? null;
 }
 
 export function SinglePayoutView() {
@@ -353,7 +353,14 @@ export function SinglePayoutView() {
         <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
           <span className="inline-flex shrink-0 items-center gap-2 font-montserrat text-sm font-medium text-[#606060]">
             Notify Recipient
-            <Switch checked={notify} onCheckedChange={setNotify} aria-label="Notify recipient" />
+            <Switch
+              checked={notify}
+              onCheckedChange={(checked) => {
+                setNotify(checked);
+                if (!checked) setEmail("");
+              }}
+              aria-label="Notify recipient"
+            />
           </span>
           <input
             type="email"
@@ -392,7 +399,7 @@ export function SinglePayoutView() {
         contacts={contacts}
         selectedAddress={addressInput}
         onSelect={(contact) => {
-          setAddressInput(contact.address);
+          setAddressInput(contact.wallet);
           if (contact.email) {
             setEmail(contact.email.slice(0, EMAIL_MAX_LENGTH));
             setNotify(true);

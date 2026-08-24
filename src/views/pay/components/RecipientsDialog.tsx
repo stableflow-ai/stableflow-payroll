@@ -37,7 +37,7 @@ export function RecipientsDialog(props: {
         {contacts.map((contact) => {
           const selected = Boolean(
             selectedAddress
-            && sameAddress(contact.address, selectedAddress, detectAddressChainKind(selectedAddress)),
+            && sameAddress(contact.wallet, selectedAddress, detectAddressChainKind(selectedAddress)),
           );
           return (
             <li
@@ -48,12 +48,12 @@ export function RecipientsDialog(props: {
             >
               <RecipientAvatar
                 name={contact.name}
-                address={contact.address}
+                address={contact.wallet}
                 className="size-8 text-xs"
               />
               <div className="min-w-0 flex-1">
                 <p className="truncate font-montserrat text-sm font-medium text-black">{contact.name}</p>
-                <p className="font-montserrat text-[10px] text-[#606060]">{formatAddress(contact.address)}</p>
+                <p className="font-montserrat text-[10px] text-[#606060]">{formatAddress(contact.wallet)}</p>
               </div>
               <div className="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100">
                 <button

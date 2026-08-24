@@ -25,7 +25,7 @@ export function ContactFormDialog(props: {
   useEffect(() => {
     if (!open) return;
     setName(contact?.name ?? "");
-    setAddress(contact?.address ?? "");
+    setAddress(contact?.wallet ?? "");
     setEmail(contact?.email ?? "");
     setError(null);
   }, [open, contact]);

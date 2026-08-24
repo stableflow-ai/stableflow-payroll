@@ -32,7 +32,10 @@ export function HomeView() {
           onRangeChange={setRange}
           points={volume.data ?? []}
         />
-        <PendingPayoutsCard items={(pending.data ?? []).slice(0, HOME_LIST_LIMIT)} />
+        <PendingPayoutsCard
+          items={(pending.data ?? []).slice(0, HOME_LIST_LIMIT)}
+          loading={pending.isPending}
+        />
       </div>
       <RecentPayoutsTable items={(recent.data ?? []).slice(0, HOME_LIST_LIMIT)} />
     </div>

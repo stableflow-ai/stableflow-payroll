@@ -21,7 +21,7 @@ export function RecipientAddressField(props: {
         <div className="flex h-9 min-w-0 flex-1 items-center rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] pr-2 pl-2">
           {matched ? (
             <span className="mr-2 inline-flex h-[30px] shrink-0 items-center gap-1.5 rounded-[8px] border border-black/10 bg-white px-1.5">
-              <RecipientAvatar name={matched.name} address={matched.address} className="size-5 text-[10px]" />
+              <RecipientAvatar name={matched.name} address={matched.wallet} className="size-5 text-[10px]" />
               <span className="max-w-[72px] truncate font-montserrat text-sm font-medium text-black">
                 {matched.name}
               </span>

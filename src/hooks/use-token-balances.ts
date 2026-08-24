@@ -5,7 +5,10 @@ import { useTokenBalancesStore } from "@/stores/token-balances";
 
 function ownersKey(owners: ChainOwners): string {
   return (["evm", "near", "solana"] as const)
-    .map((kind) => `${kind}:${owners[kind] || ""}`)
+    .map((kind) => {
+      const address = owners[kind] || "";
+      return `${kind}:${kind === "solana" ? address : address.toLowerCase()}`;
+    })
     .join("|");
 }
 
@@ -29,16 +32,23 @@ export function useEnsureTokenBalances(opts: {
   const ownerKey = useMemo(() => ownersKey(owners), [owners]);
   const ready = hasAnyOwner(owners);
   const wasReadyRef = useRef(false);
+  const enabledRef = useRef(enabled);
+  const ownersRef = useRef(owners);
+  const tokensRef = useRef(tokens);
+  ownersRef.current = owners;
+  tokensRef.current = tokens;
 
   useEffect(() => {
+    const justEnabled = enabled && !enabledRef.current;
+    enabledRef.current = enabled;
     if (!enabled || !ready || !tokenKey) return;
-    void fetchAll(owners, tokens);
+    void fetchAll(ownersRef.current, tokensRef.current, { force: justEnabled });
     if (!pollMs) return;
     const id = window.setInterval(() => {
-      void fetchAll(owners, tokens);
+      void fetchAll(ownersRef.current, tokensRef.current, { force: true });
     }, pollMs);
     return () => window.clearInterval(id);
-  }, [enabled, ready, ownerKey, tokenKey, fetchAll, owners, tokens, pollMs]);
+  }, [enabled, ready, ownerKey, tokenKey, fetchAll, pollMs]);
 
   useEffect(() => {
     if (wasReadyRef.current && !ready) clear();

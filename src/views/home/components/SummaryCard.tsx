@@ -74,11 +74,7 @@ export function SummaryCard({
         <section>
           <h2 className="font-montserrat text-base font-medium capitalize text-black">Balance</h2>
           {hasWallet ? (
-            <button
-              type="button"
-              className="mt-2 block w-full text-left"
-              onClick={() => setTokenDialogOpen(true)}
-            >
+            <div className="mt-2 block w-full text-left">
               <p className="font-montserrat text-[26px] font-medium text-black">
                 {formatAmount(totals.usd, { padDecimals: true })}
               </p>
@@ -102,7 +98,7 @@ export function SummaryCard({
                   </span>
                 ))}
               </div>
-            </button>
+            </div>
           ) : (
             <Button
               variant="primary"
@@ -120,9 +116,8 @@ export function SummaryCard({
             Total Payment
           </h2>
           <p
-            className={`mt-2 font-montserrat text-[26px] font-medium text-black ${
-              totalPayment == null ? "opacity-30" : ""
-            }`}
+            className={`mt-2 font-montserrat text-[26px] font-medium text-black ${totalPayment == null ? "opacity-30" : ""
+              }`}
           >
             {totalPayment == null ? "$-" : formatAmount(totalPayment, { padDecimals: true })}
           </p>
@@ -133,9 +128,8 @@ export function SummaryCard({
             Recipients
           </h2>
           <p
-            className={`mt-2 font-montserrat text-[26px] font-medium text-black ${
-              recipients == null ? "opacity-30" : ""
-            }`}
+            className={`mt-2 font-montserrat text-[26px] font-medium text-black ${recipients == null ? "opacity-30" : ""
+              }`}
           >
             {recipients == null ? "-" : recipients}
           </p>

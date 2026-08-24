@@ -9,6 +9,7 @@ import {
   formatUnits,
   type Address,
   type Chain,
+  type PublicClient,
 } from "viem";
 import {
   arbitrum,
@@ -44,6 +45,8 @@ const chainById: Record<number, Chain> = {
   [scroll.id]: scroll,
 };
 
+const clients = new Map<string, PublicClient>();
+
 function resolveChain(networkOrBlockchain: string): Chain | null {
   const chainId = getChainByNetwork(networkOrBlockchain)?.chainId;
   if (!chainId) return null;
@@ -54,10 +57,14 @@ export function getPublicClientForNetwork(networkOrBlockchain: string) {
   const chain = resolveChain(networkOrBlockchain);
   const config = getChainByNetwork(networkOrBlockchain);
   if (!chain || !config) return null;
-  return createPublicClient({
+  const cached = clients.get(config.blockchain);
+  if (cached) return cached;
+  const client = createPublicClient({
     chain,
     transport: evmTransportForBlockchain(config.blockchain),
   });
+  clients.set(config.blockchain, client);
+  return client;
 }
 
 export async function readErc20Balance(opts: {
@@ -75,6 +82,56 @@ export async function readErc20Balance(opts: {
     args: [opts.owner],
   });
   return { raw, formatted: formatUnits(raw, opts.decimals) };
+}
+
+export type Erc20BalanceInput = {
+  assetId: string;
+  tokenAddress: Address;
+  decimals: number;
+};
+
+export type Erc20BalanceResult =
+  | { assetId: string; raw: bigint; formatted: string }
+  | { assetId: string; error: string };
+
+export async function readErc20Balances(opts: {
+  network: string;
+  owner: Address;
+  tokens: Erc20BalanceInput[];
+}): Promise<Erc20BalanceResult[]> {
+  const client = getPublicClientForNetwork(opts.network);
+  if (!client) {
+    return opts.tokens.map((token) => ({
+      assetId: token.assetId,
+      error: `Unsupported network: ${opts.network}`,
+    }));
+  }
+  if (opts.tokens.length === 0) return [];
+
+  const results = await client.multicall({
+    allowFailure: true,
+    contracts: opts.tokens.map((token) => ({
+      address: token.tokenAddress,
+      abi: erc20Abi,
+      functionName: "balanceOf" as const,
+      args: [opts.owner] as const,
+    })),
+  });
+
+  return opts.tokens.map((token, index) => {
+    const result = results[index];
+    if (!result || result.status !== "success") {
+      const message = result && "error" in result && result.error instanceof Error
+        ? result.error.message
+        : "Failed to read balance";
+      return { assetId: token.assetId, error: message };
+    }
+    return {
+      assetId: token.assetId,
+      raw: result.result,
+      formatted: formatUnits(result.result, token.decimals),
+    };
+  });
 }
 
 export { erc20Abi };

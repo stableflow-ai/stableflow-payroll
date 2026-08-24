@@ -13,7 +13,7 @@ export function useContacts() {
     addContact: (input: { name: string; address: string; email: string | null }) =>
       createMutation.mutateAsync({
         name: input.name,
-        address: input.address,
+        wallet: input.address,
         email: input.email || undefined,
       }),
     updateContact: (id: string, input: { name: string; address: string; email: string | null }) =>
@@ -21,7 +21,7 @@ export function useContacts() {
         id,
         body: {
           name: input.name,
-          address: input.address,
+          wallet: input.address,
           email: input.email || undefined,
         },
       }),

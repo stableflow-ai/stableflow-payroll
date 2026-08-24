@@ -9,7 +9,7 @@ function mapRecipient(raw: unknown): PayRecipient {
   return {
     id: apiText(row.id),
     name: apiText(row.name),
-    address: apiText(row.address),
+    wallet: apiText(row.wallet),
     email: email || null,
   };
 }
