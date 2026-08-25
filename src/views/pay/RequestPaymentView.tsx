@@ -4,38 +4,42 @@ import { Card } from "@/components/ui/card/Card";
 import { InputNumber } from "@/components/ui/input-number/InputNumber";
 import { TokenNetworkDialog } from "@/components/token-network-dialog/TokenNetworkDialog";
 import { WalletConnectDialog } from "@/components/WalletConnect";
-import { useRequestPayment } from "@/hooks/use-request-payment";
+import {
+  useCreatePayRequestMutation,
+  useRequestPaymentsQuery,
+  useRequestWithdrawCountQuery,
+} from "@/hooks/use-request-payment";
 import { useRequestWithdraw } from "@/hooks/use-request-withdraw";
 import { useConnectedWallets, useWallet } from "@/hooks/use-wallet";
 import useToast from "@/hooks/use-toast";
 import { activateConfidentialAccount } from "@/lib/confidential/activate";
 import { toIntentsAccountId } from "@/lib/confidential/to-intents-account-id";
 import { hasUsableNearintentsUserSession } from "@/stores/nearintents-user-session";
-import { useAuthStore } from "@/stores/auth";
 import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
 import { useWalletStore } from "@/stores/wallet";
 import { getAddressPlaceholder, sameAddress } from "@/utils";
 import type { ChainKind } from "@/wallet";
-import type { ReceivedPayment } from "@/mocks/request-payment";
-import { RECEIVED_STATUS } from "@/mocks/request-payment";
 import { TokenSelectButton } from "./components/TokenSelectButton";
 import { AdvanceOption } from "./components/request/AdvanceOption";
 import { GenerateLinkDialog } from "./components/request/GenerateLinkDialog";
 import { ReceivedPaymentList } from "./components/request/ReceivedPaymentList";
 import { ReceivingAddressField } from "./components/request/ReceivingAddressField";
-import { AMOUNT_MAX_DECIMALS } from "./config";
+import { AMOUNT_MAX_DECIMALS, PAY_REQUEST_MODE } from "./config";
 import {
   activateErrorMessage,
   buildPaymentRequestUrl,
   receivingAddressError,
+  toReceivedPaymentView,
   tokenChainKind,
+  type ReceivedPaymentView,
 } from "./request-utils";
 import { formatQuoteErrorMessage, parsePositiveDecimal } from "./utils";
 
 export function RequestPaymentView() {
   const toast = useToast();
-  const user = useAuthStore((state) => state.user);
-  const { received, pendingWithdrawCount } = useRequestPayment();
+  const listQuery = useRequestPaymentsQuery();
+  const withdrawCountQuery = useRequestWithdrawCountQuery();
+  const createMutation = useCreatePayRequestMutation();
   const withdrawMutation = useRequestWithdraw();
   const owners = useConnectedWallets();
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
@@ -53,11 +57,10 @@ export function RequestPaymentView() {
   const [walletDialogOpen, setWalletDialogOpen] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [paymentLink, setPaymentLink] = useState("");
-  const [withdrawnIds, setWithdrawnIds] = useState<string[]>([]);
-  const [withdrawingId, setWithdrawingId] = useState<string | null>(null);
+  const [withdrawingId, setWithdrawingId] = useState<number | null>(null);
   const skipAutofillRef = useRef(false);
   const pendingPrivateRef = useRef(false);
-  const pendingWithdrawRef = useRef<ReceivedPayment | null>(null);
+  const pendingWithdrawRef = useRef<ReceivedPaymentView | null>(null);
   const addressRef = useRef(addressInput);
   const activateRef = useRef<() => Promise<boolean>>(async () => false);
   addressRef.current = addressInput;
@@ -90,13 +93,11 @@ export function RequestPaymentView() {
   const showAddressStatus = Boolean(addressInput.trim()) || showAddressErrors;
   const amountForLink = parsePositiveDecimal(amount, AMOUNT_MAX_DECIMALS);
 
-  const rows = useMemo(() => {
-    return received.map((row) => (
-      withdrawnIds.includes(row.id) ? { ...row, status: RECEIVED_STATUS.Withdrawed } : row
-    ));
-  }, [received, withdrawnIds]);
-
-  const pendingCount = Math.max(0, pendingWithdrawCount - withdrawnIds.length);
+  const rows = useMemo(
+    () => (listQuery.data ?? []).map(toReceivedPaymentView),
+    [listQuery.data],
+  );
+  const pendingCount = withdrawCountQuery.data ?? 0;
 
   function clearAddress() {
     skipAutofillRef.current = true;
@@ -191,12 +192,8 @@ export function RequestPaymentView() {
     await activatePrivateReceive();
   }
 
-  function handleGenerate() {
+  async function handleGenerate() {
     setShowAddressErrors(true);
-    if (!user?.id) {
-      toast.fail({ title: "Sign in to generate a payment link" });
-      return;
-    }
     if (!destToken || !destKind) {
       toast.fail({ title: "Select a receiving token" });
       return;
@@ -211,19 +208,27 @@ export function RequestPaymentView() {
       return;
     }
 
-    setPaymentLink(buildPaymentRequestUrl(window.location.origin, {
-      address: addressInput,
-      amount: amountForLink,
-      token: destToken.symbol,
-      network: destToken.blockchain,
-      uid: user.id,
-      memo: description,
-      receivePrivately,
-    }));
-    setLinkDialogOpen(true);
+    try {
+      const memo = description.trim();
+      const created = await createMutation.mutateAsync({
+        amount: amountForLink,
+        mode: receivePrivately ? PAY_REQUEST_MODE.Private : PAY_REQUEST_MODE.Standard,
+        network: destToken.blockchain,
+        recipient_address: addressInput.trim(),
+        token: destToken.symbol,
+        memo: memo || undefined,
+        private_recipient_address: receivePrivately
+          ? toIntentsAccountId(addressInput, destKind)
+          : undefined,
+      });
+      setPaymentLink(buildPaymentRequestUrl(window.location.origin, created.id));
+      setLinkDialogOpen(true);
+    } catch (err) {
+      toast.fail({ title: formatQuoteErrorMessage(err, destToken.decimals) });
+    }
   }
 
-  async function runWithdraw(row: ReceivedPayment) {
+  async function runWithdraw(row: ReceivedPaymentView) {
     const token = findByChainAndSymbol(row.blockchain, row.symbol);
     if (!token) {
       toast.fail({ title: "Could not resolve the received token" });
@@ -239,6 +244,7 @@ export function RequestPaymentView() {
         return;
       }
       await withdrawMutation.mutateAsync({
+        requestId: row.id,
         address: row.address,
         chainKind: row.chainKind,
         assetId: token.assetId,
@@ -246,7 +252,6 @@ export function RequestPaymentView() {
         decimals: token.decimals,
         signGeneratedIntent: (intent) => useWalletStore.getState().signGeneratedIntent(row.chainKind, intent),
       });
-      setWithdrawnIds((ids) => (ids.includes(row.id) ? ids : [...ids, row.id]));
       toast.success({ title: "Withdraw submitted" });
     } catch (error) {
       toast.fail({ title: formatQuoteErrorMessage(error, token.decimals) });
@@ -308,21 +313,36 @@ export function RequestPaymentView() {
             }}
           />
 
-          <Button size="xl" className="mt-8 w-full" loading={activating} onClick={handleGenerate}>
+          <Button
+            size="xl"
+            className="mt-8 w-full"
+            loading={activating || createMutation.isPending}
+            onClick={() => {
+              void handleGenerate();
+            }}
+          >
             Generate Payment Link
           </Button>
         </Card>
 
-        <Card className="w-full px-6 py-7 sm:px-8">
-          <ReceivedPaymentList
-            rows={rows}
-            pendingWithdrawCount={pendingCount}
-            withdrawingId={withdrawingId}
-            onWithdraw={(row) => {
-              void runWithdraw(row);
-            }}
-          />
-        </Card>
+        <ReceivedPaymentList
+          rows={rows}
+          pendingWithdrawCount={pendingCount}
+          withdrawingId={withdrawingId}
+          loading={listQuery.isPending}
+          error={
+            listQuery.isError
+              ? listQuery.error instanceof Error
+                ? listQuery.error.message
+                : "Failed to load received payments"
+              : null
+          }
+          refreshing={listQuery.isFetching && !listQuery.isPending}
+          onRefresh={() => listQuery.refetch()}
+          onWithdraw={(row) => {
+            void runWithdraw(row);
+          }}
+        />
       </div>
 
       <TokenNetworkDialog

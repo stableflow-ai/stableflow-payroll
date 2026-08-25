@@ -10,9 +10,7 @@ export interface PaySingleQuoteParam {
   payer?: string;
   memo?: string;
   notifyEmail?: string;
-  mode?: string;
-  privateDestinationAddress?: string;
-  request_user_id?: number;
+  request_id?: number;
 }
 
 export interface PaySingleSwapParam extends PaySingleQuoteParam {
@@ -121,6 +119,11 @@ export interface PayPaymentsQuery {
   start_time?: number;
   end_time?: number;
 }
+
+export type PayPaymentsExportQuery = Pick<
+  PayPaymentsQuery,
+  "q" | "status" | "token" | "start_time" | "end_time"
+>;
 
 export interface PayPaymentsResp {
   total: number;

@@ -1,5 +1,4 @@
 export const MOCK_ENABLED = {
-  request: true,
   partner: true,
 } as const;
 

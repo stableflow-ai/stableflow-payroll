@@ -1,4 +1,5 @@
 import * as nearintentsApi from "@/api/nearintents";
+import { withdrawPayRequest } from "@/api/request-payment";
 import { QUICK_PAY_SLIPPAGE_TOLERANCE } from "@/views/pay/config";
 import { toIntentsAccountId } from "@/lib/confidential/to-intents-account-id";
 import { getPrivateBalances, privateAvailableForToken } from "@/lib/confidential/one-click-auth";
@@ -15,11 +16,9 @@ import { Big } from "@/utils";
 import type { ChainKind, GeneratedIntent, IntentSignedPayload } from "@/wallet";
 
 const QUOTE_DEADLINE_MS = 10 * 60_000;
-const STATUS_POLL_MS = 2_000;
-const STATUS_POLL_ATTEMPTS = 15;
-const TERMINAL_STATUS = new Set(["SUCCESS", "FAILED", "REFUNDED"]);
 
 export interface WithdrawConfidentialInput {
+  requestId: number;
   address: string;
   chainKind: ChainKind;
   assetId: string;
@@ -45,21 +44,14 @@ async function assertPrivateBalance(input: WithdrawConfidentialInput, intentsAcc
   }
 }
 
-async function sleep(ms: number): Promise<void> {
-  await new Promise((resolve) => window.setTimeout(resolve, ms));
-}
-
 /**
  * Withdraw private (confidential) balance to the main-chain wallet.
  *
  * Quote + generate-intent go through our `/v1/nearintents` Partner-key proxy.
- * TODO(api): replace submit-intent + status polling with
- * `POST /v1/pay/request/received/:id/withdraw/submit` when the product API
- * records the row, calls 1Click `v0/submit-intent`, and polls `v0/status`.
+ * The signed payload is submitted via `POST /v1/pay/request/withdraw`.
  */
 export async function withdrawConfidentialPayment(input: WithdrawConfidentialInput): Promise<{
   depositAddress: string;
-  status?: string;
 }> {
   const intentsAccountId = toIntentsAccountId(input.address, input.chainKind);
   await assertPrivateBalance(input, intentsAccountId);
@@ -94,22 +86,10 @@ export async function withdrawConfidentialPayment(input: WithdrawConfidentialInp
   }
 
   const signedData = await input.signGeneratedIntent(generated.intent);
-
-  // TODO(api): POST /v1/pay/request/received/:id/withdraw/submit with signedData.
-  await nearintentsApi.nearintentsSubmitIntent({
-    type: NEARINTENTS_INTENT_TYPE.SwapTransfer,
+  await withdrawPayRequest({
+    deposit_address: depositAddress,
+    request_id: input.requestId,
     signedData,
   });
-
-  let status: string | undefined;
-  for (let attempt = 0; attempt < STATUS_POLL_ATTEMPTS; attempt++) {
-    const result = await nearintentsApi.nearintentsStatus(depositAddress, quoted.quote?.depositMemo);
-    status = result.status;
-    if (status && TERMINAL_STATUS.has(status)) break;
-    await sleep(STATUS_POLL_MS);
-  }
-  if (status === "FAILED" || status === "REFUNDED") {
-    throw new Error(`Withdraw ${status.toLowerCase()}`);
-  }
-  return { depositAddress, status };
+  return { depositAddress };
 }

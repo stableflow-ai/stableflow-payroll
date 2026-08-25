@@ -1,7 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { usePendingPaymentsQuery } from "@/hooks/use-pending-payments";
-import { useRequestPayment } from "@/hooks/use-request-payment";
+import { useRequestWithdrawCountQuery } from "@/hooks/use-request-payment";
 import { PAY_NAV_ITEMS } from "../config";
 
 function NavBadge({ count }: { count: number }) {
@@ -14,9 +14,10 @@ function NavBadge({ count }: { count: number }) {
 }
 
 export function PaySidebar() {
-  const { pendingWithdrawCount } = useRequestPayment();
+  const withdrawCountQuery = useRequestWithdrawCountQuery();
   const pendingPayoutsQuery = usePendingPaymentsQuery();
   const pendingPayoutCount = pendingPayoutsQuery.data?.length ?? 0;
+  const requestBadgeCount = withdrawCountQuery.data ?? 0;
 
   return (
     <nav className="flex shrink-0 gap-2 overflow-x-auto lg:w-[201px] lg:flex-col lg:gap-1.5 lg:overflow-visible">
@@ -24,7 +25,7 @@ export function PaySidebar() {
         const Icon = item.icon;
         const badgeCount =
           item.to === "/pay/request"
-            ? pendingWithdrawCount
+            ? requestBadgeCount
             : item.to === "/pay/pending"
               ? pendingPayoutCount
               : 0;

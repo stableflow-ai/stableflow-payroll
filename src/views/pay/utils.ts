@@ -1,8 +1,9 @@
 import Big from "big.js";
+import { format } from "date-fns";
 import { ApiError } from "@/lib/api-error";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import { isAddressValid, type WalletChainKind } from "@/utils";
-import { EMAIL_PATTERN } from "./config";
+import { EMAIL_PATTERN, EXPORT_FILENAME_STAMP } from "./config";
 
 const USER_REJECTED_PATTERNS = [
   "user rejected",
@@ -134,4 +135,11 @@ export function paymentDisplayNetwork(item: {
   network: string;
 }) {
   return item.destinationNetwork || item.network;
+}
+
+export function stampDownloadFilename(filename: string, now = new Date()): string {
+  const stamp = format(now, EXPORT_FILENAME_STAMP);
+  const dot = filename.lastIndexOf(".");
+  if (dot <= 0) return `${filename}-${stamp}`;
+  return `${filename.slice(0, dot)}-${stamp}${filename.slice(dot)}`;
 }

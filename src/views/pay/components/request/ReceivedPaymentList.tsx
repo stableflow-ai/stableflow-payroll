@@ -1,71 +1,129 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, useEffect } from "react";
+import { Button } from "@/components/ui/button/Button";
+import { BUTTON_SIZE, BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Switch } from "@/components/ui/switch/Switch";
-import type { ReceivedPayment } from "@/mocks/request-payment";
-import { RECEIVED_STATUS } from "@/mocks/request-payment";
+import {
+  Table,
+  TableBody,
+  TableHead,
+  TableHeader,
+} from "@/components/ui/table/Table";
+import { RECEIVED_PAYMENT_TABLE_COLUMNS, REQUEST_LIST_REFRESH_MS } from "../../config";
+import { canWithdrawRequest, type ReceivedPaymentView } from "../../request-utils";
 import { ReceivedPaymentRow } from "./ReceivedPaymentRow";
 
 export function ReceivedPaymentList(props: {
-  rows: ReceivedPayment[];
+  rows: ReceivedPaymentView[];
   pendingWithdrawCount: number;
-  withdrawingId?: string | null;
-  onWithdraw: (row: ReceivedPayment) => void;
+  withdrawingId?: number | null;
+  loading?: boolean;
+  error?: string | null;
+  refreshing?: boolean;
+  onRefresh: () => Promise<unknown>;
+  onWithdraw: (row: ReceivedPaymentView) => void;
 }) {
-  const { rows, pendingWithdrawCount, withdrawingId = null, onWithdraw } = props;
+  const {
+    rows,
+    pendingWithdrawCount,
+    withdrawingId = null,
+    loading = false,
+    error = null,
+    refreshing = false,
+    onRefresh,
+    onWithdraw,
+  } = props;
   const [onlyPending, setOnlyPending] = useState(false);
+  const [cooldownUntil, setCooldownUntil] = useState(0);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (cooldownUntil <= Date.now()) return;
+    const id = window.setInterval(() => setNow(Date.now()), 1_000);
+    return () => window.clearInterval(id);
+  }, [cooldownUntil]);
+
+  const cooldownSec = Math.max(0, Math.ceil((cooldownUntil - now) / 1_000));
+  const refreshDisabled = cooldownSec > 0;
 
   const visible = useMemo(() => {
     if (!onlyPending) return rows;
-    return rows.filter((row) => row.status === RECEIVED_STATUS.Withdraw);
+    return rows.filter((row) => canWithdrawRequest(row));
   }, [onlyPending, rows]);
 
-  return (
-    <div>
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <h2 className="font-montserrat text-base font-medium text-black">
-          Received Payment
-        </h2>
-        <span className="inline-flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 font-montserrat text-sm text-[#606060]">
-            To be withdraw
-            {pendingWithdrawCount > 0 ? (
-              <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#6284F5] px-1 font-montserrat text-[10px] font-medium text-white">
-                {pendingWithdrawCount}
-              </span>
-            ) : null}
-          </span>
-          <Switch
-            checked={onlyPending}
-            onCheckedChange={setOnlyPending}
-            aria-label="To be withdraw"
-          />
-        </span>
-      </div>
+  async function handleRefresh() {
+    if (refreshDisabled || refreshing) return;
+    const started = Date.now();
+    setNow(started);
+    setCooldownUntil(started + REQUEST_LIST_REFRESH_MS);
+    await onRefresh();
+  }
 
-      <div className="mt-4 overflow-x-auto">
-        <div className="min-w-[640px]">
-          <div className="grid grid-cols-[minmax(200px,1.6fr)_minmax(140px,0.9fr)_minmax(140px,0.9fr)_minmax(110px,0.7fr)] gap-3 px-3 pb-2">
-            <span className="font-montserrat text-xs text-[#909090]">Request Payment</span>
-            <span className="font-montserrat text-xs text-[#909090]">Received Time</span>
-            <span className="font-montserrat text-xs text-[#909090]">Received Address</span>
-            <span className="text-right font-montserrat text-xs text-[#909090]">Status</span>
-          </div>
-          {visible.length === 0 ? (
-            <p className="px-3 py-6 font-montserrat text-sm text-[#909090]">No received payments yet</p>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {visible.map((row) => (
-                <ReceivedPaymentRow
-                  key={row.id}
-                  row={row}
-                  withdrawing={withdrawingId === row.id}
-                  withdrawDisabled={Boolean(withdrawingId)}
-                  onWithdraw={() => onWithdraw(row)}
-                />
-              ))}
-            </div>
-          )}
+  return (
+    <Table
+      className="w-full"
+      columns={RECEIVED_PAYMENT_TABLE_COLUMNS}
+      toolbar={
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+          <h2 className="font-montserrat text-base font-medium text-black">
+            Requested
+          </h2>
+          <span className="inline-flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 font-montserrat text-sm text-[#606060]">
+              To be withdraw
+              {pendingWithdrawCount > 0 ? (
+                <span className="inline-flex h-[18px] min-w-[18px] items-center justify-center rounded-full bg-[#6284F5] px-1 font-montserrat text-[10px] font-medium text-white">
+                  {pendingWithdrawCount}
+                </span>
+              ) : null}
+            </span>
+            <Switch
+              checked={onlyPending}
+              onCheckedChange={setOnlyPending}
+              aria-label="To be withdraw"
+            />
+            <Button
+              type="button"
+              variant={BUTTON_VARIANT.Normal}
+              size={BUTTON_SIZE.Sm}
+              loading={refreshing}
+              disabled={refreshDisabled}
+              onClick={() => {
+                void handleRefresh();
+              }}
+              className="h-7 rounded-full px-3 text-xs"
+            >
+              {cooldownSec > 0 ? `Refresh ${cooldownSec}s` : "Refresh"}
+            </Button>
+          </span>
         </div>
-      </div>
-    </div>
+      }
+    >
+      <TableHeader>
+        <TableHead>Request Payment</TableHead>
+        <TableHead>Request Time</TableHead>
+        <TableHead>Received Address</TableHead>
+        <TableHead>Status</TableHead>
+        <TableHead className="justify-end">Link</TableHead>
+      </TableHeader>
+      <TableBody>
+        {loading && rows.length === 0 ? (
+          <p className="py-8 text-center font-montserrat text-sm text-[#909090]">Loading received payments…</p>
+        ) : error && rows.length === 0 ? (
+          <p className="py-8 text-center font-montserrat text-sm text-danger">{error}</p>
+        ) : visible.length === 0 ? (
+          <p className="py-8 text-center font-montserrat text-sm text-[#909090]">No received payments yet</p>
+        ) : (
+          visible.map((row) => (
+            <ReceivedPaymentRow
+              key={row.id}
+              row={row}
+              withdrawing={withdrawingId === row.id}
+              withdrawDisabled={Boolean(withdrawingId)}
+              onWithdraw={() => onWithdraw(row)}
+            />
+          ))
+        )}
+      </TableBody>
+    </Table>
   );
 }

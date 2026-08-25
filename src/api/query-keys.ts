@@ -29,4 +29,10 @@ export const queryKeys = {
     all: ["analytics"] as const,
     month: (month: string) => [...queryKeys.analytics.all, "month", month] as const,
   },
+  request: {
+    all: ["request"] as const,
+    payments: ["request", "payments"] as const,
+    withdrawCount: ["request", "withdraw-count"] as const,
+    detail: (id: number) => [...queryKeys.request.all, "detail", id] as const,
+  },
 } as const;

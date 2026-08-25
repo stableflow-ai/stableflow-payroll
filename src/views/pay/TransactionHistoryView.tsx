@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
 import { IconExportLink } from "@/components/icons/link";
 import { DateRangePicker } from "@/components/date-range-picker/DateRangePicker";
@@ -10,9 +10,10 @@ import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { Pagination } from "@/components/ui/pagination/Pagination";
 import { SearchInput } from "@/components/ui/search-input/SearchInput";
 import { txExplorerUrl } from "@/config/chains";
-import { usePaymentsQuery } from "@/hooks/use-payout-api";
+import { useExportPaymentsMutation, usePaymentsQuery } from "@/hooks/use-payout-api";
 import useToast from "@/hooks/use-toast";
 import type { PayLayoutOutletContext } from "@/layouts/PayLayout";
+import type { PayPaymentsExportQuery } from "@/types/payout";
 import {
   HISTORY_ASSET_FILTER,
   HISTORY_PAGE_SIZE,
@@ -27,19 +28,25 @@ import {
   paymentRowId,
 } from "./utils";
 
-function ExportCsvButton() {
+function ExportCsvButton({ params }: { params: PayPaymentsExportQuery }) {
   const toast = useToast();
+  const exportMutation = useExportPaymentsMutation();
   return (
     <Button
       variant={BUTTON_VARIANT.Normal}
       size={BUTTON_SIZE.Sm}
-      className="h-9 w-full rounded-[6px] border-[#e3e3e3] px-3 text-black sm:w-[141px]"
+      loading={exportMutation.isPending}
+      className="h-9 w-full shrink-0 whitespace-nowrap rounded-[6px] border-[#e3e3e3] px-3 text-black sm:w-auto sm:min-w-[141px]"
       onClick={() => {
-        toast.info({ title: "Export CSV is coming soon" });
+        void exportMutation.mutateAsync(params).catch((error) => {
+          toast.fail({
+            title: error instanceof Error ? error.message : "Failed to export transactions",
+          });
+        });
       }}
     >
       Export CSV
-      <IconExportLink className="size-3.5 shrink-0" />
+      {exportMutation.isPending ? null : <IconExportLink className="size-3.5 shrink-0" />}
     </Button>
   );
 }
@@ -52,11 +59,21 @@ export function TransactionHistoryView() {
   const [range, setRange] = useState(() => lastNDaysRange(DATE_RANGE_PRESET.Days30));
   const [page, setPage] = useState(1);
   const times = rangeToUnixSeconds(range);
+  const exportParams = useMemo<PayPaymentsExportQuery>(
+    () => ({
+      q: search.trim() || undefined,
+      status: status === HISTORY_STATUS_FILTER.All ? undefined : status,
+      token: asset === HISTORY_ASSET_FILTER.All ? undefined : asset,
+      start_time: times.start_time,
+      end_time: times.end_time,
+    }),
+    [search, status, asset, times.start_time, times.end_time],
+  );
 
   useEffect(() => {
-    setHeaderExtra(<ExportCsvButton />);
+    setHeaderExtra(<ExportCsvButton params={exportParams} />);
     return () => setHeaderExtra(null);
-  }, [setHeaderExtra]);
+  }, [setHeaderExtra, exportParams]);
 
   const query = usePaymentsQuery({
     page,

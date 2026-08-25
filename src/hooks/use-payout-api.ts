@@ -1,13 +1,27 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { queryKeys } from "@/api/query-keys";
 import {
+  exportPayments,
   getPayOverview,
   getPaymentVolume,
   getPayments,
   getRecentPayments,
 } from "@/api/payout";
 import { useAuthStore } from "@/stores/auth";
-import type { PayPaymentsQuery, VolumePeriod } from "@/types/payout";
+import type { PayPaymentsExportQuery, PayPaymentsQuery, VolumePeriod } from "@/types/payout";
+import { stampDownloadFilename } from "@/views/pay/utils";
+
+function saveBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
 
 export function usePayOverviewQuery() {
   const token = useAuthStore((state) => state.token);
@@ -42,5 +56,14 @@ export function usePaymentsQuery(params: PayPaymentsQuery) {
     queryKey: queryKeys.payout.payments(params),
     queryFn: () => getPayments(params),
     enabled: Boolean(token),
+  });
+}
+
+export function useExportPaymentsMutation() {
+  return useMutation({
+    mutationFn: (params: PayPaymentsExportQuery) => exportPayments(params),
+    onSuccess: ({ blob, filename }) => {
+      saveBlob(blob, stampDownloadFilename(filename));
+    },
   });
 }

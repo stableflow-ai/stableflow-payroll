@@ -17,7 +17,10 @@ export const PAY_NAV_ITEMS = [
 
 export const PAYOUT_TABLE_COLUMNS =
   "minmax(150px,1.3fr) minmax(72px,0.5fr) minmax(140px,1fr) minmax(130px,1fr) minmax(150px,1fr) minmax(150px,0.95fr)";
+export const RECEIVED_PAYMENT_TABLE_COLUMNS =
+  "minmax(180px,1.5fr) minmax(130px,0.9fr) minmax(130px,0.9fr) minmax(110px,0.7fr) minmax(64px,0.45fr)";
 export const HISTORY_PAGE_SIZE = 10;
+export const EXPORT_FILENAME_STAMP = "yyyyMMdd-HHmmss";
 export const HISTORY_STATUS_FILTER = {
   All: "all",
   Complete: "completed",
@@ -42,16 +45,25 @@ export const DESCRIPTION_MAX_LENGTH = 200;
 export const DESCRIPTION_MAX_ROWS = 3;
 
 export const PAYMENT_REQUEST_QUERY = {
-  Addr: "addr",
-  Amount: "amount",
-  Token: "token",
-  Network: "network",
-  Uid: "uid",
-  Memo: "memo",
+  Id: "id",
+} as const;
+
+export const PAY_REQUEST_STATUS = {
+  Pending: "pending",
+  Submitted: "submitted",
+  Completed: "completed",
+  Withdrawing: "withdrawing",
+  Withdrawed: "withdrawed",
+  Failed: "failed",
+} as const;
+
+export const PAY_REQUEST_MODE = {
+  Standard: "standard",
   Private: "private",
 } as const;
 
-export const PAYMENT_REQUEST_PRIVATE_VALUE = "1";
+export const REQUEST_LIST_REFRESH_MS = 30_000;
+export const REQUEST_WITHDRAW_COUNT_POLL_MS = 120_000;
 
 export const IMPORT_MAX_ROWS = 500;
 export const IMPORT_CSV_ACCEPT = ".csv,text/csv";

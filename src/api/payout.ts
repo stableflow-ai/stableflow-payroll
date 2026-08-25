@@ -1,4 +1,4 @@
-import { http } from "@/lib/http";
+import { http, httpBlob } from "@/lib/http";
 import { PAY_API_PREFIX } from "@/api/config";
 import { getPayAnalytics } from "@/api/analytics";
 import { apiNumber, apiText, asRecord } from "@/api/map";
@@ -10,6 +10,7 @@ import type {
   PayBatchSwapResp,
   PayOverview,
   PayPaymentItem,
+  PayPaymentsExportQuery,
   PayPaymentsQuery,
   PayPaymentsResp,
   PaySingleQuoteParam,
@@ -161,4 +162,19 @@ export async function getPayments(params: PayPaymentsQuery): Promise<PayPayments
     totalPage: Math.max(1, apiNumber(data.total_page ?? data.totalPage) ?? 1),
     list,
   };
+}
+
+const PAYMENTS_EXPORT_FILENAME = "transaction-history.csv";
+
+export function exportPayments(params: PayPaymentsExportQuery) {
+  return httpBlob(`${PAY_API_PREFIX}/payments/export`, {
+    query: {
+      q: params.q || undefined,
+      status: params.status || undefined,
+      token: params.token || undefined,
+      start_time: params.start_time,
+      end_time: params.end_time,
+    },
+    fallbackFilename: PAYMENTS_EXPORT_FILENAME,
+  });
 }

@@ -55,7 +55,6 @@ Every mock reader must include this comment:
 
 | Domain | Flag | Fixtures | Hook |
 | --- | --- | --- | --- |
-| request | `MOCK_ENABLED.request` | `src/mocks/request-payment.ts` (`getReceivedPayments`, `getPendingWithdrawCount`) | `useRequestPayment` |
 | partner | `MOCK_ENABLED.partner` | `src/mocks/partner.ts` | `usePartner`, `usePartnerReports` (`getPartnerReports`) |
 
 ## Constraints

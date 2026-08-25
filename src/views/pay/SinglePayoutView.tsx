@@ -13,6 +13,7 @@ import { queryKeys } from "@/api/query-keys";
 import { useContacts, type Contact } from "@/hooks/use-contacts";
 import { usePayOriginToken } from "@/hooks/use-pay-origin-token";
 import { usePaymentWallet } from "@/hooks/use-payment-wallet";
+import { usePayRequestDetailQuery } from "@/hooks/use-request-payment";
 import { useSinglePayQuote, useSinglePaySwap } from "@/hooks/use-single-payout-api";
 import { useTokenBalancesStore } from "@/stores/token-balances";
 import useToast from "@/hooks/use-toast";
@@ -32,13 +33,13 @@ import {
   AMOUNT_MAX_DECIMALS,
   EMAIL_MAX_LENGTH,
   MEMO_MAX_LENGTH,
+  PAY_REQUEST_STATUS,
   QUICK_PAY_SLIPPAGE_TOLERANCE,
   QUOTE_DEBOUNCE_MS,
 } from "./config";
 import {
   applyRequestPayoutFields,
-  parsePaymentRequestSearch,
-  tokenChainKind,
+  parsePaymentRequestId,
 } from "./request-utils";
 import {
   detectAddressChainKind,
@@ -73,8 +74,11 @@ function matchContact(address: string, contacts: Contact[]): Contact | null {
 
 export function SinglePayoutView() {
   const [searchParams, setSearchParams] = useSearchParams();
-  const request = useMemo(() => parsePaymentRequestSearch(searchParams.toString()), [searchParams]);
-  const requestLocked = Boolean(request);
+  const requestId = useMemo(() => parsePaymentRequestId(searchParams.toString()), [searchParams]);
+  const requestQuery = usePayRequestDetailQuery(requestId);
+  const request = requestQuery.data ?? null;
+  const requestLocked = Boolean(requestId);
+  const requestPayable = request?.status === PAY_REQUEST_STATUS.Pending;
   const queryClient = useQueryClient();
   const toast = useToast();
   const { contacts, addContact, updateContact, deleteContact } = useContacts();
@@ -105,32 +109,54 @@ export function SinglePayoutView() {
   const [editing, setEditing] = useState<Contact | null>(null);
   const [deleting, setDeleting] = useState<Contact | null>(null);
   const [phase, setPhase] = useState<"idle" | "quoting" | "sending" | "done" | "error">("idle");
-  const appliedRequestKeyRef = useRef<string | null>(null);
+  const appliedRequestKeyRef = useRef<number | null>(null);
   const invalidLinkToastRef = useRef(false);
+  const notPayableToastRef = useRef(false);
 
   useEffect(() => {
     void ensureFresh();
   }, [ensureFresh]);
 
   useEffect(() => {
-    if (!searchParams.toString() || request || invalidLinkToastRef.current) return;
+    if (!searchParams.toString() || requestId || invalidLinkToastRef.current) return;
     invalidLinkToastRef.current = true;
     toast.fail({ title: "This payment link is invalid" });
-  }, [request, searchParams, toast]);
+    setSearchParams({}, { replace: true });
+  }, [requestId, searchParams, setSearchParams, toast]);
+
+  useEffect(() => {
+    if (!requestId || !requestQuery.isError || invalidLinkToastRef.current) return;
+    invalidLinkToastRef.current = true;
+    toast.fail({ title: "This payment link is invalid" });
+    setSearchParams({}, { replace: true });
+  }, [requestId, requestQuery.isError, setSearchParams, toast]);
+
+  useEffect(() => {
+    notPayableToastRef.current = false;
+  }, [requestId]);
+
+  useEffect(() => {
+    if (!request || request.status === PAY_REQUEST_STATUS.Pending || notPayableToastRef.current) return;
+    notPayableToastRef.current = true;
+    toast.fail({ title: "This payment request is no longer payable" });
+    setSearchParams({}, { replace: true });
+  }, [request, setSearchParams, toast]);
 
   useEffect(() => {
     if (!request) return;
-    const key = searchParams.toString();
-    if (appliedRequestKeyRef.current === key) return;
-    appliedRequestKeyRef.current = key;
-    setAddressInput(request.addr);
+    if (appliedRequestKeyRef.current === request.id) return;
+    appliedRequestKeyRef.current = request.id;
+    setAddressInput(request.recipient_address);
     setAmount(request.amount);
-    if (request.memo) setMemo(request.memo);
-  }, [request, searchParams]);
+    setMemo(request.memo.slice(0, MEMO_MAX_LENGTH));
+  }, [request]);
 
   useEffect(() => {
     if (!request) return;
-    const next = findByChainAndSymbol(request.network, request.token);
+    const tokenRaw = request.token.toUpperCase();
+    const token = tokenRaw === "USDC" || tokenRaw === "USDT" ? tokenRaw : null;
+    if (!token) return;
+    const next = findByChainAndSymbol(request.network, token);
     if (next) setDestToken(next);
   }, [findByChainAndSymbol, request, tokens]);
 
@@ -169,7 +195,6 @@ export function SinglePayoutView() {
     }
     const origin = payoutNetworkToken(originToken);
     const dest = payoutNetworkToken(destToken);
-    const destKind = tokenChainKind(destToken);
     const body: PaySingleQuoteParam = {
       amount: debouncedAmountForQuote,
       destinationAddress,
@@ -181,12 +206,9 @@ export function SinglePayoutView() {
       slippageTolerance: QUICK_PAY_SLIPPAGE_TOLERANCE,
       payer: connectedAddress,
     };
-    if (!request || !destKind) return body;
-    try {
-      return applyRequestPayoutFields(body, request, destKind);
-    } catch {
-      return null;
-    }
+    if (!requestLocked) return body;
+    if (!requestId || !requestPayable) return null;
+    return applyRequestPayoutFields(body, requestId);
   }, [
     originToken,
     destToken,
@@ -195,7 +217,9 @@ export function SinglePayoutView() {
     walletReady,
     connectedAddress,
     destinationAddress,
-    request,
+    requestLocked,
+    requestId,
+    requestPayable,
   ]);
 
   const dryQuoteQuery = useSinglePayQuote(quoteBody);
@@ -243,7 +267,6 @@ export function SinglePayoutView() {
       setPhase("quoting");
       const origin = payoutNetworkToken(originToken);
       const dest = payoutNetworkToken(destToken);
-      const destKind = tokenChainKind(destToken);
       let swapBody: PaySingleSwapParam = {
         amount: amountForQuote,
         destinationAddress,
@@ -256,8 +279,11 @@ export function SinglePayoutView() {
         payer: paymentWalletAddress,
         notifyEmail: notifyEmailParam(notify, email),
       };
-      if (request && destKind) {
-        swapBody = applyRequestPayoutFields(swapBody, request, destKind);
+      if (requestLocked) {
+        if (!requestId || !requestPayable) {
+          throw new Error("This payment request is no longer payable");
+        }
+        swapBody = applyRequestPayoutFields(swapBody, requestId);
       }
       const memoValue = memo.trim();
       if (memoValue) swapBody.memo = memoValue;
@@ -312,12 +338,17 @@ export function SinglePayoutView() {
     && quote
     && !dryQuoteStale
     && !quoteError
-    && !sending,
+    && !sending
+    && (!requestLocked || requestPayable),
   );
 
   function handleSend() {
     if (!connectedAddress) {
       paymentWallet.connectWallet();
+      return;
+    }
+    if (requestLocked && !requestPayable) {
+      toast.fail({ title: "This payment request is no longer payable" });
       return;
     }
     void settleMutation.mutateAsync();

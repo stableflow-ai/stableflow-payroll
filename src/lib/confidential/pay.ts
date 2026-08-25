@@ -1,6 +1,6 @@
 /**
  * Payer settlement for a request-payment link lives on Single Payout.
- * The link is frontend-built query params (`/pay?addr=&amount=&token=&network=&uid=`).
- * Private requests add `mode: "private"` and `privateDestinationAddress`.
+ * The link is `/pay?id=<requestId>`. The payer loads `GET /v1/pay/request/{id}`
+ * and quote/swap send `request_id`.
  */
 export {};

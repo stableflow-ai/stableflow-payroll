@@ -6,7 +6,7 @@ import {
   setOnUnauthorized,
   setStoredSession,
 } from "./auth-session";
-import { http } from "./http";
+import { http, httpBlob } from "./http";
 
 const API_BASE = "https://test-api.stableflow.ai";
 
@@ -172,5 +172,112 @@ describe("http", () => {
       message: "Amount is too low for bridge, try at least 18634672511199040",
       status: 400,
     });
+  });
+});
+
+describe("httpBlob", () => {
+  const fetchMock = vi.fn();
+
+  beforeEach(() => {
+    vi.stubEnv("VITE_API_BASE_URL", API_BASE);
+    vi.stubGlobal("localStorage", createMemoryStorage());
+    vi.stubGlobal("fetch", fetchMock);
+    fetchMock.mockReset();
+    setOnUnauthorized(() => {});
+  });
+
+  afterEach(() => {
+    vi.unstubAllEnvs();
+    vi.unstubAllGlobals();
+    setOnUnauthorized(() => {});
+  });
+
+  it("returns the file blob and Content-Disposition filename", async () => {
+    setStoredSession("tok-1", SAMPLE_USER);
+    fetchMock.mockResolvedValueOnce(
+      new Response("id,amount\n1,10", {
+        status: 200,
+        headers: {
+          "Content-Type": "text/csv",
+          "Content-Disposition": 'attachment; filename="payments.csv"',
+        },
+      }),
+    );
+    const result = await httpBlob("/v1/pay/payments/export", {
+      fallbackFilename: "transaction-history.csv",
+    });
+    expect(result.filename).toBe("payments.csv");
+    expect(await result.blob.text()).toBe("id,amount\n1,10");
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`${API_BASE}/v1/pay/payments/export`);
+    expect((init.headers as Record<string, string>).Accept).toBe("text/csv, application/json");
+    expect((init.headers as Record<string, string>).Authorization).toBe("Bearer tok-1");
+  });
+
+  it("uses the fallback filename and appends query params", async () => {
+    setStoredSession("tok-1", SAMPLE_USER);
+    fetchMock.mockResolvedValueOnce(
+      new Response("id\n1", {
+        status: 200,
+        headers: { "Content-Type": "text/csv" },
+      }),
+    );
+    const result = await httpBlob("/v1/pay/payments/export", {
+      query: { q: "ada", status: "completed", empty: undefined },
+      fallbackFilename: "transaction-history.csv",
+    });
+    expect(result.filename).toBe("transaction-history.csv");
+    const [url] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toBe(`${API_BASE}/v1/pay/payments/export?q=ada&status=completed`);
+  });
+
+  it("decodes filename* from Content-Disposition", async () => {
+    setStoredSession("tok-1", SAMPLE_USER);
+    fetchMock.mockResolvedValueOnce(
+      new Response("ok", {
+        status: 200,
+        headers: {
+          "Content-Type": "text/csv",
+          "Content-Disposition": "attachment; filename*=UTF-8''report%20export.csv",
+        },
+      }),
+    );
+    const result = await httpBlob("/v1/pay/payments/export");
+    expect(result.filename).toBe("report export.csv");
+  });
+
+  it("throws without fetching when auth is required and no token is stored", async () => {
+    await expect(httpBlob("/v1/pay/payments/export")).rejects.toMatchObject({
+      name: "ApiError",
+      status: 401,
+      code: "UNAUTHENTICATED",
+    });
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("throws an envelope error when HTTP is 200 but code is not 200", async () => {
+    setStoredSession("tok-1", SAMPLE_USER);
+    fetchMock.mockResolvedValueOnce(jsonResponse({ code: 400, message: "Nothing to export" }));
+    await expect(httpBlob("/v1/pay/payments/export")).rejects.toMatchObject({
+      name: "ApiError",
+      message: "Nothing to export",
+      status: 200,
+      code: "400",
+    });
+  });
+
+  it("clears the session and notifies on HTTP 401", async () => {
+    setStoredSession("tok-1", SAMPLE_USER);
+    const onUnauthorized = vi.fn();
+    setOnUnauthorized(onUnauthorized);
+    fetchMock.mockResolvedValueOnce(jsonResponse({ code: 401, message: "Expired" }, 401));
+
+    await expect(httpBlob("/v1/pay/payments/export")).rejects.toMatchObject({
+      name: "ApiError",
+      status: 401,
+      message: "Expired",
+    });
+    expect(getAuthToken()).toBeNull();
+    expect(onUnauthorized).toHaveBeenCalledOnce();
   });
 });
