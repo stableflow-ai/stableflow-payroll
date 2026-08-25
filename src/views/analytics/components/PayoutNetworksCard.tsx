@@ -7,7 +7,7 @@ export function PayoutNetworksCard({ items }: { items: NetworkShare[] }) {
       <h2 className="font-montserrat text-lg font-medium capitalize text-black">
         Payout Networks
       </h2>
-      <ul className="mt-6 flex flex-1 flex-col justify-between gap-4">
+      <ul className="mt-6 flex flex-1 flex-col justify-start gap-4">
         {items.map((item) => (
           <li key={item.network} className="flex items-center gap-3">
             <span className="w-[88px] shrink-0 font-montserrat text-sm font-medium text-black">
