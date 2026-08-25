@@ -44,7 +44,7 @@ src/
     icons/                # Shared SVG icon components
     layout/               # AppHeader, wallet capsule, account menu
     WalletConnect.tsx     # Wallet connect dialog (business)
-  hooks/                  # Shared hooks (`use-wallet`, `use-auth-api`, `use-toast`, `use-media-query`, `use-payout-api`, `use-analytics-api`, `use-partner`, `use-partner-reports`)
+  hooks/                  # Shared hooks (`use-wallet`, `use-auth-api`, `use-toast`, `use-media-query`, `use-payout-api`, `use-analytics-api`, `use-partner-api`, `use-partner-reports`)
   wallet/                 # Multi-chain wallet adapters and providers
   stores/                 # Zustand stores (wallet, auth session, nearintents-user-session)
   api/                    # Backend wrappers by domain (`auth.ts`, `nearintents.ts`, `config.ts`, `query-keys.ts`)

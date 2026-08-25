@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { IconCopy, IconDelete, IconPen, IconPlus } from "@/components/icons";
+import { IconCopy, IconDelete, IconLoading, IconPen, IconPlus } from "@/components/icons";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_SIZE } from "@/components/ui/button/config";
 import {
@@ -10,20 +10,25 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/Table";
-import { usePartner } from "@/hooks/use-partner";
+import { usePartnerKeyMutations, usePartnerKeysQuery } from "@/hooks/use-partner-api";
 import useToast from "@/hooks/use-toast";
+import type { PayPartnerKey } from "@/types/partner";
 import { formatDate } from "@/utils";
 import { API_KEY_DIALOG_MODE, ApiKeyDialog, type ApiKeyDialogMode } from "./components/ApiKeyDialog";
+import { DeleteApiKeyDialog } from "./components/DeleteApiKeyDialog";
 import { API_KEY_TABLE_COLUMNS } from "./config";
-import { maskApiKey } from "./utils";
+import { maskApiKey, partnerApiError } from "./utils";
 
 export function ApiKeysView() {
-  const { apiKeys, createApiKey, updateApiKeyLabel, deleteApiKey } = usePartner();
+  const keysQuery = usePartnerKeysQuery();
+  const { createMutation, updateMutation, deleteMutation } = usePartnerKeyMutations();
   const toast = useToast();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [dialogMode, setDialogMode] = useState<ApiKeyDialogMode>(API_KEY_DIALOG_MODE.Create);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [deleting, setDeleting] = useState<PayPartnerKey | null>(null);
 
+  const apiKeys = keysQuery.data ?? [];
   const editingKey = apiKeys.find((row) => row.id === editingId);
 
   const openCreate = () => {
@@ -32,7 +37,7 @@ export function ApiKeysView() {
     setDialogOpen(true);
   };
 
-  const openEdit = (id: string) => {
+  const openEdit = (id: number) => {
     setDialogMode(API_KEY_DIALOG_MODE.Edit);
     setEditingId(id);
     setDialogOpen(true);
@@ -45,6 +50,15 @@ export function ApiKeysView() {
     } catch {
       toast.fail({ title: "Could not copy" });
     }
+  };
+
+  const confirmDelete = () => {
+    if (!deleting) return;
+    const id = deleting.id;
+    setDeleting(null);
+    void deleteMutation.mutateAsync(id).catch((error) => {
+      toast.fail({ title: partnerApiError(error, "Could not delete API key") });
+    });
   };
 
   return (
@@ -75,7 +89,15 @@ export function ApiKeysView() {
           <TableHead>Created</TableHead>
           <TableHead />
         </TableHeader>
-        {apiKeys.length === 0 ? (
+        {keysQuery.isPending ? (
+          <div className="flex justify-center py-20 lg:py-[150px]">
+            <IconLoading className="size-6 animate-spin text-[#909090]" />
+          </div>
+        ) : keysQuery.isError ? (
+          <p className="py-20 text-center font-montserrat text-sm font-medium text-danger lg:py-[150px]">
+            {partnerApiError(keysQuery.error, "Failed to load API keys")}
+          </p>
+        ) : apiKeys.length === 0 ? (
           <p className="py-20 text-center font-montserrat text-sm font-medium text-[#aaa] lg:py-[150px]">
             No API key, you can{" "}
             <button type="button" className="cursor-pointer text-black" onClick={openCreate}>
@@ -89,13 +111,13 @@ export function ApiKeysView() {
                 <TableCell>{row.label}</TableCell>
                 <TableCell>
                   <span className="inline-flex min-w-0 items-center gap-1.5">
-                    <span className="truncate">{maskApiKey(row.key)}</span>
+                    <span className="truncate">{maskApiKey(row.apiKey)}</span>
                     <button
                       type="button"
                       className="shrink-0 cursor-pointer text-[#909090] hover:text-black"
                       aria-label="Copy API key"
                       onClick={() => {
-                        void copyKey(row.key);
+                        void copyKey(row.apiKey);
                       }}
                     >
                       <IconCopy className="size-3" />
@@ -114,9 +136,9 @@ export function ApiKeysView() {
                   </button>
                   <button
                     type="button"
-                    className="cursor-pointer text-[#909090] hover:text-black"
+                    className="cursor-pointer text-[#909090] hover:text-danger"
                     aria-label="Delete API key"
-                    onClick={() => deleteApiKey(row.id)}
+                    onClick={() => setDeleting(row)}
                   >
                     <IconDelete className="size-3.5" />
                   </button>
@@ -133,10 +155,21 @@ export function ApiKeysView() {
         mode={dialogMode}
         initialLabel={editingKey?.label ?? ""}
         onClose={() => setDialogOpen(false)}
-        onCreate={(label) => createApiKey(label).key}
-        onUpdate={(label) => {
-          if (editingId) updateApiKeyLabel(editingId, label);
+        onCreate={async (label) => {
+          const created = await createMutation.mutateAsync({ label });
+          return created.apiKey;
         }}
+        onUpdate={async (label) => {
+          if (editingId == null) return;
+          await updateMutation.mutateAsync({ id: editingId, label });
+        }}
+      />
+
+      <DeleteApiKeyDialog
+        open={Boolean(deleting)}
+        onClose={() => setDeleting(null)}
+        apiKey={deleting}
+        onConfirm={confirmDelete}
       />
     </div>
   );

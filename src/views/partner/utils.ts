@@ -1,5 +1,6 @@
 import { differenceInCalendarDays, format, startOfDay, subDays } from "date-fns";
 import { getChainByNetwork } from "@/config/chains";
+import { ApiError } from "@/lib/api-error";
 import {
   isInDateRange,
   lastNDaysRange,
@@ -22,6 +23,12 @@ export type { DateRangeValue };
 export function maskApiKey(key: string): string {
   if (key.length <= 11) return key;
   return `${key.slice(0, 7)}*****${key.slice(-4)}`;
+}
+
+export function partnerApiError(error: unknown, fallback: string): string {
+  if (error instanceof ApiError) return error.message;
+  if (error instanceof Error && error.message) return error.message;
+  return fallback;
 }
 
 function requiredTrimmed(value: string, label: string, max: number): string | null {

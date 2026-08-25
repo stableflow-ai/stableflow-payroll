@@ -16,7 +16,7 @@ import {
   TableRow,
 } from "@/components/ui/table/Table";
 import { FIXED_CHAINS } from "@/config/chains";
-import { usePartner } from "@/hooks/use-partner";
+import { usePartnerKeysQuery } from "@/hooks/use-partner-api";
 import { usePartnerReports } from "@/hooks/use-partner-reports";
 import useToast from "@/hooks/use-toast";
 import { tokenLogoUrl } from "@/lib/logo";
@@ -56,8 +56,8 @@ const TOKEN_OPTIONS = [
 
 export function ReportsView() {
   const toast = useToast();
-  const { apiKeys } = usePartner();
-  const { keys, rows } = usePartnerReports();
+  const keysQuery = usePartnerKeysQuery();
+  const { rows } = usePartnerReports();
   const [range, setRange] = useState(() => lastNDaysRange(REPORT_TIME_PRESET.Days30));
   const [apiKey, setApiKey] = useState(REPORT_FILTER_ALL);
   const [network, setNetwork] = useState(REPORT_FILTER_ALL);
@@ -69,14 +69,11 @@ export function ReportsView() {
   const [page, setPage] = useState(1);
 
   const apiKeyOptions = useMemo(() => {
-    const seen = new Map<string, string>();
-    for (const key of keys) seen.set(key.id, key.label);
-    for (const key of apiKeys) seen.set(key.id, key.label);
     return [
       { value: REPORT_FILTER_ALL, label: "All" },
-      ...[...seen.entries()].map(([value, label]) => ({ value, label })),
+      ...(keysQuery.data ?? []).map((key) => ({ value: String(key.id), label: key.label })),
     ];
-  }, [apiKeys, keys]);
+  }, [keysQuery.data]);
 
   const scopedRows = useMemo(() => {
     return rows.filter((row) => {

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { Navigate, Outlet, useLocation, useSearchParams } from "react-router-dom";
-import { usePartner } from "@/hooks/use-partner";
+import { usePartnerQuery } from "@/hooks/use-partner-api";
 import { useAuthStore } from "@/stores/auth";
 import { loginPathWithReturnTo, returnToFromSearch } from "@/views/auth/return-to";
 
@@ -17,9 +17,21 @@ export function RequireAuth() {
 }
 
 export function RequirePartner() {
-  const { isPartner } = usePartner();
+  const query = usePartnerQuery();
 
-  if (!isPartner) {
+  if (query.isPending) {
+    return <p className="font-montserrat text-sm text-[#909090]">Loading…</p>;
+  }
+
+  if (query.isError) {
+    return (
+      <p className="font-montserrat text-sm text-danger">
+        {query.error instanceof Error ? query.error.message : "Failed to load partner"}
+      </p>
+    );
+  }
+
+  if (!query.data?.id) {
     return <Navigate to="/partner" replace />;
   }
 

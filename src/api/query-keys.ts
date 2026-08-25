@@ -35,4 +35,9 @@ export const queryKeys = {
     withdrawCount: ["request", "withdraw-count"] as const,
     detail: (id: number) => [...queryKeys.request.all, "detail", id] as const,
   },
+  partner: {
+    all: ["partner"] as const,
+    me: ["partner", "me"] as const,
+    keys: ["partner", "keys"] as const,
+  },
 } as const;

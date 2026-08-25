@@ -8,11 +8,11 @@ export type { PartnerReports };
 // 2. Add src/api/partner.ts using http() and append the endpoint table in doc/api.md.
 // 3. Add queryKeys.partner in src/api/query-keys.ts.
 // 4. Switch this hook to useQuery ({ enabled: Boolean(token), queryFn: real api }).
-// 5. Set MOCK_ENABLED.partner = false and delete src/mocks/partner.ts.
+// 5. Set MOCK_ENABLED.partnerReports = false and delete src/mocks/partner.ts.
 export function usePartnerReports(): PartnerReports {
-  if (!MOCK_ENABLED.partner) {
+  if (!MOCK_ENABLED.partnerReports) {
     throw new Error(
-      "Partner mock is disabled. Wire TanStack Query before turning MOCK_ENABLED.partner off.",
+      "Partner reports mock is disabled. Wire TanStack Query before turning MOCK_ENABLED.partnerReports off.",
     );
   }
   return getPartnerReports();

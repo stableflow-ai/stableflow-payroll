@@ -1,23 +1,13 @@
-export type PartnerRegistration = {
-  firstName: string;
-  lastName: string;
-  company: string;
-  purpose: string;
-  website: string;
-  telegram: string;
-  additionalDetails: string;
+export type PartnerReportAsset = {
+  symbol: string;
+  network: string;
 };
 
-export type PartnerApiKey = {
+export type PartnerReportKey = {
   id: string;
   label: string;
   key: string;
   createdAt: string;
-};
-
-export type PartnerReportAsset = {
-  symbol: string;
-  network: string;
 };
 
 export type PartnerReportTx = {
@@ -35,74 +25,11 @@ export type PartnerReportTx = {
 };
 
 export type PartnerReports = {
-  keys: PartnerApiKey[];
+  keys: PartnerReportKey[];
   rows: PartnerReportTx[];
 };
 
-let isPartner = false;
-let registration: PartnerRegistration | null = null;
-let apiKeys: PartnerApiKey[] = [];
-
-const listeners = new Set<() => void>();
-
-function emit() {
-  for (const listener of listeners) listener();
-}
-
-export function subscribePartner(listener: () => void) {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
-export function getIsPartner() {
-  return isPartner;
-}
-
-export function getPartnerRegistration() {
-  return registration;
-}
-
-export function getPartnerApiKeys(): PartnerApiKey[] {
-  return apiKeys;
-}
-
-export function registerPartner(input: PartnerRegistration) {
-  registration = { ...input };
-  isPartner = true;
-  emit();
-}
-
-export function createApiKey(label: string): PartnerApiKey {
-  const next: PartnerApiKey = {
-    id: crypto.randomUUID(),
-    label: label.trim(),
-    key: `sk-${crypto.randomUUID().replaceAll("-", "")}`,
-    createdAt: new Date().toISOString(),
-  };
-  apiKeys = [...apiKeys, next];
-  emit();
-  return next;
-}
-
-export function updateApiKeyLabel(id: string, label: string): PartnerApiKey | null {
-  let updated: PartnerApiKey | null = null;
-  apiKeys = apiKeys.map((row) => {
-    if (row.id !== id) return row;
-    updated = { ...row, label: label.trim() };
-    return updated;
-  });
-  if (updated) emit();
-  return updated;
-}
-
-export function deleteApiKey(id: string) {
-  apiKeys = apiKeys.filter((row) => row.id !== id);
-  emit();
-}
-
-const REPORT_KEYS: PartnerApiKey[] = [
+const REPORT_KEYS: PartnerReportKey[] = [
   {
     id: "pk-demo-1",
     label: "Production",
@@ -147,7 +74,7 @@ const REPORT_SEEDS: Array<{
   { amount: 3400, received: 3398.1, source: { symbol: "USDC", network: "Ethereum" }, dest: { symbol: "USDT", network: "BNB Chain" }, daysAgo: 10, apiKeyId: "pk-demo-1", hour: 12 },
   { amount: 750, received: 749.05, source: { symbol: "USDT", network: "Polygon" }, dest: { symbol: "USDC", network: "Polygon" }, daysAgo: 11, apiKeyId: "pk-demo-2", hour: 8 },
   { amount: 6400, received: 6397.8, source: { symbol: "USDC", network: "Arbitrum" }, dest: { symbol: "USDT", network: "Solana" }, daysAgo: 12, apiKeyId: "pk-demo-1", hour: 15 },
-  { amount: 19000, received: 18991.4, source: { symbol: "USDT", network: "Solana" }, dest: { symbol: "USDC", network: "Base" }, daysAgo: 13, apiKeyId: "pk-demo-1", hour: 10 },
+  { amount: 19000, received: 18991.4, source: { symbol: "USDC", network: "Solana" }, dest: { symbol: "USDC", network: "Base" }, daysAgo: 13, apiKeyId: "pk-demo-1", hour: 10 },
   { amount: 280, received: 279.6, source: { symbol: "USDC", network: "Base" }, dest: { symbol: "USDT", network: "Arbitrum" }, daysAgo: 14, apiKeyId: "pk-demo-2", hour: 19 },
   { amount: 5100, received: 5097.2, source: { symbol: "USDT", network: "Ethereum" }, dest: { symbol: "USDC", network: "Plasma" }, daysAgo: 15, apiKeyId: "pk-demo-1", hour: 11 },
   { amount: 8600, received: 8594.9, source: { symbol: "USDC", network: "Optimism" }, dest: { symbol: "USDT", network: "Base" }, daysAgo: 16, apiKeyId: "pk-demo-1", hour: 14 },

@@ -2,7 +2,7 @@ import { type FormEvent, useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_SIZE } from "@/components/ui/button/config";
-import { usePartner } from "@/hooks/use-partner";
+import { useCreatePartnerMutation, usePartnerQuery } from "@/hooks/use-partner-api";
 import useToast from "@/hooks/use-toast";
 import { PartnerField } from "./components/PartnerField";
 import {
@@ -14,10 +14,11 @@ import {
   TELEGRAM_MAX_LENGTH,
   WEBSITE_MAX_LENGTH,
 } from "./config";
-import { partnerRegistrationError } from "./utils";
+import { partnerApiError, partnerRegistrationError } from "./utils";
 
 export function PartnerRegistrationView() {
-  const { isPartner, registerPartner } = usePartner();
+  const partnerQuery = usePartnerQuery();
+  const createMutation = useCreatePartnerMutation();
   const navigate = useNavigate();
   const toast = useToast();
   const [firstName, setFirstName] = useState("");
@@ -28,11 +29,23 @@ export function PartnerRegistrationView() {
   const [telegram, setTelegram] = useState("");
   const [additionalDetails, setAdditionalDetails] = useState("");
 
-  if (isPartner) {
+  if (partnerQuery.isPending) {
+    return <p className="font-montserrat text-sm text-[#909090]">Loading…</p>;
+  }
+
+  if (partnerQuery.isError) {
+    return (
+      <p className="font-montserrat text-sm text-danger">
+        {partnerApiError(partnerQuery.error, "Failed to load partner")}
+      </p>
+    );
+  }
+
+  if (partnerQuery.data?.id) {
     return <Navigate to="/partner/api-keys" replace />;
   }
 
-  const submit = (event: FormEvent) => {
+  const submit = async (event: FormEvent) => {
     event.preventDefault();
     const ruleError = partnerRegistrationError({
       firstName,
@@ -47,16 +60,20 @@ export function PartnerRegistrationView() {
       toast.fail({ title: ruleError });
       return;
     }
-    registerPartner({
-      firstName: firstName.trim(),
-      lastName: lastName.trim(),
-      company: company.trim(),
-      purpose: purpose.trim(),
-      website: website.trim(),
-      telegram: telegram.trim(),
-      additionalDetails: additionalDetails.trim(),
-    });
-    navigate("/partner/api-keys", { replace: true });
+    try {
+      await createMutation.mutateAsync({
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+        company: company.trim(),
+        purpose: purpose.trim(),
+        website: website.trim(),
+        telegram: telegram.trim(),
+        description: additionalDetails.trim(),
+      });
+      navigate("/partner/api-keys", { replace: true });
+    } catch (error) {
+      toast.fail({ title: partnerApiError(error, "Could not send request") });
+    }
   };
 
   return (
@@ -129,7 +146,7 @@ export function PartnerRegistrationView() {
           optional
           multiline
         />
-        <Button type="submit" size={BUTTON_SIZE.Lg} className="w-full">
+        <Button type="submit" size={BUTTON_SIZE.Lg} className="w-full" loading={createMutation.isPending}>
           Send Request
         </Button>
       </form>

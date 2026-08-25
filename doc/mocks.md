@@ -55,7 +55,7 @@ Every mock reader must include this comment:
 
 | Domain | Flag | Fixtures | Hook |
 | --- | --- | --- | --- |
-| partner | `MOCK_ENABLED.partner` | `src/mocks/partner.ts` | `usePartner`, `usePartnerReports` (`getPartnerReports`) |
+| partnerReports | `MOCK_ENABLED.partnerReports` | `src/mocks/partner.ts` | `usePartnerReports` (`getPartnerReports`) |
 
 ## Constraints
 

@@ -15,7 +15,7 @@ The previous app (`stableflow-pay-old`) is a visual and payout-flow reference on
 | Home | `/` | shipped | Dashboard: summary, charts, pending. Behind `RequireAuth` + `AppLayout`. Overview, volume, pending, and recent use `/v1/pay/*`. Balance is summed on-chain from connected payer-chain USDT/USDC. |
 | Pay | `/pay`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request` | in progress | See [Pay](#pay). Pending list uses `GET /v1/pay/payments/pending`. History uses `GET /v1/pay/payments`. Address book uses `/v1/pay/recipient*`. |
 | Analytics | `/analytics` | shipped | Month selector, Total Payment chart (`/v1/pay/payments/volume`, day/week/month), latest payouts (`/payments/recent`), calendar / asset mix / networks from `GET /v1/pay/analytics`. Shows a skeleton while analytics loads. |
-| Partner | `/partner`, `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | shipped | See [Partner](#partner). Registration, API Keys, and Reports are mock until the API exists. Support / Terms / Docs are placeholders. |
+| Partner | `/partner`, `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | shipped | See [Partner](#partner). Registration and API Keys use `/v1/pay/partner*`. Reports are mock until the API exists. Support / Terms / Docs are placeholders. |
 
 ## Auth
 
@@ -29,7 +29,7 @@ The previous app (`stableflow-pay-old`) is a visual and payout-flow reference on
   - Guest: Login `Forgot Password?` opens a dialog. Send Code calls `POST /v1/pay/reset-password/code`. Continue calls `POST /v1/pay/reset-password` (`email`, `code`, `newPassword`), then closes back to login.
   - Authed: header avatar menu opens `ResetPasswordDialog` (`variant="authed"`). Continue calls `POST /v1/pay/change-password` (`currentPassword`, `newPassword`). The session stays; the dialog closes.
 
-Guards live in `src/router/guards.tsx`: `RequireAuth`, `RedirectIfAuthed`. Do not add admin/employee guards.
+Guards live in `src/router/guards.tsx`: `RequireAuth`, `RedirectIfAuthed`, `RequirePartner`. Do not add admin/employee guards.
 
 ## Home
 
@@ -69,7 +69,7 @@ For SDK users. Submenus:
 | Terms of Service | `/partner/terms` | Always available. |
 | Developer Docs | `/partner/docs` | Always available. |
 
-Until Partner status is active, API Keys and Reports must not open. Header **Developer** goes to `/partner`: registration when the user is not a Partner, `/partner/api-keys` after they are. After the user is a Partner, hide the registration form; do not show it again. Partner status is mock until the API exists.
+Until Partner status is active, API Keys and Reports must not open. Header **Developer** goes to `/partner`: registration when the user is not a Partner, `/partner/api-keys` after they are. After the user is a Partner, hide the registration form; do not show it again. Partner status comes from `GET /v1/pay/partner` (`null` or empty data means not a Partner). API keys use `/v1/pay/partner/keys`.
 
 Registration fields:
 
@@ -81,7 +81,7 @@ Registration fields:
 | `purpose` | required, max 5000 |
 | `website` | optional, max 500, default `""` |
 | `telegram` | optional, max 128, default `""` |
-| `additional_details` | optional, max 5000, default `""` |
+| `description` | optional, max 5000, default `""`. UI label is Additional Details. |
 
 ## Routing today
 

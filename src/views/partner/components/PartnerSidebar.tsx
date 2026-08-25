@@ -1,14 +1,15 @@
 import { NavLink } from "react-router-dom";
 import { IconLockOutline } from "@/components/icons";
 import { cn } from "@/lib/utils";
-import { usePartner } from "@/hooks/use-partner";
+import { usePartnerQuery } from "@/hooks/use-partner-api";
 import { PARTNER_NAV_ITEMS } from "../config";
 
 const ITEM_CLASS =
   "inline-flex h-11 shrink-0 items-center gap-2.5 rounded-[8px] px-3.5 font-montserrat text-sm font-medium whitespace-nowrap duration-150 lg:w-full";
 
 export function PartnerSidebar() {
-  const { isPartner } = usePartner();
+  const partnerQuery = usePartnerQuery();
+  const isPartner = Boolean(partnerQuery.data?.id);
 
   return (
     <nav className="flex shrink-0 gap-2 overflow-x-auto lg:w-[220px] lg:flex-col lg:gap-1.5 lg:overflow-visible lg:border-r lg:border-black/10 lg:px-2.5 lg:py-5">

@@ -28,7 +28,7 @@ export const WEBSITE_MAX_LENGTH = 500;
 export const TELEGRAM_MAX_LENGTH = 128;
 export const PURPOSE_MAX_LENGTH = 5000;
 export const ADDITIONAL_DETAILS_MAX_LENGTH = 5000;
-export const API_KEY_LABEL_MAX_LENGTH = 100;
+export const API_KEY_LABEL_MAX_LENGTH = 200;
 
 export const API_KEY_TABLE_COLUMNS =
   "minmax(140px,1.2fr) minmax(180px,1.4fr) minmax(160px,1fr) minmax(72px,auto)";
