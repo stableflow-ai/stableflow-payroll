@@ -13,6 +13,15 @@ export type DateRangeValue = {
   to: Date;
 };
 
+export function calendarRangeFromPicks(start: Date, end: Date): DateRangeValue {
+  if (isSameDay(start, end)) {
+    return { from: startOfDay(end), to: endOfDay(end) };
+  }
+  const from = start.getTime() <= end.getTime() ? start : end;
+  const to = start.getTime() <= end.getTime() ? end : start;
+  return { from: startOfDay(from), to: endOfDay(to) };
+}
+
 export function lastNDaysRange(days: number, now: Date = new Date()): DateRangeValue {
   return {
     from: startOfDay(subDays(now, days - 1)),
@@ -30,6 +39,7 @@ export function formatDateRangeLabel(range: DateRangeValue, now: Date = new Date
     matchesLastNDays(range, option.days, now),
   );
   if (preset) return preset.label;
+  if (isSameDay(range.from, range.to)) return format(range.from, "MMM d, yyyy");
   return `${format(range.from, "MMM d, yyyy")} – ${format(range.to, "MMM d, yyyy")}`;
 }
 

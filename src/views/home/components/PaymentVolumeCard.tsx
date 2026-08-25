@@ -63,42 +63,50 @@ export function PaymentVolumeCard({
         />
       </div>
       <div className="mt-4 h-[280px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
-            <CartesianGrid vertical={false} stroke="#e3e3e3" />
-            <XAxis
-              dataKey="label"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              tickFormatter={formatVolumeTick}
-              tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
-              width={48}
-            />
-            <Tooltip
-              content={(props) => (
-                <VolumeTooltip
-                  active={props.active}
-                  payload={props.payload}
-                  label={props.label}
+        {
+          points.length > 0 ? (
+            <ResponsiveContainer width="100%" height="100%">
+              <LineChart data={points} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <CartesianGrid vertical={false} stroke="#e3e3e3" />
+                <XAxis
+                  dataKey="label"
+                  axisLine={false}
+                  tickLine={false}
+                  tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
                 />
-              )}
-              cursor={{ stroke: "#4DA0FF", strokeWidth: 1 }}
-            />
-            <Line
-              type="monotone"
-              dataKey="value"
-              stroke={HOME_CHART_LINE_COLOR}
-              strokeWidth={2}
-              dot={false}
-              activeDot={{ r: 6, fill: HOME_CHART_LINE_COLOR, stroke: "#fff", strokeWidth: 2 }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  tickFormatter={formatVolumeTick}
+                  tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
+                  width={48}
+                />
+                <Tooltip
+                  content={(props) => (
+                    <VolumeTooltip
+                      active={props.active}
+                      payload={props.payload}
+                      label={props.label}
+                    />
+                  )}
+                  cursor={{ stroke: "#4DA0FF", strokeWidth: 1 }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="value"
+                  stroke={HOME_CHART_LINE_COLOR}
+                  strokeWidth={2}
+                  dot={false}
+                  activeDot={{ r: 6, fill: HOME_CHART_LINE_COLOR, stroke: "#fff", strokeWidth: 2 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <div className="flex justify-center items-center py-8 font-montserrat text-sm text-[#909090] text-center">
+              No payment volume data yet
+            </div>
+          )
+        }
       </div>
     </Card>
   );

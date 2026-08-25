@@ -26,6 +26,7 @@ import {
   RECENT_PAYOUTS_COLUMNS,
 } from "../config";
 import { ViewAllLink } from "./ViewAllLink";
+import { IconLoading } from "@/components/icons";
 
 function StatusCell({ item }: { item: PayPaymentItem }) {
   const status = paymentRowStatus(item.status);
@@ -56,7 +57,7 @@ function StatusCell({ item }: { item: PayPaymentItem }) {
   );
 }
 
-export function RecentPayoutsTable({ items }: { items: PayPaymentItem[] }) {
+export function RecentPayoutsTable({ items, loading }: { items: PayPaymentItem[]; loading?: boolean; }) {
   return (
     <Table columns={RECENT_PAYOUTS_COLUMNS}>
       <div className="mb-4 flex min-w-max items-center justify-between gap-3">
@@ -73,19 +74,31 @@ export function RecentPayoutsTable({ items }: { items: PayPaymentItem[] }) {
         <TableHead>Status</TableHead>
       </TableHeader>
       <TableBody>
-        {items.map((item, index) => (
-          <TableRow key={item.id || `${item.recipient}-${index}`}>
-            <TableCell>{formatAddress(item.recipient)}</TableCell>
-            <TableCell>{formatAmount(paymentDisplayAmount(item), { prefix: "" })}</TableCell>
-            <TableCell>
-              {paymentDisplayToken(item)} · {chainDisplayName(paymentDisplayNetwork(item))}
-            </TableCell>
-            <TableCell>{formatDate(item.submittedAt)}</TableCell>
-            <TableCell>
-              <StatusCell item={item} />
-            </TableCell>
-          </TableRow>
-        ))}
+        {
+          loading ? (
+            <div className="w-full py-8 flex justify-center items-center">
+              <IconLoading className="size-6 animate-spin text-[#909090]" />
+            </div>
+          ) : (
+            items.length > 0 ? items.map((item, index) => (
+              <TableRow key={item.id || `${item.recipient}-${index}`}>
+                <TableCell>{formatAddress(item.recipient)}</TableCell>
+                <TableCell>{formatAmount(paymentDisplayAmount(item), { prefix: "" })}</TableCell>
+                <TableCell>
+                  {paymentDisplayToken(item)} · {chainDisplayName(paymentDisplayNetwork(item))}
+                </TableCell>
+                <TableCell>{formatDate(item.submittedAt)}</TableCell>
+                <TableCell>
+                  <StatusCell item={item} />
+                </TableCell>
+              </TableRow>
+            )) : (
+              <div className="w-full flex justify-center items-center py-8 font-montserrat text-sm text-[#909090] text-center">
+                No payout yet
+              </div>
+            )
+          )
+        }
       </TableBody>
     </Table>
   );

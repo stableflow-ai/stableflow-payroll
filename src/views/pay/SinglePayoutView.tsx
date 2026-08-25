@@ -81,7 +81,7 @@ export function SinglePayoutView() {
   const requestPayable = request?.status === PAY_REQUEST_STATUS.Pending;
   const queryClient = useQueryClient();
   const toast = useToast();
-  const { contacts, addContact, updateContact, deleteContact } = useContacts();
+  const { contacts, addContact, updateContact, deleteContact, isPending: contactsPending } = useContacts();
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const tokens = useIntentsTokensStore((s) => s.tokens);
   const findByChainAndSymbol = useIntentsTokensStore((s) => s.findByChainAndSymbol);
@@ -479,6 +479,7 @@ export function SinglePayoutView() {
         open={bookOpen}
         onClose={() => setBookOpen(false)}
         contacts={contacts}
+        loading={contactsPending}
         selectedAddress={addressInput}
         onSelect={(contact) => {
           setAddressInput(contact.wallet);

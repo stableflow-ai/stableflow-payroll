@@ -159,7 +159,7 @@ export function ReportsView() {
 
       <div className="mx-auto flex w-full max-w-[1212px] flex-col gap-5">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div className="flex flex-wrap items-center gap-3">
+        <div className="flex flex-1 flex-wrap items-center gap-3">
           <DateRangePicker
             value={range}
             onChange={(next) => {
@@ -177,7 +177,7 @@ export function ReportsView() {
             }}
             options={apiKeyOptions}
             className="min-w-[min(100%,160px)] flex-1 lg:flex-none"
-            triggerClassName="w-full lg:w-[139px]"
+            triggerClassName="w-full"
           />
           <Dropdown
             label="Networks"
@@ -188,13 +188,13 @@ export function ReportsView() {
             }}
             options={NETWORK_OPTIONS}
             className="min-w-[min(100%,160px)] flex-1 lg:flex-none"
-            triggerClassName="w-full lg:w-[203px]"
+            triggerClassName="w-full"
           />
         </div>
         <Button
           variant={BUTTON_VARIANT.Normal}
           size={BUTTON_SIZE.Sm}
-          className="h-9 w-full rounded-[6px] border-[#e3e3e3] px-3 text-black lg:w-[141px]"
+          className="h-9 rounded-[6px] border-[#e3e3e3] px-3 text-black"
           onClick={() => {
             toast.info({ title: "Export CSV is coming soon" });
           }}

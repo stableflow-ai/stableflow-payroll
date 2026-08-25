@@ -116,10 +116,10 @@ export function SummaryCard({
             Total Payment
           </h2>
           <p
-            className={`mt-2 font-montserrat text-[26px] font-medium text-black ${totalPayment == null ? "opacity-30" : ""
+            className={`mt-2 font-montserrat text-[26px] font-medium text-black ${(totalPayment == null || totalPayment == "0") ? "opacity-30" : ""
               }`}
           >
-            {totalPayment == null ? "$-" : formatAmount(totalPayment, { padDecimals: true })}
+            {(totalPayment == null || totalPayment == "0") ? "$-" : formatAmount(totalPayment, { padDecimals: true })}
           </p>
         </section>
 
@@ -128,10 +128,10 @@ export function SummaryCard({
             Recipients
           </h2>
           <p
-            className={`mt-2 font-montserrat text-[26px] font-medium text-black ${recipients == null ? "opacity-30" : ""
+            className={`mt-2 font-montserrat text-[26px] font-medium text-black ${(recipients == null || recipients == 0) ? "opacity-30" : ""
               }`}
           >
-            {recipients == null ? "-" : recipients}
+            {(recipients == null || recipients == 0) ? "-" : recipients}
           </p>
         </section>
       </Card>

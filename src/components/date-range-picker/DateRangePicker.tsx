@@ -3,14 +3,12 @@ import { createPortal } from "react-dom";
 import {
   addMonths,
   eachDayOfInterval,
-  endOfDay,
   endOfMonth,
   endOfWeek,
   format,
   isSameDay,
   isSameMonth,
   isWithinInterval,
-  startOfDay,
   startOfMonth,
   startOfWeek,
 } from "date-fns";
@@ -23,6 +21,7 @@ import {
 import { cn } from "@/lib/utils";
 import { DATE_RANGE_PRESET_OPTIONS, DATE_RANGE_WEEKDAY_LABELS } from "./config";
 import {
+  calendarRangeFromPicks,
   formatDateRangeLabel,
   lastNDaysRange,
   type DateRangeValue,
@@ -96,9 +95,7 @@ export function DateRangePicker(props: {
       setDraftStart(day);
       return;
     }
-    const from = draftStart.getTime() <= day.getTime() ? draftStart : day;
-    const to = draftStart.getTime() <= day.getTime() ? day : draftStart;
-    commit({ from: startOfDay(from), to: endOfDay(to) });
+    commit(calendarRangeFromPicks(draftStart, day));
   };
 
   return (

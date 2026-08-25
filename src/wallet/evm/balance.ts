@@ -84,6 +84,24 @@ export async function readErc20Balance(opts: {
   return { raw, formatted: formatUnits(raw, opts.decimals) };
 }
 
+export async function readErc20Allowance(opts: {
+  network: string;
+  tokenAddress: Address;
+  owner: Address;
+  spender: Address;
+  blockNumber?: bigint;
+}): Promise<bigint> {
+  const client = getPublicClientForNetwork(opts.network);
+  if (!client) throw new Error(`Unsupported network: ${opts.network}`);
+  return client.readContract({
+    address: opts.tokenAddress,
+    abi: erc20Abi,
+    functionName: "allowance",
+    args: [opts.owner, opts.spender],
+    ...(opts.blockNumber != null ? { blockNumber: opts.blockNumber } : {}),
+  });
+}
+
 export type Erc20BalanceInput = {
   assetId: string;
   tokenAddress: Address;

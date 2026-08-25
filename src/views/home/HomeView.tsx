@@ -37,7 +37,10 @@ export function HomeView() {
           loading={pending.isPending}
         />
       </div>
-      <RecentPayoutsTable items={(recent.data ?? []).slice(0, HOME_LIST_LIMIT)} />
+      <RecentPayoutsTable
+        items={(recent.data ?? []).slice(0, HOME_LIST_LIMIT)}
+        loading={recent.isPending}
+      />
     </div>
   );
 }

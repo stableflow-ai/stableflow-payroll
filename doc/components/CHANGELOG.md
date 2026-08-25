@@ -2,6 +2,10 @@
 
 Record every create/update of components under `src/components/ui/` so other agents can discover new APIs.
 
+## 2026-08-25
+
+- **DateRangePicker:** Second calendar click may be the same day as the first (single-day range). Custom one-day ranges show one date, not `MMM d, yyyy – MMM d, yyyy`.
+
 ## 2026-08-24
 
 - **DateRangePicker:** Shared time-range calendar (presets + two-click range). Extracted from Partner Reports for History.

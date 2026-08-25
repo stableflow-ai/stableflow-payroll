@@ -1,6 +1,8 @@
 import type { Address, Hash, Hex } from "viem";
 import { getWalletClient, switchChain, waitForTransactionReceipt } from "wagmi/actions";
+import { readErc20Allowance } from "./evm/balance";
 import { wagmiConfig } from "./evm/config";
+import { verifyPostApproveAllowance } from "./verify-post-approve-allowance";
 
 type SupportedEvmChainId = (typeof wagmiConfig)["chains"][number]["id"];
 
@@ -33,8 +35,13 @@ export async function broadcastBatchPayCallData(input: {
   approvals: string[];
   callData: string;
   contract: string;
+  owner: string;
+  spender: string;
+  requiredAmount: bigint;
+  network: string;
 }): Promise<Hash> {
   const chainId = input.chainId as SupportedEvmChainId;
+  let approveBlockNumber: bigint | undefined;
   for (const approval of input.approvals) {
     if (!approval.trim()) continue;
     const hash = await broadcastQuickPayCallData({
@@ -42,8 +49,22 @@ export async function broadcastBatchPayCallData(input: {
       contract: input.tokenAddress,
       callData: approval,
     });
-    await waitForTransactionReceipt(wagmiConfig, { hash, chainId });
+    const receipt = await waitForTransactionReceipt(wagmiConfig, { hash, chainId });
+    if (receipt.status !== "success") {
+      throw new Error("Token approval failed");
+    }
+    approveBlockNumber = receipt.blockNumber;
   }
+  await verifyPostApproveAllowance({
+    requiredAmount: input.requiredAmount,
+    readAllowance: () => readErc20Allowance({
+      network: input.network,
+      tokenAddress: input.tokenAddress as Address,
+      owner: input.owner as Address,
+      spender: input.spender as Address,
+      blockNumber: approveBlockNumber,
+    }),
+  });
   return broadcastQuickPayCallData({
     chainId: input.chainId,
     contract: input.contract,

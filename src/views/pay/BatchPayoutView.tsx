@@ -213,6 +213,9 @@ export function BatchPayoutView() {
         toast.fail({ title: "Insufficient balance" });
         throw new BalanceGateError("Insufficient balance");
       }
+      if (!swapped.spender) {
+        throw new Error("Missing spender");
+      }
       setPhase("sending");
       const txHash = await broadcastBatchPayCallData({
         chainId: originToken.chain.chainId,
@@ -220,6 +223,10 @@ export function BatchPayoutView() {
         approvals: swapped.approvals ?? [],
         callData: swapped.callData,
         contract: swapped.contract,
+        owner: payer,
+        spender: swapped.spender,
+        requiredAmount: amountIn,
+        network: originToken.blockchain,
       });
       enqueueBatchPayoutCommit({ orderId: swapped.orderId, txHash });
     },

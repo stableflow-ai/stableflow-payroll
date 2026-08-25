@@ -71,12 +71,13 @@ export const PAY_REQUEST_MODE = {
 export const REQUEST_LIST_REFRESH_MS = 30_000;
 export const REQUEST_WITHDRAW_COUNT_POLL_MS = 120_000;
 
-export const IMPORT_MAX_ROWS = 500;
+export const IMPORT_MAX_ROWS = 100;
 export const IMPORT_CSV_ACCEPT = ".csv,text/csv";
 export const IMPORT_CSV_TEMPLATE_FILENAME = "payout-import-template.csv";
 export const IMPORT_CSV_TEMPLATE = [
   "recipient,amount,token,network,memo",
-  "0x1111111111111111111111111111111111111111,100,USDC,ethereum,payroll",
-  "alice.near,50,USDT,near,",
-  "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA,25,USDC,solana,bonus",
+  "0x557be3f47a45499385f60cd64e2ff455e42a3311,100,USDC,eth,payroll",
+  "stableflow.near,50,USDT,near,",
+  "9JXR51yBLBgfesHF8SJgKWkNnx4FxtJCxCc3AV31TBsn,25,USDC,sol,bonus",
+  "TJbLVQHYf61a36iC7oyxdMiNSoqTMKYAMv,1,USDT,tron",
 ].join("\n");

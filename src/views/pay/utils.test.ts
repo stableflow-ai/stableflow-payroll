@@ -1,6 +1,22 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "@/lib/api-error";
-import { formatQuoteErrorMessage, stampDownloadFilename } from "./utils";
+import { detectAddressChainKind, formatQuoteErrorMessage, stampDownloadFilename } from "./utils";
+
+describe("detectAddressChainKind", () => {
+  it("classifies a Tron address before Near", () => {
+    expect(detectAddressChainKind("TJbLVQHYf61a36iC7oyxdMiNSoqTMKYAMv")).toBe("tron");
+  });
+
+  it("classifies named Near accounts including hyphen and DAO labels", () => {
+    expect(detectAddressChainKind("alice.near")).toBe("near");
+    expect(detectAddressChainKind("a-b.near")).toBe("near");
+    expect(detectAddressChainKind("burrow.sputnik-dao.near")).toBe("near");
+  });
+
+  it("classifies a 64-character hex implicit Near account", () => {
+    expect(detectAddressChainKind("a".repeat(64))).toBe("near");
+  });
+});
 
 describe("formatQuoteErrorMessage", () => {
   it("converts a 1Click minimum amount from minor units", () => {

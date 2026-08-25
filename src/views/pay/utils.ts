@@ -31,9 +31,9 @@ export function detectAddressChainKind(address: string): WalletChainKind | null 
   const raw = address.trim();
   if (!raw) return null;
   if (isAddressValid(raw, "evm")) return "evm";
+  if (isAddressValid(raw, "tron")) return "tron";
   if (isAddressValid(raw, "solana")) return "solana";
   if (isAddressValid(raw, "near")) return "near";
-  if (isAddressValid(raw, "tron")) return "tron";
   return null;
 }
 
