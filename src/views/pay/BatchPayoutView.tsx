@@ -86,7 +86,11 @@ export function BatchPayoutView() {
   }, [ensureFresh]);
 
   useEffect(() => {
-    const stepper = <BatchStepper active={pageStep === "preview" ? 2 : 1} />;
+    const stepper = (
+      <div className="sm:absolute sm:left-1/2 sm:-translate-x-1/2">
+        <BatchStepper active={pageStep === "preview" ? 2 : 1} />
+      </div>
+    );
     setHeaderExtra(stepper);
     return () => setHeaderExtra(null);
   }, [pageStep, setHeaderExtra]);
