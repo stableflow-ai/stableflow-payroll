@@ -116,7 +116,7 @@ export function TransactionHistoryView() {
   }
 
   return (
-    <div>
+    <div className="mx-auto w-full max-w-[1212px]">
       <div className="mb-4 flex flex-wrap items-center gap-3 justify-between">
         <SearchInput
           value={search}

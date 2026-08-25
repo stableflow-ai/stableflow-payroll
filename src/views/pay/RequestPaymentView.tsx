@@ -273,7 +273,7 @@ export function RequestPaymentView() {
 
   return (
     <>
-      <div className="flex w-full max-w-[776px] flex-col gap-6">
+      <div className="mx-auto flex w-full max-w-[776px] flex-col gap-6">
         <Card className="w-full px-6 py-7 sm:px-8">
           <ReceivingAddressField
             value={addressInput}

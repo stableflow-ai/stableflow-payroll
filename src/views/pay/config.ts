@@ -2,17 +2,23 @@ import type { ComponentType } from "react";
 import { IconBatchUp, IconDuration, IconRecords, IconUp } from "@/components/icons";
 import type { IconProps } from "@/components/icons/types";
 
+export const PAY_NAV_GROUP = {
+  Payout: "payout",
+  Request: "request",
+} as const;
+
 export const PAY_NAV_ITEMS = [
-  { label: "Single Payout", to: "/pay", icon: IconUp, iconClassName: undefined },
-  { label: "Batch Payout", to: "/pay/batch", icon: IconBatchUp, iconClassName: undefined },
-  { label: "Request Payment", to: "/pay/request", icon: IconUp, iconClassName: "rotate-180" },
-  { label: "Pending Payouts", to: "/pay/pending", icon: IconDuration, iconClassName: undefined },
-  { label: "Transaction History", to: "/pay/history", icon: IconRecords, iconClassName: undefined },
+  { label: "Single Payout", to: "/pay", icon: IconUp, iconClassName: undefined, group: PAY_NAV_GROUP.Payout },
+  { label: "Batch Payout", to: "/pay/batch", icon: IconBatchUp, iconClassName: undefined, group: PAY_NAV_GROUP.Payout },
+  { label: "Pending Payouts", to: "/pay/pending", icon: IconDuration, iconClassName: undefined, group: PAY_NAV_GROUP.Payout },
+  { label: "Transaction History", to: "/pay/history", icon: IconRecords, iconClassName: undefined, group: PAY_NAV_GROUP.Payout },
+  { label: "Request Payment", to: "/pay/request", icon: IconUp, iconClassName: "rotate-180", group: PAY_NAV_GROUP.Request },
 ] as const satisfies ReadonlyArray<{
   label: string;
   to: string;
   icon: ComponentType<IconProps>;
   iconClassName: string | undefined;
+  group: (typeof PAY_NAV_GROUP)[keyof typeof PAY_NAV_GROUP];
 }>;
 
 export const PAYOUT_TABLE_COLUMNS =

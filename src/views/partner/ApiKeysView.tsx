@@ -67,7 +67,8 @@ export function ApiKeysView() {
         </Button>
       </div>
 
-      <Table columns={API_KEY_TABLE_COLUMNS} className="p-5">
+      <div className="mx-auto w-full max-w-[1212px]">
+        <Table columns={API_KEY_TABLE_COLUMNS} className="p-5">
         <TableHeader>
           <TableHead>Label</TableHead>
           <TableHead>Key</TableHead>
@@ -75,7 +76,7 @@ export function ApiKeysView() {
           <TableHead />
         </TableHeader>
         {apiKeys.length === 0 ? (
-          <p className="pt-20 text-center font-montserrat text-sm font-medium text-[#aaa] lg:py-[150px]">
+          <p className="py-20 text-center font-montserrat text-sm font-medium text-[#aaa] lg:py-[150px]">
             No API key, you can{" "}
             <button type="button" className="cursor-pointer text-black" onClick={openCreate}>
               Create new API key
@@ -124,7 +125,8 @@ export function ApiKeysView() {
             ))}
           </TableBody>
         )}
-      </Table>
+        </Table>
+      </div>
 
       <ApiKeyDialog
         open={dialogOpen}

@@ -356,7 +356,7 @@ export function SinglePayoutView() {
 
   return (
     <>
-      <Card className="w-full max-w-[776px] px-6 py-7 sm:px-8">
+      <Card className="mx-auto w-full max-w-[776px] px-6 py-7 sm:px-8">
         <RecipientAddressField
           value={addressInput}
           matched={matched}
@@ -450,7 +450,7 @@ export function SinglePayoutView() {
             maxLength={EMAIL_MAX_LENGTH}
             onChange={(event) => setEmail(event.target.value)}
             placeholder="email@example.com"
-            className="h-9 min-w-0 flex-1 rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-3 font-montserrat text-sm text-black outline-none placeholder:text-black/30"
+            className="min-h-9 h-9 shrink-0 min-w-0 flex-1 rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-3 font-montserrat text-sm text-black outline-none placeholder:text-black/30"
           />
         </div>
 

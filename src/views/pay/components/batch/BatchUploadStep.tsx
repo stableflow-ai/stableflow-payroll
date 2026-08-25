@@ -104,7 +104,7 @@ export function BatchUploadStep(props: {
     <>
       <Card
         className={cn(
-          "relative w-full px-5 py-6 sm:px-8 sm:py-8",
+          "relative mx-auto w-full max-w-[1192px] px-5 py-6 sm:px-8 sm:py-8",
           dragOver ? "ring-2 ring-black/20" : "",
         )}
         onDragOver={(event) => {
@@ -151,7 +151,7 @@ export function BatchUploadStep(props: {
             type="button"
             disabled={busySource === "csv" || busySource === "google"}
             onClick={() => void handleGoogle()}
-            className="inline-flex h-10 w-[152px] items-center justify-center rounded-[10px] border border-[#d9d9d9] bg-white shadow-[0_0_6px_0_rgba(0,0,0,0.06)] disabled:opacity-40"
+            className="inline-flex h-8 md:h-10 w-[152px] items-center justify-center rounded-[10px] border border-[#d9d9d9] bg-white shadow-[0_0_6px_0_rgba(0,0,0,0.06)] disabled:opacity-40"
           >
             {busySource === "google" && !pendingSheets ? (
               <span className="size-4 animate-spin rounded-full border-2 border-black border-r-transparent" />

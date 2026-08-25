@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { BUTTON_SIZE, BUTTON_VARIANT } from "./config";
 
 const buttonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-2 px-5 text-center font-montserrat font-medium leading-normal transition-colors transition-opacity outline-none select-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-30",
+  "inline-flex cursor-pointer items-center justify-center gap-2 px-3 md:px-5 text-center font-montserrat font-medium leading-normal transition-colors transition-opacity outline-none select-none disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-30",
   {
     variants: {
       variant: {
@@ -15,10 +15,10 @@ const buttonVariants = cva(
           "border border-[rgba(0,0,0,0.20)] bg-white text-[#606060] shadow-[0_0_6px_0_rgba(0,0,0,0.06)] hover:bg-black/5",
       },
       size: {
-        [BUTTON_SIZE.Xl]: "h-14 rounded-[12px] text-base",
-        [BUTTON_SIZE.Lg]: "h-[50px] rounded-[12px] text-base",
-        [BUTTON_SIZE.Md]: "h-10 rounded-[10px] text-base",
-        [BUTTON_SIZE.Sm]: "h-9 rounded-[8px] text-sm",
+        [BUTTON_SIZE.Xl]: "h-12 md:h-14 rounded-[12px] text-[15px] md:text-base",
+        [BUTTON_SIZE.Lg]: "h-10 md:h-[50px] rounded-[12px] text-sm md:text-base",
+        [BUTTON_SIZE.Md]: "h-8 md:h-10 rounded-[10px] text-[13px] md:text-base",
+        [BUTTON_SIZE.Sm]: "h-6 md:h-9 rounded-[8px] text-xl md:text-sm",
       },
     },
     defaultVariants: {

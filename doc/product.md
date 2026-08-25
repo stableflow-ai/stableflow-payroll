@@ -37,15 +37,15 @@ One authenticated page at `/`. Summary, payment volume chart, pending payouts, a
 
 ## Pay
 
-`PayLayout` secondary nav (left sidebar on desktop, horizontal chips on mobile):
+`PayLayout` secondary nav (left sidebar on desktop, horizontal chips on mobile). Desktop sidebar shows a **Payout** group label, then Single / Batch / Pending / History, a divider, then Request Payment.
 
 | Menu | Route | Notes |
 | --- | --- | --- |
 | Single Payout | `/pay` | One address, one payment. Recipients address book is a dialog on this page (`/v1/pay/recipient*`). Origin tokens are limited to `payerEnabled` chains. |
 | Batch Payout | `/pay/batch` | CSV / Google Sheets / manual rows. Validate then preview. `POST /v1/pay/batch/quote\|swap\|submit`. Recipients are wallet addresses. Origin tokens are limited to `payerEnabled` chains. |
-| Request Payment | `/pay/request` | Create a payment request (receiving address, amount, token, optional private receive). Generate Payment Link calls `POST /v1/pay/request` and copies `/pay?id=`. Received Payment uses `GET /v1/pay/request/list` (manual refresh, 30s cooldown). Sidebar badge uses `GET /v1/pay/request/withdraw/count` (120s poll). |
 | Pending Payouts | `/pay/pending` | In-flight payouts from `GET /v1/pay/payments/pending`. Amount/Asset use destination fields. Time uses `submitted_at`. Sidebar badge is the list length. |
 | Transaction History | `/pay/history` | `GET /v1/pay/payments`. Search `q`, status `completed`/`failed`, token USDT/USDC, `start_time`/`end_time` unix seconds via DateRangePicker. Export CSV calls `GET /v1/pay/payments/export` with the same filters (no pagination). |
+| Request Payment | `/pay/request` | Create a payment request (receiving address, amount, token, optional private receive). Generate Payment Link calls `POST /v1/pay/request` and copies `/pay?id=`. Received Payment uses `GET /v1/pay/request/list` (manual refresh, 30s cooldown). Sidebar badge uses `GET /v1/pay/request/withdraw/count` (120s poll). |
 
 Single payout uses `POST /v1/pay/single/quote|swap|submit`. Memo and notify-recipient email are sent on swap only, not on quote. Batch payout uses `POST /v1/pay/batch/quote|swap|submit`. Origin broadcast is EVM-only (`payerEnabled` on `FIXED_CHAINS`). Recipients are wallet addresses (not employees). The address book is not a route.
 

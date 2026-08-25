@@ -157,7 +157,8 @@ export function ReportsView() {
     <div className="flex flex-col gap-5">
       <h1 className="font-montserrat text-[26px] font-semibold text-black">Reports</h1>
 
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+      <div className="mx-auto flex w-full max-w-[1212px] flex-col gap-5">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex flex-wrap items-center gap-3">
           <DateRangePicker
             value={range}
@@ -363,7 +364,8 @@ export function ReportsView() {
             ))}
           </TableBody>
         )}
-      </Table>
+        </Table>
+      </div>
     </div>
   );
 }

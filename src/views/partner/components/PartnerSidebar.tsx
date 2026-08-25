@@ -5,13 +5,13 @@ import { usePartner } from "@/hooks/use-partner";
 import { PARTNER_NAV_ITEMS } from "../config";
 
 const ITEM_CLASS =
-  "inline-flex h-11 shrink-0 items-center gap-2.5 rounded-[8px] px-3.5 font-montserrat text-sm font-medium whitespace-nowrap duration-150";
+  "inline-flex h-11 shrink-0 items-center gap-2.5 rounded-[8px] px-3.5 font-montserrat text-sm font-medium whitespace-nowrap duration-150 lg:w-full";
 
 export function PartnerSidebar() {
   const { isPartner } = usePartner();
 
   return (
-    <nav className="flex shrink-0 gap-2 overflow-x-auto lg:w-[201px] lg:flex-col lg:gap-1.5 lg:overflow-visible">
+    <nav className="flex shrink-0 gap-2 overflow-x-auto lg:w-[220px] lg:flex-col lg:gap-1.5 lg:overflow-visible lg:border-r lg:border-black/10 lg:px-2.5 lg:py-5">
       {PARTNER_NAV_ITEMS.map((item) => {
         const Icon = item.icon;
         const locked = item.lockedUntilPartner && !isPartner;

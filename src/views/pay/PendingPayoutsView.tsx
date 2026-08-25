@@ -26,15 +26,23 @@ export function PendingPayoutsView() {
 
   if (query.isError) {
     return (
-      <p className="font-montserrat text-sm text-danger">
+      <p className="mx-auto w-full max-w-[1212px] font-montserrat text-sm text-danger">
         {query.error instanceof Error ? query.error.message : "Failed to load pending payouts"}
       </p>
     );
   }
 
   if (query.isPending) {
-    return <p className="font-montserrat text-sm text-[#909090]">Loading pending payouts…</p>;
+    return (
+      <p className="mx-auto w-full max-w-[1212px] font-montserrat text-sm text-[#909090]">
+        Loading pending payouts…
+      </p>
+    );
   }
 
-  return <PayoutsTable rows={rows} empty="No pending payouts" />;
+  return (
+    <div className="mx-auto w-full max-w-[1212px]">
+      <PayoutsTable rows={rows} empty="No pending payouts" />
+    </div>
+  );
 }

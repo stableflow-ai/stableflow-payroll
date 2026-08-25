@@ -51,7 +51,7 @@ export function BatchValidateStep(props: {
   } = props;
 
   return (
-    <div>
+    <div className="mx-auto w-full max-w-[1192px]">
       <Card className="w-full px-5 py-6 sm:px-8 sm:py-8">
         <h2 className="font-montserrat text-xl font-semibold text-black">Validate</h2>
         <p className="mt-2 font-montserrat text-sm text-[#606060]">Send a private payment from your organization's treasury.</p>
