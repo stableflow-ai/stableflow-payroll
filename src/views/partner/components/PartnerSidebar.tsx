@@ -37,6 +37,7 @@ export function PartnerSidebar() {
             className={({ isActive }) =>
               cn(
                 ITEM_CLASS,
+                "hover:bg-[#EEE] duration-150",
                 isActive
                   ? "bg-white text-[#6284F5] shadow-[0_0_20px_0_rgba(0,0,0,0.06)]"
                   : "text-[#606060]",

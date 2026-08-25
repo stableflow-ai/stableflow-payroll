@@ -22,6 +22,7 @@ export function PaySidebar() {
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     cn(
       "inline-flex h-11 shrink-0 duration-150 items-center gap-2.5 rounded-[8px] px-3.5 font-montserrat text-sm font-medium whitespace-nowrap lg:w-full",
+      "hover:bg-[#EEE]",
       isActive
         ? "bg-white text-[#6284F5] shadow-[0_0_20px_0_rgba(0,0,0,0.06)]"
         : "text-[#606060]",
