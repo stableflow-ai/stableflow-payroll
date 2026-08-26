@@ -22,16 +22,28 @@ import type {
   VolumePoint,
 } from "@/types/payout";
 
-export function singleQuote(body: PaySingleQuoteParam) {
-  return http<PaySingleQuoteResp>(`${PAY_API_PREFIX}/single/quote`, { method: "POST", body });
+export function singleQuote(body: PaySingleQuoteParam, options?: { auth?: boolean }) {
+  return http<PaySingleQuoteResp>(`${PAY_API_PREFIX}/single/quote`, {
+    method: "POST",
+    body,
+    auth: options?.auth ?? true,
+  });
 }
 
-export function singleSwap(body: PaySingleSwapParam) {
-  return http<PaySingleSwapResp>(`${PAY_API_PREFIX}/single/swap`, { method: "POST", body });
+export function singleSwap(body: PaySingleSwapParam, options?: { auth?: boolean }) {
+  return http<PaySingleSwapResp>(`${PAY_API_PREFIX}/single/swap`, {
+    method: "POST",
+    body,
+    auth: options?.auth ?? true,
+  });
 }
 
-export function singleSubmit(body: PaySingleSubmitParam) {
-  return http<void>(`${PAY_API_PREFIX}/single/submit`, { method: "POST", body });
+export function singleSubmit(body: PaySingleSubmitParam, options?: { auth?: boolean }) {
+  return http<void>(`${PAY_API_PREFIX}/single/submit`, {
+    method: "POST",
+    body,
+    auth: options?.auth ?? true,
+  });
 }
 
 export function batchQuote(body: PayBatchQuoteParam) {

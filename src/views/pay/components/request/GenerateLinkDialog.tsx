@@ -29,7 +29,7 @@ export function GenerateLinkDialog(props: {
   return (
     <Dialog open={open} onClose={onClose} title="Payment link">
       <p className="font-montserrat text-sm leading-6 text-[#606060]">
-        Send this link to the payer. They will open Single Payout with the amount and address filled in.
+        Send this link to the payer. They can open it without logging in and pay from their wallet.
       </p>
       <div className="mt-4 flex items-center gap-2 rounded-[8px] border border-[#e3e3e3] bg-[#f6f6f6] px-3 py-2">
         <p className="min-w-0 flex-1 break-all font-montserrat text-xs text-black">{url}</p>

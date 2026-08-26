@@ -22,8 +22,17 @@ export function mapPayRequestItem(raw: unknown): PayRequestItem {
     recipient_address: apiText(row.recipient_address ?? row.recipientAddress),
     status: apiText(row.status).toLowerCase(),
     token: apiText(row.token),
+    name: apiText(row.name ?? row.payment_name ?? row.paymentName),
     memo: apiText(row.memo),
     created_at: apiText(row.created_at ?? row.createdAt),
+    payer: apiText(row.payer ?? row.paid_address ?? row.paidAddress),
+    paid_at: apiText(row.paid_at ?? row.paidAt),
+    destination_tx_hash: apiText(
+      row.destination_tx_hash ?? row.destinationTxHash ?? row.completed_tx_hash ?? row.completedTxHash,
+    ),
+    withdraw_tx_hash: apiText(
+      row.withdraw_tx_hash ?? row.withdrawTxHash ?? row.withdrawed_tx_hash ?? row.withdrawedTxHash,
+    ),
   };
 }
 
@@ -50,8 +59,14 @@ export function createPayRequest(body: PayCreateRequestParam) {
   return http<unknown>(`${PAY_API_PREFIX}/request`, { method: "POST", body }).then(mapCreateResp);
 }
 
-export function getPayRequest(id: number) {
-  return http<unknown>(`${PAY_API_PREFIX}/request/${id}`).then(mapPayRequestItem);
+export function getPayRequest(id: number, options?: { auth?: boolean }) {
+  return http<unknown>(`${PAY_API_PREFIX}/request/${id}`, {
+    auth: options?.auth ?? true,
+  }).then(mapPayRequestItem);
+}
+
+export function disablePayRequest(id: number) {
+  return http<void>(`${PAY_API_PREFIX}/request/${id}/disable`, { method: "POST" });
 }
 
 export function withdrawPayRequest(body: PayWithdrawParam) {

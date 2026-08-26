@@ -6,6 +6,7 @@ export interface PayCreateRequestParam {
   network: string;
   recipient_address: string;
   token: string;
+  name: string;
   memo?: string;
   private_recipient_address?: string;
 }
@@ -23,8 +24,13 @@ export interface PayRequestItem {
   recipient_address: string;
   status: string;
   token: string;
+  name: string;
   memo: string;
   created_at: string;
+  payer: string;
+  paid_at: string;
+  destination_tx_hash: string;
+  withdraw_tx_hash: string;
 }
 
 export interface PayWithdrawParam {

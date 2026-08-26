@@ -83,7 +83,11 @@ async function processCommit(id: string, item: QuickPayCommitItem, retryCount = 
 
   try {
     const { singleSubmit } = await import("@/api/payout");
-    await singleSubmit({ orderId: item.orderId, txHash: item.txHash });
+    const { getAuthToken } = await import("@/lib/auth-session");
+    await singleSubmit(
+      { orderId: item.orderId, txHash: item.txHash },
+      { auth: Boolean(getAuthToken()) },
+    );
     useQuickPayCommitQueueStore.getState().remove(id);
     clearTaskMeta(id);
     notifySuccessListeners();

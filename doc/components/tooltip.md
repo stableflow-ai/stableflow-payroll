@@ -21,8 +21,9 @@ Renders the panel with `createPortal` into `document.body` so overflow/stacking 
 | `content` | `ReactNode` | required | Panel body |
 | `children` | `ReactNode` | required | Trigger |
 | `leaveDelay` | `number` | `0` | Milliseconds before close after mouse leave. When `> 0`, hovering the panel keeps it open |
-| `side` | `"top" \| "right" \| "bottom" \| "left"` | `"top"` | Preferred placement; viewport-clamped |
+| `side` | `"top" \| "top-left" \| "top-right" \| "right" \| "right-top" \| "right-bottom" \| "bottom" \| "bottom-left" \| "bottom-right" \| "left" \| "left-top" \| "left-bottom"` | `"top"` | Cardinal values (`top` / `right` / `bottom` / `left`) center on that edge. Composite values edge-align (`top-left` shares the trigger’s left edge above it; `left-bottom` shares the bottom edge to the left). Viewport-clamped |
 | `className` | `string` | — | Panel classes |
+| `triggerClassName` | `string` | — | Extra classes on the trigger wrapper (`span.inline-flex.max-w-full`) |
 
 ## Example
 
@@ -36,6 +37,6 @@ import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 
 ## Notes
 
-- The trigger is wrapped in `span.inline-flex`. If that breaks layout, wrap the caller’s node instead and keep the child as a single element.
+- The trigger is wrapped in `span.inline-flex.max-w-full`. Pass `triggerClassName` to fix layout (for example `block w-full`) instead of wrapping another element.
 - Page scroll (including nested scroll containers) dismisses the tooltip.
 - Panel `className` width (`w-[285px]`, `max-w-*`) is used when measuring placement. Do not expect `max-content` to override it.

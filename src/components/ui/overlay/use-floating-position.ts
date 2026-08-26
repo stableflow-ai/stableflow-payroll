@@ -3,9 +3,17 @@ import { useCallback, useLayoutEffect, useState } from "react";
 
 export const FLOATING_SIDE = {
   Top: "top",
+  TopLeft: "top-left",
+  TopRight: "top-right",
   Right: "right",
+  RightTop: "right-top",
+  RightBottom: "right-bottom",
   Bottom: "bottom",
+  BottomLeft: "bottom-left",
+  BottomRight: "bottom-right",
   Left: "left",
+  LeftTop: "left-top",
+  LeftBottom: "left-bottom",
 } as const;
 
 export type FloatingSide = (typeof FLOATING_SIDE)[keyof typeof FLOATING_SIDE];
@@ -17,6 +25,15 @@ export const FLOATING_ALIGN = {
 } as const;
 
 export type FloatingAlign = (typeof FLOATING_ALIGN)[keyof typeof FLOATING_ALIGN];
+
+const CARDINAL_SIDE = {
+  Top: FLOATING_SIDE.Top,
+  Right: FLOATING_SIDE.Right,
+  Bottom: FLOATING_SIDE.Bottom,
+  Left: FLOATING_SIDE.Left,
+} as const;
+
+export type CardinalSide = (typeof CARDINAL_SIDE)[keyof typeof CARDINAL_SIDE];
 
 const VIEWPORT_PADDING = 8;
 
@@ -53,7 +70,7 @@ export function useFloatingPosition(options: {
 
     const triggerRect = trigger.getBoundingClientRect();
     const panelRect = measurePanelRect(panel);
-    setStyle(getFloatingStyle(triggerRect, panelRect, side, align, offset));
+    setStyle(getClampedFloatingStyle(triggerRect, panelRect, side, align, offset));
     return true;
   }, [align, offset, panelRef, side, triggerRef]);
 
@@ -104,30 +121,73 @@ function measurePanelRect(panel: HTMLElement): DOMRect {
   return rect;
 }
 
-function getFloatingStyle(
+export function resolveFloatingPlacement(
+  side: FloatingSide,
+  align: FloatingAlign,
+): { side: CardinalSide; align: FloatingAlign } {
+  switch (side) {
+    case FLOATING_SIDE.TopLeft:
+      return { side: CARDINAL_SIDE.Top, align: FLOATING_ALIGN.Start };
+    case FLOATING_SIDE.TopRight:
+      return { side: CARDINAL_SIDE.Top, align: FLOATING_ALIGN.End };
+    case FLOATING_SIDE.BottomLeft:
+      return { side: CARDINAL_SIDE.Bottom, align: FLOATING_ALIGN.Start };
+    case FLOATING_SIDE.BottomRight:
+      return { side: CARDINAL_SIDE.Bottom, align: FLOATING_ALIGN.End };
+    case FLOATING_SIDE.LeftTop:
+      return { side: CARDINAL_SIDE.Left, align: FLOATING_ALIGN.Start };
+    case FLOATING_SIDE.LeftBottom:
+      return { side: CARDINAL_SIDE.Left, align: FLOATING_ALIGN.End };
+    case FLOATING_SIDE.RightTop:
+      return { side: CARDINAL_SIDE.Right, align: FLOATING_ALIGN.Start };
+    case FLOATING_SIDE.RightBottom:
+      return { side: CARDINAL_SIDE.Right, align: FLOATING_ALIGN.End };
+    default:
+      return { side, align };
+  }
+}
+
+export function getFloatingCoords(
+  trigger: Pick<DOMRect, "top" | "right" | "bottom" | "left" | "width" | "height">,
+  panel: Pick<DOMRect, "width" | "height">,
+  side: FloatingSide,
+  align: FloatingAlign,
+  offset: number,
+): { top: number; left: number } {
+  const placement = resolveFloatingPlacement(side, align);
+
+  if (placement.side === CARDINAL_SIDE.Bottom) {
+    return {
+      top: trigger.bottom + offset,
+      left: getAlignedLeft(trigger, panel.width, placement.align),
+    };
+  }
+  if (placement.side === CARDINAL_SIDE.Top) {
+    return {
+      top: trigger.top - panel.height - offset,
+      left: getAlignedLeft(trigger, panel.width, placement.align),
+    };
+  }
+  if (placement.side === CARDINAL_SIDE.Left) {
+    return {
+      top: getAlignedTop(trigger, panel.height, placement.align),
+      left: trigger.left - panel.width - offset,
+    };
+  }
+  return {
+    top: getAlignedTop(trigger, panel.height, placement.align),
+    left: trigger.right + offset,
+  };
+}
+
+function getClampedFloatingStyle(
   trigger: DOMRect,
   panel: DOMRect,
   side: FloatingSide,
   align: FloatingAlign,
   offset: number,
 ): CSSProperties {
-  let top = 0;
-  let left = 0;
-
-  if (side === FLOATING_SIDE.Bottom) {
-    top = trigger.bottom + offset;
-    left = getAlignedLeft(trigger, panel.width, align);
-  } else if (side === FLOATING_SIDE.Top) {
-    top = trigger.top - panel.height - offset;
-    left = getAlignedLeft(trigger, panel.width, align);
-  } else if (side === FLOATING_SIDE.Left) {
-    top = getAlignedTop(trigger, panel.height, align);
-    left = trigger.left - panel.width - offset;
-  } else {
-    top = getAlignedTop(trigger, panel.height, align);
-    left = trigger.right + offset;
-  }
-
+  let { top, left } = getFloatingCoords(trigger, panel, side, align, offset);
   const maxLeft = window.innerWidth - panel.width - VIEWPORT_PADDING;
   const maxTop = window.innerHeight - panel.height - VIEWPORT_PADDING;
   left = clamp(left, VIEWPORT_PADDING, Math.max(VIEWPORT_PADDING, maxLeft));
@@ -141,7 +201,9 @@ function getFloatingStyle(
   };
 }
 
-function getAlignedLeft(trigger: DOMRect, panelWidth: number, align: FloatingAlign) {
+type Box = Pick<DOMRect, "top" | "right" | "bottom" | "left" | "width" | "height">;
+
+function getAlignedLeft(trigger: Box, panelWidth: number, align: FloatingAlign) {
   if (align === FLOATING_ALIGN.Center) {
     return trigger.left + trigger.width / 2 - panelWidth / 2;
   }
@@ -151,7 +213,7 @@ function getAlignedLeft(trigger: DOMRect, panelWidth: number, align: FloatingAli
   return trigger.left;
 }
 
-function getAlignedTop(trigger: DOMRect, panelHeight: number, align: FloatingAlign) {
+function getAlignedTop(trigger: Box, panelHeight: number, align: FloatingAlign) {
   if (align === FLOATING_ALIGN.Center) {
     return trigger.top + trigger.height / 2 - panelHeight / 2;
   }

@@ -78,7 +78,7 @@ export function BatchValidateStep(props: {
           </p>
         </div>
 
-        <div className="mt-8 hidden gap-3 font-montserrat text-sm font-medium text-[#606060] lg:grid lg:grid-cols-[minmax(0,1.4fr)_minmax(160px,0.7fr)_minmax(180px,0.8fr)_minmax(120px,0.55fr)_28px]">
+        <div className="mt-8 hidden gap-3 font-montserrat text-sm font-medium text-[#606060] lg:grid lg:grid-cols-[minmax(0,1.5fr)_minmax(100px,0.5fr)_minmax(180px,0.8fr)_minmax(120px,0.55fr)_28px]">
           <span>Recipient</span>
           <span>Amount</span>
           <span>Prefer Token, Network</span>
@@ -155,7 +155,7 @@ function BatchRow(props: {
 
   return (
     <div
-      className="grid gap-3 lg:grid-cols-[minmax(0,1.4fr)_minmax(160px,0.7fr)_minmax(180px,0.8fr)_minmax(120px,0.55fr)_28px] lg:items-center"
+      className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(100px,0.5fr)_minmax(180px,0.8fr)_minmax(120px,0.55fr)_28px] lg:items-center"
     >
       <label className="flex min-w-0 flex-col gap-1 lg:block">
         <span className="font-montserrat text-sm text-[#606060] lg:hidden">Recipient</span>

@@ -168,8 +168,9 @@ export function useOrderQuery(id: string) {
 | POST | `/v1/pay/partner/keys/{id}` | yes | `PayPartnerKeyLabelBody` | `void` | `updatePartnerKeyLabel` | `usePartnerKeyMutations` |
 | DELETE | `/v1/pay/partner/keys/{id}` | yes | — | `void` | `deletePartnerKey` | `usePartnerKeyMutations` |
 | POST | `/v1/pay/request` | yes | `PayCreateRequestParam` | `PayCreateRequestResp` | `createPayRequest` | `useCreatePayRequestMutation` |
-| GET | `/v1/pay/request/{id}` | yes | — | `PayRequestItem` | `getPayRequest` | `usePayRequestDetailQuery` |
+| GET | `/v1/pay/request/{id}` | if session | — | `PayRequestItem` | `getPayRequest` | `usePayRequestDetailQuery` |
 | GET | `/v1/pay/request/list` | yes | — | `PayRequestItem[]` | `getRequestPayments` | `useRequestPaymentsQuery` |
+| POST | `/v1/pay/request/{id}/disable` | yes | — | `void` | `disablePayRequest` | `useDisablePayRequestMutation` |
 | POST | `/v1/pay/request/withdraw` | yes | `PayWithdrawParam` | `void` | `withdrawPayRequest` | `useRequestWithdraw` |
 | GET | `/v1/pay/request/withdraw/count` | yes | — | `{ count: number }` | `getRequestWithdrawCount` | `useRequestWithdrawCountQuery` |
 | POST | `/v1/nearintents/quote` | yes | `NearintentsQuoteParam` | `NearintentsQuoteResp` | `nearintentsQuote` | `useRequestWithdraw` |
@@ -177,7 +178,7 @@ export function useOrderQuery(id: string) {
 | POST | `/v1/nearintents/submit-intent` | yes | `NearintentsSubmitIntentParam` | `NearintentsSubmitIntentResp` | `nearintentsSubmitIntent` | unused by product withdraw |
 | GET | `/v1/nearintents/status` | yes | `depositAddress` | `NearintentsStatusResp` | `nearintentsStatus` | unused by product withdraw |
 
-Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`, `ChangePasswordBody`, `ResetPasswordBody`, `ResetPasswordCodeBody`). Payout types: `src/types/payout.ts`. Analytics: `src/types/analytics.ts`. Recipients: `src/types/recipient.ts`. Partner: `src/types/partner.ts`. Request Payment: `src/types/request-payment.ts`. Near Intents proxy: `src/types/nearintents.ts`. Single and batch quote bodies use 1Click `network` codes (`eth`, `arb`, `sol`, …) plus `token` (`USDT` / `USDC`), not 1Click `assetId`. Single `memo` and `notifyEmail` belong on swap (and are optional on the shared quote type). Request Payment payer quotes add `request_id` only. `GET /v1/pay/request/{id}` includes `memo`, which Single Payout prefills for the payer. Batch `receives` use `address` (wallet, no `employeeId`). Payment list rows are snake_case (`submitted_at`, `destination_*`); mappers produce `PayPaymentItem`. Amount/Asset use destination fields. History `start_time` / `end_time` are unix seconds (start of first day, end of last day). History export uses the same filters (no pagination) via `GET /v1/pay/payments/export` (`httpBlob`); the saved filename appends a local `yyyyMMdd-HHmmss` stamp. Volume `period` is `day` / `week` / `month`; points may use `start_at` + `total_payment` instead of `label` / `value`. Origin token pickers are limited by `payerEnabled` on `FIXED_CHAINS`. `/v1/nearintents/*` is our Partner-key proxy of 1Click `/v0`. Withdraw signs via generate-intent then `POST /v1/pay/request/withdraw`. The Pay sidebar polls `GET /v1/pay/request/withdraw/count` every 120s for the Request Payment badge. `GET /v1/pay/partner` returns `null` when the user is not a Partner. Registration posts Additional Details as `description`. Partner API key labels are max 200 characters.
+Types: `src/types/auth.ts` (`AuthUser`, `LoginBody`, `RegisterBody`, `AuthSession`, `ChangePasswordBody`, `ResetPasswordBody`, `ResetPasswordCodeBody`). Payout types: `src/types/payout.ts`. Analytics: `src/types/analytics.ts`. Recipients: `src/types/recipient.ts`. Partner: `src/types/partner.ts`. Request Payment: `src/types/request-payment.ts`. Near Intents proxy: `src/types/nearintents.ts`. Single and batch quote bodies use 1Click `network` codes (`eth`, `arb`, `sol`, …) plus `token` (`USDT` / `USDC`), not 1Click `assetId`. Single `memo` and `notifyEmail` belong on swap (and are optional on the shared quote type). Request Payment create sends required `name` (max 50) and optional `memo`. List/detail rows also map `payer`, `paid_at`, `destination_tx_hash`, and `withdraw_tx_hash`. The public payer page at `/p/:id` calls `GET /v1/pay/request/{id}` and `POST /v1/pay/single/quote|swap|submit` with Bearer only when a session token exists; Single Payout still always sends auth. Request quotes add `request_id` only. `GET /v1/pay/request/{id}` includes `memo` and `name`. Pending requests can be disabled with `POST /v1/pay/request/{id}/disable`. Batch `receives` use `address` (wallet, no `employeeId`). Payment list rows are snake_case (`submitted_at`, `destination_*`); mappers produce `PayPaymentItem`. Amount/Asset use destination fields. History `start_time` / `end_time` are unix seconds (start of first day, end of last day). History export uses the same filters (no pagination) via `GET /v1/pay/payments/export` (`httpBlob`); the saved filename appends a local `yyyyMMdd-HHmmss` stamp. Volume `period` is `day` / `week` / `month`; points may use `start_at` + `total_payment` instead of `label` / `value`. Origin token pickers are limited by `payerEnabled` on `FIXED_CHAINS`. `/v1/nearintents/*` is our Partner-key proxy of 1Click `/v0`. Withdraw signs via generate-intent then `POST /v1/pay/request/withdraw`. The Pay sidebar polls `GET /v1/pay/request/withdraw/count` every 120s for the Request Payment badge. `GET /v1/pay/partner` returns `null` when the user is not a Partner. Registration posts Additional Details as `description`. Partner API key labels are max 200 characters.
 
 Public files:
 
@@ -196,7 +197,7 @@ Public files:
 | `src/api/recipient.ts` | Address book list / create / update / delete |
 | `src/api/partner.ts` | Partner registration and API keys |
 | `src/api/nearintents.ts` | 1Click proxy: quote, generate-intent, submit-intent, status |
-| `src/api/request-payment.ts` | Create request, request detail, received list, withdraw, withdraw count |
+| `src/api/request-payment.ts` | Create request, request detail, received list, disable, withdraw, withdraw count |
 | `src/hooks/use-auth-api.ts` | Auth mutations + profile query |
 | `src/hooks/use-single-payout-api.ts` | Single quote query + swap mutation |
 | `src/hooks/use-batch-payout-api.ts` | Batch quote query + swap mutation |
@@ -205,7 +206,7 @@ Public files:
 | `src/hooks/use-analytics-api.ts` | Analytics month query |
 | `src/hooks/use-recipient-api.ts` | Recipient list + mutations |
 | `src/hooks/use-partner-api.ts` | Partner query, keys query, create partner, key mutations |
-| `src/hooks/use-request-payment.ts` | Received list query, withdraw count query, create mutation, payer detail query |
+| `src/hooks/use-request-payment.ts` | Received list query, withdraw count query, create/disable mutations, payer detail query |
 | `src/hooks/use-request-withdraw.ts` | Confidential withdraw mutation |
 | `src/stores/auth.ts` | Product JWT session store |
 | `src/stores/nearintents-user-session.ts` | 1Click / Near Intents User-Session (not the product JWT) |

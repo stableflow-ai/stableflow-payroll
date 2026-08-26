@@ -21,6 +21,7 @@ export function ReceivedPaymentList(props: {
   refreshing?: boolean;
   onRefresh: () => Promise<unknown>;
   onWithdraw: (row: ReceivedPaymentView) => void;
+  onDelete: (row: ReceivedPaymentView) => void;
 }) {
   const {
     rows,
@@ -31,6 +32,7 @@ export function ReceivedPaymentList(props: {
     refreshing = false,
     onRefresh,
     onWithdraw,
+    onDelete,
   } = props;
   const [onlyPending, setOnlyPending] = useState(false);
   const [cooldownUntil, setCooldownUntil] = useState(0);
@@ -60,12 +62,12 @@ export function ReceivedPaymentList(props: {
 
   return (
     <Table
-      className="w-full"
+      className="mx-auto w-full max-w-[1212px]"
       columns={RECEIVED_PAYMENT_TABLE_COLUMNS}
       toolbar={
         <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
           <h2 className="font-montserrat text-base font-medium text-black">
-            Requested
+            Request Payment
           </h2>
           <span className="inline-flex items-center gap-2">
             <span className="inline-flex items-center gap-1.5 font-montserrat text-sm text-[#606060]">
@@ -98,14 +100,16 @@ export function ReceivedPaymentList(props: {
         </div>
       }
     >
-      <TableHeader>
+      <TableHeader className="border-b-0">
+        <TableHead className="first:pl-3">Payment Name</TableHead>
         <TableHead>Request Payment</TableHead>
-        <TableHead>Request Time</TableHead>
-        <TableHead>Received Address</TableHead>
+        <TableHead>Receive Address</TableHead>
+        <TableHead>Paid Address</TableHead>
+        <TableHead>Paid Time</TableHead>
         <TableHead>Status</TableHead>
-        <TableHead className="justify-end">Link</TableHead>
+        <TableHead className="justify-end last:pr-4" />
       </TableHeader>
-      <TableBody>
+      <TableBody className="flex flex-col gap-3.5">
         {loading && rows.length === 0 ? (
           <p className="py-8 text-center font-montserrat text-sm text-[#909090]">Loading received payments…</p>
         ) : error && rows.length === 0 ? (
@@ -120,6 +124,7 @@ export function ReceivedPaymentList(props: {
               withdrawing={withdrawingId === row.id}
               withdrawDisabled={Boolean(withdrawingId)}
               onWithdraw={() => onWithdraw(row)}
+              onDelete={() => onDelete(row)}
             />
           ))
         )}

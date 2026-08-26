@@ -3,10 +3,13 @@ import {
   applyRequestPayoutFields,
   buildPaymentRequestUrl,
   canWithdrawRequest,
+  formatCouponAmount,
   parsePaymentRequestId,
+  truncateMiddle,
   pendingWithdrawCount,
   receivedPaymentStatusLabel,
   receivingAddressError,
+  requestStatusExplorerUrl,
   toReceivedPaymentView,
 } from "./request-utils";
 import { PAY_REQUEST_MODE, PAY_REQUEST_STATUS } from "./config";
@@ -31,16 +34,16 @@ describe("receivingAddressError", () => {
 
 describe("payment request id", () => {
   it("builds and parses a positive id", () => {
-    expect(buildPaymentRequestUrl("https://pay.example/", 42)).toBe("https://pay.example/pay?id=42");
-    expect(parsePaymentRequestId("id=42")).toBe(42);
-    expect(parsePaymentRequestId("?id=42")).toBe(42);
+    expect(buildPaymentRequestUrl("https://pay.example/", 42)).toBe("https://pay.example/p/42");
+    expect(parsePaymentRequestId("42")).toBe(42);
+    expect(parsePaymentRequestId(" 42 ")).toBe(42);
   });
 
   it("rejects missing or invalid ids", () => {
     expect(parsePaymentRequestId("")).toBeNull();
-    expect(parsePaymentRequestId("id=0")).toBeNull();
-    expect(parsePaymentRequestId("id=-1")).toBeNull();
-    expect(parsePaymentRequestId("addr=0x1&amount=1&token=USDC&network=arb&uid=1")).toBeNull();
+    expect(parsePaymentRequestId("0")).toBeNull();
+    expect(parsePaymentRequestId("-1")).toBeNull();
+    expect(parsePaymentRequestId("id=42")).toBeNull();
   });
 });
 
@@ -70,8 +73,13 @@ describe("received payment view", () => {
     recipient_address: "0x1111111111111111111111111111111111111111",
     status: PAY_REQUEST_STATUS.Completed,
     token: "USDC",
+    name: "Invoice-Adward-July",
     memo: "invoice",
     created_at: "2026-08-20T08:51:55.754Z",
+    payer: "0x2222222222222222222222222222222222222222",
+    paid_at: "2026-08-21T08:51:55.754Z",
+    destination_tx_hash: "0xcomplete",
+    withdraw_tx_hash: "0xwithdraw",
   };
 
   it("maps chain display fields and pending withdraw", () => {
@@ -79,6 +87,8 @@ describe("received payment view", () => {
     expect(row.network).toBe("Arbitrum");
     expect(row.blockchain).toBe("arb");
     expect(row.private).toBe(true);
+    expect(row.paymentName).toBe("Invoice-Adward-July");
+    expect(row.paidAddress).toBe("0x2222222222222222222222222222222222222222");
     expect(canWithdrawRequest(row)).toBe(true);
     expect(pendingWithdrawCount([item])).toBe(1);
     expect(pendingWithdrawCount([{ ...item, mode: PAY_REQUEST_MODE.Standard }])).toBe(0);
@@ -93,5 +103,35 @@ describe("received payment view", () => {
       ...item,
       status: PAY_REQUEST_STATUS.Failed,
     }))).toBe("Failed");
+  });
+
+  it("picks explorer hashes by status", () => {
+    expect(requestStatusExplorerUrl(toReceivedPaymentView({
+      ...item,
+      status: PAY_REQUEST_STATUS.Withdrawed,
+    }))).toContain("0xwithdraw");
+    expect(requestStatusExplorerUrl(toReceivedPaymentView({
+      ...item,
+      mode: PAY_REQUEST_MODE.Standard,
+      status: PAY_REQUEST_STATUS.Completed,
+    }))).toContain("0xcomplete");
+    expect(requestStatusExplorerUrl(toReceivedPaymentView(item))).toBeNull();
+  });
+});
+
+describe("formatCouponAmount", () => {
+  it("pads two decimal places", () => {
+    expect(formatCouponAmount("500")).toEqual({ whole: "500", fraction: "00" });
+    expect(formatCouponAmount("12.5")).toEqual({ whole: "12", fraction: "50" });
+  });
+});
+
+describe("truncateMiddle", () => {
+  it("keeps short strings unchanged", () => {
+    expect(truncateMiddle("Invoice", 8, 8)).toBe("Invoice");
+  });
+
+  it("ellipsis in the middle of long strings", () => {
+    expect(truncateMiddle("abcdefghijklmnop", 4, 4)).toBe("abcd...mnop");
   });
 });

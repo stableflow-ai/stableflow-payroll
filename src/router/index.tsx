@@ -6,6 +6,7 @@ import { HomeView } from "@/views/home/HomeView";
 import { AnalyticsView } from "@/views/analytics/AnalyticsView";
 import { BatchPayoutView } from "@/views/pay/BatchPayoutView";
 import { PendingPayoutsView } from "@/views/pay/PendingPayoutsView";
+import { RequestPayView } from "@/views/pay/RequestPayView";
 import { RequestPaymentView } from "@/views/pay/RequestPaymentView";
 import { SinglePayoutView } from "@/views/pay/SinglePayoutView";
 import { TransactionHistoryView } from "@/views/pay/TransactionHistoryView";
@@ -40,10 +41,14 @@ export const router = createBrowserRouter([
     element: <HowItWorksView />,
   },
   {
-    element: <RequireAuth />,
+    element: <AppLayout />,
     children: [
       {
-        element: <AppLayout />,
+        path: "/p/:id",
+        element: <RequestPayView />,
+      },
+      {
+        element: <RequireAuth />,
         children: [
           {
             path: "/",

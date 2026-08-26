@@ -2,6 +2,11 @@
 
 Record every create/update of components under `src/components/ui/` so other agents can discover new APIs.
 
+## 2026-08-26
+
+- **Tooltip:** `triggerClassName` on the trigger wrapper. Cardinal `side` values (`top` / `right` / `bottom` / `left`) center on that edge; eight composite values (`top-left`, `left-bottom`, …) edge-align.
+- **Overlay (`FLOATING_SIDE`):** Twelve placements relative to the trigger. Composite sides resolve to a cardinal side plus `align` and ignore a passed `align`. Cardinal sides still use the caller’s `align` (default `start`).
+
 ## 2026-08-25
 
 - **DateRangePicker:** Second calendar click may be the same day as the first (single-day range). Custom one-day ranges show one date, not `MMM d, yyyy – MMM d, yyyy`.

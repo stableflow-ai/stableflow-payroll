@@ -6,6 +6,7 @@ import { TokenNetworkDialog } from "@/components/token-network-dialog/TokenNetwo
 import { WalletConnectDialog } from "@/components/WalletConnect";
 import {
   useCreatePayRequestMutation,
+  useDisablePayRequestMutation,
   useRequestPaymentsQuery,
   useRequestWithdrawCountQuery,
 } from "@/hooks/use-request-payment";
@@ -21,6 +22,7 @@ import { getAddressPlaceholder, sameAddress } from "@/utils";
 import type { ChainKind } from "@/wallet";
 import { TokenSelectButton } from "./components/TokenSelectButton";
 import { AdvanceOption } from "./components/request/AdvanceOption";
+import { DeletePaymentRequestDialog } from "./components/request/DeletePaymentRequestDialog";
 import { GenerateLinkDialog } from "./components/request/GenerateLinkDialog";
 import { ReceivedPaymentList } from "./components/request/ReceivedPaymentList";
 import { ReceivingAddressField } from "./components/request/ReceivingAddressField";
@@ -40,6 +42,7 @@ export function RequestPaymentView() {
   const listQuery = useRequestPaymentsQuery();
   const withdrawCountQuery = useRequestWithdrawCountQuery();
   const createMutation = useCreatePayRequestMutation();
+  const disableMutation = useDisablePayRequestMutation();
   const withdrawMutation = useRequestWithdraw();
   const owners = useConnectedWallets();
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
@@ -49,8 +52,9 @@ export function RequestPaymentView() {
   const [amount, setAmount] = useState("");
   const [destToken, setDestToken] = useState<IntentsToken | null>(null);
   const [destDialogOpen, setDestDialogOpen] = useState(false);
-  const [advanceOpen, setAdvanceOpen] = useState(false);
+  const [paymentName, setPaymentName] = useState("");
   const [description, setDescription] = useState("");
+  const [deleting, setDeleting] = useState<ReceivedPaymentView | null>(null);
   const [receivePrivately, setReceivePrivately] = useState(false);
   const [activating, setActivating] = useState(false);
   const [showAddressErrors, setShowAddressErrors] = useState(false);
@@ -177,7 +181,6 @@ export function RequestPaymentView() {
       setReceivePrivately(false);
       return;
     }
-    if (!advanceOpen) setAdvanceOpen(true);
     if (destKind && addressInput.trim()) {
       try {
         const intentsAccountId = toIntentsAccountId(addressInput, destKind);
@@ -202,6 +205,11 @@ export function RequestPaymentView() {
       toast.fail({ title: "Enter a receiving amount" });
       return;
     }
+    const name = paymentName.trim();
+    if (!name) {
+      toast.fail({ title: "Enter a payment name" });
+      return;
+    }
     const error = receivingAddressError(addressInput, destKind);
     if (error) {
       toast.fail({ title: error === "Address cannot be empty" ? "Fix the receiving address" : error });
@@ -216,6 +224,7 @@ export function RequestPaymentView() {
         network: destToken.blockchain,
         recipient_address: addressInput.trim(),
         token: destToken.symbol,
+        name,
         memo: memo || undefined,
         private_recipient_address: receivePrivately
           ? toIntentsAccountId(addressInput, destKind)
@@ -271,10 +280,23 @@ export function RequestPaymentView() {
     void runWithdraw(row);
   }, [owners]);
 
+  async function handleDelete() {
+    if (!deleting) return;
+    try {
+      await disableMutation.mutateAsync(deleting.id);
+      toast.success({ title: "Payment request deleted" });
+      setDeleting(null);
+    } catch (error) {
+      toast.fail({
+        title: error instanceof Error ? error.message : "Could not delete payment request",
+      });
+    }
+  }
+
   return (
     <>
-      <div className="mx-auto flex w-full max-w-[776px] flex-col gap-6">
-        <Card className="w-full px-6 py-7 sm:px-8">
+      <div className="flex w-full flex-col gap-6">
+        <Card className="mx-auto w-full max-w-[776px] px-6 py-7 sm:px-8">
           <ReceivingAddressField
             value={addressInput}
             onChange={handleAddressChange}
@@ -285,8 +307,8 @@ export function RequestPaymentView() {
           />
 
           <div className="mt-8">
-            <p className="font-montserrat text-sm font-medium text-[#606060]">
-              Set receiving token amount
+            <p className="font-montserrat text-sm font-medium capitalize text-[#606060]">
+              Set Payment
             </p>
             <div className="mt-2 flex items-end justify-between gap-3">
               <InputNumber
@@ -302,8 +324,8 @@ export function RequestPaymentView() {
           </div>
 
           <AdvanceOption
-            open={advanceOpen}
-            onToggle={() => setAdvanceOpen((value) => !value)}
+            paymentName={paymentName}
+            onPaymentNameChange={setPaymentName}
             description={description}
             onDescriptionChange={setDescription}
             receivePrivately={receivePrivately}
@@ -342,6 +364,7 @@ export function RequestPaymentView() {
           onWithdraw={(row) => {
             void runWithdraw(row);
           }}
+          onDelete={setDeleting}
         />
       </div>
 
@@ -358,6 +381,16 @@ export function RequestPaymentView() {
         open={linkDialogOpen}
         url={paymentLink}
         onClose={() => setLinkDialogOpen(false)}
+      />
+
+      <DeletePaymentRequestDialog
+        open={Boolean(deleting)}
+        row={deleting}
+        loading={disableMutation.isPending}
+        onClose={() => setDeleting(null)}
+        onConfirm={() => {
+          void handleDelete();
+        }}
       />
 
       {walletDialogOpen ? (

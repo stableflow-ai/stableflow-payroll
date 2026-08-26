@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { queryKeys } from "@/api/query-keys";
 import {
   createPayRequest,
+  disablePayRequest,
   getPayRequest,
   getRequestPayments,
   getRequestWithdrawCount,
@@ -36,8 +37,9 @@ export function usePayRequestDetailQuery(id: number | null) {
   const token = useAuthStore((state) => state.token);
   return useQuery({
     queryKey: queryKeys.request.detail(id ?? 0),
-    queryFn: () => getPayRequest(id!),
-    enabled: Boolean(token) && Boolean(id),
+    queryFn: () => getPayRequest(id!, { auth: Boolean(token) }),
+    enabled: Boolean(id),
+    retry: false,
   });
 }
 
@@ -45,6 +47,16 @@ export function useCreatePayRequestMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (body: PayCreateRequestParam) => createPayRequest(body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.request.all });
+    },
+  });
+}
+
+export function useDisablePayRequestMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: number) => disablePayRequest(id),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.request.all });
     },

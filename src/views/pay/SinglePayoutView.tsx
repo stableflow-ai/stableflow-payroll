@@ -1,5 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconLock } from "@/components/icons/lock";
 import { IconQuestion } from "@/components/icons/question";
@@ -13,7 +12,6 @@ import { queryKeys } from "@/api/query-keys";
 import { useContacts, type Contact } from "@/hooks/use-contacts";
 import { usePayOriginToken } from "@/hooks/use-pay-origin-token";
 import { usePaymentWallet } from "@/hooks/use-payment-wallet";
-import { usePayRequestDetailQuery } from "@/hooks/use-request-payment";
 import { useSinglePayQuote, useSinglePaySwap } from "@/hooks/use-single-payout-api";
 import { useTokenBalancesStore } from "@/stores/token-balances";
 import useToast from "@/hooks/use-toast";
@@ -33,14 +31,9 @@ import {
   AMOUNT_MAX_DECIMALS,
   EMAIL_MAX_LENGTH,
   MEMO_MAX_LENGTH,
-  PAY_REQUEST_STATUS,
   QUICK_PAY_SLIPPAGE_TOLERANCE,
   QUOTE_DEBOUNCE_MS,
 } from "./config";
-import {
-  applyRequestPayoutFields,
-  parsePaymentRequestId,
-} from "./request-utils";
 import {
   detectAddressChainKind,
   formatQuoteErrorMessage,
@@ -73,18 +66,11 @@ function matchContact(address: string, contacts: Contact[]): Contact | null {
 }
 
 export function SinglePayoutView() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const requestId = useMemo(() => parsePaymentRequestId(searchParams.toString()), [searchParams]);
-  const requestQuery = usePayRequestDetailQuery(requestId);
-  const request = requestQuery.data ?? null;
-  const requestLocked = Boolean(requestId);
-  const requestPayable = request?.status === PAY_REQUEST_STATUS.Pending;
   const queryClient = useQueryClient();
   const toast = useToast();
   const { contacts, addContact, updateContact, deleteContact, isPending: contactsPending } = useContacts();
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const tokens = useIntentsTokensStore((s) => s.tokens);
-  const findByChainAndSymbol = useIntentsTokensStore((s) => s.findByChainAndSymbol);
   const { originToken, setOriginToken } = usePayOriginToken();
   const originKind: ChainKind =
     originToken?.chain.chainKind === "near" || originToken?.chain.chainKind === "solana"
@@ -109,56 +95,10 @@ export function SinglePayoutView() {
   const [editing, setEditing] = useState<Contact | null>(null);
   const [deleting, setDeleting] = useState<Contact | null>(null);
   const [phase, setPhase] = useState<"idle" | "quoting" | "sending" | "done" | "error">("idle");
-  const appliedRequestKeyRef = useRef<number | null>(null);
-  const invalidLinkToastRef = useRef(false);
-  const notPayableToastRef = useRef(false);
 
   useEffect(() => {
     void ensureFresh();
   }, [ensureFresh]);
-
-  useEffect(() => {
-    if (!searchParams.toString() || requestId || invalidLinkToastRef.current) return;
-    invalidLinkToastRef.current = true;
-    toast.fail({ title: "This payment link is invalid" });
-    setSearchParams({}, { replace: true });
-  }, [requestId, searchParams, setSearchParams, toast]);
-
-  useEffect(() => {
-    if (!requestId || !requestQuery.isError || invalidLinkToastRef.current) return;
-    invalidLinkToastRef.current = true;
-    toast.fail({ title: "This payment link is invalid" });
-    setSearchParams({}, { replace: true });
-  }, [requestId, requestQuery.isError, setSearchParams, toast]);
-
-  useEffect(() => {
-    notPayableToastRef.current = false;
-  }, [requestId]);
-
-  useEffect(() => {
-    if (!request || request.status === PAY_REQUEST_STATUS.Pending || notPayableToastRef.current) return;
-    notPayableToastRef.current = true;
-    toast.fail({ title: "This payment request is no longer payable" });
-    setSearchParams({}, { replace: true });
-  }, [request, setSearchParams, toast]);
-
-  useEffect(() => {
-    if (!request) return;
-    if (appliedRequestKeyRef.current === request.id) return;
-    appliedRequestKeyRef.current = request.id;
-    setAddressInput(request.recipient_address);
-    setAmount(request.amount);
-    setMemo(request.memo.slice(0, MEMO_MAX_LENGTH));
-  }, [request]);
-
-  useEffect(() => {
-    if (!request) return;
-    const tokenRaw = request.token.toUpperCase();
-    const token = tokenRaw === "USDC" || tokenRaw === "USDT" ? tokenRaw : null;
-    if (!token) return;
-    const next = findByChainAndSymbol(request.network, token);
-    if (next) setDestToken(next);
-  }, [findByChainAndSymbol, request, tokens]);
 
   const matched = useMemo(() => matchContact(addressInput, contacts), [addressInput, contacts]);
   const destLockChainKind = detectAddressChainKind(addressInput);
@@ -174,18 +114,17 @@ export function SinglePayoutView() {
   }, [matched?.id, matched?.email]);
 
   useEffect(() => {
-    if (requestLocked) return;
     if (!destToken || !destLockChainKind) return;
     if (destToken.chain.chainKind !== destLockChainKind) setDestToken(null);
-  }, [destLockChainKind, destToken, requestLocked]);
+  }, [destLockChainKind, destToken]);
 
   useEffect(() => {
-    if (requestLocked || destToken || !destLockChainKind || tokens.length === 0) return;
+    if (destToken || !destLockChainKind || tokens.length === 0) return;
     const next =
       tokens.find((token) => token.symbol === "USDT" && token.chain.chainKind === destLockChainKind)
       || tokens.find((token) => token.symbol === "USDC" && token.chain.chainKind === destLockChainKind);
     if (next) setDestToken(next);
-  }, [destLockChainKind, destToken, requestLocked, tokens]);
+  }, [destLockChainKind, destToken, tokens]);
 
   const canQuoteDestination = Boolean(destinationAddress && destToken);
 
@@ -206,9 +145,7 @@ export function SinglePayoutView() {
       slippageTolerance: QUICK_PAY_SLIPPAGE_TOLERANCE,
       payer: connectedAddress,
     };
-    if (!requestLocked) return body;
-    if (!requestId || !requestPayable) return null;
-    return applyRequestPayoutFields(body, requestId);
+    return body;
   }, [
     originToken,
     destToken,
@@ -217,9 +154,6 @@ export function SinglePayoutView() {
     walletReady,
     connectedAddress,
     destinationAddress,
-    requestLocked,
-    requestId,
-    requestPayable,
   ]);
 
   const dryQuoteQuery = useSinglePayQuote(quoteBody);
@@ -267,7 +201,7 @@ export function SinglePayoutView() {
       setPhase("quoting");
       const origin = payoutNetworkToken(originToken);
       const dest = payoutNetworkToken(destToken);
-      let swapBody: PaySingleSwapParam = {
+      const swapBody: PaySingleSwapParam = {
         amount: amountForQuote,
         destinationAddress,
         destinationNetwork: dest.network,
@@ -279,12 +213,6 @@ export function SinglePayoutView() {
         payer: paymentWalletAddress,
         notifyEmail: notifyEmailParam(notify, email),
       };
-      if (requestLocked) {
-        if (!requestId || !requestPayable) {
-          throw new Error("This payment request is no longer payable");
-        }
-        swapBody = applyRequestPayoutFields(swapBody, requestId);
-      }
       const memoValue = memo.trim();
       if (memoValue) swapBody.memo = memoValue;
 
@@ -310,10 +238,6 @@ export function SinglePayoutView() {
     onSuccess: () => {
       setPhase("done");
       toast.success({ title: "Payment submitted" });
-      if (requestLocked) {
-        appliedRequestKeyRef.current = null;
-        setSearchParams({}, { replace: true });
-      }
       resetForm();
       window.setTimeout(() => setPhase("idle"), 1500);
     },
@@ -338,17 +262,12 @@ export function SinglePayoutView() {
     && quote
     && !dryQuoteStale
     && !quoteError
-    && !sending
-    && (!requestLocked || requestPayable),
+    && !sending,
   );
 
   function handleSend() {
     if (!connectedAddress) {
       paymentWallet.connectWallet();
-      return;
-    }
-    if (requestLocked && !requestPayable) {
-      toast.fail({ title: "This payment request is no longer payable" });
       return;
     }
     void settleMutation.mutateAsync();
@@ -360,7 +279,6 @@ export function SinglePayoutView() {
         <RecipientAddressField
           value={addressInput}
           matched={matched}
-          locked={requestLocked}
           onChange={setAddressInput}
           onClear={() => {
             setAddressInput("");
@@ -377,15 +295,11 @@ export function SinglePayoutView() {
               decimals={AMOUNT_MAX_DECIMALS}
               onNumberChange={setAmount}
               placeholder="0"
-              readOnly={requestLocked}
               className="min-w-0 flex-1 bg-transparent font-montserrat text-[26px] font-medium text-black outline-none"
             />
             <TokenSelectButton
               token={destToken}
-              disabled={requestLocked}
-              onClick={() => {
-                if (!requestLocked) setDestDialogOpen(true);
-              }}
+              onClick={() => setDestDialogOpen(true)}
             />
           </div>
           <div className="mt-4 h-px w-full bg-[#e3e3e3]" />
@@ -406,7 +320,9 @@ export function SinglePayoutView() {
         </div>
 
         <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="font-montserrat text-xs text-[#70788a]">Est. Cost -</span>
+          <span className="font-montserrat text-xs text-[#70788a]">
+            Est. Cost {amountInDisplay}
+          </span>
           <span className="inline-flex h-[26px] items-center gap-1.5 rounded-[13px] border border-[#d0f348] bg-[rgba(208,243,72,0.2)] px-2.5 font-montserrat text-xs font-medium text-[#84a20f]">
             <IconLock className="size-3" />
             Private by default

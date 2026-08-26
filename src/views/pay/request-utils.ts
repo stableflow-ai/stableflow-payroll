@@ -1,14 +1,13 @@
-import { getChainByNetwork } from "@/config/chains";
+import { getChainByNetwork, txExplorerUrl } from "@/config/chains";
 import type { PaySingleQuoteParam } from "@/types/payout";
 import type { PayRequestItem } from "@/types/request-payment";
 import type { IntentsToken } from "@/stores/intents-tokens";
-import type { WalletChainKind } from "@/utils";
+import { formatAmount, type WalletChainKind } from "@/utils";
 import type { ChainKind } from "@/wallet";
 import { detectAddressKind } from "./batch-utils";
 import {
   PAY_REQUEST_MODE,
   PAY_REQUEST_STATUS,
-  PAYMENT_REQUEST_QUERY,
 } from "./config";
 import { detectAddressChainKind } from "./utils";
 
@@ -50,18 +49,15 @@ export function activateErrorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-export function parsePaymentRequestId(search: string): number | null {
-  const raw = search.startsWith("?") ? search.slice(1) : search;
-  if (!raw) return null;
-  const params = new URLSearchParams(raw);
-  const id = Number.parseInt(params.get(PAYMENT_REQUEST_QUERY.Id)?.trim() ?? "", 10);
+export function parsePaymentRequestId(raw: string | undefined | null): number | null {
+  const id = Number.parseInt(String(raw ?? "").trim(), 10);
   if (!Number.isInteger(id) || id <= 0) return null;
   return id;
 }
 
 export function buildPaymentRequestUrl(origin: string, id: number): string {
   const base = origin.replace(/\/+$/, "");
-  return `${base}/pay?${PAYMENT_REQUEST_QUERY.Id}=${id}`;
+  return `${base}/p/${id}`;
 }
 
 export function applyRequestPayoutFields(
@@ -73,6 +69,7 @@ export function applyRequestPayoutFields(
 
 export type ReceivedPaymentView = {
   id: number;
+  paymentName: string;
   amount: string;
   symbol: "USDC" | "USDT";
   network: string;
@@ -80,6 +77,10 @@ export type ReceivedPaymentView = {
   chainKind: ChainKind;
   createdAt: string;
   address: string;
+  paidAddress: string;
+  paidAt: string;
+  completedTxHash: string;
+  withdrawedTxHash: string;
   private: boolean;
   status: string;
 };
@@ -103,6 +104,7 @@ export function toReceivedPaymentView(item: PayRequestItem): ReceivedPaymentView
     ?? "evm";
   return {
     id: item.id,
+    paymentName: item.name,
     amount: item.amount,
     symbol,
     network: chain?.chainName ?? item.network,
@@ -110,6 +112,10 @@ export function toReceivedPaymentView(item: PayRequestItem): ReceivedPaymentView
     chainKind,
     createdAt: item.created_at,
     address: item.recipient_address,
+    paidAddress: item.payer,
+    paidAt: item.paid_at,
+    completedTxHash: item.destination_tx_hash,
+    withdrawedTxHash: item.withdraw_tx_hash,
     private: item.mode === PAY_REQUEST_MODE.Private,
     status: item.status,
   };
@@ -123,4 +129,25 @@ export function receivedPaymentStatusLabel(row: ReceivedPaymentView): string {
   if (row.status === PAY_REQUEST_STATUS.Submitted) return "Submitted";
   if (row.status === PAY_REQUEST_STATUS.Failed) return "Failed";
   return row.status;
+}
+
+export function requestStatusExplorerUrl(row: ReceivedPaymentView): string | null {
+  if (row.status === PAY_REQUEST_STATUS.Withdrawed) {
+    return txExplorerUrl(row.blockchain, row.withdrawedTxHash);
+  }
+  if (!row.private && row.status === PAY_REQUEST_STATUS.Completed) {
+    return txExplorerUrl(row.blockchain, row.completedTxHash);
+  }
+  return null;
+}
+
+export function formatCouponAmount(amount: string): { whole: string; fraction: string } {
+  const formatted = formatAmount(amount, { prefix: "", maxDecimals: 6, padDecimals: false });
+  const [whole, fraction] = formatted.split(".");
+  return { whole, fraction };
+}
+
+export function truncateMiddle(text: string, prefix = 5, suffix = 6): string {
+  if (text.length <= prefix + suffix) return text;
+  return `${text.slice(0, prefix)}...${text.slice(-suffix)}`;
 }

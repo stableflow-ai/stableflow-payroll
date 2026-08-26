@@ -11,6 +11,7 @@ import {
 } from "date-fns";
 
 export const DATE_FORMAT = {
+  Month: "month",
   MonthDay: "monthDay",
   MonthDayYear: "monthDayYear",
   DateTime: "dateTime",
@@ -19,6 +20,7 @@ export const DATE_FORMAT = {
 export type DateFormatVariant = (typeof DATE_FORMAT)[keyof typeof DATE_FORMAT];
 
 const DATE_FORMAT_PATTERN = {
+  [DATE_FORMAT.Month]: "MMM",
   [DATE_FORMAT.MonthDay]: "MMM d",
   [DATE_FORMAT.MonthDayYear]: "MMM d, yyyy",
   [DATE_FORMAT.DateTime]: "MMM d, yyyy HH:mm",

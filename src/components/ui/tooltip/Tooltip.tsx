@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import {
+  FLOATING_ALIGN,
   FLOATING_SIDE,
   type FloatingSide,
   useFloatingPosition,
@@ -15,6 +16,7 @@ export type TooltipProps = {
   leaveDelay?: number;
   side?: FloatingSide;
   className?: string;
+  triggerClassName?: string;
 };
 
 export function Tooltip(props: TooltipProps) {
@@ -24,6 +26,7 @@ export function Tooltip(props: TooltipProps) {
     leaveDelay = TOOLTIP_LEAVE_DELAY_MS,
     side = FLOATING_SIDE.Top,
     className,
+    triggerClassName,
   } = props;
   const triggerRef = useRef<HTMLSpanElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -34,6 +37,7 @@ export function Tooltip(props: TooltipProps) {
     triggerRef,
     panelRef,
     side,
+    align: FLOATING_ALIGN.Center,
     offset: 8,
   });
 
@@ -78,7 +82,7 @@ export function Tooltip(props: TooltipProps) {
     <>
       <span
         ref={triggerRef}
-        className="inline-flex max-w-full"
+        className={cn("inline-flex max-w-full", triggerClassName)}
         onMouseEnter={show}
         onMouseLeave={hide}
       >
