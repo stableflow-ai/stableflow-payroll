@@ -4,6 +4,7 @@ import {
   CartesianGrid,
   Cell,
   LabelList,
+  Rectangle,
   ResponsiveContainer,
   Tooltip,
   XAxis,
@@ -45,6 +46,31 @@ function formatChange(value: number) {
   return `${sign}${value}%`;
 }
 
+function barFill(index: number, lastIndex: number) {
+  return index === lastIndex ? CHART_BAR_ACTIVE : CHART_BAR_MUTED;
+}
+
+function VolumeActiveBar(props: {
+  x?: number;
+  y?: number;
+  width?: number;
+  height?: number;
+  index?: number;
+  lastIndex: number;
+}) {
+  const { lastIndex, index = 0, x, y, width, height } = props;
+  return (
+    <Rectangle
+      x={x}
+      y={y}
+      width={width}
+      height={height}
+      fill={barFill(index, lastIndex)}
+      radius={12}
+    />
+  );
+}
+
 function BarTopLabel(props: {
   x?: number;
   y?: number;
@@ -60,12 +86,14 @@ function BarTopLabel(props: {
   const cx = x + width / 2;
   const change = point.changePercent;
   const up = change != null && change >= 0;
+  const pillCx = cx + 20;
+  const pillY = y - 8;
 
   return (
     <g>
       <text
         x={cx}
-        y={y - 32}
+        y={y - 18}
         textAnchor="middle"
         className="fill-black font-montserrat text-[14px] font-medium"
       >
@@ -74,16 +102,16 @@ function BarTopLabel(props: {
       {change != null ? (
         <>
           <rect
-            x={cx - 23.5}
-            y={y - 26}
+            x={pillCx - 23.5}
+            y={pillY}
             width={47}
             height={26}
             rx={13}
             fill={up ? CHANGE_UP_BG : CHANGE_DOWN_BG}
           />
           <text
-            x={cx}
-            y={y - 8}
+            x={pillCx}
+            y={pillY + 18}
             textAnchor="middle"
             className={cn(
               "font-montserrat text-[12px] font-medium",
@@ -207,11 +235,16 @@ export function TotalPaymentCard(props: {
                 );
               }}
             />
-            <Bar dataKey="value" radius={[12, 12, 12, 12]} maxBarSize={60}>
+            <Bar
+              dataKey="value"
+              radius={[12, 12, 12, 12]}
+              maxBarSize={60}
+              activeBar={<VolumeActiveBar lastIndex={points.length - 1} />}
+            >
               {points.map((_, index) => (
                 <Cell
                   key={points[index]?.label ?? index}
-                  fill={index === points.length - 1 ? CHART_BAR_ACTIVE : CHART_BAR_MUTED}
+                  fill={barFill(index, points.length - 1)}
                 />
               ))}
               <LabelList

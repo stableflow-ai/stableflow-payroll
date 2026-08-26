@@ -26,6 +26,7 @@ import { PaymentCalendarCard } from "./components/PaymentCalendarCard";
 import { PayoutNetworksCard } from "./components/PayoutNetworksCard";
 import { TotalPaymentCard } from "./components/TotalPaymentCard";
 import { YearMonthPicker } from "./components/YearMonthPicker";
+import { withVolumeChangePercents } from "./utils";
 
 const DESKTOP_CHART_QUERY = "(min-width: 1024px)";
 
@@ -82,11 +83,7 @@ export function AnalyticsView() {
     }));
   }, [recent.data]);
 
-  const points = (volume.data ?? []).map((point) => ({
-    label: point.label,
-    value: point.value,
-    changePercent: null as number | null,
-  }));
+  const points = withVolumeChangePercents(volume.data ?? []);
 
   return (
     <div className="flex flex-col gap-5">
