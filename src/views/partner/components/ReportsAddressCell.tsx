@@ -5,7 +5,7 @@ import { formatAddress } from "@/utils";
 
 export function ReportsAddressCell(props: {
   address: string;
-  href: string;
+  href?: string | null;
 }) {
   const { address, href } = props;
   const toast = useToast();
@@ -28,15 +28,17 @@ export function ReportsAddressCell(props: {
       >
         <IconCopy className="size-3" />
       </button>
-      <a
-        href={href}
-        target="_blank"
-        rel="noreferrer"
-        className="shrink-0 text-[#909090] hover:text-black"
-        aria-label="Open in explorer"
-      >
-        <IconOutLink />
-      </a>
+      {href ? (
+        <a
+          href={href}
+          target="_blank"
+          rel="noreferrer"
+          className="shrink-0 text-[#909090] hover:text-black"
+          aria-label="Open in explorer"
+        >
+          <IconOutLink />
+        </a>
+      ) : null}
     </span>
   );
 }

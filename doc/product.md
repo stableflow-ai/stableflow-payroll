@@ -15,7 +15,7 @@ The previous app (`stableflow-pay-old`) is a visual and payout-flow reference on
 | Home | `/` | shipped | Dashboard: summary, charts, pending. Behind `RequireAuth` + `AppLayout`. Overview, volume, pending, and recent use `/v1/pay/*`. Balance is summed on-chain from connected payer-chain USDT/USDC. |
 | Pay | `/pay`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request` | in progress | See [Pay](#pay). Pending list uses `GET /v1/pay/payments/pending`. History uses `GET /v1/pay/payments`. Address book uses `/v1/pay/recipient*`. |
 | Analytics | `/analytics` | shipped | Month selector, Total Payment chart (`/v1/pay/payments/volume`, day/week/month), latest payouts (`/payments/recent`), calendar / asset mix / networks from `GET /v1/pay/analytics`. Shows a skeleton while analytics loads. |
-| Partner | `/partner`, `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | shipped | See [Partner](#partner). Registration and API Keys use `/v1/pay/partner*`. Reports are mock until the API exists. Support / Terms / Docs are placeholders. |
+| Partner | `/partner`, `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | shipped | See [Partner](#partner). Registration and API Keys use `/v1/pay/partner*`. Reports use `/v1/pay/partner/analytics` and `/v1/pay/partner/payments`. Support / Terms / Docs are placeholders. |
 
 ## Auth
 
@@ -64,12 +64,12 @@ For SDK users. Submenus:
 | Menu | Route | Access |
 | --- | --- | --- |
 | API Keys | `/partner/api-keys` | Only after the user is a Partner. Default landing once they are. |
-| Reports | `/partner/reports` | Only after the user is a Partner. Time / API key / network filters, volume and transaction charts, and a paginated usage table. Mock until the API exists. |
+| Reports | `/partner/reports` | Only after the user is a Partner. Top time / API key / network filters drive volume stats and charts (`GET /v1/pay/partner/analytics`). A paginated usage table has its own API key / source / destination / amount filters (`GET /v1/pay/partner/payments`). |
 | Support | `/partner/support` | Contact. Always available. |
 | Terms of Service | `/partner/terms` | Always available. |
 | Developer Docs | `/partner/docs` | Always available. |
 
-Until Partner status is active, API Keys and Reports must not open. Header **Developer** goes to `/partner`: registration when the user is not a Partner, `/partner/api-keys` after they are. After the user is a Partner, hide the registration form; do not show it again. Partner status comes from `GET /v1/pay/partner` (`null` or empty data means not a Partner). API keys use `/v1/pay/partner/keys`.
+Until Partner status is active, API Keys and Reports must not open. Header **Developer** goes to `/partner`: registration when the user is not a Partner, `/partner/api-keys` after they are. After the user is a Partner, hide the registration form; do not show it again. Partner status comes from `GET /v1/pay/partner` (`null` or empty data means not a Partner). API keys use `/v1/pay/partner/keys`. Reports stats use `GET /v1/pay/partner/analytics`; the table uses `GET /v1/pay/partner/payments`.
 
 Registration fields:
 

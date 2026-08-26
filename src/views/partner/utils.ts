@@ -1,8 +1,6 @@
 import { differenceInCalendarDays, format, startOfDay, subDays } from "date-fns";
-import { getChainByNetwork } from "@/config/chains";
 import { ApiError } from "@/lib/api-error";
 import {
-  isInDateRange,
   lastNDaysRange,
   type DateRangeValue,
 } from "@/components/date-range-picker/utils";
@@ -13,11 +11,12 @@ import {
   LAST_NAME_MAX_LENGTH,
   PURPOSE_MAX_LENGTH,
   REPORT_AMOUNT_FILTER,
+  REPORT_FILTER_ALL,
   TELEGRAM_MAX_LENGTH,
   WEBSITE_MAX_LENGTH,
 } from "./config";
 
-export { isInDateRange, lastNDaysRange };
+export { lastNDaysRange };
 export type { DateRangeValue };
 
 export function maskApiKey(key: string): string {
@@ -65,16 +64,29 @@ export function partnerRegistrationError(input: {
   );
 }
 
-export function matchesAmountFilter(amount: number, filter: string) {
-  if (filter === REPORT_AMOUNT_FILTER.All) return true;
-  if (filter === REPORT_AMOUNT_FILTER.Under1k) return amount >= 0 && amount <= 1000;
-  if (filter === REPORT_AMOUNT_FILTER.From1kTo10k) return amount > 1000 && amount <= 10000;
-  if (filter === REPORT_AMOUNT_FILTER.Over10k) return amount > 10000;
-  return true;
+export function reportOptionalFilter(value: string): string | undefined {
+  return value === REPORT_FILTER_ALL ? undefined : value;
 }
 
-export function chainBlockchain(network: string) {
-  return getChainByNetwork(network)?.blockchain ?? network.toLowerCase();
+export function reportOptionalApiKeyId(value: string): number | undefined {
+  if (value === REPORT_FILTER_ALL) return undefined;
+  const id = Number(value);
+  return Number.isInteger(id) && id > 0 ? id : undefined;
+}
+
+export function reportAmountQuery(filter: string): { min_amount?: number; max_amount?: number } {
+  if (filter === REPORT_AMOUNT_FILTER.Under1k) return { min_amount: 0, max_amount: 1000 };
+  if (filter === REPORT_AMOUNT_FILTER.From1kTo10k) return { min_amount: 1000, max_amount: 10000 };
+  if (filter === REPORT_AMOUNT_FILTER.Over10k) return { min_amount: 10000 };
+  return {};
+}
+
+export function reportDailyDateKey(date: string): string {
+  const trimmed = date.trim();
+  if (/^\d{4}-\d{2}-\d{2}/.test(trimmed)) return trimmed.slice(0, 10);
+  const parsed = new Date(trimmed);
+  if (Number.isNaN(parsed.getTime())) return trimmed;
+  return format(parsed, "yyyy-MM-dd");
 }
 
 export function eachDateKey(range: DateRangeValue) {

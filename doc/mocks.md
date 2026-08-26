@@ -53,9 +53,7 @@ Every mock reader must include this comment:
 
 ## Domains
 
-| Domain | Flag | Fixtures | Hook |
-| --- | --- | --- | --- |
-| partnerReports | `MOCK_ENABLED.partnerReports` | `src/mocks/partner.ts` | `usePartnerReports` (`getPartnerReports`) |
+None. All product screens that needed fixtures now call `/v1/pay/*`.
 
 ## Constraints
 

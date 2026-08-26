@@ -1,7 +1,12 @@
+import { chainDisplayName } from "@/config/chains";
 import { tokenLogoUrl } from "@/lib/logo";
-import type { PartnerReportAsset } from "@/mocks/partner";
 
-export function ReportsAssetCell({ asset }: { asset: PartnerReportAsset }) {
+export type ReportsAsset = {
+  symbol: string;
+  network: string;
+};
+
+export function ReportsAssetCell({ asset }: { asset: ReportsAsset }) {
   return (
     <span className="inline-flex min-w-0 items-center gap-1.5">
       <img
@@ -10,7 +15,7 @@ export function ReportsAssetCell({ asset }: { asset: PartnerReportAsset }) {
         className="size-5 shrink-0 rounded-[12px] object-cover"
       />
       <span className="truncate">
-        {asset.symbol} · {asset.network}
+        {asset.symbol} · {chainDisplayName(asset.network)}
       </span>
     </span>
   );

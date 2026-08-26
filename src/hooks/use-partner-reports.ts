@@ -1,19 +1,23 @@
-import { MOCK_ENABLED } from "@/mocks/config";
-import { getPartnerReports, type PartnerReports } from "@/mocks/partner";
+import { useQuery } from "@tanstack/react-query";
+import { queryKeys } from "@/api/query-keys";
+import { getPartnerAnalytics, getPartnerPayments } from "@/api/partner";
+import { useAuthStore } from "@/stores/auth";
+import type { PayPartnerAnalyticsQuery, PayPartnerPaymentsQuery } from "@/types/partner";
 
-export type { PartnerReports };
+export function usePartnerAnalyticsQuery(params: PayPartnerAnalyticsQuery) {
+  const token = useAuthStore((state) => state.token);
+  return useQuery({
+    queryKey: queryKeys.partner.analytics(params),
+    queryFn: () => getPartnerAnalytics(params),
+    enabled: Boolean(token),
+  });
+}
 
-// TODO(api): replace mock read with TanStack Query when the backend contract is ready.
-// 1. Add types in src/types/partner.ts from the real API (do not reuse mock-local types blindly).
-// 2. Add src/api/partner.ts using http() and append the endpoint table in doc/api.md.
-// 3. Add queryKeys.partner in src/api/query-keys.ts.
-// 4. Switch this hook to useQuery ({ enabled: Boolean(token), queryFn: real api }).
-// 5. Set MOCK_ENABLED.partnerReports = false and delete src/mocks/partner.ts.
-export function usePartnerReports(): PartnerReports {
-  if (!MOCK_ENABLED.partnerReports) {
-    throw new Error(
-      "Partner reports mock is disabled. Wire TanStack Query before turning MOCK_ENABLED.partnerReports off.",
-    );
-  }
-  return getPartnerReports();
+export function usePartnerPaymentsQuery(params: PayPartnerPaymentsQuery) {
+  const token = useAuthStore((state) => state.token);
+  return useQuery({
+    queryKey: queryKeys.partner.payments(params),
+    queryFn: () => getPartnerPayments(params),
+    enabled: Boolean(token),
+  });
 }

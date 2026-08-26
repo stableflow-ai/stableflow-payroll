@@ -39,5 +39,7 @@ export const queryKeys = {
     all: ["partner"] as const,
     me: ["partner", "me"] as const,
     keys: ["partner", "keys"] as const,
+    analytics: (params: unknown) => [...queryKeys.partner.all, "analytics", params] as const,
+    payments: (params: unknown) => [...queryKeys.partner.all, "payments", params] as const,
   },
 } as const;
