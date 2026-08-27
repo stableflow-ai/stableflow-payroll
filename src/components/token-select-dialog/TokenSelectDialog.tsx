@@ -121,7 +121,12 @@ export function TokenSelectDialog({
       } else if (token.blockchain !== chainFilter) {
         return false;
       }
-      if (q && !token.symbol.toLowerCase().includes(q) && !token.chain.chainName.toLowerCase().includes(q)) {
+      if (
+        q
+        && !token.symbol.toLowerCase().includes(q)
+        && !token.providerSymbol.toLowerCase().includes(q)
+        && !token.chain.chainName.toLowerCase().includes(q)
+      ) {
         return false;
       }
       return true;

@@ -70,7 +70,7 @@ export const PAY_REQUEST_MODE = {
 export const REQUEST_LIST_REFRESH_MS = 30_000;
 export const REQUEST_WITHDRAW_COUNT_POLL_MS = 120_000;
 
-export const IMPORT_MAX_ROWS = 100;
+export const IMPORT_MAX_ROWS = 50;
 export const IMPORT_CSV_ACCEPT = ".csv,text/csv";
 export const IMPORT_CSV_TEMPLATE_FILENAME = "payout-import-template.csv";
 export const IMPORT_CSV_TEMPLATE = [

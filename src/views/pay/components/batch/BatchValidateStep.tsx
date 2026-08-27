@@ -100,11 +100,14 @@ export function BatchValidateStep(props: {
           ))}
         </div>
 
+        <p className="mt-6 text-right font-montserrat text-sm text-[#606060]">
+          {rows.length}/{IMPORT_MAX_ROWS}
+        </p>
         <button
           type="button"
           disabled={rows.length >= IMPORT_MAX_ROWS}
           onClick={onAdd}
-          className="mt-6 flex h-9 w-full items-center justify-center gap-2 rounded-[8px] border border-dashed border-black/20 font-montserrat text-sm font-medium text-black disabled:opacity-40"
+          className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-[8px] border border-dashed border-black/20 font-montserrat text-sm font-medium text-black disabled:opacity-40"
         >
           <IconPlus className="size-3" />
           Add one

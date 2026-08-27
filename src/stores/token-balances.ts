@@ -3,7 +3,7 @@ import type { Address } from "viem";
 import { TOKEN_BALANCE_POLL_MS } from "@/components/token-select-dialog/config";
 import { isAddressValid } from "@/utils";
 import type { ChainKind, ChainOwners } from "@/wallet";
-import { isNativeToken, type IntentsToken } from "@/stores/intents-tokens";
+import { isNativeToken, isNearWrappedGasToken, type IntentsToken } from "@/stores/intents-tokens";
 import { getPublicClientForNetwork, readErc20Balance, readErc20Balances, readNativeBalance } from "@/wallet/evm/balance";
 import { readNativeNearBalance, readNearFtBalance } from "@/wallet/near/balance";
 import { readNativeSolBalance, readSplBalance } from "@/wallet/solana/balance";
@@ -116,7 +116,7 @@ async function readRawBalance(owner: string, token: IntentsToken): Promise<bigin
   const kind = token.chain.chainKind;
   const native = isNativeToken(token);
   if (kind === "near") {
-    if (native) return readNativeNearBalance({ owner });
+    if (native || isNearWrappedGasToken(token)) return readNativeNearBalance({ owner });
     if (!token.contractAddress) throw new Error("Missing contract address");
     return readNearFtBalance({ tokenContract: token.contractAddress, owner });
   }

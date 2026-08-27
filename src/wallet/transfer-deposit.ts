@@ -2,9 +2,9 @@
  * Send origin tokens to the 1Click deposit address returned by single swap.
  */
 
-import { isNativeToken, type IntentsToken } from "@/stores/intents-tokens";
+import { isNativeToken, isNearWrappedGasToken, type IntentsToken } from "@/stores/intents-tokens";
 import { transferErc20, transferNativeEvm } from "./evm/transfer";
-import { transferFt, transferNativeNear } from "./near/transfer";
+import { transferFt, transferNativeNear, transferNearViaWrap } from "./near/transfer";
 import { transferNativeSol, transferSpl } from "./solana/transfer";
 import { transferNativeTrx, transferTrc20 } from "./tron/transfer";
 
@@ -43,6 +43,10 @@ export async function transferToDepositAddress(input: {
   }
 
   if (kind === "near") {
+    if (isNearWrappedGasToken(token)) {
+      if (!token.contractAddress) throw new Error("Missing token contract");
+      return transferNearViaWrap({ tokenContract: token.contractAddress, to, amountIn });
+    }
     if (native) return transferNativeNear({ to, amountIn });
     if (!token.contractAddress) throw new Error("Missing token contract");
     return transferFt({ tokenContract: token.contractAddress, to, amountIn });

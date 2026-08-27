@@ -16,6 +16,7 @@ export const PAYOUT_SYMBOLS = [
   "USDC",
   "USDT",
   "DAI",
+  "WETH",
   "ETH",
   "BNB",
   "AVAX",
@@ -50,10 +51,13 @@ interface ProviderToken {
 }
 
 const PAYOUT_SYMBOL_SET = new Set<string>(PAYOUT_SYMBOLS);
+export const WRAP_NEAR_CONTRACT = "wrap.near";
+export const WRAP_NEAR_ASSET_ID = "nep141:wrap.near";
 
 export function normalizeSymbol(symbol: string): PayoutSymbol | null {
   const upper = String(symbol || "").toUpperCase();
   if (upper === "USDT0") return "USDT";
+  if (upper === "WNEAR") return "NEAR";
   if (PAYOUT_SYMBOL_SET.has(upper)) return upper as PayoutSymbol;
   return null;
 }
@@ -66,7 +70,16 @@ export function isNativeToken(token: Pick<IntentsToken, "contractAddress"> | nul
   return lower === "native" || lower === ZERO_ADDRESS;
 }
 
-function filterTokens(raw: ProviderToken[]): IntentsToken[] {
+export function isNearWrappedGasToken(
+  token: Pick<IntentsToken, "blockchain" | "assetId" | "contractAddress"> | null | undefined,
+): boolean {
+  if (!token || token.blockchain !== "near") return false;
+  const assetId = String(token.assetId || "").trim().toLowerCase();
+  if (assetId === WRAP_NEAR_ASSET_ID) return true;
+  return String(token.contractAddress || "").trim().toLowerCase() === WRAP_NEAR_CONTRACT;
+}
+
+export function filterTokens(raw: ProviderToken[]): IntentsToken[] {
   const chainByCode = new Map(FIXED_CHAINS.map((c) => [c.blockchain, c]));
   const out: IntentsToken[] = [];
   for (const token of raw) {
@@ -74,6 +87,7 @@ function filterTokens(raw: ProviderToken[]): IntentsToken[] {
     if (!chain) continue;
     const symbol = normalizeSymbol(token.symbol);
     if (!symbol) continue;
+    if (symbol === "NEAR" && token.blockchain !== "near") continue;
     if (!Number.isInteger(token.decimals) || token.decimals < 0) continue;
     out.push({
       assetId: token.assetId,
@@ -87,7 +101,9 @@ function filterTokens(raw: ProviderToken[]): IntentsToken[] {
       logo: tokenLogoUrl(symbol),
     });
   }
-  return out;
+  const hasNearWrap = out.some((token) => token.symbol === "NEAR" && isNearWrappedGasToken(token));
+  if (!hasNearWrap) return out;
+  return out.filter((token) => !(token.symbol === "NEAR" && token.blockchain === "near" && isNativeToken(token)));
 }
 
 interface IntentsTokensState {
@@ -148,7 +164,7 @@ export const useIntentsTokensStore = create<IntentsTokensState>()(
       },
     }),
     {
-      name: "stableflow-pay:intents-tokens:v2.1",
+      name: "stableflow-pay:intents-tokens:v2.4",
       partialize: (s) => ({ tokens: s.tokens, fetchedAt: s.fetchedAt }),
     },
   ),
