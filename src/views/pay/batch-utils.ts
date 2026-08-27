@@ -1,7 +1,7 @@
 import { getChainByNetwork } from "@/config/chains";
 import type { PayBatchReceive } from "@/types/payout";
-import type { IntentsToken, StableSymbol } from "@/stores/intents-tokens";
-import { normalizeSymbol } from "@/stores/intents-tokens";
+import type { IntentsToken, PayoutSymbol } from "@/stores/intents-tokens";
+import { isNativeToken, normalizeSymbol } from "@/stores/intents-tokens";
 import { Big } from "@/utils";
 import type { WalletChainKind } from "@/utils";
 import { AMOUNT_MAX_DECIMALS, MEMO_MAX_LENGTH } from "./config";
@@ -24,7 +24,7 @@ export type BatchDraftPatch = Partial<Pick<BatchDraft, "address" | "amount" | "m
 
 export type FindTokenByChainAndSymbol = (
   blockchain: string,
-  symbol: StableSymbol,
+  symbol: PayoutSymbol,
 ) => IntentsToken | undefined;
 
 type Field = "address" | "amount" | "token" | "network" | "memo";
@@ -338,7 +338,9 @@ export function isEvmOriginToken(token: IntentsToken | null): boolean {
     token
     && token.chain.chainKind === "evm"
     && token.chain.chainId
-    && token.contractAddress,
+    && token.chain.batchEnabled
+    && token.contractAddress
+    && !isNativeToken(token),
   );
 }
 

@@ -1,33 +1,41 @@
 import { ORIGIN_TOKEN_FALLBACKS } from "./config";
-import type { IntentsToken, StableSymbol } from "@/stores/intents-tokens";
+import { PAYOUT_SYMBOLS, isNativeToken, type IntentsToken, type PayoutSymbol } from "@/stores/intents-tokens";
 
 export function resolvePayOriginToken({
   savedOriginAssetId,
   findByAssetId,
   findByChainAndSymbol,
   allowedBlockchains = null,
+  excludeNative = false,
 }: {
   savedOriginAssetId: string | null;
   findByAssetId: (assetId: string) => IntentsToken | undefined;
-  findByChainAndSymbol: (blockchain: string, symbol: StableSymbol) => IntentsToken | undefined;
+  findByChainAndSymbol: (blockchain: string, symbol: PayoutSymbol) => IntentsToken | undefined;
   allowedBlockchains?: string[] | null;
+  excludeNative?: boolean;
 }): IntentsToken | null {
   const allowed = allowedBlockchains?.length ? new Set(allowedBlockchains) : null;
+
+  function accept(token: IntentsToken | undefined): token is IntentsToken {
+    if (!token) return false;
+    if (allowed && !allowed.has(token.blockchain)) return false;
+    if (excludeNative && isNativeToken(token)) return false;
+    return true;
+  }
+
   const saved = savedOriginAssetId ? findByAssetId(savedOriginAssetId) : undefined;
-  if (saved && (!allowed || allowed.has(saved.blockchain))) return saved;
+  if (accept(saved)) return saved;
 
   const defaults = ORIGIN_TOKEN_FALLBACKS
     .map((row) => findByChainAndSymbol(row.blockchain, row.symbol))
-    .filter((token): token is IntentsToken => Boolean(token));
-
-  if (!allowed) return defaults[0] ?? null;
-
-  const allowedDefault = defaults.find((token) => allowed.has(token.blockchain));
-  if (allowedDefault) return allowedDefault;
+    .filter(accept);
+  if (defaults[0]) return defaults[0];
 
   for (const chain of allowedBlockchains || []) {
-    const token = findByChainAndSymbol(chain, "USDT") || findByChainAndSymbol(chain, "USDC");
-    if (token) return token;
+    for (const symbol of PAYOUT_SYMBOLS) {
+      const token = findByChainAndSymbol(chain, symbol);
+      if (accept(token)) return token;
+    }
   }
   return null;
 }

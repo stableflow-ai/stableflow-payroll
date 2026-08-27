@@ -1,6 +1,6 @@
 import { useWallet as useTronAdapter } from "@tronweb3/tronwallet-adapter-react-hooks";
 import { useWalletModal as useTronWalletModal } from "@tronweb3/tronwallet-adapter-react-ui";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { isAddressValid } from "@/utils";
 import type { GeneratedIntent, IntentSignInput, IntentSignedPayload, UseWalletResult, WalletAccount } from "../types";
 import {
@@ -11,6 +11,7 @@ import {
   payloadAsText,
   walletDoesNotSupportSigning,
 } from "../intents-sign";
+import { setTronSigner } from "./session";
 
 export function useTronWallet(): UseWalletResult {
   const {
@@ -19,8 +20,18 @@ export function useTronWallet(): UseWalletResult {
     connecting,
     disconnect,
     signMessage: adapterSignMessage,
+    signTransaction,
   } = useTronAdapter();
   const { setVisible, visible } = useTronWalletModal();
+
+  useEffect(() => {
+    if (!address || !signTransaction) {
+      setTronSigner(null);
+      return;
+    }
+    setTronSigner({ address, signTransaction });
+    return () => setTronSigner(null);
+  }, [address, signTransaction]);
 
   const account = useMemo<WalletAccount | null>(() => {
     if (!address) return null;

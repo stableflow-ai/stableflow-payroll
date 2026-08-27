@@ -19,6 +19,7 @@ import {
   HISTORY_PAGE_SIZE,
   HISTORY_STATUS_FILTER,
 } from "./config";
+import { PAYOUT_SYMBOLS } from "@/stores/intents-tokens";
 import { PayoutsTable } from "./components/payout-table/PayoutsTable";
 import { paymentRowStatus } from "./components/payout-table/PayoutStatusCell";
 import {
@@ -152,8 +153,7 @@ export function TransactionHistoryView() {
             triggerClassName="w-full"
             options={[
               { value: HISTORY_ASSET_FILTER.All, label: "All Assets" },
-              { value: HISTORY_ASSET_FILTER.USDT, label: "USDT" },
-              { value: HISTORY_ASSET_FILTER.USDC, label: "USDC" },
+              ...PAYOUT_SYMBOLS.map((symbol) => ({ value: symbol, label: symbol })),
             ]}
           />
           <DateRangePicker

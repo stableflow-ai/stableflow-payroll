@@ -1,7 +1,8 @@
 import { getChainByNetwork, txExplorerUrl } from "@/config/chains";
 import type { PaySingleQuoteParam } from "@/types/payout";
 import type { PayRequestItem } from "@/types/request-payment";
-import type { IntentsToken } from "@/stores/intents-tokens";
+import type { IntentsToken, PayoutSymbol } from "@/stores/intents-tokens";
+import { normalizeSymbol } from "@/stores/intents-tokens";
 import { formatAmount, type WalletChainKind } from "@/utils";
 import type { ChainKind } from "@/wallet";
 import { detectAddressKind } from "./batch-utils";
@@ -71,7 +72,7 @@ export type ReceivedPaymentView = {
   id: number;
   paymentName: string;
   amount: string;
-  symbol: "USDC" | "USDT";
+  symbol: PayoutSymbol;
   network: string;
   blockchain: string;
   chainKind: ChainKind;
@@ -98,7 +99,7 @@ export function pendingWithdrawCount(items: readonly PayRequestItem[]): number {
 export function toReceivedPaymentView(item: PayRequestItem): ReceivedPaymentView {
   const chain = getChainByNetwork(item.network);
   const token = item.token.toUpperCase();
-  const symbol = token === "USDT" ? "USDT" : "USDC";
+  const symbol = normalizeSymbol(token) ?? "USDC";
   const chainKind = chain?.chainKind
     ?? detectAddressChainKind(item.recipient_address)
     ?? "evm";

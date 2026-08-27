@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOutletContext } from "react-router-dom";
-import { TokenNetworkDialog } from "@/components/token-network-dialog/TokenNetworkDialog";
-import { PAYER_BLOCKCHAINS } from "@/config/chains";
+import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
+import { BATCH_BLOCKCHAINS } from "@/config/chains";
 import { queryKeys } from "@/api/query-keys";
 import { useBatchPayQuote, useBatchPaySwap } from "@/hooks/use-batch-payout-api";
 import { usePayOriginToken } from "@/hooks/use-pay-origin-token";
@@ -59,7 +59,7 @@ export function BatchPayoutView() {
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const findByChainAndSymbol = useIntentsTokensStore((s) => s.findByChainAndSymbol);
   const tokensReady = useIntentsTokensStore((s) => s.tokens.length > 0);
-  const { originToken, setOriginToken } = usePayOriginToken();
+  const { originToken, setOriginToken } = usePayOriginToken(BATCH_BLOCKCHAINS, { excludeNative: true });
   const originKind: ChainKind =
     originToken?.chain.chainKind === "near" || originToken?.chain.chainKind === "solana"
       ? originToken.chain.chainKind
@@ -197,8 +197,8 @@ export function BatchPayoutView() {
         throw new BalanceGateError("Connect your payment wallet first");
       }
       if (!isEvmOriginToken(originToken) || !originToken.chain.chainId || !originToken.contractAddress) {
-        toast.fail({ title: "Batch payout currently supports EVM origin tokens only" });
-        throw new BalanceGateError("Batch payout currently supports EVM origin tokens only");
+        toast.fail({ title: "Batch payout currently supports EVM ERC-20 origin tokens only" });
+        throw new BalanceGateError("Batch payout currently supports EVM ERC-20 origin tokens only");
       }
       const payer = wallet.account.address;
       setPhase("quoting");
@@ -328,31 +328,30 @@ export function BatchPayoutView() {
         />
       ) : null}
 
-      <TokenNetworkDialog
+      <TokenSelectDialog
         open={originDialogOpen}
         onClose={() => setOriginDialogOpen(false)}
         title="Paying token"
-        initialSymbol={(originToken?.symbol || "USDT") as "USDC" | "USDT"}
         selectedAssetId={originToken?.assetId}
         showBalances
         balanceOwners={balanceOwners}
-        allowedBlockchains={PAYER_BLOCKCHAINS}
+        allowedBlockchains={BATCH_BLOCKCHAINS}
+        excludeNative
         onSelect={({ token }) => {
           setOriginToken(token);
           setOriginDialogOpen(false);
           const kind = token.chain.chainKind;
-          const owner = kind === "evm" || kind === "near" || kind === "solana"
+          const owner = kind === "evm" || kind === "near" || kind === "solana" || kind === "tron"
             ? balanceOwners[kind]
             : undefined;
           if (owner) void fetchOneBalance(owner, token);
         }}
       />
 
-      <TokenNetworkDialog
+      <TokenSelectDialog
         open={Boolean(destRow)}
         onClose={() => setDestRowId(null)}
         title="Prefer token"
-        initialSymbol={(destRow?.token?.symbol || "USDT") as "USDC" | "USDT"}
         selectedAssetId={destRow?.token?.assetId}
         lockChainKind={destRow?.chainKind}
         onSelect={({ token }) => {

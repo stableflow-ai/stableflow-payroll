@@ -17,6 +17,7 @@ import {
   type ReactNode,
 } from "react";
 import { getLogo } from "@/lib/logo";
+import { setNearSelector } from "./session";
 
 interface NearWalletContextValue {
   selector: WalletSelector | null;
@@ -65,6 +66,7 @@ export function NearWalletProvider({ children }: { children: ReactNode }) {
         });
         if (cancelled) return;
         const nextModal = setupModal(nextSelector, { contractId: "" });
+        setNearSelector(nextSelector);
         const syncAccounts = () => {
           const state = nextSelector.store.getState();
           const active = state.accounts.find((account) => account.active)?.accountId || null;
@@ -84,6 +86,7 @@ export function NearWalletProvider({ children }: { children: ReactNode }) {
 
     return () => {
       cancelled = true;
+      setNearSelector(null);
       unsubscribe?.();
     };
   }, []);

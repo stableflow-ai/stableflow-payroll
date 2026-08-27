@@ -28,6 +28,7 @@ describe("formatAmount", () => {
 
   it("shows a dust label when enabled", () => {
     expect(formatAmount("0.001", { maxDecimals: 2, showDust: true })).toBe("$ <0.01");
+    expect(formatAmount("0.001", { prefix: "", maxDecimals: 2, showDust: true })).toBe("<0.01");
   });
 
   it("accepts Big instances and invalid input", () => {

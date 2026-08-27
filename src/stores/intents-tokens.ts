@@ -1,5 +1,5 @@
 /**
- * Cached 1Click supported tokens (USDT/USDC on registered chains).
+ * Cached 1Click supported tokens on registered chains.
  * Refresh every 30 minutes; persist to localStorage.
  */
 
@@ -10,14 +10,30 @@ import { tokenLogoUrl } from "@/lib/logo";
 
 const ONE_CLICK_TOKENS_URL = "https://1click.chaindefuser.com/v0/tokens";
 const REFRESH_MS = 30 * 60 * 1000;
+const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
-export type StableSymbol = "USDC" | "USDT";
+export const PAYOUT_SYMBOLS = [
+  "USDC",
+  "USDT",
+  "ETH",
+  "BNB",
+  "DAI",
+  "TRX",
+  "SOL",
+  "LINK",
+  "AVAX",
+  "NEAR",
+] as const;
+
+export type PayoutSymbol = (typeof PAYOUT_SYMBOLS)[number];
+/** @deprecated Use PayoutSymbol. */
+export type StableSymbol = PayoutSymbol;
 
 export interface IntentsToken {
   assetId: string;
   decimals: number;
   blockchain: string;
-  symbol: StableSymbol;
+  symbol: PayoutSymbol;
   providerSymbol: string;
   price: number;
   contractAddress: string | null;
@@ -34,11 +50,21 @@ interface ProviderToken {
   contractAddress?: string | null;
 }
 
-export function normalizeSymbol(symbol: string): StableSymbol | null {
+const PAYOUT_SYMBOL_SET = new Set<string>(PAYOUT_SYMBOLS);
+
+export function normalizeSymbol(symbol: string): PayoutSymbol | null {
   const upper = String(symbol || "").toUpperCase();
-  if (upper === "USDC") return "USDC";
-  if (upper === "USDT" || upper === "USDT0") return "USDT";
+  if (upper === "USDT0") return "USDT";
+  if (PAYOUT_SYMBOL_SET.has(upper)) return upper as PayoutSymbol;
   return null;
+}
+
+export function isNativeToken(token: Pick<IntentsToken, "contractAddress"> | null | undefined): boolean {
+  if (!token) return false;
+  const addr = String(token.contractAddress || "").trim();
+  if (!addr) return true;
+  const lower = addr.toLowerCase();
+  return lower === "native" || lower === ZERO_ADDRESS;
 }
 
 function filterTokens(raw: ProviderToken[]): IntentsToken[] {
@@ -72,9 +98,9 @@ interface IntentsTokensState {
   error: string | null;
   ensureFresh: () => Promise<void>;
   refresh: (force?: boolean) => Promise<void>;
-  tokensForSymbol: (symbol: StableSymbol) => IntentsToken[];
+  tokensForSymbol: (symbol: PayoutSymbol) => IntentsToken[];
   findByAssetId: (assetId: string) => IntentsToken | undefined;
-  findByChainAndSymbol: (blockchain: string, symbol: StableSymbol) => IntentsToken | undefined;
+  findByChainAndSymbol: (blockchain: string, symbol: PayoutSymbol) => IntentsToken | undefined;
 }
 
 export const useIntentsTokensStore = create<IntentsTokensState>()(
@@ -123,7 +149,7 @@ export const useIntentsTokensStore = create<IntentsTokensState>()(
       },
     }),
     {
-      name: "stableflow-pay:intents-tokens:v1",
+      name: "stableflow-pay:intents-tokens:v2",
       partialize: (s) => ({ tokens: s.tokens, fetchedAt: s.fetchedAt }),
     },
   ),

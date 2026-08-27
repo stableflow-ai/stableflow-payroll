@@ -7,6 +7,7 @@ import {
   IconSupport,
 } from "@/components/icons";
 import type { IconProps } from "@/components/icons/types";
+import { PAYOUT_SYMBOLS } from "@/stores/intents-tokens";
 
 export const PARTNER_NAV_ITEMS = [
   { label: "API Keys", to: "/partner/api-keys", icon: IconKey, lockedUntilPartner: true },
@@ -55,7 +56,7 @@ export const REPORT_AMOUNT_OPTIONS = [
   { value: REPORT_AMOUNT_FILTER.Over10k, label: ">10,000" },
 ] as const;
 
-export const REPORT_TOKENS = ["USDT", "USDC"] as const;
+export const REPORT_TOKENS = PAYOUT_SYMBOLS;
 
 export const REPORT_PAGE_SIZE = 12;
 

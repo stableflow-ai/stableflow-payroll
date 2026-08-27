@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button/Button";
 import { Card } from "@/components/ui/card/Card";
 import { InputNumber } from "@/components/ui/input-number/InputNumber";
-import { TokenNetworkDialog } from "@/components/token-network-dialog/TokenNetworkDialog";
+import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
 import { WalletConnectDialog } from "@/components/WalletConnect";
 import {
   useCreatePayRequestMutation,
@@ -35,7 +35,7 @@ import {
   tokenChainKind,
   type ReceivedPaymentView,
 } from "./request-utils";
-import { formatQuoteErrorMessage, parsePositiveDecimal } from "./utils";
+import { detectAddressChainKind, formatQuoteErrorMessage, parsePositiveDecimal } from "./utils";
 
 export function RequestPaymentView() {
   const toast = useToast();
@@ -70,6 +70,7 @@ export function RequestPaymentView() {
   addressRef.current = addressInput;
 
   const destKind = tokenChainKind(destToken);
+  const destLockChainKind = detectAddressChainKind(addressInput);
   const wallet = useWallet(destKind ?? "evm");
 
   useEffect(() => {
@@ -368,12 +369,12 @@ export function RequestPaymentView() {
         />
       </div>
 
-      <TokenNetworkDialog
+      <TokenSelectDialog
         open={destDialogOpen}
         onClose={() => setDestDialogOpen(false)}
         title="Receiving token"
-        initialSymbol={(destToken?.symbol || "USDC") as "USDC" | "USDT"}
         selectedAssetId={destToken?.assetId}
+        lockChainKind={destLockChainKind}
         onSelect={({ token }) => setDestToken(token)}
       />
 

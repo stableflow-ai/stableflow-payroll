@@ -356,14 +356,14 @@ export function ReportsView() {
             <TableBody>
               {pageRows.map((row) => (
                 <TableRow key={row.id}>
-                  <TableCell>{formatAmount(row.amount, { prefix: "" })}</TableCell>
+                  <TableCell>{formatAmount(row.amount, { prefix: "", showDust: true })}</TableCell>
                   <TableCell>
                     <ReportsAssetCell asset={{ symbol: row.token, network: row.network }} />
                   </TableCell>
                   <TableCell>
                     <Icon2Right className="h-2 w-3 shrink-0 text-black" />
                   </TableCell>
-                  <TableCell>{formatAmount(row.destinationAmount, { prefix: "" })}</TableCell>
+                  <TableCell>{formatAmount(row.destinationAmount, { prefix: "", showDust: true })}</TableCell>
                   <TableCell>
                     <ReportsAssetCell
                       asset={{ symbol: row.destinationToken, network: row.destinationNetwork }}

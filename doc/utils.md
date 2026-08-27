@@ -54,7 +54,7 @@ Uses `big.js`. Never converts through `Number` for display; uses `Big#toFixed(dp
 | `maxDecimals` | `2` | Decimal places passed to `toFixed` |
 | `rounding` | `ROUND_DOWN` (`Big.roundDown`) | Second argument of `toFixed` |
 | `padDecimals` | `false` | `true` → `$1.50`; `false` → `$1.5` |
-| `showDust` | `false` | If `0 < abs(value) < 10^(-maxDecimals)`, return `$ <0.01` (threshold follows `maxDecimals`) |
+| `showDust` | `false` | If `0 < abs(value) < 10^(-maxDecimals)`, return `$ <0.01` or `<0.01` when `prefix` is empty |
 | `prefix` | `"$"` | |
 
 Rounding constants (same values as `Big.round*`): `ROUND_DOWN`, `ROUND_UP`, `ROUND_HALF_UP`, `ROUND_HALF_EVEN`. `Big` is also re-exported.

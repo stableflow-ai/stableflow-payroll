@@ -51,7 +51,7 @@ export function PayoutsTable(props: {
               <TableCell>
                 <PayoutRecipientCell address={row.recipient} />
               </TableCell>
-              <TableCell>{formatAmount(row.amount, { prefix: "" })}</TableCell>
+              <TableCell>{formatAmount(row.amount, { prefix: "", showDust: true })}</TableCell>
               <TableCell>
                 {row.token} · {chainDisplayName(row.network)}
               </TableCell>

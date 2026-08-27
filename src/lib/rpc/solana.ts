@@ -1,4 +1,4 @@
-import { Connection } from "@solana/web3.js";
+import { Connection, type ConnectionConfig } from "@solana/web3.js";
 import { isProxyRpcUrl, rpcUrlsFor } from "./chain-rpc";
 import { generateRpcSignature } from "./signature";
 
@@ -8,6 +8,7 @@ const isRpcUnavailableError = (error: unknown) => {
     message.includes("fetch")
     || message.includes("timeout")
     || message.includes("failed to fetch")
+    || message.includes("expired timestamp")
     || message.includes("503")
     || message.includes("429")
     || message.includes("403")
@@ -16,11 +17,21 @@ const isRpcUnavailableError = (error: unknown) => {
   );
 };
 
+function signedFetch(url: string): ConnectionConfig["fetch"] {
+  if (!isProxyRpcUrl(url)) return undefined;
+  return (input, init) => {
+    const { headers } = generateRpcSignature("solana");
+    const merged = new Headers(init?.headers);
+    merged.set("x-hmac-signature", headers["x-hmac-signature"]);
+    merged.set("x-timestamp", headers["x-timestamp"]);
+    return fetch(input, { ...init, headers: merged });
+  };
+}
+
 function connectionFor(url: string): Connection {
-  const headers = isProxyRpcUrl(url) ? generateRpcSignature("solana").headers : undefined;
   return new Connection(url, {
     commitment: "confirmed",
-    httpHeaders: headers,
+    fetch: signedFetch(url),
   });
 }
 
@@ -81,8 +92,7 @@ export function solanaPrimaryRpcUrl(): string {
   return rpcUrlsFor("sol")[0] || "https://solana-rpc.publicnode.com";
 }
 
-export function solanaConnectionConfig(): { commitment: "confirmed"; httpHeaders?: Record<string, string> } {
+export function solanaConnectionConfig(): ConnectionConfig {
   const url = solanaPrimaryRpcUrl();
-  const headers = isProxyRpcUrl(url) ? generateRpcSignature("solana").headers : undefined;
-  return { commitment: "confirmed", httpHeaders: headers };
+  return { commitment: "confirmed", fetch: signedFetch(url) };
 }

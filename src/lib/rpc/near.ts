@@ -6,6 +6,46 @@
 
 import { rpcUrlsFor } from "./chain-rpc";
 
+export async function nearViewAccount(accountId: string): Promise<{ amount: string } | null> {
+  const urls = rpcUrlsFor("near");
+  let lastError: unknown = null;
+  for (const url of urls) {
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: "stableflow-pay",
+          method: "query",
+          params: {
+            request_type: "view_account",
+            finality: "final",
+            account_id: accountId,
+          },
+        }),
+      });
+      if (!res.ok) {
+        lastError = new Error(`Near RPC ${res.status}`);
+        continue;
+      }
+      const json = await res.json() as {
+        result?: { amount?: string };
+        error?: unknown;
+      };
+      if (json.error || json.result?.amount == null) {
+        lastError = json.error || new Error("Empty Near RPC result");
+        continue;
+      }
+      return { amount: json.result.amount };
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  if (lastError) throw lastError;
+  return null;
+}
+
 export async function nearViewFunction<T>(
   contractId: string,
   methodName: string,

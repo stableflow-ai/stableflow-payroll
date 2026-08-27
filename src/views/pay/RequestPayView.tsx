@@ -9,11 +9,11 @@ import { useSinglePayQuote, useSinglePaySwap } from "@/hooks/use-single-payout-a
 import useToast from "@/hooks/use-toast";
 import { useAuthStore } from "@/stores/auth";
 import { enqueueQuickPayCommit } from "@/stores/quick-pay-commit-queue";
-import { useIntentsTokensStore } from "@/stores/intents-tokens";
+import { useIntentsTokensStore, normalizeSymbol } from "@/stores/intents-tokens";
 import { useTokenBalancesStore } from "@/stores/token-balances";
 import type { PaySingleQuoteParam, PaySingleSwapParam } from "@/types/payout";
 import { formatAmount } from "@/utils";
-import { broadcastQuickPayCallData } from "@/wallet/broadcast-quick-pay";
+import { transferToDepositAddress } from "@/wallet/transfer-deposit";
 import type { ChainKind } from "@/wallet";
 import { RequestPayBackButton } from "./components/request-pay/RequestPayBackButton";
 import {
@@ -85,8 +85,7 @@ export function RequestPayView() {
 
   const destToken = useMemo(() => {
     if (!request) return null;
-    const tokenRaw = request.token.toUpperCase();
-    const symbol = tokenRaw === "USDT" ? "USDT" : tokenRaw === "USDC" ? "USDC" : null;
+    const symbol = normalizeSymbol(request.token);
     if (!symbol) return null;
     return findByChainAndSymbol(request.network, symbol) ?? null;
   }, [findByChainAndSymbol, request, tokens]);
@@ -158,10 +157,6 @@ export function RequestPayView() {
         paymentWallet.connectWallet();
         throw new Error("Connect your payment wallet first");
       }
-      if (originToken.chain.chainKind !== "evm" || !originToken.chain.chainId || !originToken.contractAddress) {
-        toast.fail({ title: "Quick Pay currently supports EVM origin tokens only" });
-        throw new BalanceGateError("Unsupported origin chain");
-      }
       const paymentWalletAddress = wallet.account.address;
       setPhase("quoting");
       const origin = payoutNetworkToken(originToken);
@@ -181,6 +176,10 @@ export function RequestPayView() {
       if (memoValue) swapBody.memo = memoValue;
 
       const swapped = await swapMutation.mutateAsync(swapBody);
+      const depositAddress = swapped.depositAddress?.trim();
+      if (!depositAddress) {
+        throw new Error("Missing deposit address");
+      }
       const amountIn = BigInt(swapped.amountIn || "0");
       const balance = await fetchOneBalance(paymentWalletAddress, originToken);
       if (!balance || balance.status !== "success" || balance.raw == null) {
@@ -192,10 +191,10 @@ export function RequestPayView() {
         throw new BalanceGateError("Insufficient balance");
       }
       setPhase("sending");
-      const txHash = await broadcastQuickPayCallData({
-        chainId: originToken.chain.chainId,
-        contract: originToken.contractAddress,
-        callData: swapped.callData,
+      const txHash = await transferToDepositAddress({
+        token: originToken,
+        depositAddress,
+        amountIn,
       });
       enqueueQuickPayCommit({ orderId: swapped.orderId, txHash });
     },

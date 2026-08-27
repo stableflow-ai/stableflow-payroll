@@ -128,12 +128,11 @@ export const CHAIN_RPC: Record<string, ChainRpcConfig> = {
       "https://rpc.mainnet.near.org",
     ],
   },
-  // No HMAC proxy for Tron yet.
   tron: {
     blockchain: "tron",
     kind: "tron",
-    proxySlug: null,
-    publicUrls: ["https://api.trongrid.io"],
+    proxySlug: "tron",
+    publicUrls: ["https://api.trongrid.io", "https://tron-rpc.publicnode.com"],
   },
 };
 

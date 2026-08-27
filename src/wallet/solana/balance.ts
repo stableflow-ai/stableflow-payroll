@@ -11,6 +11,12 @@ export function getSolanaRpcConnection() {
   return getSolanaConnection();
 }
 
+export async function readNativeSolBalance(opts: { owner: string }): Promise<bigint> {
+  const connection = getSolanaRpcConnection();
+  const raw = await connection.getBalance(new PublicKey(opts.owner));
+  return BigInt(raw);
+}
+
 export async function readSplBalance(opts: {
   tokenMint: string;
   owner: string;

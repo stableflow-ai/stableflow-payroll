@@ -1,9 +1,10 @@
 import { VOLUME_PERIOD, type VolumePeriod } from "@/types/payout";
-import { TOKEN_BALANCE_POLL_MS } from "@/components/token-network-dialog/config";
+import { TOKEN_BALANCE_POLL_MS } from "@/components/token-select-dialog/config";
 
 export const DEFAULT_VOLUME_PERIOD = VOLUME_PERIOD.Monthly;
 export const HOME_LIST_LIMIT = 6;
 export const HOME_BALANCE_POLL_MS = TOKEN_BALANCE_POLL_MS;
+export const HOME_BALANCE_CHIP_ROW_HEIGHT_PX = 30;
 
 export const VOLUME_PERIOD_OPTIONS = [
   { value: VOLUME_PERIOD.Daily, label: "Daily" },

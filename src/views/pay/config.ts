@@ -1,6 +1,7 @@
 import type { ComponentType } from "react";
 import { IconBatchUp, IconDuration, IconRecords, IconUp } from "@/components/icons";
 import type { IconProps } from "@/components/icons/types";
+import { PAYOUT_SYMBOLS } from "@/stores/intents-tokens";
 
 export const PAY_NAV_GROUP = {
   Payout: "payout",
@@ -32,10 +33,10 @@ export const HISTORY_STATUS_FILTER = {
   Complete: "completed",
   Failed: "failed",
 } as const;
+
 export const HISTORY_ASSET_FILTER = {
   All: "all",
-  USDT: "USDT",
-  USDC: "USDC",
+  ...Object.fromEntries(PAYOUT_SYMBOLS.map((symbol) => [symbol, symbol])),
 } as const;
 
 export const AMOUNT_MAX_DECIMALS = 6;

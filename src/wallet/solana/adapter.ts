@@ -1,6 +1,6 @@
 import { useWallet as useSolanaAdapter } from "@solana/wallet-adapter-react";
 import { useWalletModal as useSolanaWalletModal } from "@solana/wallet-adapter-react-ui";
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { isAddressValid } from "@/utils";
 import type { GeneratedIntent, IntentSignInput, IntentSignedPayload, UseWalletResult, WalletAccount } from "../types";
 import {
@@ -11,6 +11,7 @@ import {
   unixTimestamp,
   walletDoesNotSupportSigning,
 } from "../intents-sign";
+import { setSolanaSigner } from "./session";
 
 export function useSolanaWallet(): UseWalletResult {
   const {
@@ -20,10 +21,20 @@ export function useSolanaWallet(): UseWalletResult {
     disconnect,
     select,
     signMessage: adapterSignMessage,
+    signTransaction,
   } = useSolanaAdapter();
   const { setVisible, visible } = useSolanaWalletModal();
 
   const address = publicKey?.toBase58() || null;
+
+  useEffect(() => {
+    if (!publicKey || !signTransaction) {
+      setSolanaSigner(null);
+      return;
+    }
+    setSolanaSigner({ publicKey, signTransaction });
+    return () => setSolanaSigner(null);
+  }, [publicKey, signTransaction]);
 
   const account = useMemo<WalletAccount | null>(() => {
     if (!address) return null;

@@ -1,12 +1,13 @@
 import { formatUnits } from "viem";
 import type { Address } from "viem";
-import { TOKEN_BALANCE_POLL_MS } from "@/components/token-network-dialog/config";
+import { TOKEN_BALANCE_POLL_MS } from "@/components/token-select-dialog/config";
 import { isAddressValid } from "@/utils";
 import type { ChainKind, ChainOwners } from "@/wallet";
-import type { IntentsToken } from "@/stores/intents-tokens";
-import { getPublicClientForNetwork, readErc20Balance, readErc20Balances } from "@/wallet/evm/balance";
-import { readNearFtBalance } from "@/wallet/near/balance";
-import { readSplBalance } from "@/wallet/solana/balance";
+import { isNativeToken, type IntentsToken } from "@/stores/intents-tokens";
+import { getPublicClientForNetwork, readErc20Balance, readErc20Balances, readNativeBalance } from "@/wallet/evm/balance";
+import { readNativeNearBalance, readNearFtBalance } from "@/wallet/near/balance";
+import { readNativeSolBalance, readSplBalance } from "@/wallet/solana/balance";
+import { readNativeTrxBalance, readTrc20Balance } from "@/wallet/tron/balance";
 import { create } from "zustand";
 
 export type TokenBalanceStatus = "idle" | "loading" | "success" | "error";
@@ -45,7 +46,7 @@ function chainFetchKey(owner: string, blockchain: string, chainKind: ChainKind):
 
 function tokenChainKind(token: IntentsToken): ChainKind | null {
   const kind = token.chain.chainKind;
-  if (kind === "evm" || kind === "near" || kind === "solana") return kind;
+  if (kind === "evm" || kind === "near" || kind === "solana" || kind === "tron") return kind;
   return null;
 }
 
@@ -111,33 +112,52 @@ function isFresh(entry: TokenBalanceEntry | undefined, now: number): boolean {
   );
 }
 
+async function readRawBalance(owner: string, token: IntentsToken): Promise<bigint> {
+  const kind = token.chain.chainKind;
+  const native = isNativeToken(token);
+  if (kind === "near") {
+    if (native) return readNativeNearBalance({ owner });
+    if (!token.contractAddress) throw new Error("Missing contract address");
+    return readNearFtBalance({ tokenContract: token.contractAddress, owner });
+  }
+  if (kind === "solana") {
+    if (native) return readNativeSolBalance({ owner });
+    if (!token.contractAddress) throw new Error("Missing contract address");
+    return readSplBalance({ tokenMint: token.contractAddress, owner });
+  }
+  if (kind === "tron") {
+    if (native) return readNativeTrxBalance({ owner });
+    if (!token.contractAddress) throw new Error("Missing contract address");
+    return readTrc20Balance({ tokenContract: token.contractAddress, owner });
+  }
+  if (native) {
+    const result = await readNativeBalance({
+      network: token.blockchain,
+      owner: owner as Address,
+      decimals: token.decimals,
+    });
+    return result.raw;
+  }
+  if (!token.contractAddress) throw new Error("Missing contract address");
+  if (!getPublicClientForNetwork(token.blockchain)) {
+    throw new Error("Unsupported network");
+  }
+  const result = await readErc20Balance({
+    network: token.blockchain,
+    tokenAddress: token.contractAddress as Address,
+    owner: owner as Address,
+    decimals: token.decimals,
+  });
+  return result.raw;
+}
+
 async function readOne(owner: string, token: IntentsToken): Promise<TokenBalanceEntry> {
   const kind = tokenChainKind(token);
   if (!kind || !isAddressValid(owner, kind)) {
     return errorEntry("Wallet address does not match this chain");
   }
-  if (!token.contractAddress) {
-    return errorEntry("Missing contract address");
-  }
   try {
-    let raw = 0n;
-    if (kind === "near") {
-      raw = await readNearFtBalance({ tokenContract: token.contractAddress, owner });
-    } else if (kind === "solana") {
-      raw = await readSplBalance({ tokenMint: token.contractAddress, owner });
-    } else {
-      // TODO: origin / balance reads for Tron once payout broadcast is supported.
-      if (!getPublicClientForNetwork(token.blockchain)) {
-        return errorEntry("Unsupported network");
-      }
-      const result = await readErc20Balance({
-        network: token.blockchain,
-        tokenAddress: token.contractAddress as Address,
-        owner: owner as Address,
-        decimals: token.decimals,
-      });
-      raw = result.raw;
-    }
+    const raw = await readRawBalance(owner, token);
     return successEntry(raw, formatUnits(raw, token.decimals));
   } catch (cause) {
     return errorEntry(cause instanceof Error ? cause.message : "Failed to read balance");
@@ -200,19 +220,39 @@ export const useTokenBalancesStore = create<TokenBalancesState>((set, get) => {
 
     markTokensLoading(owner, tokens);
 
-    const readable = tokens.filter((token) => token.contractAddress);
-    const missing = tokens.filter((token) => !token.contractAddress);
+    const nativeTokens = tokens.filter((token) => isNativeToken(token));
+    const erc20Tokens = tokens.filter((token) => !isNativeToken(token) && token.contractAddress);
+    const missing = tokens.filter((token) => !isNativeToken(token) && !token.contractAddress);
     const updates: Array<{ key: string; entry: TokenBalanceEntry }> = missing.map((token) => ({
       key: balanceKey(owner, token.assetId, "evm"),
       entry: errorEntry("Missing contract address"),
     }));
 
-    if (readable.length > 0) {
+    for (const token of nativeTokens) {
+      try {
+        const result = await readNativeBalance({
+          network: blockchain,
+          owner: owner as Address,
+          decimals: token.decimals,
+        });
+        updates.push({
+          key: balanceKey(owner, token.assetId, "evm"),
+          entry: successEntry(result.raw, result.formatted),
+        });
+      } catch (cause) {
+        updates.push({
+          key: balanceKey(owner, token.assetId, "evm"),
+          entry: errorEntry(cause instanceof Error ? cause.message : "Failed to read balance"),
+        });
+      }
+    }
+
+    if (erc20Tokens.length > 0) {
       try {
         const results = await readErc20Balances({
           network: blockchain,
           owner: owner as Address,
-          tokens: readable.map((token) => ({
+          tokens: erc20Tokens.map((token) => ({
             assetId: token.assetId,
             tokenAddress: token.contractAddress as Address,
             decimals: token.decimals,
@@ -228,7 +268,7 @@ export const useTokenBalancesStore = create<TokenBalancesState>((set, get) => {
         }
       } catch (cause) {
         const message = cause instanceof Error ? cause.message : "Failed to read balance";
-        for (const token of readable) {
+        for (const token of erc20Tokens) {
           updates.push({
             key: balanceKey(owner, token.assetId, "evm"),
             entry: errorEntry(message),

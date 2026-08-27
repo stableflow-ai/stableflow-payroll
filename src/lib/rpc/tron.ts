@@ -4,7 +4,8 @@
  */
 
 import { TronWeb } from "tronweb";
-import { rpcUrlsFor } from "./chain-rpc";
+import { isProxyRpcUrl, rpcUrlsFor } from "./chain-rpc";
+import { generateRpcSignature } from "./signature";
 
 const TRON_FALLBACK_HOST = "https://api.trongrid.io";
 
@@ -15,8 +16,12 @@ export function tronPrimaryRpcUrl(): string {
 }
 
 export function getTronWeb(): TronWeb {
+  const url = tronPrimaryRpcUrl();
   if (!shared) {
-    shared = new TronWeb({ fullHost: tronPrimaryRpcUrl() });
+    shared = new TronWeb({ fullHost: url });
+  }
+  if (isProxyRpcUrl(url)) {
+    shared.setHeader(generateRpcSignature("tron").headers);
   }
   return shared;
 }

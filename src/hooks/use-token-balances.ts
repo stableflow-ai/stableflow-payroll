@@ -4,7 +4,7 @@ import type { IntentsToken } from "@/stores/intents-tokens";
 import { useTokenBalancesStore } from "@/stores/token-balances";
 
 function ownersKey(owners: ChainOwners): string {
-  return (["evm", "near", "solana"] as const)
+  return (["evm", "near", "solana", "tron"] as const)
     .map((kind) => {
       const address = owners[kind] || "";
       return `${kind}:${kind === "solana" ? address : address.toLowerCase()}`;
@@ -13,7 +13,7 @@ function ownersKey(owners: ChainOwners): string {
 }
 
 function hasAnyOwner(owners: ChainOwners): boolean {
-  return Boolean(owners.evm || owners.near || owners.solana);
+  return Boolean(owners.evm || owners.near || owners.solana || owners.tron);
 }
 
 export function useEnsureTokenBalances(opts: {

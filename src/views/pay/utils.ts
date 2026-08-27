@@ -37,6 +37,16 @@ export function detectAddressChainKind(address: string): WalletChainKind | null 
   return null;
 }
 
+export function defaultDestToken(
+  tokens: IntentsToken[],
+  chainKind: WalletChainKind,
+): IntentsToken | null {
+  return tokens.find((token) => token.symbol === "USDT" && token.chain.chainKind === chainKind)
+    || tokens.find((token) => token.symbol === "USDC" && token.chain.chainKind === chainKind)
+    || tokens.find((token) => token.chain.chainKind === chainKind)
+    || null;
+}
+
 export function parsePositiveDecimal(raw: string, maxDecimals = 6): string | null {
   const cleaned = raw.replace(/,/g, "").trim();
   if (!cleaned) return null;

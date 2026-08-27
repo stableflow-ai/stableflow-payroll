@@ -27,7 +27,7 @@ export interface PaySingleQuoteResp {
 }
 
 export interface PaySingleSwapResp extends PaySingleQuoteResp {
-  callData: string;
+  depositAddress: string;
   orderId: string;
 }
 

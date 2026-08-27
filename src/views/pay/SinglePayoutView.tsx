@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card/Card";
 import { InputNumber } from "@/components/ui/input-number/InputNumber";
 import { Switch } from "@/components/ui/switch/Switch";
 import { Tooltip } from "@/components/ui/tooltip/Tooltip";
-import { TokenNetworkDialog } from "@/components/token-network-dialog/TokenNetworkDialog";
+import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
 import { queryKeys } from "@/api/query-keys";
 import { useContacts, type Contact } from "@/hooks/use-contacts";
 import { usePayOriginToken } from "@/hooks/use-pay-origin-token";
@@ -19,7 +19,7 @@ import { formatAmount, sameAddress } from "@/utils";
 import type { PaySingleQuoteParam, PaySingleSwapParam } from "@/types/payout";
 import { enqueueQuickPayCommit } from "@/stores/quick-pay-commit-queue";
 import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
-import { broadcastQuickPayCallData } from "@/wallet/broadcast-quick-pay";
+import { transferToDepositAddress } from "@/wallet/transfer-deposit";
 import type { ChainKind } from "@/wallet";
 import { ContactFormDialog } from "./components/ContactFormDialog";
 import { DeleteContactDialog } from "./components/DeleteContactDialog";
@@ -36,6 +36,7 @@ import {
 } from "./config";
 import {
   detectAddressChainKind,
+  defaultDestToken,
   formatQuoteErrorMessage,
   isDryQuoteStale,
   notifyEmailParam,
@@ -120,9 +121,7 @@ export function SinglePayoutView() {
 
   useEffect(() => {
     if (destToken || !destLockChainKind || tokens.length === 0) return;
-    const next =
-      tokens.find((token) => token.symbol === "USDT" && token.chain.chainKind === destLockChainKind)
-      || tokens.find((token) => token.symbol === "USDC" && token.chain.chainKind === destLockChainKind);
+    const next = defaultDestToken(tokens, destLockChainKind);
     if (next) setDestToken(next);
   }, [destLockChainKind, destToken, tokens]);
 
@@ -192,11 +191,6 @@ export function SinglePayoutView() {
         paymentWallet.connectWallet();
         throw new Error("Connect your payment wallet first");
       }
-      if (originToken.chain.chainKind !== "evm" || !originToken.chain.chainId || !originToken.contractAddress) {
-        // TODO: broadcast Near / Solana / Tron origin payouts when the backend supports them.
-        toast.fail({ title: "Quick Pay currently supports EVM origin tokens only" });
-        throw new BalanceGateError("Unsupported origin chain");
-      }
       const paymentWalletAddress = wallet.account.address;
       setPhase("quoting");
       const origin = payoutNetworkToken(originToken);
@@ -217,6 +211,10 @@ export function SinglePayoutView() {
       if (memoValue) swapBody.memo = memoValue;
 
       const swapped = await swapMutation.mutateAsync(swapBody);
+      const depositAddress = swapped.depositAddress?.trim();
+      if (!depositAddress) {
+        throw new Error("Missing deposit address");
+      }
       const amountIn = BigInt(swapped.amountIn || "0");
       const balance = await fetchOneBalance(paymentWalletAddress, originToken);
       if (!balance || balance.status !== "success" || balance.raw == null) {
@@ -228,10 +226,10 @@ export function SinglePayoutView() {
         throw new BalanceGateError("Insufficient balance");
       }
       setPhase("sending");
-      const txHash = await broadcastQuickPayCallData({
-        chainId: originToken.chain.chainId,
-        contract: originToken.contractAddress,
-        callData: swapped.callData,
+      const txHash = await transferToDepositAddress({
+        token: originToken,
+        depositAddress,
+        amountIn,
       });
       enqueueQuickPayCommit({ orderId: swapped.orderId, txHash });
     },
@@ -381,11 +379,10 @@ export function SinglePayoutView() {
         </Button>
       </Card>
 
-      <TokenNetworkDialog
+      <TokenSelectDialog
         open={destDialogOpen}
         onClose={() => setDestDialogOpen(false)}
         title="Recipient token"
-        initialSymbol={(destToken?.symbol || "USDC") as "USDC" | "USDT"}
         selectedAssetId={destToken?.assetId}
         lockChainKind={destLockChainKind}
         onSelect={({ token }) => setDestToken(token)}

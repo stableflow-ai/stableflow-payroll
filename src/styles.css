@@ -109,19 +109,17 @@
   }
 }
 
-/* Wallet portals need clicks even when a local overlay is open. */
+/* Wallet portals need clicks and stacking above Overlay (z-index 1000+). */
 [data-rk],
 .wallet-adapter-modal,
+.wallet-adapter-modal-wrapper,
 #near-wallet-selector-modal,
 .nws-modal,
 .nws-modal-wrapper,
+.adapter-modal,
 .picker-dialog,
 .picker-dialog-bg {
   pointer-events: auto !important;
-}
-
-.picker-dialog,
-.picker-dialog-bg {
   z-index: 10000 !important;
 }
 

@@ -44,6 +44,14 @@ export const LATEST_PAYOUTS_LIMIT = 6;
 export const ASSET_COLORS: Record<string, string> = {
   USDT: "#000000",
   USDC: "#AAAAAA",
+  ETH: "#627EEA",
+  BNB: "#F3BA2F",
+  DAI: "#F5AC37",
+  TRX: "#FF0013",
+  SOL: "#9945FF",
+  LINK: "#2A5ADA",
+  AVAX: "#E84142",
+  NEAR: "#000000",
   PYUSD: "#DFDFDF",
 };
 

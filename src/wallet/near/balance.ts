@@ -1,4 +1,14 @@
-import { nearViewFunction } from "@/lib/rpc/near";
+import { nearViewAccount, nearViewFunction } from "@/lib/rpc/near";
+
+export async function readNativeNearBalance(opts: { owner: string }): Promise<bigint> {
+  const account = await nearViewAccount(opts.owner);
+  if (!account?.amount) return 0n;
+  try {
+    return BigInt(account.amount);
+  } catch {
+    return 0n;
+  }
+}
 
 export async function readNearFtBalance(opts: {
   tokenContract: string;

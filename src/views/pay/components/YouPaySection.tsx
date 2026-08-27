@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { TokenNetworkDialog } from "@/components/token-network-dialog/TokenNetworkDialog";
+import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
 import { formatAddress, formatAmount } from "@/utils";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import { useTokenBalance } from "@/hooks/use-token-balances";
@@ -35,7 +35,7 @@ export function YouPaySection(props: {
   const originBalance = useTokenBalance(walletAddress, originToken?.assetId);
 
   useEffect(() => {
-    if (!walletAddress || !originToken?.contractAddress) return;
+    if (!walletAddress || !originToken) return;
     void fetchOneBalance(walletAddress, originToken);
     const id = window.setInterval(() => {
       void fetchOneBalance(walletAddress, originToken);
@@ -86,11 +86,10 @@ export function YouPaySection(props: {
           )}
         </span>
       </p>
-      <TokenNetworkDialog
+      <TokenSelectDialog
         open={originDialogOpen}
         onClose={() => setOriginDialogOpen(false)}
         title="You pay with"
-        initialSymbol={(originToken?.symbol || "USDT") as "USDC" | "USDT"}
         selectedAssetId={originToken?.assetId}
         showBalances
         balanceOwners={balanceOwners}
@@ -98,7 +97,7 @@ export function YouPaySection(props: {
         onSelect={({ token }) => {
           onOriginTokenChange(token);
           const kind = token.chain.chainKind;
-          const owner = kind === "evm" || kind === "near" || kind === "solana"
+          const owner = kind === "evm" || kind === "near" || kind === "solana" || kind === "tron"
             ? balanceOwners[kind]
             : undefined;
           if (owner) void fetchOneBalance(owner, token);

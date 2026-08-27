@@ -83,7 +83,7 @@ export function RecentPayoutsTable({ items, loading }: { items: PayPaymentItem[]
             items.length > 0 ? items.map((item, index) => (
               <TableRow key={item.id || `${item.recipient}-${index}`}>
                 <TableCell>{formatAddress(item.recipient)}</TableCell>
-                <TableCell>{formatAmount(paymentDisplayAmount(item), { prefix: "" })}</TableCell>
+                <TableCell>{formatAmount(paymentDisplayAmount(item), { prefix: "", showDust: true })}</TableCell>
                 <TableCell>
                   {paymentDisplayToken(item)} · {chainDisplayName(paymentDisplayNetwork(item))}
                 </TableCell>

@@ -10,8 +10,8 @@ export function SolanaWalletProvider({ children }: { children: ReactNode }) {
     () => [new PhantomWalletAdapter(), new SolflareWalletAdapter()],
     [],
   );
-  const endpoint = solanaPrimaryRpcUrl();
-  const config = solanaConnectionConfig();
+  const endpoint = useMemo(() => solanaPrimaryRpcUrl(), []);
+  const config = useMemo(() => solanaConnectionConfig(), []);
 
   return (
     <ConnectionProvider endpoint={endpoint} config={config}>

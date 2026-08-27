@@ -67,6 +67,17 @@ export function getPublicClientForNetwork(networkOrBlockchain: string) {
   return client;
 }
 
+export async function readNativeBalance(opts: {
+  network: string;
+  owner: Address;
+  decimals: number;
+}): Promise<{ raw: bigint; formatted: string }> {
+  const client = getPublicClientForNetwork(opts.network);
+  if (!client) throw new Error(`Unsupported network: ${opts.network}`);
+  const raw = await client.getBalance({ address: opts.owner });
+  return { raw, formatted: formatUnits(raw, opts.decimals) };
+}
+
 export async function readErc20Balance(opts: {
   network: string;
   tokenAddress: Address;

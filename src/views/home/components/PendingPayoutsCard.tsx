@@ -41,7 +41,7 @@ export function PendingPayoutsCard({ items, loading }: { items: PayPaymentItem[]
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block font-montserrat text-sm font-medium text-black">
-                      {formatAmount(paymentDisplayAmount(item), { prefix: "" })} {paymentDisplayToken(item)} · {chainDisplayName(paymentDisplayNetwork(item))}
+                      {formatAmount(paymentDisplayAmount(item), { prefix: "", showDust: true })} {paymentDisplayToken(item)} · {chainDisplayName(paymentDisplayNetwork(item))}
                     </span>
                     <span className="mt-0.5 block font-montserrat text-[10px] text-[#606060]">
                       To {formatAddress(item.recipient)}

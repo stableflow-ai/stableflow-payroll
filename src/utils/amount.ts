@@ -35,7 +35,8 @@ export function formatAmount(
   const minUnit = new Big(10).pow(-maxDecimals);
 
   if (showDust && abs.gt(0) && abs.lt(minUnit)) {
-    return `${prefix} <${minUnit.toFixed(maxDecimals)}`;
+    const dust = `<${minUnit.toFixed(maxDecimals)}`;
+    return prefix ? `${prefix} ${dust}` : dust;
   }
 
   const negative = amount.lt(0);

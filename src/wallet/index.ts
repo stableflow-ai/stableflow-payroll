@@ -12,3 +12,4 @@ export {
   type WalletAdapter,
 } from "./types";
 export { wagmiConfig } from "./evm/config";
+export { transferToDepositAddress } from "./transfer-deposit";
