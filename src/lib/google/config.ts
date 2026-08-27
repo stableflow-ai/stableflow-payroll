@@ -3,6 +3,9 @@ export const GAPI_SCRIPT_SRC = "https://apis.google.com/js/api.js";
 export const GOOGLE_DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.file";
 export const SHEETS_API_BASE = "https://sheets.googleapis.com/v4";
 export const TOKEN_EXPIRY_SKEW_MS = 60_000;
+export const GOOGLE_DRIVE_TOKEN_STORAGE_KEY = "stableflow-pay.google-drive-session";
+export const GOOGLE_OAUTH_PROMPT_NONE = "";
+export const GOOGLE_OAUTH_PROMPT_SELECT_ACCOUNT = "select_account";
 
 export const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID ?? "";
 export const GOOGLE_API_KEY = import.meta.env.VITE_GOOGLE_API_KEY ?? "";

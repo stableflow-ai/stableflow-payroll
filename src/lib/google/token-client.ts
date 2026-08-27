@@ -1,10 +1,16 @@
 import {
   GOOGLE_CLIENT_ID,
   GOOGLE_DRIVE_FILE_SCOPE,
-  TOKEN_EXPIRY_SKEW_MS,
+  GOOGLE_OAUTH_PROMPT_NONE,
+  GOOGLE_OAUTH_PROMPT_SELECT_ACCOUNT,
   isGoogleImportConfigured,
 } from "./config";
 import { loadGoogleScripts } from "./load-scripts";
+import {
+  googleDriveRequiresAccountPicker,
+  readGoogleDriveToken,
+  useGoogleDriveSessionStore,
+} from "@/stores/google-drive-session";
 
 export class GoogleAuthCancelledError extends Error {
   constructor(message = "Google sign-in cancelled") {
@@ -13,13 +19,7 @@ export class GoogleAuthCancelledError extends Error {
   }
 }
 
-interface CachedToken {
-  accessToken: string;
-  expiresAt: number;
-}
-
 let tokenClient: google.accounts.oauth2.TokenClient | null = null;
-let cached: CachedToken | null = null;
 let pendingReject: ((error: Error) => void) | null = null;
 
 function ensureTokenClient(): google.accounts.oauth2.TokenClient {
@@ -73,39 +73,48 @@ function requestAccessToken(prompt: string): Promise<google.accounts.oauth2.Toke
 
 function cacheToken(response: google.accounts.oauth2.TokenResponse): string {
   const expiresInMs = Math.max(0, (Number(response.expires_in) || 3600) * 1000);
-  cached = {
-    accessToken: response.access_token,
+  const accessToken = response.access_token;
+  useGoogleDriveSessionStore.getState().upsert({
+    accessToken,
     expiresAt: Date.now() + expiresInMs,
-  };
-  return cached.accessToken;
-}
-
-function readCachedToken(): string | null {
-  if (!cached) return null;
-  if (cached.expiresAt - TOKEN_EXPIRY_SKEW_MS <= Date.now()) return null;
-  return cached.accessToken;
-}
-
-export function clearGoogleAccessToken(): void {
-  cached = null;
+  });
+  return accessToken;
 }
 
 export async function getDriveFileToken(options?: { interactive?: boolean }): Promise<string> {
   await loadGoogleScripts();
-  const existing = readCachedToken();
+  const existing = readGoogleDriveToken();
   if (existing && options?.interactive !== true) return existing;
 
-  const interactive = options?.interactive === true || !cached;
+  const forcePicker = options?.interactive === true || googleDriveRequiresAccountPicker();
   try {
-    const response = await requestAccessToken(interactive ? "select_account" : "");
+    const response = await requestAccessToken(
+      forcePicker ? GOOGLE_OAUTH_PROMPT_SELECT_ACCOUNT : GOOGLE_OAUTH_PROMPT_NONE,
+    );
     return cacheToken(response);
   } catch (error) {
     if (error instanceof GoogleAuthCancelledError) throw error;
-    if (!interactive) {
-      const response = await requestAccessToken("select_account");
+    if (!forcePicker) {
+      const response = await requestAccessToken(GOOGLE_OAUTH_PROMPT_SELECT_ACCOUNT);
       return cacheToken(response);
     }
     throw error;
+  }
+}
+
+export async function signOutGoogleDrive(): Promise<void> {
+  const accessToken = useGoogleDriveSessionStore.getState().accessToken;
+  useGoogleDriveSessionStore.getState().clear();
+  if (!accessToken) return;
+  try {
+    await loadGoogleScripts();
+    const oauth = window.google?.accounts?.oauth2;
+    if (!oauth?.revoke) return;
+    await new Promise<void>((resolve) => {
+      oauth.revoke(accessToken, () => resolve());
+    });
+  } catch {
+    // Local session is already cleared.
   }
 }
 

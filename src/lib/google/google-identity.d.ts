@@ -23,6 +23,7 @@ declare namespace google {
       }
 
       function initTokenClient(config: TokenClientConfig): TokenClient;
+      function revoke(accessToken: string, done?: () => void): void;
     }
   }
 }

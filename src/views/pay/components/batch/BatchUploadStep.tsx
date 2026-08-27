@@ -1,13 +1,15 @@
 import { useRef, useState } from "react";
 import { IconCloud } from "@/components/icons/cloud";
+import { IconLogout } from "@/components/icons/logout";
 import { Button } from "@/components/ui/button/Button";
 import { Card } from "@/components/ui/card/Card";
 import { isGoogleImportConfigured } from "@/lib/google/config";
 import { isGooglePickerCancelled, openSpreadsheetPicker } from "@/lib/google/picker";
 import { listSheetTitles, readSheetValues } from "@/lib/google/sheets";
-import { isGoogleAuthCancelled, getDriveFileToken } from "@/lib/google/token-client";
+import { isGoogleAuthCancelled, getDriveFileToken, signOutGoogleDrive } from "@/lib/google/token-client";
 import { parseCsvFile } from "@/lib/import/csv";
 import { cn } from "@/lib/utils";
+import { isUsableGoogleDriveSession, useGoogleDriveSessionStore } from "@/stores/google-drive-session";
 import {
   IMPORT_CSV_ACCEPT,
   IMPORT_CSV_TEMPLATE,
@@ -22,6 +24,7 @@ export function BatchUploadStep(props: {
 }) {
   const { onEnterManually, onImported, onError } = props;
   const inputRef = useRef<HTMLInputElement>(null);
+  const googleSignedIn = useGoogleDriveSessionStore((session) => isUsableGoogleDriveSession(session));
   const [dragOver, setDragOver] = useState(false);
   const [busySource, setBusySource] = useState<"google" | "csv" | null>(null);
   const [pendingSheets, setPendingSheets] = useState<{
@@ -147,18 +150,31 @@ export function BatchUploadStep(props: {
           >
             Choose file
           </Button>
-          <button
-            type="button"
-            disabled={busySource === "csv" || busySource === "google"}
-            onClick={() => void handleGoogle()}
-            className="inline-flex h-8 md:h-10 w-[152px] items-center justify-center rounded-[10px] border border-[#d9d9d9] bg-white shadow-[0_0_6px_0_rgba(0,0,0,0.06)] disabled:opacity-40"
-          >
-            {busySource === "google" && !pendingSheets ? (
-              <span className="size-4 animate-spin rounded-full border-2 border-black border-r-transparent" />
-            ) : (
-              <img src="/pay/google-sheets.png" alt="Google Sheets" className="h-4 w-[109px] object-contain" />
-            )}
-          </button>
+          <div className="relative">
+            <button
+              type="button"
+              disabled={busySource === "csv" || busySource === "google"}
+              onClick={() => void handleGoogle()}
+              className="inline-flex h-8 w-[152px] items-center justify-center rounded-[10px] border border-[#d9d9d9] bg-white shadow-[0_0_6px_0_rgba(0,0,0,0.06)] disabled:opacity-40 md:h-10"
+            >
+              {busySource === "google" && !pendingSheets ? (
+                <span className="size-4 animate-spin rounded-full border-2 border-black border-r-transparent" />
+              ) : (
+                <img src="/pay/google-sheets.png" alt="Google Sheets" className="h-4 w-[109px] object-contain" />
+              )}
+            </button>
+            {googleSignedIn ? (
+              <button
+                type="button"
+                aria-label="Switch Google account"
+                disabled={busySource === "google"}
+                onClick={() => void signOutGoogleDrive()}
+                className="absolute top-1/2 left-full ml-2 -translate-y-1/2 border-0 bg-transparent p-1 text-danger disabled:opacity-40"
+              >
+                <IconLogout />
+              </button>
+            ) : null}
+          </div>
         </div>
 
         <input
