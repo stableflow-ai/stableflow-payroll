@@ -3,15 +3,13 @@ import { useWalletModal as useSolanaWalletModal } from "@solana/wallet-adapter-r
 import { useCallback, useEffect, useMemo } from "react";
 import { isAddressValid } from "@/utils";
 import type { GeneratedIntent, IntentSignInput, IntentSignedPayload, UseWalletResult, WalletAccount } from "../types";
-import {
-  buildSolanaPayload,
-  encodeEd25519,
-  nonceToBase64,
-  payloadAsText,
-  unixTimestamp,
-  walletDoesNotSupportSigning,
-} from "../intents-sign";
+import { payloadAsText } from "../intents-sign";
 import { setSolanaSigner } from "./session";
+import {
+  createSolanaEmptyIntentBytes,
+  formatSolanaSignedData,
+  signSolanaIntentsMessage,
+} from "./sign-intents-message";
 
 export function useSolanaWallet(): UseWalletResult {
   const {
@@ -55,46 +53,31 @@ export function useSolanaWallet(): UseWalletResult {
 
   const signMessage = useCallback(
     async (input: IntentSignInput): Promise<IntentSignedPayload> => {
-      if (!address || !publicKey) {
+      if (!address) {
         throw new Error("[wallet:solana] No connected account to sign with.");
       }
-      if (typeof adapterSignMessage !== "function") {
-        throw walletDoesNotSupportSigning("Solana");
-      }
-      const payload = buildSolanaPayload(
-        input.signerId,
-        nonceToBase64(input.nonce),
-        unixTimestamp(input.deadlineMs),
-      );
-      const signature = await adapterSignMessage(new TextEncoder().encode(payload));
-      return {
-        standard: "raw_ed25519",
-        payload,
-        public_key: encodeEd25519(publicKey.toBytes()),
-        signature: encodeEd25519(signature),
-      };
+      const message = createSolanaEmptyIntentBytes({
+        signerId: input.signerId,
+        deadlineMs: input.deadlineMs,
+        nonce: input.nonce,
+      });
+      const signature = await signSolanaIntentsMessage(message, adapterSignMessage);
+      return formatSolanaSignedData(signature, message, address);
     },
-    [adapterSignMessage, address, publicKey],
+    [adapterSignMessage, address],
   );
 
   const signGeneratedIntent = useCallback(
     async (intent: GeneratedIntent): Promise<IntentSignedPayload> => {
-      if (!address || !publicKey) {
+      if (!address) {
         throw new Error("[wallet:solana] No connected account to sign with.");
       }
-      if (typeof adapterSignMessage !== "function") {
-        throw walletDoesNotSupportSigning("Solana");
-      }
       const payload = payloadAsText(intent.payload);
-      const signature = await adapterSignMessage(new TextEncoder().encode(payload));
-      return {
-        standard: "raw_ed25519",
-        payload,
-        public_key: encodeEd25519(publicKey.toBytes()),
-        signature: encodeEd25519(signature),
-      };
+      const message = new TextEncoder().encode(payload);
+      const signature = await signSolanaIntentsMessage(message, adapterSignMessage);
+      return formatSolanaSignedData(signature, message, address);
     },
-    [adapterSignMessage, address, publicKey],
+    [adapterSignMessage, address],
   );
 
   const isAddressValidFn = useCallback((value: string) => isAddressValid(value, "solana"), []);

@@ -19,10 +19,6 @@ export function isoDeadline(deadlineMs: number): string {
   return new Date(deadlineMs).toISOString();
 }
 
-export function unixTimestamp(deadlineMs: number): number {
-  return Math.floor(deadlineMs / 1000);
-}
-
 export function buildNep413Message(signerId: string, deadlineIso: string): string {
   return JSON.stringify({ deadline: deadlineIso, intents: [], signer_id: signerId });
 }
@@ -32,16 +28,6 @@ export function buildEvmFamilyPayload(signerId: string, nonceB64: string, deadli
     signer_id: signerId,
     verifying_contract: INTENTS_RECIPIENT,
     deadline: deadlineIso,
-    nonce: nonceB64,
-    intents: [],
-  });
-}
-
-export function buildSolanaPayload(signerId: string, nonceB64: string, timestamp: number): string {
-  return JSON.stringify({
-    signer_id: signerId,
-    verifying_contract: INTENTS_RECIPIENT,
-    deadline: { timestamp },
     nonce: nonceB64,
     intents: [],
   });
