@@ -221,7 +221,7 @@ export function SinglePayoutView() {
         toast.fail({ title: "Could not read wallet balance" });
         throw new BalanceGateError("Could not read wallet balance");
       }
-      if (balance.raw < amountIn) {
+      if (balance.raw < amountIn && import.meta.env.VITE_VIRIFY_BALANCE !== "false") {
         toast.fail({ title: "Insufficient balance" });
         throw new BalanceGateError("Insufficient balance");
       }

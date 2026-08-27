@@ -17,6 +17,7 @@ export async function broadcastQuickPayCallData(input: {
   chainId: number;
   contract: string;
   callData: string;
+  value?: bigint;
 }): Promise<Hash> {
   await switchChain(wagmiConfig, { chainId: input.chainId as SupportedEvmChainId });
   const client = await getWalletClient(wagmiConfig);
@@ -24,7 +25,7 @@ export async function broadcastQuickPayCallData(input: {
   return client.sendTransaction({
     to: input.contract as Address,
     data: toHexData(input.callData),
-    value: 0n,
+    value: input.value ?? 0n,
     chain: client.chain,
   });
 }
@@ -39,8 +40,11 @@ export async function broadcastBatchPayCallData(input: {
   spender: string;
   requiredAmount: bigint;
   network: string;
+  value?: bigint;
+  verifyAllowance?: boolean;
 }): Promise<Hash> {
   const chainId = input.chainId as SupportedEvmChainId;
+  const verifyAllowance = input.verifyAllowance !== false;
   let approveBlockNumber: bigint | undefined;
   for (const approval of input.approvals) {
     if (!approval.trim()) continue;
@@ -55,19 +59,22 @@ export async function broadcastBatchPayCallData(input: {
     }
     approveBlockNumber = receipt.blockNumber;
   }
-  await verifyPostApproveAllowance({
-    requiredAmount: input.requiredAmount,
-    readAllowance: () => readErc20Allowance({
-      network: input.network,
-      tokenAddress: input.tokenAddress as Address,
-      owner: input.owner as Address,
-      spender: input.spender as Address,
-      blockNumber: approveBlockNumber,
-    }),
-  });
+  if (verifyAllowance) {
+    await verifyPostApproveAllowance({
+      requiredAmount: input.requiredAmount,
+      readAllowance: () => readErc20Allowance({
+        network: input.network,
+        tokenAddress: input.tokenAddress as Address,
+        owner: input.owner as Address,
+        spender: input.spender as Address,
+        blockNumber: approveBlockNumber,
+      }),
+    });
+  }
   return broadcastQuickPayCallData({
     chainId: input.chainId,
     contract: input.contract,
     callData: input.callData,
+    value: input.value,
   });
 }

@@ -10,7 +10,14 @@ import {
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { PublicKey, SystemProgram, Transaction } from "@solana/web3.js";
+import {
+  PublicKey,
+  SystemProgram,
+  Transaction,
+  TransactionExpiredBlockheightExceededError,
+  VersionedTransaction,
+} from "@solana/web3.js";
+import { Buffer } from "buffer";
 import { getSolanaConnection } from "@/lib/rpc/solana";
 import { getSolanaSigner } from "./session";
 
@@ -34,6 +41,58 @@ async function sendSigned(transaction: Transaction): Promise<string> {
   );
   if (confirmation.value.err) {
     throw new Error("Solana transfer failed");
+  }
+  return signature;
+}
+
+const SOLANA_EXPIRED_MESSAGE = "Solana transaction expired. Confirm again to retry.";
+
+function recentBlockhashOf(tx: Transaction | VersionedTransaction): string {
+  if (tx instanceof VersionedTransaction) return tx.message.recentBlockhash;
+  return tx.recentBlockhash || "";
+}
+
+function isExpiredBlockhashError(error: unknown): boolean {
+  if (error instanceof TransactionExpiredBlockheightExceededError) return true;
+  if (!(error instanceof Error)) return false;
+  return /block height exceeded|blockhash not found|blockhash.*expired/i.test(error.message);
+}
+
+export async function broadcastSerializedSolanaTx(input: {
+  serializedTransaction: string;
+  lastValidBlockHeight?: number;
+}): Promise<string> {
+  const signer = requireSigner();
+  const connection = getSolanaConnection();
+  const raw = Buffer.from(input.serializedTransaction, "base64");
+  let unsigned: Transaction | VersionedTransaction;
+  try {
+    unsigned = Transaction.from(raw);
+  } catch {
+    unsigned = VersionedTransaction.deserialize(raw);
+  }
+  const signed = await signer.signTransaction(unsigned);
+  const signature = await connection.sendRawTransaction(signed.serialize());
+  const lastValidBlockHeight = input.lastValidBlockHeight
+    ?? (await connection.getLatestBlockhash("confirmed")).lastValidBlockHeight;
+  try {
+    const confirmation = await connection.confirmTransaction(
+      {
+        signature,
+        blockhash: recentBlockhashOf(signed),
+        lastValidBlockHeight,
+      },
+      "confirmed",
+    );
+    if (confirmation.value.err) {
+      throw new Error(SOLANA_EXPIRED_MESSAGE);
+    }
+  } catch (error) {
+    if (error instanceof Error && error.message === SOLANA_EXPIRED_MESSAGE) throw error;
+    if (isExpiredBlockhashError(error)) {
+      throw new Error(SOLANA_EXPIRED_MESSAGE);
+    }
+    throw error;
   }
   return signature;
 }

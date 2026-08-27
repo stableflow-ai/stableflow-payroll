@@ -10,11 +10,11 @@ import { usePaymentWallet } from "@/hooks/use-payment-wallet";
 import { useTokenBalance } from "@/hooks/use-token-balances";
 import { useConnectedWallets } from "@/hooks/use-wallet";
 import useToast from "@/hooks/use-toast";
-import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
+import { useIntentsTokensStore } from "@/stores/intents-tokens";
 import { enqueueBatchPayoutCommit } from "@/stores/batch-payout-commit-queue";
 import { useTokenBalancesStore } from "@/stores/token-balances";
 import { formatAmount } from "@/utils";
-import { broadcastBatchPayCallData } from "@/wallet/broadcast-quick-pay";
+import { broadcastBatchPayout } from "@/wallet/broadcast-batch-payout";
 import type { ChainKind } from "@/wallet";
 import type { PayBatchQuoteParam } from "@/types/payout";
 import type { PayLayoutOutletContext } from "@/layouts/PayLayout";
@@ -28,7 +28,7 @@ import {
   createEmptyDraft,
   feeFromQuote,
   groupTokenBreakdown,
-  isEvmOriginToken,
+  isBatchOriginToken,
   parseImportRows,
   patchDraft,
   refillUnresolvedTokens,
@@ -59,7 +59,7 @@ export function BatchPayoutView() {
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const findByChainAndSymbol = useIntentsTokensStore((s) => s.findByChainAndSymbol);
   const tokensReady = useIntentsTokensStore((s) => s.tokens.length > 0);
-  const { originToken, setOriginToken } = usePayOriginToken(BATCH_BLOCKCHAINS, { excludeNative: true });
+  const { originToken, setOriginToken } = usePayOriginToken(BATCH_BLOCKCHAINS);
   const originKind: ChainKind =
     originToken?.chain.chainKind === "near" || originToken?.chain.chainKind === "solana"
       ? originToken.chain.chainKind
@@ -101,7 +101,7 @@ export function BatchPayoutView() {
   }, [tokensReady, findByChainAndSymbol]);
 
   useEffect(() => {
-    if (!connectedAddress || !originToken?.contractAddress) return;
+    if (!connectedAddress || !originToken) return;
     void fetchOneBalance(connectedAddress, originToken);
     const id = window.setInterval(() => {
       void fetchOneBalance(connectedAddress, originToken);
@@ -196,9 +196,9 @@ export function BatchPayoutView() {
         paymentWallet.connectWallet();
         throw new BalanceGateError("Connect your payment wallet first");
       }
-      if (!isEvmOriginToken(originToken) || !originToken.chain.chainId || !originToken.contractAddress) {
-        toast.fail({ title: "Batch payout currently supports EVM ERC-20 origin tokens only" });
-        throw new BalanceGateError("Batch payout currently supports EVM ERC-20 origin tokens only");
+      if (!isBatchOriginToken(originToken)) {
+        toast.fail({ title: "Select a paying token" });
+        throw new BalanceGateError("Select a paying token");
       }
       const payer = wallet.account.address;
       setPhase("quoting");
@@ -209,25 +209,20 @@ export function BatchPayoutView() {
         toast.fail({ title: "Could not read wallet balance" });
         throw new BalanceGateError("Could not read wallet balance");
       }
-      if (balance.raw < amountIn) {
+      if (balance.raw < amountIn && import.meta.env.VITE_VIRIFY_BALANCE !== "false") {
         toast.fail({ title: "Insufficient balance" });
         throw new BalanceGateError("Insufficient balance");
       }
       const tx = swapped.transaction;
-      if (!tx?.batch_contract || !tx.callData) {
+      if (!tx) {
         throw new Error("Missing batch transaction");
       }
       setPhase("sending");
-      const txHash = await broadcastBatchPayCallData({
-        chainId: originToken.chain.chainId,
-        tokenAddress: originToken.contractAddress,
-        approvals: tx.approvals ?? [],
-        callData: tx.callData,
-        contract: tx.batch_contract,
-        owner: payer,
-        spender: tx.batch_contract,
-        requiredAmount: amountIn,
-        network: originToken.blockchain,
+      const txHash = await broadcastBatchPayout({
+        token: originToken,
+        transaction: tx,
+        amountIn,
+        payer,
       });
       enqueueBatchPayoutCommit({ orderId: swapped.orderId, txHash });
     },
@@ -248,7 +243,7 @@ export function BatchPayoutView() {
 
   const sending = settleMutation.isPending || phase === "quoting" || phase === "sending";
   const canConfirm = Boolean(
-    isEvmOriginToken(originToken)
+    isBatchOriginToken(originToken)
     && quoteBody
     && quote
     && !quoteStale
@@ -337,7 +332,6 @@ export function BatchPayoutView() {
         showBalances
         balanceOwners={balanceOwners}
         allowedBlockchains={BATCH_BLOCKCHAINS}
-        excludeNative
         onSelect={({ token }) => {
           setOriginToken(token);
           setOriginDialogOpen(false);

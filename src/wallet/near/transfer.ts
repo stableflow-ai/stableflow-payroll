@@ -2,8 +2,13 @@
  * Near native and FT transfers to a deposit address.
  */
 
-import { actionCreators } from "@near-wallet-selector/core";
+import {
+  actionCreators,
+  internalActionToNaj,
+  type FunctionCallAction,
+} from "@near-wallet-selector/core";
 import { nearViewFunction } from "@/lib/rpc/near";
+import type { PayBatchNearAction } from "@/types/payout";
 import { getNearSelector } from "./session";
 
 const FT_GAS = BigInt("30000000000000");
@@ -25,6 +30,31 @@ async function hashFromOutcomes(result: unknown): Promise<string> {
   const hash = last?.transaction?.hash || last?.transaction_outcome?.id;
   if (!hash) throw new Error("Near wallet did not return a transaction hash");
   return hash;
+}
+
+function toFunctionCallAction(action: PayBatchNearAction): FunctionCallAction {
+  return {
+    type: "FunctionCall",
+    params: {
+      methodName: action.params.methodName,
+      args: action.params.args,
+      gas: action.params.gas,
+      deposit: action.params.deposit,
+    },
+  };
+}
+
+export async function broadcastNearActions(input: {
+  receiverId: string;
+  actions: PayBatchNearAction[];
+}): Promise<string> {
+  const selector = requireSelector();
+  const wallet = await selector.wallet();
+  const result = await wallet.signAndSendTransaction({
+    receiverId: input.receiverId,
+    actions: input.actions.map((action) => internalActionToNaj(toFunctionCallAction(action))),
+  });
+  return hashFromOutcomes(result);
 }
 
 export async function transferNativeNear(input: {

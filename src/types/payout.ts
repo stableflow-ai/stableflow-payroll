@@ -60,10 +60,24 @@ export interface PayBatchQuoteResp {
   totalAmountInUsd: string;
 }
 
+export interface PayBatchNearAction {
+  type: "FunctionCall";
+  params: {
+    methodName: string;
+    args: Record<string, unknown>;
+    gas: string;
+    deposit: string;
+  };
+}
+
 export interface PayBatchSwapTransaction {
   approvals: string[] | null;
   callData: string;
   batch_contract: string;
+  receiverId?: string;
+  actions?: PayBatchNearAction[];
+  serializedTransaction?: string;
+  lastValidBlockHeight?: number;
 }
 
 export interface PayBatchSwapResp extends PayBatchQuoteResp {

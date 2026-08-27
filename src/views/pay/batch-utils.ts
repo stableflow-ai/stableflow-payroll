@@ -1,7 +1,7 @@
 import { getChainByNetwork } from "@/config/chains";
 import type { PayBatchReceive } from "@/types/payout";
 import type { IntentsToken, PayoutSymbol } from "@/stores/intents-tokens";
-import { isNativeToken, normalizeSymbol } from "@/stores/intents-tokens";
+import { normalizeSymbol } from "@/stores/intents-tokens";
 import { Big } from "@/utils";
 import type { WalletChainKind } from "@/utils";
 import { AMOUNT_MAX_DECIMALS, MEMO_MAX_LENGTH } from "./config";
@@ -333,15 +333,8 @@ export function groupTokenBreakdown(rows: BatchDraft[]): Array<{
   }));
 }
 
-export function isEvmOriginToken(token: IntentsToken | null): boolean {
-  return Boolean(
-    token
-    && token.chain.chainKind === "evm"
-    && token.chain.chainId
-    && token.chain.batchEnabled
-    && token.contractAddress
-    && !isNativeToken(token),
-  );
+export function isBatchOriginToken(token: IntentsToken | null): boolean {
+  return Boolean(token && token.chain.batchEnabled);
 }
 
 export function feeFromQuote(totalAmountInFormatted: string | undefined, totalOut: string): string | null {
