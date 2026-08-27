@@ -33,7 +33,7 @@ export const FIXED_CHAINS: ChainConfig[] = [
   { blockchain: "bsc", chainName: "BNB Chain", chainKind: "evm", chainId: 56, logo: chainLogoUrl("bsc"), payerEnabled: true, batchEnabled: true, txExplorer: "https://bscscan.com/tx/" },
   { blockchain: "avax", chainName: "Avalanche", chainKind: "evm", chainId: 43114, logo: chainLogoUrl("avax"), payerEnabled: true, batchEnabled: true, txExplorer: "https://snowscan.xyz/tx/" },
   { blockchain: "gnosis", chainName: "Gnosis", chainKind: "evm", chainId: 100, logo: chainLogoUrl("gnosis"), payerEnabled: true, batchEnabled: true, txExplorer: "https://gnosisscan.io/tx/" },
-  { blockchain: "monad", chainName: "Monad", chainKind: "evm", chainId: 143, logo: chainLogoUrl("monad"), payerEnabled: true, batchEnabled: true, txExplorer: "https://monadvision.com/tx/" },
+  // { blockchain: "monad", chainName: "Monad", chainKind: "evm", chainId: 143, logo: chainLogoUrl("monad"), payerEnabled: true, batchEnabled: true, txExplorer: "https://monadvision.com/tx/" },
   { blockchain: "scroll", chainName: "Scroll", chainKind: "evm", chainId: 534352, logo: chainLogoUrl("scroll"), payerEnabled: true, batchEnabled: true, txExplorer: "https://scrollscan.com/tx/" },
   { blockchain: "xlayer", chainName: "X Layer", chainKind: "evm", chainId: 196, logo: chainLogoUrl("xlayer"), payerEnabled: true, batchEnabled: true, txExplorer: "https://www.okx.com/web3/explorer/xlayer/tx/" },
   // { blockchain: "plasma", chainName: "Plasma", chainKind: "evm", chainId: 9745, logo: chainLogoUrl("plasma"), payerEnabled: true, batchEnabled: true, txExplorer: "https://plasmascan.to/tx/" },

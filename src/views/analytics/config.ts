@@ -49,7 +49,6 @@ export const ASSET_COLORS: Record<string, string> = {
   DAI: "#F5AC37",
   TRX: "#FF0013",
   SOL: "#9945FF",
-  LINK: "#2A5ADA",
   AVAX: "#E84142",
   NEAR: "#000000",
   PYUSD: "#DFDFDF",

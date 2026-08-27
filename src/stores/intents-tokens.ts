@@ -15,13 +15,12 @@ const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 export const PAYOUT_SYMBOLS = [
   "USDC",
   "USDT",
+  "DAI",
   "ETH",
   "BNB",
-  "DAI",
+  "AVAX",
   "TRX",
   "SOL",
-  "LINK",
-  "AVAX",
   "NEAR",
 ] as const;
 
@@ -149,7 +148,7 @@ export const useIntentsTokensStore = create<IntentsTokensState>()(
       },
     }),
     {
-      name: "stableflow-pay:intents-tokens:v2",
+      name: "stableflow-pay:intents-tokens:v2.1",
       partialize: (s) => ({ tokens: s.tokens, fetchedAt: s.fetchedAt }),
     },
   ),

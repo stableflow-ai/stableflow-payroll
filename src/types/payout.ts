@@ -60,12 +60,15 @@ export interface PayBatchQuoteResp {
   totalAmountInUsd: string;
 }
 
+export interface PayBatchSwapTransaction {
+  approvals: string[] | null;
+  callData: string;
+  batch_contract: string;
+}
+
 export interface PayBatchSwapResp extends PayBatchQuoteResp {
   orderId: string;
-  approvals: string[];
-  callData: string;
-  spender: string;
-  contract: string;
+  transaction: PayBatchSwapTransaction;
 }
 
 export interface PayBatchSubmitParam {
