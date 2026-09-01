@@ -99,7 +99,7 @@ export default defineConfig({
     chunkSizeWarningLimit: 2000,
   },
   server: {
-    port: 5173,
+    port: 5201,
     host: "127.0.0.1",
     // When a real API is wired, the client calls VITE_API_BASE_URL directly (no proxy).
   },
