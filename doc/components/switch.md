@@ -2,35 +2,46 @@
 
 Path: `src/components/ui/switch/Switch.tsx`
 
-Figma: Decash off `392:20554`, on `395:21220`.
-
-Pill toggle. The thumb slides with Motion; the track color tweens between off and on.
+Animated toggle built on `motion/react`. Works controlled (`checked` + `onCheckedChange`) or uncontrolled (`defaultChecked`). Renders a `<button role="switch">` with `aria-checked`, so pass `aria-label` when there is no visible label.
 
 ## Defaults
 
-- Size `33.333px × 20px`, fully rounded
-- Off track `#F6F6F6`, on track `#6284F5`, 1px border `#E3E3E3`
-- Thumb `15px` white circle, 1px border `#D9D9D9`, 13px travel
-- Disabled: `opacity: 0.3` and `cursor: not-allowed` (`pointer-events: none`)
+- Track 34×20px, fully rounded, 1px border `#e3e3e3`
+- Track colour animates between `#F6F6F6` (off) and `#6284F5` (on) over 200ms
+- Thumb 16px, white, border `#d9d9d9`, springs 13px to the right when checked
+- Disabled: `opacity: 0.3`, `cursor: not-allowed`, no pointer events
+
+Constants: `SWITCH_TRACK_OFF_BG`, `SWITCH_TRACK_ON_BG`, `SWITCH_THUMB_TRAVEL_PX` in `./config`.
 
 ## Props
 
-Omits native `onChange` / `role` / `aria-checked` / `children`, plus Motion `animate` / `initial` / `transition`. Other button attributes are forwarded.
+Extends `HTMLMotionProps<"button">` minus `onChange`, `role`, `aria-checked`, `children`, `animate`, `initial`, and `transition`.
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `checked` | `boolean` | — | Controlled. Omit for uncontrolled |
-| `defaultChecked` | `boolean` | `false` | Uncontrolled initial value |
-| `onCheckedChange` | `(checked: boolean) => void` | — | Fires after a toggle |
-| `className` | `string` | — | Track (`<button>`) overrides |
-| `disabled` | `boolean` | — | Same visual treatment as Button |
-
-Constants: `SWITCH_TRACK_OFF_BG`, `SWITCH_TRACK_ON_BG`, `SWITCH_THUMB_TRAVEL_PX` in `./config`.
+| `checked` | `boolean` | — | Controlled state |
+| `defaultChecked` | `boolean` | `false` | Uncontrolled initial state |
+| `onCheckedChange` | `(checked: boolean) => void` | — | Fired with the next state |
+| `disabled` | `boolean` | — | |
+| `onClick` | `MouseEventHandler` | — | Runs first; call `preventDefault()` to veto the toggle |
+| `className` | `string` | — | Track |
 
 ## Example
 
 ```tsx
 import { Switch } from "@/components/ui/switch/Switch";
 
-<Switch checked={enabled} onCheckedChange={setEnabled} aria-label="Confidential payments" />
+<Switch
+  checked={notify}
+  onCheckedChange={(checked) => {
+    setNotify(checked);
+    if (!checked) setEmail("");
+  }}
+  aria-label="Notify recipient"
+/>
 ```
+
+## Notes
+
+- Use `onCheckedChange`, not `onChange` — the latter is stripped from the prop type.
+- The animation values live in `config.ts`, not in the JSX; change them there so both the track and the thumb stay in step.

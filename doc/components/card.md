@@ -2,33 +2,31 @@
 
 Path: `src/components/ui/card/Card.tsx`
 
-Generic surface. Dialog, Drawer, and Table reuse these defaults.
+The surface primitive. A plain `<div>` with the product's panel styling, used directly for page panels and internally by [Dialog](dialog.md), [Drawer](drawer.md), and [Table](table.md).
 
 ## Defaults
 
 - `border-radius: 20px`
 - `border: 1px solid #FFF`
 - `background: #FDFDFD`
-- `box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.06)`
 - `padding: 20px`
-
-`className` is merged last and can override any default.
+- `box-shadow: 0 0 20px 0 rgba(0,0,0,0.06)`
 
 ## Props
 
-Extends `HTMLAttributes<HTMLDivElement>`.
-
-| Prop | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `className` | `string` | — | Tailwind merge via `cn()` |
-| ...rest | div attributes | — | Spread onto the root |
+`CardProps = HTMLAttributes<HTMLDivElement>`. Every div attribute is forwarded; `className` is merged with `cn()` so any default can be overridden.
 
 ## Example
 
 ```tsx
 import { Card } from "@/components/ui/card/Card";
 
-<Card className="w-full max-w-[480px]">
-  Content
+<Card className="mx-auto w-full max-w-[776px] px-6 py-7 sm:px-8">
+  {children}
 </Card>
 ```
+
+## Notes
+
+- Reach for Card before hand-rolling a panel; the radius, border, and shadow are not repeated anywhere else.
+- Padding is part of the default. Override it on the caller (`p-0`, `px-6 py-7`) rather than wrapping the Card in another box.

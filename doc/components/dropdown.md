@@ -2,41 +2,40 @@
 
 Path: `src/components/ui/dropdown/Dropdown.tsx`
 
-Figma: Decash `817:23133` (trigger). Select-style menu, not an action menu.
-
-The trigger uses `IconArrowDown`; the icon rotates `180deg` while open. The panel is portaled to `document.body` with:
-
-- `border-radius: 12px`
-- `border: 1px solid #E0E0E0`
-- `background: #FDFDFD`
-- `box-shadow: 0 0 20px 0 rgba(0, 0, 0, 0.06)`
-- Montserrat Medium 16px / `#000`
-
-Closes on outside click, Escape, and scroll.
-
-The panel is `position: fixed`. `useFloatingPosition` measures it off-flow (hidden, origin `0,0`) before clamping, and keeps CSS width classes such as `w-[285px]` / `w-max` so the first open is not pinned to the left edge of the viewport.
+Select-style trigger with a portalled option list. Works controlled (`value` + `onChange`) or uncontrolled (`defaultValue`).
 
 ## Trigger defaults
 
-- Height 36px, `border-radius: 6px`
-- Border `#E3E3E3`, background `#FFF`
-- Montserrat Medium 14px / `#000`
-- Trigger is `overflow-hidden`; label and value truncate so the chevron stays inside when the control is narrow.
+- Height 36px, `border-radius: 6px`, border `#E3E3E3`, white background, `padding: 0 12px`
+- Montserrat Medium 14px, black
+- Optional `label` renders on the left in `#AAA`; the selected value then right-aligns
+- `IconArrowDown` on the right rotates 180° while open
+- Disabled: `opacity: 0.3`, `cursor: not-allowed`
+
+## Panel defaults
+
+Rendered into `document.body` at `z-index: 1100`, positioned below the trigger with a 6px offset and clamped to the viewport by `useFloatingPosition`. Minimum width matches the trigger. Radius 12px, border `#E0E0E0`, background `#FDFDFD`, shadow `0 0 20px 0 rgba(0,0,0,0.06)`.
+
+Options are 14px Montserrat Medium; hover and the selected row use `rgba(0,0,0,0.05)`; disabled options are `opacity: 0.3`.
+
+It closes on outside pointer-down, Escape, or any scroll in the capture phase.
 
 ## Props
 
 | Prop | Type | Default | Notes |
 | --- | --- | --- | --- |
-| `options` | `{ value: string; label: ReactNode; disabled?: boolean }[]` | required | |
-| `label` | `ReactNode` | — | Optional prefix on the trigger (gray, left-aligned) |
-| `value` | `string` | — | Controlled value |
-| `defaultValue` | `string` | — | Uncontrolled initial value |
-| `onChange` | `(value: string) => void` | — | Fired on select |
-| `placeholder` | `string` | `"Select"` | Shown when nothing is selected |
+| `options` | `DropdownOption[]` | required | `{ value: string; label: ReactNode; disabled?: boolean }` |
+| `value` | `string` | — | Controlled selection |
+| `defaultValue` | `string` | — | Uncontrolled initial selection |
+| `onChange` | `(value: string) => void` | — | Fired on select, then the panel closes |
+| `label` | `ReactNode` | — | Static prefix inside the trigger |
+| `placeholder` | `string` | `"Select"` | Shown when nothing matches the current value |
 | `disabled` | `boolean` | `false` | |
-| `className` | `string` | — | Outer wrapper |
+| `className` | `string` | — | Wrapper (`relative inline-block`) |
 | `triggerClassName` | `string` | — | Trigger button |
-| `panelClassName` | `string` | — | Portaled panel |
+| `panelClassName` | `string` | — | Portalled option list |
+
+Constant: `DROPDOWN_PLACEHOLDER` in `./config`.
 
 ## Example
 
@@ -45,12 +44,18 @@ import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 
 <Dropdown
   value={status}
-  onChange={setStatus}
-  triggerClassName="w-[141px]"
+  onChange={(value) => { setStatus(value); setPage(1); }}
+  className="flex-1 md:w-[141px]"
+  triggerClassName="w-full"
   options={[
     { value: "all", label: "All Status" },
-    { value: "complete", label: "Complete" },
-    { value: "pending", label: "Pending" },
+    { value: "completed", label: "Complete" },
+    { value: "failed", label: "Failed" },
   ]}
 />
 ```
+
+## Notes
+
+- The wrapper is `inline-block`, so give it a width (`className="w-full"` or a fixed width) inside a flex row.
+- There is no built-in search, multi-select, or infinite scroll. A long list needs a different component; do not bolt paging onto this one.

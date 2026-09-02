@@ -43,10 +43,10 @@ export const router = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
-      {
-        path: "/p/:id",
-        element: <RequestPayView />,
-      },
+      // {
+      //   path: "/p/:id",
+      //   element: <RequestPayView />,
+      // },
       {
         element: <RequireAuth />,
         children: [

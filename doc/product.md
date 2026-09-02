@@ -1,107 +1,109 @@
 # Product Map
 
-Stableflow Pay is a confidential stablecoin payout product. There are **no roles** (no admin, employee, or organization). Recipients are **wallet addresses**, not employees.
+Stableflow Pay lets a signed-in business send stablecoin payouts across EVM, Near, Solana, and Tron from a single paying wallet. Cross-chain routing goes through Near Intents (1Click) behind the backend.
 
-Read this before adding pages or navigation. Page UI and APIs are specified when each screen is built. Routes marked *planned* are not in the router yet.
-
-The previous app (`stableflow-pay-old`) is a visual and payout-flow reference only. Do not copy employee, org, or invite-onboarding flows.
+Only two areas are released: **Auth** and **Pay**. Everything else is either a public side page or a route that is commented out in `src/router/index.tsx`. This document details the released areas only.
 
 ## Areas
 
 | Area | Routes | Status | Notes |
 | --- | --- | --- | --- |
-| Auth | `/login`, `/register` | shipped | Email + password. Register body: `name`, `email`, `password`, `inviteCode`. Guest forgot password: email, verification code, and new password in a dialog. Authed users change password from the header avatar menu. |
-| Marketing | `/howitworks` | shipped | Public. Linked from the auth shell. |
-| Home | `/` | shipped | Dashboard: summary, charts, pending. Behind `RequireAuth` + `AppLayout`. Overview, volume, pending, and recent use `/v1/pay/*`. Balance is summed on-chain from connected payer-chain tokens (`PAYOUT_SYMBOLS`, USD via token price). |
-| Pay | `/pay`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request` | in progress | See [Pay](#pay). Pending list uses `GET /v1/pay/payments/pending`. History uses `GET /v1/pay/payments`. Address book uses `/v1/pay/recipient*`. |
-| Analytics | `/analytics` | shipped | Month selector, Total Payment chart (`/v1/pay/payments/volume`, day/week/month), latest payouts (`/payments/recent`), calendar / asset mix / networks from `GET /v1/pay/analytics`. Shows a skeleton while analytics loads. |
-| Partner | `/partner`, `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | shipped | See [Partner](#partner). Registration and API Keys use `/v1/pay/partner*`. Reports use `/v1/pay/partner/analytics` and `/v1/pay/partner/payments`. Support / Terms / Docs are placeholders. |
+| Auth | `/login`, `/register` | Released | Detailed below. Reset password is a dialog, not a route. |
+| Pay | `/pay`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request` | Released | Detailed below. Requires a session. |
+| Marketing | `/howitworks` | Live, not detailed here | Static public page linked from the auth screens. |
+| Public payer | `/p/:id` | Disabled | Route commented out in `src/router/index.tsx`; `src/views/pay/RequestPayView.tsx` still exists. Anonymous page that pays a payment request created in `/pay/request`, rendered inside `AppLayout` but outside `RequireAuth`. |
+| Home | `/` | Disabled | Route commented out in `src/router/index.tsx`; `src/views/home/` still exists. |
+| Analytics | `/analytics` | Disabled | Route commented out; `src/views/analytics/` still exists. |
+| Partner | `/partner`, `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | Disabled | Routes and `PartnerLayout` commented out; `src/views/partner/` and `RequirePartner` still exist. |
+
+Do not re-enable a disabled route, or document one here, without being asked.
+
+Known gap: the catch-all route redirects to `/`, and `/` has no route while Home is disabled. Landing on an unknown path therefore does not resolve to a page. Signed-in entry points (`/pay` in the header logo and nav) are used instead.
+
+## Shell
+
+`AppLayout` (`src/layouts/AppLayout.tsx`) wraps everything except the auth screens and `/howitworks`: a 63px `AppHeader` over a `#f6f6f6` page. Pay and Partner paths render full-bleed; other paths get a centred `max-w-[1252px]` container. With only `/pay/*` enabled underneath it, the centred branch is currently unreachable.
+
+`AppHeader` (`src/components/layout/`) holds the logo (links to `/pay`), the nav from `HEADER_NAV_ITEMS` (only `Pay` is enabled), `HeaderWalletCapsule` (multi-chain connect state), and `HeaderAccountMenu` (user, change password, log out). Below `md` the nav moves to a second scrollable row.
+
+`PayLayout` (`src/layouts/PayLayout.tsx`) adds the Pay sidebar, the page title (taken from the active `PAY_NAV_ITEMS` entry), and a `setHeaderExtra` outlet context so a child view can inject a control next to the title. It also mounts `useQuickPayCommitQueue()` and `useBatchPayoutCommitQueue()`, which drain the persisted submit queues in the background.
 
 ## Auth
 
-- Login: `email` + `password`.
-- Register: `name` (max 50), `email` (max 100), `password` (8–50), confirm password must match, `inviteCode` (max 10).
-- Session: Zustand `useAuthStore` + `localStorage`. Types: `AuthUser` (`id`, `email`, `name`) — no `role` or `org_id`.
-- Unauthenticated `/` redirects to `/login`. Authenticated `/login` or `/register` redirects to `/`, or to a safe `returnTo` query when present.
-- After login or register, navigate to a safe `returnTo` (in-app path with search) or `/`.
-- Boot: hydrate `{ token, user }` from `localStorage`, then `GET /v1/pay/profile` in the background. HTTP 401 logs the user out. Navigation is not blocked while the profile request is in flight.
-- Reset password:
-  - Guest: Login `Forgot Password?` opens a dialog. Send Code calls `POST /v1/pay/reset-password/code`. Continue calls `POST /v1/pay/reset-password` (`email`, `code`, `newPassword`), then closes back to login.
-  - Authed: header avatar menu opens `ResetPasswordDialog` (`variant="authed"`). Continue calls `POST /v1/pay/change-password` (`currentPassword`, `newPassword`). The session stays; the dialog closes.
+Files: `src/views/auth/`. Guards: `src/router/guards.tsx`. Session: `src/stores/auth.ts` + `src/lib/auth-session.ts`. API: [api.md](api.md).
 
-Guards live in `src/router/guards.tsx`: `RequireAuth`, `RedirectIfAuthed`, `RequirePartner`. Do not add admin/employee guards.
+Both screens share `AuthShell`: a blue brand panel (logo, headline, three feature bullets, link to `/howitworks`) beside a form card, stacking vertically below `md`. `AuthBetaBanner` sits above the login card.
 
-## Home
+| Screen | Fields | Endpoint |
+| --- | --- | --- |
+| `/login` | Email, password | `POST /v1/pay/auth/login` |
+| `/register` | Name, email, password, confirm password, invite code | `POST /v1/pay/auth/register` |
 
-One authenticated page at `/`. Summary, payment volume chart, pending payouts, and recent payouts. Shared chrome is `AppLayout` + `AppHeader`, not the page itself. Total Payment and Recipients come from `GET /v1/pay/overview`. Volume uses `GET /v1/pay/payments/volume` (`day` / `week` / `month`). Pending and recent lists use `/v1/pay/payments/pending` and `/recent` (max 6). Balance is summed client-side from connected wallets on `payerEnabled` chains (USD uses `/v0/tokens` prices). Token chips are display-only.
+Validation lives in `src/views/auth/config.ts` as pure `*RuleError` / `*FormError` functions (name ≤ 50, email ≤ 100 and pattern-checked, password 8–50, invite code ≤ 10, confirm must match). The first failing rule is shown as an error toast; the request is not sent.
+
+**Reset password** is `ResetPasswordDialog`, opened from "Forgot Password?" on `/login` (`guest` variant) and from the header account menu (`authed` variant).
+
+- `guest`: email → `POST /v1/pay/reset-password/code` (60-second resend cooldown) → email + code + new password → `POST /v1/pay/reset-password`.
+- `authed`: current password + new password → `POST /v1/pay/change-password`.
+
+**Session.** `useLoginMutation` / `useRegisterMutation` call `applySession(token, user)`, which writes `stableflow-pay.session` to `localStorage` and updates `useAuthStore`. `useAuthStore` re-reads that key on first import, so a reload restores the session synchronously. `SessionBootstrap` in `src/App.tsx` runs `useProfileQuery()` to validate the token against `GET /v1/pay/profile` in the background and refresh the cached user.
+
+**Redirects.** `RequireAuth` sends anonymous visitors to `/login?returnTo=<path+search>`. `RedirectIfAuthed` sends signed-in visitors away from `/login` and `/register` to `returnTo` or `/`. After a successful login the view navigates to `returnTo ?? "/pay"`. `safeReturnTo` in `return-to.ts` rejects anything that is not a same-origin absolute path and refuses to bounce back to `/login` or `/register`.
+
+**401.** Any authenticated request that returns 401 clears the stored session and calls `notifyUnauthorized()`, which `src/stores/auth.ts` has wired to `logout()` (clears the store and the whole TanStack Query cache). The next render hits `RequireAuth` and lands on `/login`.
 
 ## Pay
 
-`PayLayout` secondary nav (left sidebar on desktop, horizontal chips on mobile). Desktop sidebar shows a **Payout** group label, then Single / Batch / Pending / History, a divider, then Request Payment.
+Files: `src/views/pay/`. Constants: `src/views/pay/config.ts`. Sidebar: `PaySidebar` reads `PAY_NAV_ITEMS`.
 
-| Menu | Route | Notes |
-| --- | --- | --- |
-| Single Payout | `/pay` | One address, one payment. Recipients address book is a dialog on this page (`/v1/pay/recipient*`). Origin tokens are limited to `payerEnabled` chains. |
-| Batch Payout | `/pay/batch` | CSV / Google Sheets / manual rows (max 50). Google Sheets keeps the GIS session across refresh (`sessionStorage`) until it expires; a logout icon beside the Sheets button switches account. Validate then preview. `POST /v1/pay/batch/quote\|swap\|submit`. Recipients are wallet addresses. Origin tokens are any `PAYOUT_SYMBOLS` token on `batchEnabled` chains (including native gas tokens). Near-chain NEAR is wrap.near like Single (UI/balance show native NEAR). |
-| Pending Payouts | `/pay/pending` | In-flight payouts from `GET /v1/pay/payments/pending`. Amount/Asset use destination fields. Time uses `submitted_at`. Sidebar badge is the list length. |
-| Transaction History | `/pay/history` | `GET /v1/pay/payments`. Search `q`, status `completed`/`failed`, token from `PAYOUT_SYMBOLS`, `start_time`/`end_time` unix seconds via DateRangePicker. Export CSV calls `GET /v1/pay/payments/export` with the same filters (no pagination). |
-| Request Payment | `/pay/request` | Create a payment request (receiving address, amount, dest token, required payment name, optional description, optional private receive). Generate Payment Link calls `POST /v1/pay/request` and copies `/p/:id`. The list uses `GET /v1/pay/request/list` (manual refresh, 30s cooldown). Sidebar badge uses `GET /v1/pay/request/withdraw/count` (120s poll). Pending rows can be disabled via `POST /v1/pay/request/{id}/disable`. |
+Sidebar entries: Single Payout, Batch Payout, Pending Payouts (badge = number of pending payouts), Transaction History. The Request Payment entry and its group divider are commented out, so `/pay/request` is reachable only by URL.
 
-Single payout uses `POST /v1/pay/single/quote|swap|submit`. Swap returns `depositAddress`; the connected origin wallet transfers `amountIn` to that address (native or token, EVM / Solana / Near / Tron). Near-chain **NEAR** is 1Click `nep141:wrap.near` (`wNEAR`): the UI and balance show native NEAR (1:1); Single / Request Payment wrap via `near_deposit`, `storage_deposit` the deposit address if needed, then `ft_transfer` wNEAR. Memo and notify-recipient email are sent on swap only, not on quote. Batch payout uses `POST /v1/pay/batch/quote|swap|submit` (max 50 rows). EVM and Tron send `transaction.approvals` then `transaction.callData` to `transaction.batch_contract` (native tokens attach `totalAmountIn` as value/callValue). Near signs `transaction.receiverId` + `transaction.actions` (NEAR wrap is already in those actions). Solana signs `transaction.serializedTransaction` and confirms with `lastValidBlockHeight`. Recipients are wallet addresses (not employees). The address book is not a route.
+Shared building blocks: `TokenSelectDialog` (chain + token picker, optional balances), `PayoutsTable` (Recipient / Amount / Asset / Memo / Time / Status with an explorer link), `RecipientAddressField` + `RecipientsDialog` + `ContactFormDialog` (address book), `usePayOriginToken` and `usePaymentWallet` (paying token and matching wallet).
 
-Request Payment (`/pay/request`) lets the logged-in user set a receiving address (autofilled from the connected wallet for the selected token chain), amount, dest token, required **Payment Name** (`name`, max 50), optional description (`memo`), and **Receive Privately**. Private receive signs an empty-intents MultiPayload (V1 versioned nonce from `intents.near` `current_salt`) on the matching chain wallet, then `POST https://1click.chaindefuser.com/v0/auth/authenticate` to store a Near Intents User-Session in `useNearintentsUserSessionStore` (refresh via `/v0/auth/refresh`). Generate Payment Link calls `POST /v1/pay/request` and copies `/p/{id}`. The public payer page (`/p/:id`, AppHeader, no Pay sidebar, no login required) loads `GET /v1/pay/request/{id}` with Bearer only when a session exists. Pending requests can be paid with `POST /v1/pay/single/quote|swap|submit` plus `request_id` (same guest-auth rule). If that GET fails or `status` is not `pending`, the coupon shows the deleted state. After Pay Now succeeds, the same page shows the paid state. The Request Payment list uses `GET /v1/pay/request/list` when the page opens (no poll; Refresh is limited to once per 30s). Columns: Payment Name, Request Payment, Receive Address (`Private` when `mode=private`), Paid Address (`payer`), Paid Time (`paid_at`), Status, actions. Received rows link `destination_tx_hash`; withdrawed rows link `withdraw_tx_hash`. Copy link and delete are pending-only. Delete confirms then calls `POST /v1/pay/request/{id}/disable`. The Pay sidebar (and the list “To be withdraw” badge) uses `GET /v1/pay/request/withdraw/count` every 120s. Withdraw uses `/v1/nearintents/quote` then `generate-intent`, wallet-signs the payload, then `POST /v1/pay/request/withdraw` and refetches the list once. The Withdraw button is only for `mode=private` and `status=completed`.
+Amounts are limited to `AMOUNT_MAX_DECIMALS` (6) in the inputs, memos to `MEMO_MAX_LENGTH` (200), and slippage is fixed at `QUICK_PAY_SLIPPAGE_TOLERANCE` (5).
 
-Back on `/p/:id` goes to `/`. Unauthenticated `/` still redirects to `/login?returnTo=`. After login or register, that `returnTo` is used when it is a safe in-app path.
+### `/pay` — Single Payout
 
-## Analytics
+One card: recipient address (chain detected from the address by `detectAddressChainKind`, matched against the address book), amount plus recipient token, memo, and a "Notify Recipient" switch with an email field. Choosing a contact with an email turns notification on automatically. Changing the address to another chain clears the selected token; a default USDT → USDC → first-available token for that chain is then picked by `defaultDestToken`.
 
-One authenticated page at `/analytics`. Title-row year-month picker (year arrows + 12-month grid, trigger `YYYY MMM`) drives `GET /v1/pay/analytics` (stats, Payment Calendar, Asset Distribution, Payout Networks top 5). Total Payment bars use Daily / Weekly / Monthly via `GET /v1/pay/payments/volume`. Latest Payouts uses `GET /v1/pay/payments/recent`. The page shows a skeleton while analytics is loading.
+The address book dialogs create, edit, and delete recipients through `useContacts` → `/v1/pay/recipient*`.
 
-## Partner
+Current state: **Send Payment does not submit yet.** The mutation assembles the payload (amount, destination address/network/token, slippage, optional notify email and memo, `successUrl`) and stops at a `TODO` where the payment link should be requested and the browser redirected. The quote / swap / broadcast path (`useSinglePayQuote`, `useSinglePaySwap`, `transferToDepositAddress`, `enqueueQuickPayCommit`) is still wired and is what this screen is expected to move to; `RequestPayView` is the reference implementation. Do not delete either.
 
-For SDK users. Submenus:
+### `/pay/batch` — Batch Payout
 
-| Menu | Route | Access |
-| --- | --- | --- |
-| API Keys | `/partner/api-keys` | Only after the user is a Partner. Default landing once they are. |
-| Reports | `/partner/reports` | Only after the user is a Partner. Top time / API key / network filters drive volume stats and charts (`GET /v1/pay/partner/analytics`). A paginated usage table has its own API key / source / destination / amount filters (`GET /v1/pay/partner/payments`). |
-| Support | `/partner/support` | Contact. Always available. |
-| Terms of Service | `/partner/terms` | Always available. |
-| Developer Docs | `/partner/docs` | Always available. |
+Three page steps (`upload` → `validate` → `preview`) with a two-dot `BatchStepper` injected into the layout header.
 
-Until Partner status is active, API Keys and Reports must not open. Header **Developer** goes to `/partner`: registration when the user is not a Partner, `/partner/api-keys` after they are. After the user is a Partner, hide the registration form; do not show it again. Partner status comes from `GET /v1/pay/partner` (`null` or empty data means not a Partner). API keys use `/v1/pay/partner/keys`. Reports stats use `GET /v1/pay/partner/analytics`; the table uses `GET /v1/pay/partner/payments`.
+1. **Upload.** Drop a CSV, pick a Google Sheet through the Picker, or start with one empty row. Template and accepted extensions are in `config.ts` (`IMPORT_CSV_TEMPLATE`, `IMPORT_CSV_ACCEPT`); columns are `recipient,amount,token,network,memo`. Imports are capped at `IMPORT_MAX_ROWS` (50) and the extra rows are dropped with a toast.
+2. **Validate.** An editable table of drafts with per-field status. `batch-utils.ts` owns parsing, patching, per-row validation, token resolution against the 1Click token list, totals, and the per-token breakdown. The paying token is chosen here; its balance is polled every `ORIGIN_BALANCE_POLL_MS` (20s).
+3. **Preview.** Totals, payout count, fee and cost from a live quote (`useBatchPayQuote`, refetched every 60s; the button stays disabled while the quote is stale or errored). Confirm runs `POST /v1/pay/batch/swap`, re-reads the wallet balance, refuses to continue when it is short of `totalAmountIn`, broadcasts through `broadcastBatchPayout`, then calls `enqueueBatchPayoutCommit({ orderId, txHash })` and resets the flow.
 
-Registration fields:
+The paying chain is restricted to `BATCH_BLOCKCHAINS` from `src/config/chains.ts`.
 
-| Field | Constraints |
-| --- | --- |
-| `first_name` | required, max 100 |
-| `last_name` | required, max 100 |
-| `company` | required, max 255 |
-| `purpose` | required, max 5000 |
-| `website` | optional, max 500, default `""` |
-| `telegram` | optional, max 128, default `""` |
-| `description` | optional, max 5000, default `""`. UI label is Additional Details. |
+### `/pay/pending` — Pending Payouts
 
-## Routing today
+Read-only `PayoutsTable` over `GET /v1/pay/payments/pending`. Every row renders as Pending. The query polls every 8 seconds while the list is non-empty and stops when it drains; the same query drives the sidebar badge.
 
-```
-/login            RedirectIfAuthed → LoginView
-/register         RedirectIfAuthed → RegisterView
-/howitworks       public → HowItWorksView
-/p/:id            AppLayout (no auth) → RequestPayView
-/                 RequireAuth → AppLayout → HomeView
-/analytics        RequireAuth → AppLayout → AnalyticsView
-/pay              RequireAuth → AppLayout → PayLayout → SinglePayoutView
-/pay/batch        PayLayout → BatchPayoutView
-/pay/request      PayLayout → RequestPaymentView
-/pay/pending      PayLayout → PendingPayoutsView
-/pay/history      PayLayout → TransactionHistoryView
-/partner          PartnerLayout → PartnerRegistrationView (redirects to api-keys if Partner)
-/partner/api-keys RequirePartner → ApiKeysView
-/partner/reports  RequirePartner → ReportsView
-/partner/support  PartnerPlaceholderView
-/partner/terms    PartnerPlaceholderView
-/partner/docs     PartnerPlaceholderView
-*                 → /
-```
+### `/pay/history` — Transaction History
+
+Filters: address search, status (`All` / `Complete` / `Failed`), asset (`All` plus `PAYOUT_SYMBOLS`), and a `DateRangePicker` defaulting to the last 30 days. Every filter change resets to page 1, and "Clear Filter" is enabled only when something differs from the defaults.
+
+The table is server-paginated at `HISTORY_PAGE_SIZE` (10) through `GET /v1/pay/payments`; dates are sent as Unix seconds. Status text comes from `paymentRowStatus` (`completed`/`complete` → Complete, `failed` → Failed, anything else → Pending) and each row links to the chain explorer via `txExplorerUrl`.
+
+"Export CSV" is injected into the layout header and calls `GET /v1/pay/payments/export` with the same filters minus paging. The downloaded filename is the server's `Content-Disposition` name with a `yyyyMMdd-HHmmss` stamp appended.
+
+### `/pay/request` — Request Payment
+
+Reachable by URL only; the sidebar entry is commented out.
+
+The merchant fills in a receiving address (auto-filled from the connected wallet for the selected token's chain), amount, token, payment name, and description, then generates a shareable `/p/:id` link through `POST /v1/pay/request`. An advanced option switches the request to `private` mode, which activates a confidential Near Intents account (`src/lib/confidential/`) and stores a separate `private_recipient_address`.
+
+The generated link does not resolve while the public payer route is disabled. Both halves of this flow are off the released surface; treat them as one unit if either is re-enabled.
+
+Below the form, `ReceivedPaymentList` shows the merchant's requests with their status (`pending`, `submitted`, `completed`, `withdrawing`, `withdrawed`, `failed`), lets them disable a request (`POST /v1/pay/request/{id}/disable`), and withdraw funds received privately (`useRequestWithdraw` → `POST /v1/pay/request/withdraw`). `GET /v1/pay/request/withdraw/count` polls every two minutes for the withdrawable count.
+
+## Wallet and payout capability
+
+`src/config/chains.ts` is the chain registry: 1Click blockchain code, display name, chain kind, EVM chain id, logo, explorer prefix, and `payerEnabled` / `batchEnabled` flags. It also maps CSV/Sheets aliases (`ethereum` → `eth`, `matic` → `pol`, and so on) so imported rows resolve.
+
+`src/wallet/` holds one adapter per chain kind (`evm/`, `near/`, `solana/`, `tron/`) plus the shared `WalletProvider`, `transfer-deposit.ts`, `broadcast-quick-pay.ts`, and `broadcast-batch-payout.ts`. Features talk to wallets through `useWallet`, `useConnectedWallets`, and `usePaymentWallet` rather than importing an adapter directly.

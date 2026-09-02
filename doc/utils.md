@@ -1,70 +1,78 @@
 # Shared Utils
 
-Import from `@/utils`. Search this module (and `src/lib/`) before writing a new helper. Only add a function here if it is reusable across features; keep feature-specific helpers next to that feature.
-
-After adding or changing a public util, update this file.
+Generic helpers live in `src/utils/` and are re-exported from `src/utils/index.ts`.
 
 ```ts
-import { formatAddress, formatAmount, formatDate } from "@/utils";
+import { formatAmount, formatAddress, formatDate, validateAddress } from "@/utils";
 ```
 
-## Address
+Search here before writing a helper. Feature-specific logic belongs in that feature's own `utils.ts` (for example `src/views/pay/utils.ts`, `src/views/pay/batch-utils.ts`, `src/views/pay/request-utils.ts`).
 
-Path: `src/utils/address.ts`
+`cn()` is not part of this barrel; it stays in `src/lib/utils.ts` as the shadcn alias.
 
-Moved from `src/lib/address-validation.ts` and `src/lib/address.ts`.
+## Address — `src/utils/address.ts`
+
+Validation and formatting for EVM, Near, Solana, and Tron. EVM uses viem, Tron uses `TronWeb.isAddress`, Solana checks the base58 alphabet and a 32-byte decode, Near follows the account-id rules.
 
 | Function | Notes |
 | --- | --- |
-| `validateAddress(address, chainKind)` | `{ isValid, error? }` for EVM / Near / Solana / Tron |
-| `isAddressValid(address, chainKind)` | Boolean wrapper |
-| `normalizeAddress(address, chainKind)` | Checksum EVM, lowercase Near, otherwise trimmed |
-| `sameAddress(a, b, chainKind?)` | Case-sensitive for Solana and Tron |
-| `resolveChainKind(networkOrKind)` | Maps aliases such as `sol` / `trx` |
-| `getAddressPlaceholder(chainKind)` | Input placeholder |
-| `formatAddress(address, prefix?, suffix?)` | Truncates long `0x` addresses (`0x12...45678`) |
+| `resolveChainKind(networkOrKind)` | Normalises `"evm" \| "near" \| "solana" \| "tron"`, the aliases `sol` and `trx`, and any network name known to `src/config/chains.ts`. Returns `null` when unknown. |
+| `validateAddress(address, chainKind)` | Returns `{ isValid, error? }` with a human-readable English message. |
+| `isAddressValid(address, chainKind)` | Boolean shortcut over `validateAddress`. |
+| `normalizeAddress(address, chainKind)` | Checksums EVM addresses, lowercases Near account ids, trims the rest. Returns `null` when invalid. |
+| `sameAddress(a, b, chainKind?)` | Case-insensitive comparison except on Solana and Tron, which are case-sensitive. |
+| `getAddressPlaceholder(chainKind)` | Input placeholder: `0x…`, `alice.near`, `Solana address`, `T…`. |
+| `formatAddress(address, prefix = 4, suffix = 5)` | Middle-ellipsis. Short non-`0x` values (Near account ids) are returned unchanged. |
 
-## Date
+`WalletChainKind` is re-exported here as an alias of `ChainKind` from `src/wallet/types.ts`.
 
-Path: `src/utils/date.ts`
+## Amount — `src/utils/amount.ts`
 
-Uses `date-fns`. ISO strings such as `2026-08-20T08:51:55.754Z` are parsed as `Date` and formatted in the **local** timezone. Invalid input returns `""`.
+`big.js` is re-exported as `Big` along with `ROUND_DOWN`, `ROUND_UP`, `ROUND_HALF_UP`, and `ROUND_HALF_EVEN`. Use them instead of floating-point arithmetic on money.
 
-`formatDate(value, variant?)` — `DATE_FORMAT`:
-
-| Variant | Pattern | Example |
-| --- | --- | --- |
-| `monthDay` | `MMM d` | `Aug 1` |
-| `monthDayYear` | `MMM d, yyyy` | `Aug 1, 2026` |
-| `dateTime` (default) | `MMM d, yyyy HH:mm` | `Aug 1, 2026 11:56` (24h) |
-
-`formatTimeAgo(value, now?)` — absolute interval to `now` (default `new Date()`), largest unit only, no `ago` suffix: `45 s`, `1 min` / `10 mins`, `1 hour` / `2 hours`, then `day(s)`, `week(s)`, `month(s)`, `year(s)`.
-
-## Amount
-
-Path: `src/utils/amount.ts`
-
-Uses `big.js`. Never converts through `Number` for display; uses `Big#toFixed(dp, rm)` so the result is not scientific notation.
-
-`formatAmount(value, options?)` — `value` is `string | number | Big`.
+`formatAmount(value, options)` groups thousands and returns a string.
 
 | Option | Default | Notes |
 | --- | --- | --- |
-| `decimals` | — | Treat `value` as minor units: `value / 10^decimals` |
-| `maxDecimals` | `2` | Decimal places passed to `toFixed` |
-| `rounding` | `ROUND_DOWN` (`Big.roundDown`) | Second argument of `toFixed` |
-| `padDecimals` | `false` | `true` → `$1.50`; `false` → `$1.5` |
-| `showDust` | `false` | If `0 < abs(value) < 10^(-maxDecimals)`, return `$ <0.01` or `<0.01` when `prefix` is empty |
-| `prefix` | `"$"` | |
+| `decimals` | — | Token decimals to divide by first. Pass this for raw on-chain amounts; omit it for values that are already human-readable. |
+| `maxDecimals` | `2` | Fractional digits kept after rounding. |
+| `rounding` | `ROUND_DOWN` | Any `big.js` rounding mode. |
+| `padDecimals` | `false` | Keep trailing zeros. |
+| `showDust` | `false` | Render `<0.01` style output for non-zero values below the smallest displayable unit. |
+| `prefix` | `"$"` | Pass `""` for a bare number. |
 
-Rounding constants (same values as `Big.round*`): `ROUND_DOWN`, `ROUND_UP`, `ROUND_HALF_UP`, `ROUND_HALF_EVEN`. `Big` is also re-exported.
+An unparseable value degrades to `0` rather than throwing.
 
 ```ts
-import { Big, formatAmount, ROUND_UP } from "@/utils";
-
-formatAmount("1.239", { maxDecimals: 2 }); // $1.23
-formatAmount("1.231", { maxDecimals: 2, rounding: ROUND_UP }); // $1.24
-formatAmount("1000000", { decimals: 6, maxDecimals: 2, padDecimals: true }); // $1.00
+formatAmount("1234.5678");                                  // "$1,234.56"
+formatAmount(row.amount, { prefix: "", showDust: true });   // "1,234.56"
+formatAmount(raw, { decimals: 6, maxDecimals: 6, prefix: "" });
 ```
 
-Invalid input formats as zero (`$0` / `$0.00` when padded). Negative amounts keep the sign after the prefix: `$-1.23`.
+## Date — `src/utils/date.ts`
+
+Wrappers over `date-fns` that return `""` for an invalid input instead of throwing.
+
+`formatDate(value, variant = "dateTime")`:
+
+| Variant (`DATE_FORMAT`) | Pattern | Example |
+| --- | --- | --- |
+| `Month` | `MMM` | `Sep` |
+| `MonthDay` | `MMM d` | `Sep 2` |
+| `MonthDayYear` | `MMM d, yyyy` | `Sep 2, 2026` |
+| `DateTime` (default) | `MMM d, yyyy HH:mm` | `Sep 2, 2026 18:35` |
+
+`formatTimeAgo(value, now?)` returns a compact relative string that steps through seconds, minutes, hours, days, weeks, months, and years (`45 s`, `3 mins`, `2 hours`, `1 day`, `5 weeks`).
+
+## Related helpers outside `@/utils`
+
+These are shared but live elsewhere on purpose. Update this list when that changes.
+
+| Helper | Location | Notes |
+| --- | --- | --- |
+| `cn()` | `src/lib/utils.ts` | `clsx` + `tailwind-merge` |
+| Chain lookup, explorer URLs | `src/config/chains.ts` | `getChainByNetwork`, `chainDisplayName`, `txExplorerUrl`, `networkToChainId` |
+| Chain / token / route logos | `src/lib/logo.ts` | Remote URLs on `assets.dapdap.net` |
+| Envelope field readers | `src/api/map.ts` | `asRecord`, `apiText`, `apiNumber` |
+| Date-range maths | `src/components/date-range-picker/utils.ts` | See [components/date-range-picker.md](components/date-range-picker.md) |
+| Download filename stamping | `src/views/pay/utils.ts` | `stampDownloadFilename` — Pay-specific for now |
