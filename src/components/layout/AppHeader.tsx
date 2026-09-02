@@ -43,9 +43,12 @@ export function AppHeader() {
   return (
     <header className="border-b border-black/10">
       <div className="flex h-[63px] w-full items-center pr-2 md:pr-4">
-        <div className="flex h-full shrink-0 items-center pl-2 md:w-[220px] md:pl-[35px]">
+        <a
+          className="flex h-full shrink-0 items-center pl-2 md:w-[220px] md:pl-[35px]"
+          href="/pay"
+        >
           <img src="/logo.svg" alt="Stableflow Pay" className="h-[29px] w-auto" />
-        </div>
+        </a>
         <HeaderNav
           cursorId="header-nav-cursor-desktop"
           className="hidden h-full min-w-0 flex-1 items-center md:flex"

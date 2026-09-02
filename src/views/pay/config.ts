@@ -13,7 +13,7 @@ export const PAY_NAV_ITEMS = [
   { label: "Batch Payout", to: "/pay/batch", icon: IconBatchUp, iconClassName: undefined, group: PAY_NAV_GROUP.Payout },
   { label: "Pending Payouts", to: "/pay/pending", icon: IconDuration, iconClassName: undefined, group: PAY_NAV_GROUP.Payout },
   { label: "Transaction History", to: "/pay/history", icon: IconRecords, iconClassName: undefined, group: PAY_NAV_GROUP.Payout },
-  { label: "Request Payment", to: "/pay/request", icon: IconUp, iconClassName: "rotate-180", group: PAY_NAV_GROUP.Request },
+  // { label: "Request Payment", to: "/pay/request", icon: IconUp, iconClassName: "rotate-180", group: PAY_NAV_GROUP.Request },
 ] as const satisfies ReadonlyArray<{
   label: string;
   to: string;

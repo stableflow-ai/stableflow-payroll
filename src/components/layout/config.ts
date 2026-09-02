@@ -5,10 +5,10 @@ export const HEADER_AVATAR_SRC = "/avatar/avatar-1.png";
 export const HEADER_NAV_ACTIVE_COLOR = "#0054D2";
 
 export const HEADER_NAV_ITEMS = [
-  { label: "Home", to: "/" },
+  // { label: "Home", to: "/" },
   { label: "Pay", to: "/pay" },
-  { label: "Analytics", to: "/analytics" },
-  { label: "Partner", to: "/partner" },
+  // { label: "Analytics", to: "/analytics" },
+  // { label: "Partner", to: "/partner" },
 ] as const;
 
 export const HEADER_CHAIN_LOGO: Record<ChainKind, string> = {

@@ -43,7 +43,7 @@ export function LoginView() {
     }
     try {
       await loginMutation.mutateAsync({ email: email.trim(), password });
-      navigate(returnTo ?? "/", { replace: true });
+      navigate(returnTo ?? "/pay", { replace: true });
     } catch (cause) {
       toast.fail({
         title: authErrorMessage(cause, "Unable to sign in"),

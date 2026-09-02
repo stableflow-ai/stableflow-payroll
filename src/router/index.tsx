@@ -50,14 +50,14 @@ export const router = createBrowserRouter([
       {
         element: <RequireAuth />,
         children: [
-          {
-            path: "/",
-            element: <HomeView />,
-          },
-          {
-            path: "/analytics",
-            element: <AnalyticsView />,
-          },
+          // {
+          //   path: "/",
+          //   element: <HomeView />,
+          // },
+          // {
+          //   path: "/analytics",
+          //   element: <AnalyticsView />,
+          // },
           {
             element: <PayLayout />,
             children: [
@@ -68,22 +68,22 @@ export const router = createBrowserRouter([
               { path: "/pay/history", element: <TransactionHistoryView /> },
             ],
           },
-          {
-            element: <PartnerLayout />,
-            children: [
-              { path: "/partner", element: <PartnerRegistrationView /> },
-              {
-                element: <RequirePartner />,
-                children: [
-                  { path: "/partner/api-keys", element: <ApiKeysView /> },
-                  { path: "/partner/reports", element: <ReportsView /> },
-                ],
-              },
-              { path: "/partner/support", element: <PartnerPlaceholderView /> },
-              { path: "/partner/terms", element: <PartnerPlaceholderView /> },
-              { path: "/partner/docs", element: <PartnerPlaceholderView /> },
-            ],
-          },
+          // {
+          //   element: <PartnerLayout />,
+          //   children: [
+          //     { path: "/partner", element: <PartnerRegistrationView /> },
+          //     {
+          //       element: <RequirePartner />,
+          //       children: [
+          //         { path: "/partner/api-keys", element: <ApiKeysView /> },
+          //         { path: "/partner/reports", element: <ReportsView /> },
+          //       ],
+          //     },
+          //     { path: "/partner/support", element: <PartnerPlaceholderView /> },
+          //     { path: "/partner/terms", element: <PartnerPlaceholderView /> },
+          //     { path: "/partner/docs", element: <PartnerPlaceholderView /> },
+          //   ],
+          // },
         ],
       },
     ],

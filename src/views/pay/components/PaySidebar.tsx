@@ -44,7 +44,7 @@ export function PaySidebar() {
           </NavLink>
         );
       })}
-      <div className="-mx-2.5 my-1.5 hidden h-px shrink-0 bg-black/10 lg:block" />
+      {/* <div className="-mx-2.5 my-1.5 hidden h-px shrink-0 bg-black/10 lg:block" /> */}
       {PAY_NAV_ITEMS.filter((item) => item.group === PAY_NAV_GROUP.Request).map((item) => {
         const Icon = item.icon;
         return (

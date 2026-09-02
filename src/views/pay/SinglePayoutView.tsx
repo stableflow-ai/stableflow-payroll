@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconLock } from "@/components/icons/lock";
 import { IconQuestion } from "@/components/icons/question";
 import { Button } from "@/components/ui/button/Button";
 import { Card } from "@/components/ui/card/Card";
@@ -10,35 +9,24 @@ import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
 import { queryKeys } from "@/api/query-keys";
 import { useContacts, type Contact } from "@/hooks/use-contacts";
-import { usePayOriginToken } from "@/hooks/use-pay-origin-token";
-import { usePaymentWallet } from "@/hooks/use-payment-wallet";
-import { useSinglePayQuote, useSinglePaySwap } from "@/hooks/use-single-payout-api";
-import { useTokenBalancesStore } from "@/stores/token-balances";
 import useToast from "@/hooks/use-toast";
-import { formatAmount, sameAddress } from "@/utils";
-import type { PaySingleQuoteParam, PaySingleSwapParam } from "@/types/payout";
-import { enqueueQuickPayCommit } from "@/stores/quick-pay-commit-queue";
+import { sameAddress } from "@/utils";
 import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
-import { transferToDepositAddress } from "@/wallet/transfer-deposit";
-import type { ChainKind } from "@/wallet";
 import { ContactFormDialog } from "./components/ContactFormDialog";
 import { DeleteContactDialog } from "./components/DeleteContactDialog";
 import { RecipientAddressField } from "./components/RecipientAddressField";
 import { RecipientsDialog } from "./components/RecipientsDialog";
 import { TokenSelectButton } from "./components/TokenSelectButton";
-import { YouPaySection } from "./components/YouPaySection";
 import {
   AMOUNT_MAX_DECIMALS,
   EMAIL_MAX_LENGTH,
   MEMO_MAX_LENGTH,
   QUICK_PAY_SLIPPAGE_TOLERANCE,
-  QUOTE_DEBOUNCE_MS,
 } from "./config";
 import {
   detectAddressChainKind,
   defaultDestToken,
   formatQuoteErrorMessage,
-  isDryQuoteStale,
   notifyEmailParam,
   parsePositiveDecimal,
   payoutNetworkToken,
@@ -49,15 +37,6 @@ class BalanceGateError extends Error {
     super(message);
     this.name = "BalanceGateError";
   }
-}
-
-function useDebouncedValue<T>(value: T, delayMs: number): T {
-  const [debounced, setDebounced] = useState(value);
-  useEffect(() => {
-    const id = window.setTimeout(() => setDebounced(value), delayMs);
-    return () => window.clearTimeout(id);
-  }, [value, delayMs]);
-  return debounced;
 }
 
 function matchContact(address: string, contacts: Contact[]): Contact | null {
@@ -72,17 +51,6 @@ export function SinglePayoutView() {
   const { contacts, addContact, updateContact, deleteContact, isPending: contactsPending } = useContacts();
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const tokens = useIntentsTokensStore((s) => s.tokens);
-  const { originToken, setOriginToken } = usePayOriginToken();
-  const originKind: ChainKind =
-    originToken?.chain.chainKind === "near" || originToken?.chain.chainKind === "solana"
-      ? originToken.chain.chainKind
-      : originToken?.chain.chainKind === "tron"
-        ? "tron"
-        : "evm";
-  const paymentWallet = usePaymentWallet(originKind);
-  const wallet = paymentWallet.wallet;
-  const connectedAddress = paymentWallet.connectedAddress;
-  const walletReady = Boolean(connectedAddress);
 
   const [addressInput, setAddressInput] = useState("");
   const [amount, setAmount] = useState("");
@@ -104,8 +72,7 @@ export function SinglePayoutView() {
   const matched = useMemo(() => matchContact(addressInput, contacts), [addressInput, contacts]);
   const destLockChainKind = detectAddressChainKind(addressInput);
   const destinationAddress = destLockChainKind ? addressInput.trim() : "";
-  const amountForQuote = parsePositiveDecimal(amount, AMOUNT_MAX_DECIMALS);
-  const debouncedAmountForQuote = useDebouncedValue(amountForQuote, QUOTE_DEBOUNCE_MS);
+  const amountDecimals = parsePositiveDecimal(amount, AMOUNT_MAX_DECIMALS);
 
   useEffect(() => {
     if (matched?.email) {
@@ -125,53 +92,6 @@ export function SinglePayoutView() {
     if (next) setDestToken(next);
   }, [destLockChainKind, destToken, tokens]);
 
-  const canQuoteDestination = Boolean(destinationAddress && destToken);
-
-  const quoteBody = useMemo((): PaySingleQuoteParam | null => {
-    if (!originToken || !destToken || !debouncedAmountForQuote || !canQuoteDestination || !walletReady || !connectedAddress) {
-      return null;
-    }
-    const origin = payoutNetworkToken(originToken);
-    const dest = payoutNetworkToken(destToken);
-    const body: PaySingleQuoteParam = {
-      amount: debouncedAmountForQuote,
-      destinationAddress,
-      destinationNetwork: dest.network,
-      destinationToken: dest.token,
-      network: origin.network,
-      token: origin.token,
-      refundTo: connectedAddress,
-      slippageTolerance: QUICK_PAY_SLIPPAGE_TOLERANCE,
-      payer: connectedAddress,
-    };
-    return body;
-  }, [
-    originToken,
-    destToken,
-    debouncedAmountForQuote,
-    canQuoteDestination,
-    walletReady,
-    connectedAddress,
-    destinationAddress,
-  ]);
-
-  const dryQuoteQuery = useSinglePayQuote(quoteBody);
-  const swapMutation = useSinglePaySwap();
-  const quote = amountForQuote && canQuoteDestination ? dryQuoteQuery.data : undefined;
-  const dryQuoteStale = isDryQuoteStale({
-    amountForQuote,
-    debouncedAmountForQuote,
-    isPlaceholderData: dryQuoteQuery.isPlaceholderData,
-    isPending: dryQuoteQuery.isPending,
-    isFetching: dryQuoteQuery.isFetching,
-  });
-  const quoteError = dryQuoteQuery.isError ? formatQuoteErrorMessage(dryQuoteQuery.error, 2) : null;
-  const amountInDisplay = quote?.amountInFormatted
-    ? formatAmount(quote.amountInFormatted, { prefix: "", maxDecimals: AMOUNT_MAX_DECIMALS })
-    : "—";
-
-  const fetchOneBalance = useTokenBalancesStore((s) => s.fetchOne);
-
   function resetForm() {
     setAddressInput("");
     setDestToken(null);
@@ -184,54 +104,25 @@ export function SinglePayoutView() {
 
   const settleMutation = useMutation({
     mutationFn: async () => {
-      if (!originToken || !destToken || !amountForQuote || !quote || !destinationAddress || !connectedAddress) {
+      if (!destToken || !amountDecimals || !destinationAddress) {
         throw new Error("Missing payment inputs");
       }
-      if (!wallet.isConnected || !wallet.account?.address) {
-        paymentWallet.connectWallet();
-        throw new Error("Connect your payment wallet first");
-      }
-      const paymentWalletAddress = wallet.account.address;
       setPhase("quoting");
-      const origin = payoutNetworkToken(originToken);
       const dest = payoutNetworkToken(destToken);
-      const swapBody: PaySingleSwapParam = {
-        amount: amountForQuote,
+      const payBody = {
+        amount: amountDecimals,
         destinationAddress,
         destinationNetwork: dest.network,
         destinationToken: dest.token,
-        network: origin.network,
-        token: origin.token,
-        refundTo: paymentWalletAddress,
         slippageTolerance: QUICK_PAY_SLIPPAGE_TOLERANCE,
-        payer: paymentWalletAddress,
         notifyEmail: notifyEmailParam(notify, email),
+        memo: memo.trim() ? memo.trim() : void 0,
+        successUrl: `${window.location.origin}/pay/success`,
       };
-      const memoValue = memo.trim();
-      if (memoValue) swapBody.memo = memoValue;
-
-      const swapped = await swapMutation.mutateAsync(swapBody);
-      const depositAddress = swapped.depositAddress?.trim();
-      if (!depositAddress) {
-        throw new Error("Missing deposit address");
-      }
-      const amountIn = BigInt(swapped.amountIn || "0");
-      const balance = await fetchOneBalance(paymentWalletAddress, originToken);
-      if (!balance || balance.status !== "success" || balance.raw == null) {
-        toast.fail({ title: "Could not read wallet balance" });
-        throw new BalanceGateError("Could not read wallet balance");
-      }
-      if (balance.raw < amountIn && import.meta.env.VITE_VIRIFY_BALANCE !== "false") {
-        toast.fail({ title: "Insufficient balance" });
-        throw new BalanceGateError("Insufficient balance");
-      }
+      console.log(payBody);
+      // TODO Call the API to get the payment link
+      // Redirect to the payment link
       setPhase("sending");
-      const txHash = await transferToDepositAddress({
-        token: originToken,
-        depositAddress,
-        amountIn,
-      });
-      enqueueQuickPayCommit({ orderId: swapped.orderId, txHash });
     },
     onSuccess: () => {
       setPhase("done");
@@ -250,25 +141,15 @@ export function SinglePayoutView() {
   });
 
   const sending = settleMutation.isPending || phase === "quoting" || phase === "sending";
-  const quoteLoading = Boolean(amountForQuote && canQuoteDestination && originToken && walletReady)
-    && (dryQuoteStale || dryQuoteQuery.isFetching);
   const canSend = Boolean(
     destinationAddress
     && destToken
-    && amountForQuote
-    && originToken
-    && quote
-    && !dryQuoteStale
-    && !quoteError
+    && amountDecimals
     && !sending,
   );
 
   function handleSend() {
-    if (!connectedAddress) {
-      paymentWallet.connectWallet();
-      return;
-    }
-    void settleMutation.mutateAsync();
+    settleMutation.mutateAsync();
   }
 
   return (
@@ -302,33 +183,6 @@ export function SinglePayoutView() {
           </div>
           <div className="mt-4 h-px w-full bg-[#e3e3e3]" />
         </div>
-
-        <div className="mt-5">
-          <YouPaySection
-            amountDisplay={amountInDisplay}
-            originToken={originToken}
-            onOriginTokenChange={setOriginToken}
-            walletAddress={connectedAddress}
-            walletConnected={wallet.isConnected}
-            walletIcon={originKind === "evm" ? paymentWallet.walletInfo.icon : null}
-            connecting={wallet.isConnecting}
-            onConnectWallet={() => paymentWallet.connectWallet()}
-          />
-          <div className="mt-4 h-px w-full bg-[#e3e3e3]" />
-        </div>
-
-        <div className="mt-4 flex flex-wrap items-center gap-2">
-          <span className="font-montserrat text-xs text-[#70788a]">
-            Est. Cost {amountInDisplay}
-          </span>
-          <span className="inline-flex h-[26px] items-center gap-1.5 rounded-[13px] border border-[#d0f348] bg-[rgba(208,243,72,0.2)] px-2.5 font-montserrat text-xs font-medium text-[#84a20f]">
-            <IconLock className="size-3" />
-            Private by default
-          </span>
-        </div>
-        {quoteError ? (
-          <p className="mt-2 font-montserrat text-xs text-danger">{quoteError}</p>
-        ) : null}
 
         <div className="mt-6 flex items-center gap-3">
           <span className="inline-flex shrink-0 items-center gap-1 font-montserrat text-sm font-medium text-[#606060]">
@@ -371,8 +225,8 @@ export function SinglePayoutView() {
         <Button
           size="xl"
           className="mt-8 w-full"
-          loading={sending || quoteLoading}
-          disabled={!canSend && Boolean(connectedAddress)}
+          loading={sending}
+          disabled={!canSend}
           onClick={handleSend}
         >
           Send Payment
