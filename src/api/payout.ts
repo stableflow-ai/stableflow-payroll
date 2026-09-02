@@ -18,6 +18,8 @@ import type {
   PaySingleSubmitParam,
   PaySingleSwapParam,
   PaySingleSwapResp,
+  PayrollCreatePaymentParam,
+  PayrollPayment,
   VolumePeriod,
   VolumePoint,
 } from "@/types/payout";
@@ -189,4 +191,49 @@ export function exportPayments(params: PayPaymentsExportQuery) {
     },
     fallbackFilename: PAYMENTS_EXPORT_FILENAME,
   });
+}
+
+export function mapPayrollPayment(raw: unknown): PayrollPayment {
+  const row = asRecord(raw) ?? {};
+  const memo = apiText(row.memo);
+  return {
+    paymentId: apiText(row.payment_id ?? row.paymentId),
+    payUrl: apiText(row.pay_url ?? row.payUrl),
+    paySessionId: apiText(row.pay_session_id ?? row.paySessionId),
+    payPaymentId: apiText(row.pay_payment_id ?? row.payPaymentId),
+    status: apiText(row.status).toLowerCase(),
+    payer: apiText(row.payer),
+    recipient: apiText(row.recipient),
+    sourceAmount: apiText(row.source_amount ?? row.sourceAmount),
+    sourceSymbol: apiText(row.source_symbol ?? row.sourceSymbol),
+    sourceNetwork: apiText(row.source_network ?? row.sourceNetwork),
+    destinationAmount: apiText(row.destination_amount ?? row.destinationAmount),
+    destinationSymbol: apiText(row.destination_symbol ?? row.destinationSymbol),
+    destinationNetwork: apiText(row.destination_network ?? row.destinationNetwork),
+    destinationTxHash: apiText(row.destination_tx_hash ?? row.destination_txHash ?? row.destinationTxHash),
+    txHash: apiText(row.tx_hash ?? row.txHash),
+    memo: memo || null,
+    paidAt: apiText(row.paid_at ?? row.paidAt),
+    createdAt: apiText(row.created_at ?? row.createdAt),
+    updatedAt: apiText(row.updated_at ?? row.updatedAt),
+  };
+}
+
+/** Creates the hosted checkout session. The payer is sent to `payUrl`. */
+export async function createPayrollPayment(
+  body: PayrollCreatePaymentParam,
+): Promise<PayrollPayment> {
+  const payment = mapPayrollPayment(
+    await http<unknown>(`${PAY_API_PREFIX}/payments`, { method: "POST", body }),
+  );
+  if (!payment.payUrl) {
+    throw new ApiError("Payment link is missing from the response", 502, "NO_PAY_URL");
+  }
+  return payment;
+}
+
+export async function getPayrollPayment(paymentId: string): Promise<PayrollPayment> {
+  return mapPayrollPayment(
+    await http<unknown>(`${PAY_API_PREFIX}/payments/${encodeURIComponent(paymentId)}`),
+  );
 }

@@ -35,3 +35,7 @@ export interface ResetPasswordBody {
   code: string;
   newPassword: string;
 }
+
+export interface UpdateProfileBody {
+  name: string;
+}

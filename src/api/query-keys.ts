@@ -20,6 +20,7 @@ export const queryKeys = {
     recent: ["payout", "recent"] as const,
     payments: (params: unknown) => [...queryKeys.payout.all, "payments", params] as const,
     singleQuote: (body: unknown) => [...queryKeys.payout.all, "single-quote", body] as const,
+    payrollPayment: (id: string) => [...queryKeys.payout.all, "payroll-payment", id] as const,
     batchQuote: (body: unknown) => [...queryKeys.payout.all, "batch-quote", body] as const,
   },
   recipient: {

@@ -147,3 +147,40 @@ export interface PayPaymentsResp {
   totalPage: number;
   list: PayPaymentItem[];
 }
+
+/**
+ * Body of `POST /v1/payroll/payments`. The backend creates a hosted checkout
+ * session on our behalf, so the field names are the backend's snake_case.
+ * `memo` is not in the Swagger contract yet; it is capped at 200 characters.
+ */
+export interface PayrollCreatePaymentParam {
+  amount: string;
+  /** 1Click blockchain code, e.g. `eth` / `base` / `near`. */
+  network: string;
+  recipient: string;
+  symbol: string;
+  memo?: string;
+  success_url?: string;
+}
+
+export interface PayrollPayment {
+  paymentId: string;
+  payUrl: string;
+  paySessionId: string;
+  payPaymentId: string;
+  status: string;
+  payer: string;
+  recipient: string;
+  sourceAmount: string;
+  sourceSymbol: string;
+  sourceNetwork: string;
+  destinationAmount: string;
+  destinationSymbol: string;
+  destinationNetwork: string;
+  destinationTxHash: string;
+  txHash: string;
+  memo: string | null;
+  paidAt: string;
+  createdAt: string;
+  updatedAt: string;
+}

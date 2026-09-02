@@ -1,17 +1,18 @@
 /**
  * Auth mutations and profile query.
- *   POST /v1/pay/auth/login
- *   POST /v1/pay/auth/register
- *   POST /v1/pay/change-password
- *   POST /v1/pay/reset-password
- *   POST /v1/pay/reset-password/code
- *   GET  /v1/pay/profile
+ *   POST /v1/payroll/auth/login
+ *   POST /v1/payroll/auth/register
+ *   POST /v1/payroll/change-password
+ *   POST /v1/payroll/reset-password
+ *   POST /v1/payroll/reset-password/code
+ *   GET  /v1/payroll/profile
+ *   POST /v1/payroll/profile
  *
  * Login / register / profile success writes the session to the Zustand auth
  * store (and localStorage). Views should still `mutateAsync` and then navigate.
  */
 import { useEffect } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   changePassword,
   getProfile,
@@ -19,6 +20,7 @@ import {
   register,
   resetPassword,
   sendResetPasswordCode,
+  updateProfile,
 } from "@/api/auth";
 import { queryKeys } from "@/api/query-keys";
 import { ApiError } from "@/lib/api-error";
@@ -64,6 +66,16 @@ export function useSendResetPasswordCodeMutation() {
 export function useResetPasswordMutation() {
   return useMutation({
     mutationFn: resetPassword,
+  });
+}
+
+export function useUpdateProfileMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateProfile,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.auth.profile });
+    },
   });
 }
 

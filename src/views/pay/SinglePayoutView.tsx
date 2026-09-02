@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconQuestion } from "@/components/icons/question";
 import { Button } from "@/components/ui/button/Button";
 import { Card } from "@/components/ui/card/Card";
 import { InputNumber } from "@/components/ui/input-number/InputNumber";
-import { Switch } from "@/components/ui/switch/Switch";
 import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
-import { queryKeys } from "@/api/query-keys";
+import { useCreatePayrollPaymentMutation } from "@/hooks/use-single-payout-api";
 import { useContacts, type Contact } from "@/hooks/use-contacts";
 import useToast from "@/hooks/use-toast";
 import { sameAddress } from "@/utils";
@@ -17,27 +15,13 @@ import { DeleteContactDialog } from "./components/DeleteContactDialog";
 import { RecipientAddressField } from "./components/RecipientAddressField";
 import { RecipientsDialog } from "./components/RecipientsDialog";
 import { TokenSelectButton } from "./components/TokenSelectButton";
-import {
-  AMOUNT_MAX_DECIMALS,
-  EMAIL_MAX_LENGTH,
-  MEMO_MAX_LENGTH,
-  QUICK_PAY_SLIPPAGE_TOLERANCE,
-} from "./config";
+import { AMOUNT_MAX_DECIMALS, MEMO_MAX_LENGTH, PAYOUT_RESULT_PATH } from "./config";
 import {
   detectAddressChainKind,
   defaultDestToken,
-  formatQuoteErrorMessage,
-  notifyEmailParam,
   parsePositiveDecimal,
   payoutNetworkToken,
 } from "./utils";
-
-class BalanceGateError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "BalanceGateError";
-  }
-}
 
 function matchContact(address: string, contacts: Contact[]): Contact | null {
   const kind = detectAddressChainKind(address);
@@ -46,24 +30,23 @@ function matchContact(address: string, contacts: Contact[]): Contact | null {
 }
 
 export function SinglePayoutView() {
-  const queryClient = useQueryClient();
   const toast = useToast();
   const { contacts, addContact, updateContact, deleteContact, isPending: contactsPending } = useContacts();
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const tokens = useIntentsTokensStore((s) => s.tokens);
+  const createPayment = useCreatePayrollPaymentMutation();
 
   const [addressInput, setAddressInput] = useState("");
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
-  const [notify, setNotify] = useState(false);
-  const [email, setEmail] = useState("");
   const [destToken, setDestToken] = useState<IntentsToken | null>(null);
   const [destDialogOpen, setDestDialogOpen] = useState(false);
   const [bookOpen, setBookOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Contact | null>(null);
   const [deleting, setDeleting] = useState<Contact | null>(null);
-  const [phase, setPhase] = useState<"idle" | "quoting" | "sending" | "done" | "error">("idle");
+  /** Stays true while the browser navigates to the hosted checkout. */
+  const [redirecting, setRedirecting] = useState(false);
 
   useEffect(() => {
     void ensureFresh();
@@ -73,13 +56,6 @@ export function SinglePayoutView() {
   const destLockChainKind = detectAddressChainKind(addressInput);
   const destinationAddress = destLockChainKind ? addressInput.trim() : "";
   const amountDecimals = parsePositiveDecimal(amount, AMOUNT_MAX_DECIMALS);
-
-  useEffect(() => {
-    if (matched?.email) {
-      setEmail(matched.email.slice(0, EMAIL_MAX_LENGTH));
-      setNotify(true);
-    }
-  }, [matched?.id, matched?.email]);
 
   useEffect(() => {
     if (!destToken || !destLockChainKind) return;
@@ -92,55 +68,7 @@ export function SinglePayoutView() {
     if (next) setDestToken(next);
   }, [destLockChainKind, destToken, tokens]);
 
-  function resetForm() {
-    setAddressInput("");
-    setDestToken(null);
-    setAmount("");
-    setMemo("");
-    setNotify(false);
-    setEmail("");
-    void queryClient.removeQueries({ queryKey: queryKeys.payout.all });
-  }
-
-  const settleMutation = useMutation({
-    mutationFn: async () => {
-      if (!destToken || !amountDecimals || !destinationAddress) {
-        throw new Error("Missing payment inputs");
-      }
-      setPhase("quoting");
-      const dest = payoutNetworkToken(destToken);
-      const payBody = {
-        amount: amountDecimals,
-        destinationAddress,
-        destinationNetwork: dest.network,
-        destinationToken: dest.token,
-        slippageTolerance: QUICK_PAY_SLIPPAGE_TOLERANCE,
-        notifyEmail: notifyEmailParam(notify, email),
-        memo: memo.trim() ? memo.trim() : void 0,
-        successUrl: `${window.location.origin}/pay/success`,
-      };
-      console.log(payBody);
-      // TODO Call the API to get the payment link
-      // Redirect to the payment link
-      setPhase("sending");
-    },
-    onSuccess: () => {
-      setPhase("done");
-      toast.success({ title: "Payment submitted" });
-      resetForm();
-      window.setTimeout(() => setPhase("idle"), 1500);
-    },
-    onError: (err) => {
-      if (err instanceof BalanceGateError) {
-        setPhase("idle");
-        return;
-      }
-      setPhase("error");
-      toast.fail({ title: formatQuoteErrorMessage(err, 2) });
-    },
-  });
-
-  const sending = settleMutation.isPending || phase === "quoting" || phase === "sending";
+  const sending = createPayment.isPending || redirecting;
   const canSend = Boolean(
     destinationAddress
     && destToken
@@ -148,8 +76,27 @@ export function SinglePayoutView() {
     && !sending,
   );
 
-  function handleSend() {
-    settleMutation.mutateAsync();
+  async function handleSend() {
+    if (!destToken || !amountDecimals || !destinationAddress) return;
+    const dest = payoutNetworkToken(destToken);
+    try {
+      const payment = await createPayment.mutateAsync({
+        amount: amountDecimals,
+        network: dest.network,
+        symbol: dest.token,
+        recipient: destinationAddress,
+        memo: memo.trim() || undefined,
+        success_url: `${window.location.origin}${PAYOUT_RESULT_PATH}`,
+      });
+      setRedirecting(true);
+      window.location.assign(payment.payUrl);
+    } catch (cause) {
+      toast.fail({
+        title: cause instanceof Error && cause.message
+          ? cause.message
+          : "Unable to create the payment",
+      });
+    }
   }
 
   return (
@@ -200,34 +147,12 @@ export function SinglePayoutView() {
           />
         </div>
 
-        <div className="mt-5 flex flex-col gap-3 sm:flex-row sm:items-center">
-          <span className="inline-flex shrink-0 items-center gap-2 font-montserrat text-sm font-medium text-[#606060]">
-            Notify Recipient
-            <Switch
-              checked={notify}
-              onCheckedChange={(checked) => {
-                setNotify(checked);
-                if (!checked) setEmail("");
-              }}
-              aria-label="Notify recipient"
-            />
-          </span>
-          <input
-            type="email"
-            value={email}
-            maxLength={EMAIL_MAX_LENGTH}
-            onChange={(event) => setEmail(event.target.value)}
-            placeholder="email@example.com"
-            className="min-h-9 h-9 shrink-0 min-w-0 flex-1 rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-3 font-montserrat text-sm text-black outline-none placeholder:text-black/30"
-          />
-        </div>
-
         <Button
           size="xl"
           className="mt-8 w-full"
           loading={sending}
           disabled={!canSend}
-          onClick={handleSend}
+          onClick={() => void handleSend()}
         >
           Send Payment
         </Button>
@@ -250,10 +175,6 @@ export function SinglePayoutView() {
         selectedAddress={addressInput}
         onSelect={(contact) => {
           setAddressInput(contact.wallet);
-          if (contact.email) {
-            setEmail(contact.email.slice(0, EMAIL_MAX_LENGTH));
-            setNotify(true);
-          }
           setBookOpen(false);
         }}
         onAdd={() => {

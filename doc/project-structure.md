@@ -105,8 +105,8 @@ src/
 | `intents-tokens.ts` | `persist` | 1Click token list, `PAYOUT_SYMBOLS`, `ensureFresh`, `findByChainAndSymbol` |
 | `token-balances.ts` | no | Balance cache and fetch status per owner + asset |
 | `quick-pay-prefs.ts` | `persist` | Remembered single-payout preferences |
-| `quick-pay-commit-queue.ts` | `persist` | Retry queue for `POST /v1/pay/single/submit` |
-| `batch-payout-commit-queue.ts` | `persist` | Retry queue for `POST /v1/pay/batch/submit` |
+| `quick-pay-commit-queue.ts` | `persist` | Retry queue for `POST /v1/payroll/single/submit` |
+| `batch-payout-commit-queue.ts` | `persist` | Retry queue for `POST /v1/payroll/batch/submit` |
 | `nearintents-user-session.ts` | no | Near Intents session for confidential receive / withdraw |
 | `google-drive-session.ts` | no | Google OAuth token for the Sheets importer |
 

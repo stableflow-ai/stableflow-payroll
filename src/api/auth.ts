@@ -8,6 +8,7 @@ import type {
   RegisterBody,
   ResetPasswordBody,
   ResetPasswordCodeBody,
+  UpdateProfileBody,
 } from "@/types/auth";
 
 export function login(body: LoginBody) {
@@ -51,4 +52,11 @@ export function resetPassword(body: ResetPasswordBody) {
 
 export function getProfile() {
   return http<AuthUser>(`${PAY_API_PREFIX}/profile`);
+}
+
+export function updateProfile(body: UpdateProfileBody) {
+  return http<void>(`${PAY_API_PREFIX}/profile`, {
+    method: "POST",
+    body,
+  });
 }

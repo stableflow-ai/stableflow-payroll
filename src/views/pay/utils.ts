@@ -21,10 +21,42 @@ export function payoutNetworkToken(token: IntentsToken): { network: string; toke
   return { network: token.blockchain, token: token.symbol };
 }
 
-export function notifyEmailParam(notify: boolean, email: string): string | undefined {
-  const trimmed = email.trim();
-  if (!notify || !isValidEmail(trimmed)) return undefined;
-  return trimmed;
+export interface PayoutCallbackParams {
+  /** Merchant order number, which the backend fills with the payroll payment id. */
+  paymentId: string;
+  sessionId: string;
+  status: string;
+  amount: string;
+  symbol: string;
+  network: string;
+  recipient: string;
+  txHash: string;
+  destinationTxHash: string;
+  paidAt: string;
+  createdAt: string;
+}
+
+/**
+ * Reads the query the hosted checkout appends to `success_url` after a
+ * successful payment. Used to render the result page before (and, if the
+ * lookup fails, instead of) `GET /v1/payroll/payments/{payment_id}`.
+ */
+export function parsePayoutCallbackParams(search: string | URLSearchParams): PayoutCallbackParams {
+  const params = typeof search === "string" ? new URLSearchParams(search) : search;
+  const read = (key: string) => (params.get(key) ?? "").trim();
+  return {
+    paymentId: read("out_order_no"),
+    sessionId: read("session_id"),
+    status: read("status").toLowerCase(),
+    amount: read("amount"),
+    symbol: read("symbol"),
+    network: read("network"),
+    recipient: read("recipient"),
+    txHash: read("tx_hash"),
+    destinationTxHash: read("destination_txHash"),
+    paidAt: read("paid_at"),
+    createdAt: read("created_at"),
+  };
 }
 
 export function detectAddressChainKind(address: string): WalletChainKind | null {

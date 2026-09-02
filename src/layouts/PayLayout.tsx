@@ -3,7 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { useBatchPayoutCommitQueue } from "@/hooks/use-batch-payout-commit-queue";
 import { useQuickPayCommitQueue } from "@/hooks/use-quick-pay-commit-queue";
 import { PaySidebar } from "@/views/pay/components/PaySidebar";
-import { PAY_NAV_ITEMS } from "@/views/pay/config";
+import { PAY_NAV_ITEMS, PAY_ROUTE_TITLES } from "@/views/pay/config";
 
 export interface PayLayoutOutletContext {
   setHeaderExtra: (node: ReactNode) => void;
@@ -25,7 +25,7 @@ export function PayLayout() {
       <div className="min-w-0 flex-1 px-2 py-6 md:px-5 lg:px-[39px] lg:py-8">
         <div className="relative flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="font-montserrat text-[26px] font-medium text-black">
-            {active?.label ?? "Pay"}
+            {active?.label ?? PAY_ROUTE_TITLES[pathname] ?? "Pay"}
           </h1>
           {headerExtra}
         </div>

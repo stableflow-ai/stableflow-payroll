@@ -104,37 +104,53 @@ navigate(returnTo ?? "/pay", { replace: true });
 
 ## Endpoints
 
-Paths are prefixed with `PAY_API_PREFIX` (`/v1/pay`) or `NEARINTENTS_API_PREFIX` (`/v1/nearintents`) from `src/api/config.ts`. "Auth" is the default for that function; `caller` means the caller decides.
+Paths are prefixed with `PAY_API_PREFIX` (`/v1/payroll`) or `NEARINTENTS_API_PREFIX` (`/v1/nearintents`) from `src/api/config.ts`. "Auth" is the default for that function; `caller` means the caller decides.
+
+Only Auth and the two payment routes below are served by the Payroll backend. The Payout, Recipients, and Payment-request tables are the pre-Payroll contract kept unchanged under the new prefix; the screens that call them are not in scope yet, so those routes will 404. Do not treat them as a spec.
 
 ### Auth — `src/api/auth.ts`, `src/types/auth.ts`, `src/hooks/use-auth-api.ts`
 
 | Method | Path | Auth | Body | Data | API | Hook |
 | --- | --- | --- | --- | --- | --- | --- |
-| POST | `/v1/pay/auth/login` | no | `LoginBody` | `AuthSession` | `login` | `useLoginMutation` |
-| POST | `/v1/pay/auth/register` | no | `RegisterBody` | `AuthSession` | `register` | `useRegisterMutation` |
-| POST | `/v1/pay/change-password` | yes | `ChangePasswordBody` | — | `changePassword` | `useChangePasswordMutation` |
-| POST | `/v1/pay/reset-password/code` | no | `ResetPasswordCodeBody` | — | `sendResetPasswordCode` | `useSendResetPasswordCodeMutation` |
-| POST | `/v1/pay/reset-password` | no | `ResetPasswordBody` | — | `resetPassword` | `useResetPasswordMutation` |
-| GET | `/v1/pay/profile` | yes | — | `AuthUser` | `getProfile` | `useProfileQuery` |
+| POST | `/v1/payroll/auth/login` | no | `LoginBody` | `AuthSession` | `login` | `useLoginMutation` |
+| POST | `/v1/payroll/auth/register` | no | `RegisterBody` | `AuthSession` | `register` | `useRegisterMutation` |
+| POST | `/v1/payroll/change-password` | yes | `ChangePasswordBody` | — | `changePassword` | `useChangePasswordMutation` |
+| POST | `/v1/payroll/reset-password/code` | no | `ResetPasswordCodeBody` | — | `sendResetPasswordCode` | `useSendResetPasswordCodeMutation` |
+| POST | `/v1/payroll/reset-password` | no | `ResetPasswordBody` | — | `resetPassword` | `useResetPasswordMutation` |
+| GET | `/v1/payroll/profile` | yes | — | `AuthUser` | `getProfile` | `useProfileQuery` |
+| POST | `/v1/payroll/profile` | yes | `UpdateProfileBody` | — | `updateProfile` | `useUpdateProfileMutation` |
 
-### Payout — `src/api/payout.ts`, `src/types/payout.ts`
+### Payments (hosted checkout) — `src/api/payout.ts`, `src/types/payout.ts`, `src/hooks/use-single-payout-api.ts`
+
+| Method | Path | Auth | Body | Data | API | Hook |
+| --- | --- | --- | --- | --- | --- | --- |
+| POST | `/v1/payroll/payments` | yes | `PayrollCreatePaymentParam` | `PayrollPayment` | `createPayrollPayment` | `useCreatePayrollPaymentMutation` |
+| GET | `/v1/payroll/payments/{payment_id}` | yes | — | `PayrollPayment` | `getPayrollPayment` | `usePayrollPaymentQuery` |
+
+`POST /payments` does not settle anything. The backend opens a hosted checkout session and answers with `pay_url`; `SinglePayoutView` sends the browser there, and the payer completes the transfer on the checkout. `createPayrollPayment` throws `ApiError(..., "NO_PAY_URL")` when the response has no link.
+
+`memo` (≤ 200 characters) is accepted but is not in the Swagger contract. There is no `notifyEmail` parameter.
+
+The checkout returns to the `success_url` we send (`{origin}/pay/result`) only after a successful payment, with `out_order_no` set to the Payroll `payment_id`. `PayoutResultView` reads it and calls `GET /payments/{payment_id}` once — there is no state left to poll for.
+
+### Payout (legacy wallet path) — `src/api/payout.ts`, `src/types/payout.ts`
 
 | Method | Path | Auth | Body / Query | Data | API | Hook |
 | --- | --- | --- | --- | --- | --- | --- |
-| POST | `/v1/pay/single/quote` | caller | `PaySingleQuoteParam` | `PaySingleQuoteResp` | `singleQuote` | `useSinglePayQuote` |
-| POST | `/v1/pay/single/swap` | caller | `PaySingleSwapParam` | `PaySingleSwapResp` | `singleSwap` | `useSinglePaySwap` |
-| POST | `/v1/pay/single/submit` | caller | `PaySingleSubmitParam` | — | `singleSubmit` | via `quick-pay-commit-queue` |
-| POST | `/v1/pay/batch/quote` | yes | `PayBatchQuoteParam` | `PayBatchQuoteResp` | `batchQuote` | `useBatchPayQuote` |
-| POST | `/v1/pay/batch/swap` | yes | `PayBatchQuoteParam` | `PayBatchSwapResp` | `batchSwap` | `useBatchPaySwap` |
-| POST | `/v1/pay/batch/submit` | yes | `PayBatchSubmitParam` | — | `batchSubmit` | via `batch-payout-commit-queue` |
-| GET | `/v1/pay/payments/pending` | yes | — | `PayPaymentItem[]` | `getPendingPayments` | `usePendingPaymentsQuery` |
-| GET | `/v1/pay/payments/recent` | yes | — | `PayPaymentItem[]` | `getRecentPayments` | `useRecentPaymentsQuery` |
-| GET | `/v1/pay/payments` | yes | `PayPaymentsQuery` | `PayPaymentsResp` | `getPayments` | `usePaymentsQuery` |
-| GET | `/v1/pay/payments/export` | yes | `PayPaymentsExportQuery` | CSV blob | `exportPayments` | `useExportPaymentsMutation` |
-| GET | `/v1/pay/payments/volume` | yes | `period` | `VolumePoint[]` | `getPaymentVolume` | `usePaymentVolumeQuery` |
-| GET | `/v1/pay/overview` | yes | — | `PayOverview` | `getPayOverview` | `usePayOverviewQuery` |
+| POST | `/v1/payroll/single/quote` | caller | `PaySingleQuoteParam` | `PaySingleQuoteResp` | `singleQuote` | `useSinglePayQuote` |
+| POST | `/v1/payroll/single/swap` | caller | `PaySingleSwapParam` | `PaySingleSwapResp` | `singleSwap` | `useSinglePaySwap` |
+| POST | `/v1/payroll/single/submit` | caller | `PaySingleSubmitParam` | — | `singleSubmit` | via `quick-pay-commit-queue` |
+| POST | `/v1/payroll/batch/quote` | yes | `PayBatchQuoteParam` | `PayBatchQuoteResp` | `batchQuote` | `useBatchPayQuote` |
+| POST | `/v1/payroll/batch/swap` | yes | `PayBatchQuoteParam` | `PayBatchSwapResp` | `batchSwap` | `useBatchPaySwap` |
+| POST | `/v1/payroll/batch/submit` | yes | `PayBatchSubmitParam` | — | `batchSubmit` | via `batch-payout-commit-queue` |
+| GET | `/v1/payroll/payments/pending` | yes | — | `PayPaymentItem[]` | `getPendingPayments` | `usePendingPaymentsQuery` |
+| GET | `/v1/payroll/payments/recent` | yes | — | `PayPaymentItem[]` | `getRecentPayments` | `useRecentPaymentsQuery` |
+| GET | `/v1/payroll/payments` | yes | `PayPaymentsQuery` | `PayPaymentsResp` | `getPayments` | `usePaymentsQuery` |
+| GET | `/v1/payroll/payments/export` | yes | `PayPaymentsExportQuery` | CSV blob | `exportPayments` | `useExportPaymentsMutation` |
+| GET | `/v1/payroll/payments/volume` | yes | `period` | `VolumePoint[]` | `getPaymentVolume` | `usePaymentVolumeQuery` |
+| GET | `/v1/payroll/overview` | yes | — | `PayOverview` | `getPayOverview` | `usePayOverviewQuery` |
 
-`getPayOverview` falls back to the current month of `/v1/pay/analytics` when the overview route answers 404. The quote hooks refetch every 60 seconds and keep the previous data while refetching, so treat `isPlaceholderData` as "stale quote, block the confirm button".
+`getPayOverview` falls back to the current month of `/v1/payroll/analytics` when the overview route answers 404. The quote hooks refetch every 60 seconds and keep the previous data while refetching, so treat `isPlaceholderData` as "stale quote, block the confirm button".
 
 Both `submit` calls are driven by the persisted retry queues rather than a hook: `enqueueQuickPayCommit` / `enqueueBatchPayoutCommit` store `{ orderId, txHash }`, retry with exponential backoff from 5s, and drop the item once the server accepts it.
 
@@ -142,10 +158,10 @@ Both `submit` calls are driven by the persisted retry queues rather than a hook:
 
 | Method | Path | Auth | Body | Data | API | Hook |
 | --- | --- | --- | --- | --- | --- | --- |
-| GET | `/v1/pay/recipient/list` | yes | — | `PayRecipient[]` | `listRecipients` | `useRecipientsQuery` |
-| POST | `/v1/pay/recipient` | yes | `PayRecipientBody` | `PayRecipient` | `createRecipient` | `useRecipientMutations` |
-| POST | `/v1/pay/recipient/{id}` | yes | `PayRecipientBody` | `PayRecipient` | `updateRecipient` | `useRecipientMutations` |
-| DELETE | `/v1/pay/recipient/{id}` | yes | — | — | `deleteRecipient` | `useRecipientMutations` |
+| GET | `/v1/payroll/recipient/list` | yes | — | `PayRecipient[]` | `listRecipients` | `useRecipientsQuery` |
+| POST | `/v1/payroll/recipient` | yes | `PayRecipientBody` | `PayRecipient` | `createRecipient` | `useRecipientMutations` |
+| POST | `/v1/payroll/recipient/{id}` | yes | `PayRecipientBody` | `PayRecipient` | `updateRecipient` | `useRecipientMutations` |
+| DELETE | `/v1/payroll/recipient/{id}` | yes | — | — | `deleteRecipient` | `useRecipientMutations` |
 
 `useContacts` wraps these hooks and is what the Pay views use.
 
@@ -153,12 +169,12 @@ Both `submit` calls are driven by the persisted retry queues rather than a hook:
 
 | Method | Path | Auth | Body | Data | API | Hook |
 | --- | --- | --- | --- | --- | --- | --- |
-| POST | `/v1/pay/request` | yes | `PayCreateRequestParam` | `PayCreateRequestResp` | `createPayRequest` | `useCreatePayRequestMutation` |
-| GET | `/v1/pay/request/{id}` | caller | — | `PayRequestItem` | `getPayRequest` | `usePayRequestDetailQuery` |
-| GET | `/v1/pay/request/list` | yes | — | `PayRequestItem[]` | `getRequestPayments` | `useRequestPaymentsQuery` |
-| POST | `/v1/pay/request/{id}/disable` | yes | — | — | `disablePayRequest` | `useDisablePayRequestMutation` |
-| POST | `/v1/pay/request/withdraw` | yes | `PayWithdrawParam` | — | `withdrawPayRequest` | `useRequestWithdraw` |
-| GET | `/v1/pay/request/withdraw/count` | yes | — | `number` | `getRequestWithdrawCount` | `useRequestWithdrawCountQuery` |
+| POST | `/v1/payroll/request` | yes | `PayCreateRequestParam` | `PayCreateRequestResp` | `createPayRequest` | `useCreatePayRequestMutation` |
+| GET | `/v1/payroll/request/{id}` | caller | — | `PayRequestItem` | `getPayRequest` | `usePayRequestDetailQuery` |
+| GET | `/v1/payroll/request/list` | yes | — | `PayRequestItem[]` | `getRequestPayments` | `useRequestPaymentsQuery` |
+| POST | `/v1/payroll/request/{id}/disable` | yes | — | — | `disablePayRequest` | `useDisablePayRequestMutation` |
+| POST | `/v1/payroll/request/withdraw` | yes | `PayWithdrawParam` | — | `withdrawPayRequest` | `useRequestWithdraw` |
+| GET | `/v1/payroll/request/withdraw/count` | yes | — | `number` | `getRequestWithdrawCount` | `useRequestWithdrawCountQuery` |
 
 `getPayRequest` takes `{ auth }` so an anonymous payer can read a request; the page that needs it (`/p/:id`) is currently disabled. `createPayRequest` throws when the response has no positive `id`.
 

@@ -22,6 +22,23 @@ export const PAY_NAV_ITEMS = [
   group: (typeof PAY_NAV_GROUP)[keyof typeof PAY_NAV_GROUP];
 }>;
 
+/** Hosted-checkout return page. Sent as `success_url` when creating a payment. */
+export const PAYOUT_RESULT_PATH = "/pay/result";
+
+/**
+ * Status values seen on the result page. `success` comes from the hosted
+ * checkout callback, `completed` from `GET /v1/payroll/payments/{payment_id}`.
+ */
+export const PAYOUT_RESULT_STATUS = {
+  Success: "success",
+  Completed: "completed",
+} as const;
+
+/** Titles for Pay routes that are not in the sidebar. */
+export const PAY_ROUTE_TITLES: Record<string, string> = {
+  [PAYOUT_RESULT_PATH]: "Payment Result",
+};
+
 export const PAYOUT_TABLE_COLUMNS =
   "minmax(150px,1.3fr) minmax(72px,0.5fr) minmax(140px,1fr) minmax(130px,1fr) minmax(150px,1fr) minmax(150px,0.95fr)";
 export const RECEIVED_PAYMENT_TABLE_COLUMNS =
