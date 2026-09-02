@@ -106,7 +106,7 @@ navigate(returnTo ?? "/pay", { replace: true });
 
 Paths are prefixed with `PAY_API_PREFIX` (`/v1/payroll`) or `NEARINTENTS_API_PREFIX` (`/v1/nearintents`) from `src/api/config.ts`. "Auth" is the default for that function; `caller` means the caller decides.
 
-Only Auth and the two payment routes below are served by the Payroll backend. The Payout, Recipients, and Payment-request tables are the pre-Payroll contract kept unchanged under the new prefix; the screens that call them are not in scope yet, so those routes will 404. Do not treat them as a spec.
+Only Auth, Single Payout (`/payments`), and Batch Payout (`/batches`) are served by the Payroll backend. The Payout, Recipients, and Payment-request tables are the pre-Payroll contract kept unchanged under the new prefix; the screens that call them are not in scope yet, so those routes will 404. Do not treat them as a spec.
 
 ### Auth — `src/api/auth.ts`, `src/types/auth.ts`, `src/hooks/use-auth-api.ts`
 
@@ -132,6 +132,19 @@ Only Auth and the two payment routes below are served by the Payroll backend. Th
 `memo` (≤ 200 characters) is accepted but is not in the Swagger contract. There is no `notifyEmail` parameter.
 
 The checkout returns to the `success_url` we send (`{origin}/pay/result`) only after a successful payment, with `out_order_no` set to the Payroll `payment_id`. `PayoutResultView` reads it and calls `GET /payments/{payment_id}` once — there is no state left to poll for.
+
+### Batch payout — `src/api/payout.ts`, `src/types/payout.ts`, `src/hooks/use-batch-payout-api.ts`
+
+| Method | Path | Auth | Body | Data | API | Hook |
+| --- | --- | --- | --- | --- | --- | --- |
+| POST | `/v1/payroll/batches` | yes | `PayrollCreateBatchParam` | `PayrollBatch` | `createPayrollBatch` | `useCreatePayrollBatchQuery` |
+| GET | `/v1/payroll/batches/{batch_id}/transaction` | yes | — | `PayrollBatch` | `getPayrollBatchTransaction` | `usePayrollBatchTransactionQuery` |
+
+`POST /batches` creates the batch and answers with the origin quote (`total_source_amount` / `total_source_amount_raw`) plus the origin-chain `transaction` to sign. `BatchPayoutView` posts once when preview opens; the refresh control and an expired/spent quote call `refetch()`. `createPayrollBatch` throws `ApiError(..., "NO_BATCH_TX")` when the response has no broadcastable transaction.
+
+Confirm signs and broadcasts that transaction. There is no submit call after broadcast. `GET .../transaction` is a status lookup; the page does not call it (success resets to the upload step). A consumed `batchId` is stored in `consumed-batches` before broadcast so the same deposit addresses are never paid twice.
+
+`notification.email` / `notification.slack` are omitted: the page does not collect them.
 
 ### Payout (legacy wallet path) — `src/api/payout.ts`, `src/types/payout.ts`
 

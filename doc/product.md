@@ -2,7 +2,7 @@
 
 Stableflow Pay lets a signed-in business send stablecoin payouts across EVM, Near, Solana, and Tron from a single paying wallet. Cross-chain routing goes through Near Intents (1Click) behind the backend.
 
-The backend is the **Payroll** API: every route in `src/api/` is built from `PAY_API_PREFIX`, which is `/v1/payroll`. Only Auth and the Single Payout flow have a Payroll endpoint today; the other Pay screens still call paths under that prefix that the backend does not serve yet.
+The backend is the **Payroll** API: every route in `src/api/` is built from `PAY_API_PREFIX`, which is `/v1/payroll`. Auth, Single Payout, and Batch Payout have Payroll endpoints today; the other Pay screens still call paths under that prefix that the backend does not serve yet.
 
 Only two areas are released: **Auth** and **Pay**. Everything else is either a public side page or a route that is commented out in `src/router/index.tsx`. This document details the released areas only.
 
@@ -88,7 +88,7 @@ Three page steps (`upload` → `validate` → `preview`) with a two-dot `BatchSt
 
 1. **Upload.** Drop a CSV, pick a Google Sheet through the Picker, or start with one empty row. Template and accepted extensions are in `config.ts` (`IMPORT_CSV_TEMPLATE`, `IMPORT_CSV_ACCEPT`); columns are `recipient,amount,token,network,memo`. Imports are capped at `IMPORT_MAX_ROWS` (50) and the extra rows are dropped with a toast.
 2. **Validate.** An editable table of drafts with per-field status. `batch-utils.ts` owns parsing, patching, per-row validation, token resolution against the 1Click token list, totals, and the per-token breakdown. The paying token is chosen here; its balance is polled every `ORIGIN_BALANCE_POLL_MS` (20s).
-3. **Preview.** Totals, payout count, fee and cost from a live quote (`useBatchPayQuote`, refetched every 60s; the button stays disabled while the quote is stale or errored). Confirm runs `POST /v1/payroll/batch/swap`, re-reads the wallet balance, refuses to continue when it is short of `totalAmountIn`, broadcasts through `broadcastBatchPayout`, then calls `enqueueBatchPayoutCommit({ orderId, txHash })` and resets the flow.
+3. **Preview.** Totals, payout count, fee and cost from `POST /v1/payroll/batches` (`useCreatePayrollBatchQuery`, posted once when this step opens). A refresh control on the card (and an expired or already-used quote) posts again. Confirm stays disabled while the quote is stale, errored, or consumed. Confirm re-reads the wallet balance, refuses to continue when it is short of `totalSourceAmountRaw`, marks the `batchId` consumed, broadcasts through `broadcastBatchPayout`, then resets the flow. There is no submit after broadcast and no waiting page.
 
 The paying chain is restricted to `BATCH_BLOCKCHAINS` from `src/config/chains.ts`.
 

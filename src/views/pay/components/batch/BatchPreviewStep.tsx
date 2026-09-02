@@ -1,6 +1,8 @@
 import { IconLock } from "@/components/icons/lock";
+import { IconRefresh } from "@/components/icons/refresh";
 import { Button } from "@/components/ui/button/Button";
 import { Card } from "@/components/ui/card/Card";
+import { cn } from "@/lib/utils";
 import { formatAddress, formatAmount } from "@/utils";
 import { formatTokenNetwork } from "../../batch-utils";
 import type { IntentsToken } from "@/stores/intents-tokens";
@@ -17,6 +19,9 @@ export function BatchPreviewStep(props: {
   quoting: boolean;
   canConfirm: boolean;
   sending: boolean;
+  canRefresh: boolean;
+  refreshing: boolean;
+  onRefresh: () => void;
   onBack: () => void;
   onConfirm: () => void;
 }) {
@@ -32,12 +37,29 @@ export function BatchPreviewStep(props: {
     quoting,
     canConfirm,
     sending,
+    canRefresh,
+    refreshing,
+    onRefresh,
     onBack,
     onConfirm,
   } = props;
 
   return (
-    <Card className="mx-auto w-full max-w-[600px] px-5 py-6 sm:px-8 sm:py-8">
+    <Card className="relative mx-auto w-full max-w-[600px] px-5 py-6 sm:px-8 sm:py-8">
+      <button
+        type="button"
+        aria-label="Refresh quote"
+        disabled={!canRefresh}
+        onClick={onRefresh}
+        className="absolute top-3 right-3 inline-flex size-8 cursor-pointer items-center justify-center text-[#909090] disabled:cursor-not-allowed disabled:opacity-50"
+      >
+        <IconRefresh
+          className={cn(
+            "size-3.5",
+            refreshing && "animate-spin [animation-direction:reverse]",
+          )}
+        />
+      </button>
       <h2 className="font-montserrat text-xl font-semibold text-black">Preview & Confirm</h2>
       <p className="mt-2 font-montserrat text-sm text-[#606060]">Send a private payment from your organization's treasury.</p>
 

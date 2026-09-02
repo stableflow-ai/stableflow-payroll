@@ -22,6 +22,8 @@ export const queryKeys = {
     singleQuote: (body: unknown) => [...queryKeys.payout.all, "single-quote", body] as const,
     payrollPayment: (id: string) => [...queryKeys.payout.all, "payroll-payment", id] as const,
     batchQuote: (body: unknown) => [...queryKeys.payout.all, "batch-quote", body] as const,
+    payrollBatch: (body: unknown) => [...queryKeys.payout.all, "payroll-batch", body] as const,
+    payrollBatchTransaction: (id: string) => [...queryKeys.payout.all, "payroll-batch-tx", id] as const,
   },
   recipient: {
     all: ["recipient"] as const,

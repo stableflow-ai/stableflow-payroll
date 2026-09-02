@@ -1,27 +1,32 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useOutletContext } from "react-router-dom";
 import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
 import { BATCH_BLOCKCHAINS } from "@/config/chains";
 import { queryKeys } from "@/api/query-keys";
-import { useBatchPayQuote, useBatchPaySwap } from "@/hooks/use-batch-payout-api";
+import { useCreatePayrollBatchQuery } from "@/hooks/use-batch-payout-api";
 import { usePayOriginToken } from "@/hooks/use-pay-origin-token";
 import { usePaymentWallet } from "@/hooks/use-payment-wallet";
 import { useTokenBalance } from "@/hooks/use-token-balances";
 import { useConnectedWallets } from "@/hooks/use-wallet";
 import useToast from "@/hooks/use-toast";
 import { useIntentsTokensStore } from "@/stores/intents-tokens";
-import { enqueueBatchPayoutCommit } from "@/stores/batch-payout-commit-queue";
+import {
+  isBatchConsumed,
+  markBatchConsumed,
+  useConsumedBatchesStore,
+} from "@/stores/consumed-batches";
 import { useTokenBalancesStore } from "@/stores/token-balances";
 import { formatAmount } from "@/utils";
 import { broadcastBatchPayout } from "@/wallet/broadcast-batch-payout";
 import type { ChainKind } from "@/wallet";
-import type { PayBatchQuoteParam } from "@/types/payout";
+import type { PayrollCreateBatchParam } from "@/types/payout";
 import type { PayLayoutOutletContext } from "@/layouts/PayLayout";
 import {
   IMPORT_MAX_ROWS,
   ORIGIN_BALANCE_POLL_MS,
-  QUICK_PAY_SLIPPAGE_TOLERANCE,
+  QUOTE_EXPIRED_MESSAGE,
+  SPENT_BATCH_MESSAGE,
 } from "./config";
 import {
   allDraftsValid,
@@ -29,11 +34,12 @@ import {
   feeFromQuote,
   groupTokenBreakdown,
   isBatchOriginToken,
+  isPayrollBatchExpired,
   parseImportRows,
   patchDraft,
   refillUnresolvedTokens,
   sumDraftAmounts,
-  toBatchReceives,
+  toPayrollBatchPayments,
   type BatchDraft,
   type BatchDraftPatch,
 } from "./batch-utils";
@@ -72,14 +78,14 @@ export function BatchPayoutView() {
   const fetchOneBalance = useTokenBalancesStore((s) => s.fetchOne);
   const originBalance = useTokenBalance(connectedAddress, originToken?.assetId);
   const balanceOwners = useConnectedWallets();
-  const swapMutation = useBatchPaySwap();
 
   const [pageStep, setPageStep] = useState<PageStep>("upload");
   const [rows, setRows] = useState<BatchDraft[]>([]);
   const [showErrors, setShowErrors] = useState(false);
   const [originDialogOpen, setOriginDialogOpen] = useState(false);
   const [destRowId, setDestRowId] = useState<string | null>(null);
-  const [phase, setPhase] = useState<"idle" | "quoting" | "sending" | "done">("idle");
+  const [phase, setPhase] = useState<"idle" | "sending" | "done">("idle");
+  const refreshedForBatchId = useRef("");
 
   useEffect(() => {
     void ensureFresh();
@@ -112,40 +118,52 @@ export function BatchPayoutView() {
   const destRow = destRowId ? rows.find((row) => row.id === destRowId) ?? null : null;
   const totalOut = useMemo(() => sumDraftAmounts(rows), [rows]);
   const breakdown = useMemo(() => groupTokenBreakdown(rows), [rows]);
-  const receives = useMemo(
-    () => (pageStep === "preview" ? toBatchReceives(rows) : []),
+  const payments = useMemo(
+    () => (pageStep === "preview" ? toPayrollBatchPayments(rows) : []),
     [pageStep, rows],
   );
 
-  const quoteBody = useMemo((): PayBatchQuoteParam | null => {
-    if (pageStep !== "preview" || !receives.length || !originToken || !connectedAddress) return null;
+  const batchBody = useMemo((): PayrollCreateBatchParam | null => {
+    if (pageStep !== "preview" || !payments.length || !originToken || !connectedAddress) return null;
     return {
-      network: originToken.blockchain,
-      token: originToken.symbol,
       payer: connectedAddress,
-      refundTo: connectedAddress,
-      slippageTolerance: QUICK_PAY_SLIPPAGE_TOLERANCE,
-      receives,
+      source_network: originToken.blockchain,
+      source_symbol: originToken.symbol,
+      payments,
     };
-  }, [pageStep, receives, originToken, connectedAddress]);
+  }, [pageStep, payments, originToken, connectedAddress]);
 
-  const dryQuoteQuery = useBatchPayQuote(quoteBody);
-  const quote = quoteBody ? dryQuoteQuery.data : undefined;
-  const quoteStale = Boolean(quoteBody) && (
-    dryQuoteQuery.isPlaceholderData
-    || (dryQuoteQuery.isPending && dryQuoteQuery.isFetching)
+  const batchQuery = useCreatePayrollBatchQuery(batchBody);
+  const batch = batchBody ? batchQuery.data : undefined;
+  const batchId = batch?.batchId ?? "";
+  const batchConsumed = useConsumedBatchesStore(
+    (state) => Boolean(batchId) && state.items.some((item) => item.batchId === batchId),
   );
-  const quoteError = dryQuoteQuery.isError
-    ? formatQuoteErrorMessage(dryQuoteQuery.error, 2)
-    : null;
-  const quoting = Boolean(quoteBody) && (quoteStale || dryQuoteQuery.isFetching) && !quoteError;
+  const refetchBatch = batchQuery.refetch;
 
-  const feeRaw = feeFromQuote(quote?.totalAmountInFormatted, totalOut);
+  useEffect(() => {
+    if (!batchConsumed || !batchId) return;
+    if (phase === "sending" || phase === "done") return;
+    if (refreshedForBatchId.current === batchId) return;
+    refreshedForBatchId.current = batchId;
+    void refetchBatch();
+  }, [batchConsumed, batchId, phase, refetchBatch]);
+
+  const quoteStale = Boolean(batchBody) && (
+    batchQuery.isPlaceholderData
+    || (batchQuery.isPending && batchQuery.isFetching)
+  );
+  const quoteError = batchQuery.isError
+    ? formatQuoteErrorMessage(batchQuery.error, 2)
+    : null;
+  const quoting = Boolean(batchBody) && (quoteStale || batchQuery.isFetching) && !quoteError;
+
+  const feeRaw = feeFromQuote(batch?.totalSourceAmount, totalOut);
   const feeLabel = feeRaw == null
     ? "—"
     : `~${formatAmount(feeRaw, { decimals: 0, maxDecimals: 6 })}`;
-  const costLabel = quote?.totalAmountInFormatted
-    ? `~${formatAmount(quote.totalAmountInFormatted, { decimals: 0, maxDecimals: 6 })}`
+  const costLabel = batch?.totalSourceAmount
+    ? `~${formatAmount(batch.totalSourceAmount, { decimals: 0, maxDecimals: 6 })}`
     : "—";
 
   function applyImported(values: string[][], defaultMemo: string) {
@@ -184,12 +202,12 @@ export function BatchPayoutView() {
     setRows([]);
     setShowErrors(false);
     setPhase("idle");
-    void queryClient.removeQueries({ queryKey: [...queryKeys.payout.all, "batch-quote"] });
+    void queryClient.removeQueries({ queryKey: [...queryKeys.payout.all, "payroll-batch"] });
   }
 
   const settleMutation = useMutation({
     mutationFn: async () => {
-      if (!originToken || !quoteBody || !quote || !connectedAddress) {
+      if (!originToken || !batchBody || !batch || !connectedAddress) {
         throw new Error("Missing payment inputs");
       }
       if (!wallet.isConnected || !wallet.account?.address) {
@@ -200,10 +218,18 @@ export function BatchPayoutView() {
         toast.fail({ title: "Select a paying token" });
         throw new BalanceGateError("Select a paying token");
       }
+      if (isPayrollBatchExpired(batch.deadline)) {
+        toast.fail({ title: QUOTE_EXPIRED_MESSAGE });
+        void refetchBatch();
+        throw new BalanceGateError(QUOTE_EXPIRED_MESSAGE);
+      }
+      if (isBatchConsumed(batch.batchId)) {
+        toast.fail({ title: SPENT_BATCH_MESSAGE });
+        void refetchBatch();
+        throw new BalanceGateError(SPENT_BATCH_MESSAGE);
+      }
       const payer = wallet.account.address;
-      setPhase("quoting");
-      const swapped = await swapMutation.mutateAsync(quoteBody);
-      const amountIn = BigInt(swapped.totalAmountIn || "0");
+      const amountIn = BigInt(batch.totalSourceAmountRaw || "0");
       const balance = await fetchOneBalance(payer, originToken);
       if (!balance || balance.status !== "success" || balance.raw == null) {
         toast.fail({ title: "Could not read wallet balance" });
@@ -213,18 +239,18 @@ export function BatchPayoutView() {
         toast.fail({ title: "Insufficient balance" });
         throw new BalanceGateError("Insufficient balance");
       }
-      const tx = swapped.transaction;
+      const tx = batch.transaction;
       if (!tx) {
         throw new Error("Missing batch transaction");
       }
       setPhase("sending");
-      const txHash = await broadcastBatchPayout({
+      markBatchConsumed(batch.batchId);
+      await broadcastBatchPayout({
         token: originToken,
         transaction: tx,
         amountIn,
         payer,
       });
-      enqueueBatchPayoutCommit({ orderId: swapped.orderId, txHash });
     },
     onSuccess: () => {
       setPhase("done");
@@ -241,15 +267,17 @@ export function BatchPayoutView() {
     },
   });
 
-  const sending = settleMutation.isPending || phase === "quoting" || phase === "sending";
+  const sending = settleMutation.isPending || phase === "sending";
   const canConfirm = Boolean(
     isBatchOriginToken(originToken)
-    && quoteBody
-    && quote
+    && batchBody
+    && batch
     && !quoteStale
     && !quoteError
+    && !batchConsumed
     && !sending,
   );
+  const canRefresh = Boolean(batchBody) && !batchQuery.isFetching && !sending;
 
   function handleConfirm() {
     if (!connectedAddress) {
@@ -316,6 +344,11 @@ export function BatchPayoutView() {
           quoting={quoting}
           canConfirm={canConfirm}
           sending={sending}
+          canRefresh={canRefresh}
+          refreshing={batchQuery.isFetching}
+          onRefresh={() => {
+            void refetchBatch();
+          }}
           onBack={() => {
             setPageStep("validate");
             setPhase("idle");

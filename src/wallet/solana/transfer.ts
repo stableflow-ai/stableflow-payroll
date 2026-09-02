@@ -60,7 +60,6 @@ function isExpiredBlockhashError(error: unknown): boolean {
 
 export async function broadcastSerializedSolanaTx(input: {
   serializedTransaction: string;
-  lastValidBlockHeight?: number;
 }): Promise<string> {
   const signer = requireSigner();
   const connection = getSolanaConnection();
@@ -73,8 +72,7 @@ export async function broadcastSerializedSolanaTx(input: {
   }
   const signed = await signer.signTransaction(unsigned);
   const signature = await connection.sendRawTransaction(signed.serialize());
-  const lastValidBlockHeight = input.lastValidBlockHeight
-    ?? (await connection.getLatestBlockhash("confirmed")).lastValidBlockHeight;
+  const { lastValidBlockHeight } = await connection.getLatestBlockhash("confirmed");
   try {
     const confirmation = await connection.confirmTransaction(
       {

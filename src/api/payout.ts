@@ -18,6 +18,11 @@ import type {
   PaySingleSubmitParam,
   PaySingleSwapParam,
   PaySingleSwapResp,
+  PayBatchNearAction,
+  PayBatchSwapTransaction,
+  PayrollBatch,
+  PayrollBatchPayment,
+  PayrollCreateBatchParam,
   PayrollCreatePaymentParam,
   PayrollPayment,
   VolumePeriod,
@@ -235,5 +240,102 @@ export async function createPayrollPayment(
 export async function getPayrollPayment(paymentId: string): Promise<PayrollPayment> {
   return mapPayrollPayment(
     await http<unknown>(`${PAY_API_PREFIX}/payments/${encodeURIComponent(paymentId)}`),
+  );
+}
+
+function mapPayrollBatchNearAction(raw: unknown): PayBatchNearAction | null {
+  const row = asRecord(raw) ?? {};
+  const params = asRecord(row.params) ?? {};
+  const methodName = apiText(params.methodName ?? params.method_name);
+  if (!methodName) return null;
+  return {
+    type: "FunctionCall",
+    params: {
+      methodName,
+      args: asRecord(params.args) ?? {},
+      gas: apiText(params.gas),
+      deposit: apiText(params.deposit),
+    },
+  };
+}
+
+function mapPayrollBatchTransaction(raw: unknown): PayBatchSwapTransaction | null {
+  const row = asRecord(raw);
+  if (!row) return null;
+  const approvals = Array.isArray(row.approvals)
+    ? row.approvals.map((item) => apiText(item)).filter(Boolean)
+    : null;
+  const actions = Array.isArray(row.actions)
+    ? row.actions.flatMap((item) => {
+        const action = mapPayrollBatchNearAction(item);
+        return action ? [action] : [];
+      })
+    : undefined;
+  return {
+    approvals,
+    callData: apiText(row.callData ?? row.call_data),
+    batch_contract: apiText(row.batch_contract ?? row.batchContract),
+    receiverId: apiText(row.receiverId ?? row.receiver_id) || undefined,
+    actions: actions?.length ? actions : undefined,
+    serializedTransaction: apiText(row.serializedTransaction ?? row.serialized_transaction) || undefined,
+    lastValidBlockHeight: apiNumber(row.lastValidBlockHeight ?? row.last_valid_block_height) ?? undefined,
+  };
+}
+
+function hasBroadcastableBatchTx(tx: PayBatchSwapTransaction): boolean {
+  if (tx.batch_contract.trim() && tx.callData.trim()) return true;
+  if (tx.receiverId?.trim() && tx.actions?.length) return true;
+  if (tx.serializedTransaction?.trim()) return true;
+  return false;
+}
+
+export function mapPayrollBatchPayment(raw: unknown): PayrollBatchPayment {
+  const row = asRecord(raw) ?? {};
+  return {
+    ...mapPayrollPayment(raw),
+    batchId: apiText(row.batch_id ?? row.batchId),
+    payDepositAddress: apiText(row.pay_deposit_address ?? row.payDepositAddress),
+  };
+}
+
+export function mapPayrollBatch(raw: unknown): PayrollBatch {
+  const row = asRecord(raw) ?? {};
+  const payments = Array.isArray(row.payments)
+    ? row.payments.map(mapPayrollBatchPayment)
+    : [];
+  const transaction = mapPayrollBatchTransaction(row.transaction) ?? {
+    approvals: null,
+    callData: "",
+    batch_contract: "",
+  };
+  return {
+    batchId: apiText(row.batch_id ?? row.batchId),
+    deadline: apiText(row.deadline),
+    payer: apiText(row.payer),
+    sourceContract: apiText(row.source_contract ?? row.sourceContract),
+    sourceDecimals: apiNumber(row.source_decimals ?? row.sourceDecimals),
+    sourceNetwork: apiText(row.source_network ?? row.sourceNetwork),
+    sourceSymbol: apiText(row.source_symbol ?? row.sourceSymbol),
+    totalSourceAmount: apiText(row.total_source_amount ?? row.totalSourceAmount),
+    totalSourceAmountRaw: apiText(row.total_source_amount_raw ?? row.totalSourceAmountRaw),
+    transaction,
+    payments,
+  };
+}
+
+export async function createPayrollBatch(body: PayrollCreateBatchParam): Promise<PayrollBatch> {
+  const batch = mapPayrollBatch(
+    await http<unknown>(`${PAY_API_PREFIX}/batches`, { method: "POST", body }),
+  );
+  if (!hasBroadcastableBatchTx(batch.transaction)) {
+    throw new ApiError("Batch transaction is missing from the response", 502, "NO_BATCH_TX");
+  }
+  return batch;
+}
+
+/** Status lookup for an existing batch. The batch page does not call this. */
+export async function getPayrollBatchTransaction(batchId: string): Promise<PayrollBatch> {
+  return mapPayrollBatch(
+    await http<unknown>(`${PAY_API_PREFIX}/batches/${encodeURIComponent(batchId)}/transaction`),
   );
 }

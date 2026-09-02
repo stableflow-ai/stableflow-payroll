@@ -1,5 +1,5 @@
 import { getChainByNetwork } from "@/config/chains";
-import type { PayBatchReceive } from "@/types/payout";
+import type { PayBatchReceive, PayrollCreateBatchPaymentParam } from "@/types/payout";
 import type { IntentsToken, PayoutSymbol } from "@/stores/intents-tokens";
 import { normalizeSymbol } from "@/stores/intents-tokens";
 import { Big } from "@/utils";
@@ -303,6 +303,28 @@ export function toBatchReceives(rows: BatchDraft[]): PayBatchReceive[] {
     if (memo) receive.memo = memo;
     return [receive];
   });
+}
+
+export function toPayrollBatchPayments(rows: BatchDraft[]): PayrollCreateBatchPaymentParam[] {
+  return rows.flatMap((row) => {
+    const amount = parsePositiveDecimal(row.amount, AMOUNT_MAX_DECIMALS);
+    if (!amount || !row.token) return [];
+    const payment: PayrollCreateBatchPaymentParam = {
+      amount,
+      recipient: row.address.trim(),
+      network: row.token.blockchain,
+      symbol: row.token.symbol,
+    };
+    const memo = row.memo.trim();
+    if (memo) payment.memo = memo;
+    return [payment];
+  });
+}
+
+export function isPayrollBatchExpired(deadline: string, now = Date.now()): boolean {
+  const ms = Date.parse(deadline);
+  if (!Number.isFinite(ms)) return false;
+  return ms <= now;
 }
 
 export function groupTokenBreakdown(rows: BatchDraft[]): Array<{

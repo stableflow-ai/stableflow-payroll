@@ -100,6 +100,5 @@ async function broadcastSolana(input: {
   if (!serialized) throw new Error("Missing batch transaction");
   return broadcastSerializedSolanaTx({
     serializedTransaction: serialized,
-    lastValidBlockHeight: input.transaction.lastValidBlockHeight,
   });
 }

@@ -184,3 +184,41 @@ export interface PayrollPayment {
   createdAt: string;
   updatedAt: string;
 }
+
+/**
+ * Body of `POST /v1/payroll/batches`. Field names are the backend's snake_case.
+ * `notification` is omitted: the batch page does not collect email or Slack.
+ */
+export interface PayrollCreateBatchPaymentParam {
+  amount: string;
+  recipient: string;
+  network: string;
+  symbol: string;
+  memo?: string;
+}
+
+export interface PayrollCreateBatchParam {
+  payer: string;
+  source_network: string;
+  source_symbol: string;
+  payments: PayrollCreateBatchPaymentParam[];
+}
+
+export interface PayrollBatchPayment extends PayrollPayment {
+  batchId: string;
+  payDepositAddress: string;
+}
+
+export interface PayrollBatch {
+  batchId: string;
+  deadline: string;
+  payer: string;
+  sourceContract: string;
+  sourceDecimals: number | null;
+  sourceNetwork: string;
+  sourceSymbol: string;
+  totalSourceAmount: string;
+  totalSourceAmountRaw: string;
+  transaction: PayBatchSwapTransaction;
+  payments: PayrollBatchPayment[];
+}
