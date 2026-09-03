@@ -1,7 +1,7 @@
 /**
  * Address validation for EVM, Near, Solana, and Tron.
- * Near/Solana rules follow stableflow-x; Solana also checks 32-byte base58 decode.
- * Tron uses TronWeb.isAddress.
+ * Near follows near-sdk-js / Nomicon account ID rules.
+ * Solana also checks 32-byte base58 decode. Tron uses TronWeb.isAddress.
  */
 
 import { TronWeb } from "tronweb";
@@ -17,6 +17,10 @@ export interface AddressValidationResult {
 }
 
 const BASE58_ALPHABET = "123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz";
+
+/** Nomicon / near-sdk-js account ID pattern (length is checked separately). */
+const NEAR_ACCOUNT_ID_REGEX =
+  /^(([a-z\d]+[-_])*[a-z\d]+\.)*([a-z\d]+[-_])*[a-z\d]+$/;
 
 function decodeBase58(input: string): Uint8Array | null {
   if (!input) return null;
@@ -64,34 +68,11 @@ function validateEvmAddress(address: string): AddressValidationResult {
 }
 
 function validateNearAddress(address: string): AddressValidationResult {
-  if (address.length < 2 || address.length > 64) {
-    return { isValid: false, error: "NEAR address must be 2-64 characters long" };
-  }
-  if (address.startsWith(".") || address.endsWith(".")) {
-    return { isValid: false, error: "NEAR address cannot start or end with a dot" };
-  }
-  if (address.includes("..")) {
-    return { isValid: false, error: "NEAR address cannot contain consecutive dots" };
-  }
-  if (/^[0-9a-f]{64}$/i.test(address)) {
-    return { isValid: true };
-  }
-  if (address.startsWith("0x") || address.startsWith("0X")) {
-    return { isValid: false, error: "Invalid NEAR address" };
-  }
-  if (!/^[a-zA-Z0-9._-]+$/.test(address)) {
-    return { isValid: false, error: "Invalid NEAR address" };
-  }
-  const labelPattern = /^[a-zA-Z0-9](?:[a-zA-Z0-9_-]*[a-zA-Z0-9])?$/;
-  if (!address.split(".").every((label) => labelPattern.test(label))) {
-    return { isValid: false, error: "NEAR address labels must start/end with letters or numbers" };
-  }
-  if (/^\d+$/.test(address)) {
-    return { isValid: false, error: "NEAR address cannot be purely numeric" };
-  }
-  if (!/[a-zA-Z]/.test(address)) {
-    return { isValid: false, error: "NEAR address must contain at least one letter" };
-  }
+  const isValid =
+    address.length >= 2 &&
+    address.length <= 64 &&
+    NEAR_ACCOUNT_ID_REGEX.test(address);
+  if (!isValid) return { isValid: false, error: "Invalid NEAR address" };
   return { isValid: true };
 }
 

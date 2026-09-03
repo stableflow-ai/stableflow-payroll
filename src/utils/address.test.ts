@@ -6,18 +6,31 @@ describe("address validation", () => {
     expect(isAddressValid("0x1111111111111111111111111111111111111111", "evm")).toBe(true);
   });
 
-  it("accepts named Near accounts, hyphen labels, DAO accounts, and implicit hex", () => {
+  it("accepts named Near accounts, hyphen labels, DAO accounts, implicit hex, numeric ids, and lowercase 0x hex", () => {
     expect(isAddressValid("alice.near", "near")).toBe(true);
     expect(isAddressValid("a-b.near", "near")).toBe(true);
     expect(isAddressValid("burrow.sputnik-dao.near", "near")).toBe(true);
     expect(isAddressValid("a".repeat(64), "near")).toBe(true);
-    expect(isAddressValid("0x1111111111111111111111111111111111111111", "near")).toBe(false);
+    expect(isAddressValid("12", "near")).toBe(true);
+    expect(isAddressValid("0x1111111111111111111111111111111111111111", "near")).toBe(true);
   });
 
-  it("accepts a Tron base58 address and still treats it as valid Near syntax", () => {
+  it("rejects Near accounts that fail Nomicon / near-sdk-js rules", () => {
+    expect(isAddressValid("Alice.near", "near")).toBe(false);
+    expect(isAddressValid("A".repeat(64), "near")).toBe(false);
+    expect(isAddressValid("0X1111111111111111111111111111111111111111", "near")).toBe(false);
+    expect(isAddressValid(".alice", "near")).toBe(false);
+    expect(isAddressValid("alice.", "near")).toBe(false);
+    expect(isAddressValid("alice..near", "near")).toBe(false);
+    expect(isAddressValid("-alice.near", "near")).toBe(false);
+    expect(isAddressValid("a", "near")).toBe(false);
+    expect(isAddressValid(`a${"b".repeat(64)}`, "near")).toBe(false);
+  });
+
+  it("accepts a Tron base58 address and rejects it as Near syntax", () => {
     const tron = "TJbLVQHYf61a36iC7oyxdMiNSoqTMKYAMv";
     expect(isAddressValid(tron, "tron")).toBe(true);
-    expect(isAddressValid(tron, "near")).toBe(true);
+    expect(isAddressValid(tron, "near")).toBe(false);
   });
 
   it("accepts 32-byte Solana pubkeys and rejects EVM hex", () => {

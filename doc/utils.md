@@ -12,12 +12,12 @@ Search here before writing a helper. Feature-specific logic belongs in that feat
 
 ## Address — `src/utils/address.ts`
 
-Validation and formatting for EVM, Near, Solana, and Tron. EVM uses viem, Tron uses `TronWeb.isAddress`, Solana checks the base58 alphabet and a 32-byte decode, Near follows the account-id rules.
+Validation and formatting for EVM, Near, Solana, and Tron. EVM uses viem, Tron uses `TronWeb.isAddress`, Solana checks the base58 alphabet and a 32-byte decode, Near uses near-sdk-js / Nomicon account ID rules (length 2–64, lowercase `a-z` / digits / `.` `-` `_`).
 
 | Function | Notes |
 | --- | --- |
 | `resolveChainKind(networkOrKind)` | Normalises `"evm" \| "near" \| "solana" \| "tron"`, the aliases `sol` and `trx`, and any network name known to `src/config/chains.ts`. Returns `null` when unknown. |
-| `validateAddress(address, chainKind)` | Returns `{ isValid, error? }` with a human-readable English message. |
+| `validateAddress(address, chainKind)` | Returns `{ isValid, error? }` with a human-readable English message. Near follows near-sdk-js / Nomicon account ID rules. |
 | `isAddressValid(address, chainKind)` | Boolean shortcut over `validateAddress`. |
 | `normalizeAddress(address, chainKind)` | Checksums EVM addresses, lowercases Near account ids, trims the rest. Returns `null` when invalid. |
 | `sameAddress(a, b, chainKind?)` | Case-insensitive comparison except on Solana and Tron, which are case-sensitive. |
