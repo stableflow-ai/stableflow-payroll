@@ -43,7 +43,7 @@ export function RedirectIfAuthed({ children }: { children: ReactNode }) {
   const [params] = useSearchParams();
 
   if (user) {
-    return <Navigate to={returnToFromSearch(params.toString()) ?? "/"} replace />;
+    return <Navigate to={returnToFromSearch(params.toString()) ?? "/pay"} replace />;
   }
 
   return children;

@@ -42,6 +42,10 @@ export const router = createBrowserRouter([
     element: <HowItWorksView />,
   },
   {
+    path: "/",
+    element: <Navigate to="/pay" replace />,
+  },
+  {
     element: <AppLayout />,
     children: [
       // {
@@ -92,6 +96,6 @@ export const router = createBrowserRouter([
   },
   {
     path: "*",
-    element: <Navigate to="/" replace />,
+    element: <Navigate to="/pay" replace />,
   },
 ]);

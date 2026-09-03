@@ -20,7 +20,7 @@ Only two areas are released: **Auth** and **Pay**. Everything else is either a p
 
 Do not re-enable a disabled route, or document one here, without being asked.
 
-Known gap: the catch-all route redirects to `/`, and `/` has no route while Home is disabled. Landing on an unknown path therefore does not resolve to a page. Signed-in entry points (`/pay` in the header logo and nav) are used instead.
+`/` and unmatched paths redirect to `/pay`. Unsigned visitors then hit `RequireAuth` and land on `/login?returnTo=/pay`.
 
 ## Shell
 
@@ -50,7 +50,7 @@ Validation lives in `src/views/auth/config.ts` as pure `*RuleError` / `*FormErro
 
 **Session.** `useLoginMutation` / `useRegisterMutation` call `applySession(token, user)`, which writes `stableflow-pay.session` to `localStorage` and updates `useAuthStore`. `useAuthStore` re-reads that key on first import, so a reload restores the session synchronously. `SessionBootstrap` in `src/App.tsx` runs `useProfileQuery()` to validate the token against `GET /v1/payroll/profile` in the background and refresh the cached user. `POST /v1/payroll/profile` (`useUpdateProfileMutation`) changes the display name; no screen uses it yet.
 
-**Redirects.** `RequireAuth` sends anonymous visitors to `/login?returnTo=<path+search>`. `RedirectIfAuthed` sends signed-in visitors away from `/login` and `/register` to `returnTo` or `/`. After a successful login the view navigates to `returnTo ?? "/pay"`. `safeReturnTo` in `return-to.ts` rejects anything that is not a same-origin absolute path and refuses to bounce back to `/login` or `/register`.
+**Redirects.** `RequireAuth` sends anonymous visitors to `/login?returnTo=<path+search>`. `RedirectIfAuthed` sends signed-in visitors away from `/login` and `/register` to `returnTo` or `/pay`. After a successful login the view navigates to `returnTo ?? "/pay"`. `safeReturnTo` in `return-to.ts` rejects anything that is not a same-origin absolute path and refuses to bounce back to `/login` or `/register`.
 
 **401.** Any authenticated request that returns 401 clears the stored session and calls `notifyUnauthorized()`, which `src/stores/auth.ts` has wired to `logout()` (clears the store and the whole TanStack Query cache). The next render hits `RequireAuth` and lands on `/login`.
 
