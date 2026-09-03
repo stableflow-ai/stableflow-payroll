@@ -64,6 +64,10 @@ export const router = createBrowserRouter([
           //   element: <AnalyticsView />,
           // },
           {
+            path: "/",
+            element: <Navigate to="/pay" replace />,
+          },
+          {
             element: <PayLayout />,
             children: [
               { path: "/pay", element: <SinglePayoutView /> },
