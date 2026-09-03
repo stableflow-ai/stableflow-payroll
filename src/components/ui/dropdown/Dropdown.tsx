@@ -26,6 +26,7 @@ export type DropdownProps = {
   className?: string;
   triggerClassName?: string;
   panelClassName?: string;
+  renderOption?: (option: DropdownOption, selected: boolean) => ReactNode;
 };
 
 export function Dropdown(props: DropdownProps) {
@@ -40,6 +41,7 @@ export function Dropdown(props: DropdownProps) {
     className,
     triggerClassName,
     panelClassName,
+    renderOption,
   } = props;
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -119,7 +121,13 @@ export function Dropdown(props: DropdownProps) {
         )}
       >
         {label ? <span className="min-w-0 shrink truncate text-[#aaa]">{label}</span> : null}
-        <span className={cn("min-w-0 truncate", label && "flex-1 text-right")}>
+        <span
+          className={cn(
+            "min-w-0 truncate",
+            label && "flex-1 text-right",
+            !selectedOption && "text-[#606060]",
+          )}
+        >
           {selectedOption?.label ?? placeholder}
         </span>
         <IconArrowDown
@@ -154,11 +162,12 @@ export function Dropdown(props: DropdownProps) {
                       selectValue(option.value);
                     }}
                     className={cn(
-                      "flex w-full px-3 py-2 text-left text-sm font-medium text-black hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-30",
+                      "flex w-full text-left text-sm font-medium text-black hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-30",
+                      renderOption ? "items-center px-2.5 py-1.5" : "px-3 py-2",
                       selected && "bg-black/5",
                     )}
                   >
-                    {option.label}
+                    {renderOption ? renderOption(option, selected) : option.label}
                   </button>
                 );
               })}

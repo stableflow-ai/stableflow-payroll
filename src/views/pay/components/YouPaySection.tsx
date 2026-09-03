@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
+import { IconLogout } from "@/components/icons/logout";
 import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
 import { formatAddress, formatAmount } from "@/utils";
+import { cn } from "@/lib/utils";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import { useTokenBalance } from "@/hooks/use-token-balances";
 import { useTokenBalancesStore } from "@/stores/token-balances";
@@ -18,6 +20,9 @@ export function YouPaySection(props: {
   walletIcon?: string | null;
   connecting: boolean;
   onConnectWallet: () => void;
+  onDisconnectWallet?: () => void;
+  allowedBlockchains?: string[];
+  amountClassName?: string;
 }) {
   const {
     amountDisplay,
@@ -28,6 +33,9 @@ export function YouPaySection(props: {
     walletIcon,
     connecting,
     onConnectWallet,
+    onDisconnectWallet,
+    allowedBlockchains = PAYER_BLOCKCHAINS,
+    amountClassName,
   } = props;
   const [originDialogOpen, setOriginDialogOpen] = useState(false);
   const balanceOwners = useConnectedWallets();
@@ -52,7 +60,19 @@ export function YouPaySection(props: {
             <img src={walletIcon} alt="" className="size-3 rounded-[2px] object-cover" />
           ) : null}
           {walletAddress ? (
-            <p className="font-montserrat text-xs text-[#606060]">{formatAddress(walletAddress)}</p>
+            <>
+              <p className="font-montserrat text-xs text-[#606060]">{formatAddress(walletAddress)}</p>
+              {onDisconnectWallet ? (
+                <button
+                  type="button"
+                  aria-label="Disconnect"
+                  onClick={onDisconnectWallet}
+                  className="inline-flex shrink-0 cursor-pointer text-danger"
+                >
+                  <IconLogout className="size-3" />
+                </button>
+              ) : null}
+            </>
           ) : (
             <button
               type="button"
@@ -66,7 +86,7 @@ export function YouPaySection(props: {
         </div>
       </div>
       <div className="mt-1 flex min-w-0 flex-wrap items-end justify-between gap-3">
-        <p className="min-w-0 break-all font-montserrat text-base font-medium text-black">
+        <p className={cn("min-w-0 break-all font-montserrat text-base font-medium text-black", amountClassName)}>
           {amountDisplay}
         </p>
         <TokenSelectButton token={originToken} onClick={() => setOriginDialogOpen(true)} />
@@ -93,9 +113,10 @@ export function YouPaySection(props: {
         selectedAssetId={originToken?.assetId}
         showBalances
         balanceOwners={balanceOwners}
-        allowedBlockchains={PAYER_BLOCKCHAINS}
+        allowedBlockchains={allowedBlockchains}
         onSelect={({ token }) => {
           onOriginTokenChange(token);
+          setOriginDialogOpen(false);
           const kind = token.chain.chainKind;
           const owner = kind === "evm" || kind === "near" || kind === "solana" || kind === "tron"
             ? balanceOwners[kind]

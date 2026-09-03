@@ -55,7 +55,7 @@ src/
   layouts/                     AppLayout, PayLayout, PartnerLayout
   views/                       one folder per area; see product.md
     auth/                      login, register, reset password
-    pay/                       single, batch, pending, history, request (+ disabled public payer)
+    pay/                       single, form, batch, pending, history, request (+ disabled public payer)
     how-it-works/              public marketing page
     home/, analytics/, partner/  routes currently disabled
   components/

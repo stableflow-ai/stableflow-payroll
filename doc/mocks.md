@@ -13,7 +13,7 @@ A mock is temporary scaffolding. It ships with a `TODO(api)` marker and is delet
 | `src/mocks/config.ts` | `MOCK_ENABLED` switchboard and the derived `MockDomain` type |
 | `src/mocks/<domain>.ts` | Fixtures and the reader function for one domain |
 
-`MOCK_ENABLED` is currently `{}` — no domain is mocked and every page reads the real API.
+`MOCK_ENABLED` currently mocks `paymentForms`. Every other page reads the real API.
 
 ## How a page reads mock data
 
@@ -51,7 +51,7 @@ Never import a fixture into a view. Go through the same hook the real API will u
 
 | Domain | Mock file | Reader hook | Notes |
 | --- | --- | --- | --- |
-| — | — | — | No mock domains. |
+| `paymentForms` | `src/mocks/payment-forms.ts` | `usePaymentFormsQuery` / `usePaymentFormQuery` | Saved batch forms for Payment by form. Quote and send still use `POST /v1/payroll/batches`. |
 
 ## Constraints
 

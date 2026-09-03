@@ -6,6 +6,7 @@ Format: one `## YYYY-MM-DD` heading per day, one `- **ComponentName:** what chan
 
 ## 2026-09-03
 
+- **Dropdown:** Placeholder text is `#606060` when nothing is selected. Optional `renderOption(option, selected)` customizes the panel row; the trigger still shows `option.label`.
 - **Table:** Scroll children wrap in `min-w-full` (no `w-max`). `fr` columns size to the card so overflow can truncate; header and body stay on the same tracks. Horizontal scroll still applies when column mins exceed the card.
 
 ## 2026-09-02
