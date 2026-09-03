@@ -11,7 +11,7 @@ Only two areas are released: **Auth** and **Pay**. Everything else is either a p
 | Area | Routes | Status | Notes |
 | --- | --- | --- | --- |
 | Auth | `/login`, `/register` | Released | Detailed below. Reset password is a dialog, not a route. |
-| Pay | `/pay`, `/pay/form`, `/pay/overview`, `/pay/result`, `/pay/batch`, `/pay/reimbursement`, `/pay/bonus`, `/pay/team`, `/pay/history`, `/pay/setting`, `/pay/pending`, `/pay/request` | Released | Detailed below. Requires a session. Placeholder routes render `PayPlaceholderView`. |
+| Pay | `/pay`, `/pay/form`, `/pay/overview`, `/pay/result`, `/pay/batch`, `/pay/reimbursement`, `/pay/bonus`, `/pay/team`, `/pay/history`, `/pay/setting`, `/pay/pending`, `/pay/request` | Released | Detailed below. Requires a session. Placeholder routes (`/pay/overview`, `/pay/reimbursement`, `/pay/bonus`, `/pay/setting`) render `PayPlaceholderView`. |
 | Marketing | `/howitworks` | Live, not detailed here | Static public page linked from the auth screens. |
 | Public payer | `/p/:id` | Disabled | Route commented out in `src/router/index.tsx`; `src/views/pay/RequestPayView.tsx` still exists. Anonymous page that pays a payment request created in `/pay/request`, rendered inside `AppLayout` but outside `RequireAuth`. |
 | Home | `/` | Disabled | Route commented out in `src/router/index.tsx`; `src/views/home/` still exists. |
@@ -60,19 +60,19 @@ Validation lives in `src/views/auth/config.ts` as pure `*RuleError` / `*FormErro
 
 Files: `src/views/pay/`. Constants: `src/views/pay/config.ts`. Sidebar: `PaySidebar` reads `PAY_NAV_ITEMS`.
 
-Sidebar entries: Overview (placeholder), Payment (`/pay` and `/pay/form`), Operations (Payroll = existing Batch Payout at `/pay/batch`; Reimbursement and Bonus placeholders), Team (placeholder), History (`/pay/history`), Setting (placeholder). Pending Payouts is not in the sidebar; `/pay/pending` remains reachable by URL. Request Payment is also URL-only.
+Sidebar entries: Overview (placeholder), Payment (`/pay` and `/pay/form`), Operations (Payroll = existing Batch Payout at `/pay/batch`; Reimbursement and Bonus placeholders), Team (`/pay/team`), History (`/pay/history`), Setting (placeholder). Pending Payouts is not in the sidebar; `/pay/pending` remains reachable by URL. Request Payment is also URL-only.
 
-Shared building blocks: `TokenSelectDialog` (chain + token picker, optional balances), `PayoutsTable` (Recipient / Amount / Asset / Memo / Time / Status with an explorer link), `RecipientAddressField` + `RecipientsDialog` + `ContactFormDialog` (address book), `PaymentByFormCard` (reusable Payment by form card), `PaymentFormDetailsDrawer` (Total Valued details), `usePayOriginToken` and `usePaymentWallet` (paying token and matching wallet).
+Shared building blocks: `TokenSelectDialog` (chain + token picker, optional balances), `PayoutsTable` (Recipient / Amount / Asset / Memo / Time / Status with an explorer link), `RecipientAddressField` + `RecipientsDialog` + `ContactFormDialog` (address book), `PaymentByFormCard` (reusable Payment by form card), `PaymentFormDetailsDrawer` (Total Valued details), `SinglePayoutCard` (reusable Single Payment card, including Team Pay Now), `usePayOriginToken` and `usePaymentWallet` (paying token and matching wallet).
 
 Amounts are limited to `AMOUNT_MAX_DECIMALS` (6) in the inputs, memos to `MEMO_MAX_LENGTH` (200), and slippage is fixed at `QUICK_PAY_SLIPPAGE_TOLERANCE` (5).
 
 ### `/pay` — Single Payment
 
-Title **Payment**. A centred `PaymentModeTabs` control switches Single Payment (`/pay`) and Payment by form (`/pay/form`). One card: recipient (search / paste address, address book), amount plus recipient token, and memo. Changing the address to another chain clears the selected token; a default USDT → USDC → first-available token for that chain is then picked by `defaultDestToken`. The empty submit label is **Starts from adding recipient**; once the form can send it becomes **Send Payment**. There is no Notify Recipient control.
+Title **Payment**. A centred `PaymentModeTabs` control switches Single Payment (`/pay`) and Payment by form (`/pay/form`). One card: recipient (search / paste address, address book), amount plus recipient token, and purpose. Changing the address to another chain clears the selected token; a default USDT → USDC → first-available token for that chain is then picked by `defaultDestToken`. The empty submit label is **Starts from adding recipient**; once the form can send it becomes **Send Payment**. There is no Notify Recipient control.
 
-The address book dialogs create, edit, and delete recipients through `useContacts` → `/v1/payroll/recipient*`.
+The form lives in `SinglePayoutCard` so Team Pay Now can mount the same card in a dialog with a locked recipient. The address book dialogs create, edit, and delete recipients through `useContacts` → `/v1/payroll/recipient*`.
 
-**Send Payment** posts to `/v1/payroll/payments` (`useCreatePayrollPaymentMutation`) with the amount, the recipient, the destination `network` / `symbol` from `payoutNetworkToken`, the optional memo, and `success_url` = `{origin}/pay/result`. The backend creates a hosted checkout session and answers with `pay_url`; the browser is sent there with `window.location.assign`. Payment itself happens on the hosted checkout, so this screen never touches a wallet.
+**Send Payment** posts to `/v1/payroll/payments` (`useCreatePayrollPaymentMutation`) with the amount, the recipient, the destination `network` / `symbol` from `payoutNetworkToken`, the optional purpose (`memo` on the API), and `success_url` = `{origin}/pay/result`. The backend creates a hosted checkout session and answers with `pay_url`; the browser is sent there with `window.location.assign`. Payment itself happens on the hosted checkout, so this screen never touches a wallet.
 
 There is no notify-recipient field: the endpoint has no `notifyEmail` parameter.
 
@@ -123,6 +123,16 @@ The merchant fills in a receiving address (auto-filled from the connected wallet
 The generated link does not resolve while the public payer route is disabled. Both halves of this flow are off the released surface; treat them as one unit if either is re-enabled.
 
 Below the form, `ReceivedPaymentList` shows the merchant's requests with their status (`pending`, `submitted`, `completed`, `withdrawing`, `withdrawed`, `failed`), lets them disable a request (`POST /v1/payroll/request/{id}/disable`), and withdraw funds received privately (`useRequestWithdraw` → `POST /v1/payroll/request/withdraw`). `GET /v1/payroll/request/withdraw/count` polls every two minutes for the withdrawable count.
+
+### `/pay/team` — Team
+
+Search, paginated member table (Name, Position, Schedule, Email, Wallet), Add Member, and Invite. List CRUD is mock data (`team` in [mocks.md](mocks.md)) until that contract exists. Schedule is display-only; Add/Edit does not set it, so a new member shows `-`. Wallet prefers EVM, then Solana, then NEAR.
+
+**Add / Edit** is a dialog: Name required; Position, Email, and the three wallet fields optional. A filled wallet must match that chain (`validateAddress`). Save stays disabled while Name is empty or a filled field is invalid.
+
+**Invite** copies the old Recipients invite form (Name, Email, Type = Employee locked, Role). It does not add a row. Mock send, then a success toast.
+
+Row menu: Edit, Pay Now, Remove. Remove asks for confirmation. **Pay Now** opens `SinglePayoutCard` in a dialog with the member as a locked recipient, then the same hosted-checkout Send Payment path as `/pay`. Members without a wallet cannot Pay Now.
 
 ## Wallet and payout capability
 

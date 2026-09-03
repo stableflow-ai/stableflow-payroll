@@ -13,6 +13,7 @@ import { PaymentByFormView } from "@/views/pay/PaymentByFormView";
 import { PayPlaceholderView } from "@/views/pay/PayPlaceholderView";
 import { SinglePayoutView } from "@/views/pay/SinglePayoutView";
 import { TransactionHistoryView } from "@/views/pay/TransactionHistoryView";
+import { TeamView } from "@/views/pay/TeamView";
 import { AppLayout } from "@/layouts/AppLayout";
 import { PartnerLayout } from "@/layouts/PartnerLayout";
 import { PayLayout } from "@/layouts/PayLayout";
@@ -75,7 +76,7 @@ export const router = createBrowserRouter([
               { path: "/pay/batch", element: <BatchPayoutView /> },
               { path: "/pay/reimbursement", element: <PayPlaceholderView /> },
               { path: "/pay/bonus", element: <PayPlaceholderView /> },
-              { path: "/pay/team", element: <PayPlaceholderView /> },
+              { path: "/pay/team", element: <TeamView /> },
               { path: "/pay/setting", element: <PayPlaceholderView /> },
               { path: "/pay/request", element: <RequestPaymentView /> },
               { path: "/pay/pending", element: <PendingPayoutsView /> },

@@ -53,9 +53,9 @@ src/
   shadcn-tailwind.css          theme variables and @theme inline
   router/                      route table (index.tsx) and guards (guards.tsx)
   layouts/                     AppLayout, PayLayout, PartnerLayout
-  views/                       one folder per area; see product.md
+    views/                       one folder per area; see product.md
     auth/                      login, register, reset password
-    pay/                       single, form, batch, pending, history, request (+ disabled public payer)
+    pay/                       single, form, batch, pending, history, team, request (+ disabled public payer)
     how-it-works/              public marketing page
     home/, analytics/, partner/  routes currently disabled
   components/
