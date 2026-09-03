@@ -42,10 +42,6 @@ export const router = createBrowserRouter([
     element: <HowItWorksView />,
   },
   {
-    path: "/",
-    element: <Navigate to="/pay" replace />,
-  },
-  {
     element: <AppLayout />,
     children: [
       // {
