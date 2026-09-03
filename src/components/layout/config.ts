@@ -12,6 +12,14 @@ export const HEADER_ACCOUNT_MENU_VARIANT = {
 export type HeaderAccountMenuVariant =
   (typeof HEADER_ACCOUNT_MENU_VARIANT)[keyof typeof HEADER_ACCOUNT_MENU_VARIANT];
 
+export const HEADER_ACCOUNT_TRIGGER_LABEL = {
+  Name: "name",
+  Email: "email",
+} as const;
+
+export type HeaderAccountTriggerLabel =
+  (typeof HEADER_ACCOUNT_TRIGGER_LABEL)[keyof typeof HEADER_ACCOUNT_TRIGGER_LABEL];
+
 export const HEADER_NAV_ITEMS = [
   // { label: "Home", to: "/" },
   { label: "Pay", to: "/pay" },

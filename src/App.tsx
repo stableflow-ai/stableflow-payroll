@@ -16,12 +16,12 @@ export default function App() {
       <SessionBootstrap />
       <RouterProvider router={router} />
       <ToastContainer
-        position="top-right"
+        position="bottom-right"
         autoClose={5000}
         hideProgressBar
         theme="light"
         toastStyle={{ backgroundColor: "transparent", boxShadow: "none" }}
-        newestOnTop
+        newestOnTop={false}
         rtl={false}
         pauseOnFocusLoss
         closeButton={false}

@@ -9,6 +9,7 @@ export type OverlayChromeProps = {
   maskClassName?: string;
   closeOnMaskClick?: boolean;
   cardClassName?: string;
+  panelClassName?: string;
   titleClassName?: string;
   closeClassName?: string;
   closeIcon?: ReactNode;

@@ -1,8 +1,12 @@
+import { motion } from "motion/react";
 import { cn } from "@/lib/utils";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { Overlay } from "@/components/ui/overlay/Overlay";
 import { OverlayPanel } from "@/components/ui/overlay/OverlayPanel";
-import { DESKTOP_MEDIA_QUERY } from "@/components/ui/overlay/config";
+import {
+  DESKTOP_MEDIA_QUERY,
+  OVERLAY_DIALOG_PANEL_FADE_SECONDS,
+} from "@/components/ui/overlay/config";
 import type { OverlayChromeProps } from "@/components/ui/overlay/types";
 import { Drawer } from "@/components/ui/drawer/Drawer";
 import { DRAWER_SIDE } from "@/components/ui/drawer/config";
@@ -45,7 +49,18 @@ export function Dialog(props: DialogProps) {
       closeOnMaskClick={closeOnMaskClick}
     >
       <div className="pointer-events-none relative flex size-full items-center justify-center p-4">
-        <div className="pointer-events-auto">
+        <motion.div
+          className="pointer-events-auto"
+          initial={{ opacity: 0 }}
+          animate={{
+            opacity: 1,
+            transition: { duration: OVERLAY_DIALOG_PANEL_FADE_SECONDS, delay: 0 },
+          }}
+          exit={{
+            opacity: 0,
+            transition: { duration: OVERLAY_DIALOG_PANEL_FADE_SECONDS, delay: 0 },
+          }}
+        >
           <OverlayPanel
             title={title}
             titleClassName={titleClassName}
@@ -57,7 +72,7 @@ export function Dialog(props: DialogProps) {
           >
             {children}
           </OverlayPanel>
-        </div>
+        </motion.div>
       </div>
     </Overlay>
   );

@@ -26,3 +26,22 @@ export const PAYMENT_FORM_CATEGORY_UI: Record<
     Icon: IconBonus,
   },
 };
+
+export const PAYMENT_FORM_DETAILS_DESKTOP_QUERY = "(min-width: 768px)";
+
+export const PAYMENT_FORM_DETAILS_CATEGORY_MUTED_CLASS =
+  "max-w-none border-black/10 bg-[#f6f6f6] text-[#606060]";
+
+export const PAYMENT_FORM_DETAILS_SUMMARY = {
+  totalValue: "Total Value",
+  recipients: "Recipients",
+  nextPayDate: "Next Pay-date",
+} as const;
+
+export const PAYMENT_FORM_DETAILS_COLUMNS = [
+  { key: "recipients", label: "Recipients" },
+  { key: "address", label: "Address" },
+  { key: "payoutPreference", label: "Payout Preference" },
+  { key: "amount", label: "Amount" },
+  { key: "netPay", label: "Net Pay" },
+] as const;

@@ -1,11 +1,19 @@
 import type { ReactNode } from "react";
-import { useEffect } from "react";
+import { useEffect, useLayoutEffect, useState } from "react";
 import { createPortal } from "react-dom";
+import { AnimatePresence, motion } from "motion/react";
 import { cn } from "@/lib/utils";
+import {
+  OVERLAY_DIALOG_PANEL_FADE_SECONDS,
+  OVERLAY_EXIT_SECONDS,
+  OVERLAY_MASK_FADE_SECONDS,
+  OVERLAY_PANEL_SLIDE_SECONDS,
+} from "./config";
 import { isTopOverlay } from "./stack";
 import { useOverlayLayer } from "./use-overlay-layer";
 
 export type OverlayProps = {
+  type?: "dialog" | "drawer";
   open: boolean;
   onClose?: () => void;
   mask?: boolean;
@@ -17,6 +25,7 @@ export type OverlayProps = {
 
 export function Overlay(props: OverlayProps) {
   const {
+    type = "dialog",
     open,
     onClose,
     mask = true,
@@ -25,7 +34,13 @@ export function Overlay(props: OverlayProps) {
     children,
     className,
   } = props;
-  const zIndex = useOverlayLayer(open);
+  const [present, setPresent] = useState(open);
+
+  useLayoutEffect(() => {
+    if (open) setPresent(true);
+  }, [open]);
+
+  const zIndex = useOverlayLayer(open || present);
 
   useEffect(() => {
     if (!open) return;
@@ -40,27 +55,51 @@ export function Overlay(props: OverlayProps) {
     return () => document.removeEventListener("keydown", onKeyDown);
   }, [open, onClose, zIndex]);
 
-  if (!open || typeof document === "undefined") {
+  if (typeof document === "undefined") {
+    return null;
+  }
+
+  if (!open && !present) {
     return null;
   }
 
   return createPortal(
-    <div
-      className={cn("fixed inset-0", className)}
-      style={{ zIndex }}
-      role="presentation"
-    >
-      <div
-        className={cn(
-          "absolute inset-0",
-          mask ? "bg-[rgba(0,0,0,0.50)]" : "bg-transparent",
-          !closeOnMaskClick && "pointer-events-none",
-          maskClassName,
-        )}
-        onClick={closeOnMaskClick ? onClose : undefined}
-      />
-      {children}
-    </div>,
+    <AnimatePresence onExitComplete={() => setPresent(false)}>
+      {open ? (
+        <motion.div
+          key="overlay-root"
+          className={cn("fixed inset-0 overflow-hidden", !mask && "pointer-events-none", className)}
+          style={{ zIndex }}
+          role="presentation"
+          initial={{ opacity: 1 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 1 }}
+          transition={{ duration: OVERLAY_EXIT_SECONDS }}
+        >
+          <motion.div
+            className={cn(
+              "absolute inset-0",
+              mask ? "bg-[rgba(0,0,0,0.50)]" : "bg-transparent",
+              !closeOnMaskClick && "pointer-events-none",
+              maskClassName,
+            )}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1, transition: { duration: OVERLAY_MASK_FADE_SECONDS, delay: 0 } }}
+            exit={{
+              opacity: 0,
+              transition: {
+                duration: OVERLAY_MASK_FADE_SECONDS,
+                delay: type === "drawer"
+                  ? OVERLAY_PANEL_SLIDE_SECONDS
+                  : OVERLAY_DIALOG_PANEL_FADE_SECONDS,
+              },
+            }}
+            onClick={closeOnMaskClick ? onClose : undefined}
+          />
+          {children}
+        </motion.div>
+      ) : null}
+    </AnimatePresence>,
     document.body,
   );
 }

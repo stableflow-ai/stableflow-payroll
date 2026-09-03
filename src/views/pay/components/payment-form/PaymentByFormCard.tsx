@@ -28,6 +28,7 @@ import { QUOTE_EXPIRED_MESSAGE, SPENT_BATCH_MESSAGE } from "../../config";
 import { isBatchOriginToken, isPayrollBatchExpired } from "../../batch-utils";
 import { formatQuoteErrorMessage } from "../../utils";
 import { YouPaySection } from "../YouPaySection";
+import { PaymentFormDetailsDrawer } from "./PaymentFormDetailsDrawer";
 import { PaymentFormSelect } from "./PaymentFormSelect";
 
 class BalanceGateError extends Error {
@@ -60,6 +61,7 @@ export function PaymentByFormCard(props: {
 
   const [pickedId, setPickedId] = useState(formIdProp ?? "");
   const [phase, setPhase] = useState<"idle" | "sending" | "done">("idle");
+  const [detailsOpen, setDetailsOpen] = useState(false);
   const refreshedForBatchId = useRef("");
 
   useEffect(() => {
@@ -177,6 +179,7 @@ export function PaymentByFormCard(props: {
       toast.success({ title: "Payment submitted" });
       void queryClient.removeQueries({ queryKey: [...queryKeys.payout.all, "payroll-batch"] });
       if (!formLocked) setPickedId("");
+      setDetailsOpen(false);
       setPhase("idle");
       onSettled?.();
     },
@@ -227,7 +230,18 @@ export function PaymentByFormCard(props: {
       </div>
 
       <div className="mt-8">
-        <p className="font-montserrat text-sm font-medium text-[#606060]">Total Valued</p>
+        <div className="flex items-center justify-between gap-3">
+          <p className="font-montserrat text-sm font-medium text-[#606060]">Total Valued</p>
+          {detail ? (
+            <button
+              type="button"
+              className="font-montserrat text-sm font-medium text-[#003bff]"
+              onClick={() => setDetailsOpen(true)}
+            >
+              Details
+            </button>
+          ) : null}
+        </div>
         <p
           className={cn(
             "mt-2 font-montserrat text-[26px] font-medium text-black",
@@ -281,6 +295,12 @@ export function PaymentByFormCard(props: {
       >
         {formPicked ? "Send Payment" : "Select Category"}
       </Button>
+
+      <PaymentFormDetailsDrawer
+        open={detailsOpen}
+        onClose={() => setDetailsOpen(false)}
+        detail={detail ?? null}
+      />
     </>
   );
 }

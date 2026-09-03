@@ -4,6 +4,8 @@ Path: `src/components/ui/dialog/Dialog.tsx`
 
 Centred modal from `768px` up (`DESKTOP_MEDIA_QUERY`). Below that it renders [Drawer](drawer.md) with `side="bottom"`, full width, and a square bottom edge, forwarding every prop it received.
 
+On desktop, open fades the mask and panel together (0.1s). Close fades the panel first, then the mask (`OVERLAY_DIALOG_PANEL_FADE_SECONDS` in `overlay/config.ts`). There is no panel slide. On a narrow viewport the bottom Drawer slides up on open and down on close.
+
 The panel is a [Card](card.md) with `w-full md:w-[500px] max-h-[90vh]`. The header row is always rendered even when `title` is empty, so the layout does not jump. Body content is `children` and scrolls once it exceeds the panel height.
 
 Nested dialogs stack: each open overlay takes the next z-index step above `1000`, Escape closes only the topmost one, and body scroll is locked while any overlay is open.
@@ -22,6 +24,7 @@ Nested dialogs stack: each open overlay takes the next z-index step above `1000`
 | `maskClassName` | `string` | — | Backdrop classes. Default fill is `rgba(0,0,0,0.50)` |
 | `closeOnMaskClick` | `boolean` | `true` | When `false` the backdrop also stops receiving pointer events |
 | `cardClassName` | `string` | — | Panel / Card classes |
+| `panelClassName` | `string` | — | Drawer shell width only; ignored by a centred Dialog |
 | `titleClassName` | `string` | — | Title `<h2>` |
 | `headerAction` | `ReactNode` | — | Control between the title and the close button |
 | `closeClassName` | `string` | — | Close button |

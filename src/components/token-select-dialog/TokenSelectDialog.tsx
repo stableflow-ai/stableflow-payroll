@@ -1,9 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
+import { motion } from "motion/react";
 import { Icon2Right } from "@/components/icons/to-right";
 import { Drawer } from "@/components/ui/drawer/Drawer";
 import { DRAWER_SIDE } from "@/components/ui/drawer/config";
 import { Overlay } from "@/components/ui/overlay/Overlay";
-import { DESKTOP_MEDIA_QUERY } from "@/components/ui/overlay/config";
+import {
+  DESKTOP_MEDIA_QUERY,
+  OVERLAY_DIALOG_PANEL_FADE_SECONDS,
+} from "@/components/ui/overlay/config";
 import { useEnsureTokenBalances } from "@/hooks/use-token-balances";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { FIXED_CHAINS } from "@/config/chains";
@@ -188,8 +192,6 @@ export function TokenSelectDialog({
     />
   );
 
-  if (!open) return null;
-
   if (!isDesktop) {
     return (
       <Drawer
@@ -219,15 +221,24 @@ export function TokenSelectDialog({
   return (
     <Overlay open={open} onClose={onClose}>
       <div className="pointer-events-none relative flex size-full items-center justify-center p-4">
-        <div
+        <motion.div
           role="dialog"
           aria-modal="true"
           className="pointer-events-auto relative flex h-[min(682px,90vh)] w-full max-w-[649px] overflow-hidden rounded-[20px] border border-white bg-[#F6F6F6] shadow-[0_0_20px_0_rgba(0,0,0,0.06)]"
           onClick={(event) => event.stopPropagation()}
+          initial={{ opacity: 0 }}
+          animate={{
+            opacity: 1,
+            transition: { duration: OVERLAY_DIALOG_PANEL_FADE_SECONDS, delay: 0 },
+          }}
+          exit={{
+            opacity: 0,
+            transition: { duration: OVERLAY_DIALOG_PANEL_FADE_SECONDS, delay: 0 },
+          }}
         >
           <div className="w-[275px] shrink-0 overflow-y-auto p-5">{chainPane}</div>
           <div className="flex min-w-0 flex-1 flex-col bg-white p-5">{tokenPane}</div>
-        </div>
+        </motion.div>
       </div>
     </Overlay>
   );

@@ -15,7 +15,7 @@ import {
 
 function navLinkClass(active: boolean) {
   return cn(
-    "inline-flex h-10 shrink-0 items-center gap-2.5 rounded-[8px] px-3.5 font-montserrat text-sm font-medium whitespace-nowrap duration-150 lg:w-full",
+    "inline-flex h-10 w-full shrink-0 items-center gap-2.5 rounded-[8px] px-3.5 font-montserrat text-sm font-medium whitespace-nowrap duration-150",
     "hover:bg-[#EEE]",
     active
       ? "bg-white text-[#06f] shadow-[0_0_20px_0_rgba(0,0,0,0.06)]"
@@ -23,20 +23,22 @@ function navLinkClass(active: boolean) {
   );
 }
 
-function LeafLink({ item }: { item: PayNavLeaf }) {
+function LeafLink(props: { item: PayNavLeaf; onNavigate?: () => void }) {
+  const { item, onNavigate } = props;
   const { pathname } = useLocation();
   const active = isPayNavLeafActive(item, pathname);
   const Icon = item.icon;
 
   return (
-    <NavLink to={item.to} end className={navLinkClass(active)}>
+    <NavLink to={item.to} end className={navLinkClass(active)} onClick={onNavigate}>
       {Icon ? <Icon className="size-3.5 shrink-0" /> : null}
       <span>{item.label}</span>
     </NavLink>
   );
 }
 
-function OperationsGroup({ item }: { item: PayNavGroupItem }) {
+function OperationsGroup(props: { item: PayNavGroupItem; onNavigate?: () => void }) {
+  const { item, onNavigate } = props;
   const { pathname } = useLocation();
   const childActive = item.children.some((child) => child.to === pathname);
   const [open, setOpen] = useState(true);
@@ -51,7 +53,7 @@ function OperationsGroup({ item }: { item: PayNavGroupItem }) {
       <button
         type="button"
         onClick={() => setOpen((current) => !current)}
-        className={cn(navLinkClass(false), "lg:justify-between")}
+        className={cn(navLinkClass(false), "justify-between")}
         aria-expanded={open}
       >
         <span className="inline-flex min-w-0 items-center gap-2.5">
@@ -63,19 +65,20 @@ function OperationsGroup({ item }: { item: PayNavGroupItem }) {
         />
       </button>
       {open ? (
-        <div className="relative flex flex-col gap-1 lg:pl-2">
+        <div className="relative flex flex-col gap-1 pl-2">
           <span
             aria-hidden
-            className="absolute top-1 bottom-1 left-[14px] hidden w-px bg-black/10 lg:block"
+            className="absolute top-1 bottom-1 left-[14px] w-px bg-black/10"
           />
           {item.children.map((child) => (
             <NavLink
               key={child.to}
               to={child.to}
               end
+              onClick={onNavigate}
               className={navLinkClass(child.to === pathname)}
             >
-              <span className="lg:pl-6">{child.label}</span>
+              <span className="pl-6">{child.label}</span>
             </NavLink>
           ))}
         </div>
@@ -84,10 +87,25 @@ function OperationsGroup({ item }: { item: PayNavGroupItem }) {
   );
 }
 
+export function PayNav(props: { onNavigate?: () => void; className?: string }) {
+  const { onNavigate, className } = props;
+  return (
+    <nav className={cn("flex flex-col gap-1", className)}>
+      {PAY_NAV_ITEMS.map((item) =>
+        isPayNavGroup(item) ? (
+          <OperationsGroup key={item.id} item={item} onNavigate={onNavigate} />
+        ) : (
+          <LeafLink key={item.id} item={item} onNavigate={onNavigate} />
+        ),
+      )}
+    </nav>
+  );
+}
+
 export function PaySidebar() {
   return (
-    <aside className="flex shrink-0 flex-col lg:w-[220px] lg:self-stretch lg:border-r lg:border-black/10">
-      <div className="hidden px-[21px] pt-5 pb-4 lg:block">
+    <aside className="hidden shrink-0 flex-col lg:flex lg:w-[220px] lg:self-stretch lg:border-r lg:border-black/10">
+      <div className="px-[21px] pt-5 pb-4">
         <a href="/pay" className="inline-flex">
           <img src="/logo.svg" alt="Stableflow Pay" className="h-[30px] w-auto" />
         </a>
@@ -98,16 +116,8 @@ export function PaySidebar() {
           <HeaderAccountMenu variant={HEADER_ACCOUNT_MENU_VARIANT.Sidebar} />
         </div>
       </div>
-      <div className="hidden h-px w-full bg-black/10 lg:block" />
-      <nav className="flex gap-2 overflow-x-auto px-2 py-2 lg:flex-1 lg:flex-col lg:gap-1 lg:overflow-visible lg:px-2.5 lg:py-5">
-        {PAY_NAV_ITEMS.map((item) =>
-          isPayNavGroup(item) ? (
-            <OperationsGroup key={item.id} item={item} />
-          ) : (
-            <LeafLink key={item.id} item={item} />
-          ),
-        )}
-      </nav>
+      <div className="h-px w-full bg-black/10" />
+      <PayNav className="flex-1 px-2.5 py-5" />
     </aside>
   );
 }

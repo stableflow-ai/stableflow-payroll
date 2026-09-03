@@ -15,8 +15,8 @@
   background: oklch(0.985 0.003 247);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
-  --toastify-toast-right: 0px !important;
-  --toastify-toast-top: 65px !important;
+  --toastify-toast-right: 16px !important;
+  --toastify-toast-bottom: 16px !important;
   --background: oklch(0.985 0.003 247);
   --foreground: oklch(0.21 0.025 255);
   --card: oklch(1 0 0);
@@ -123,20 +123,19 @@
   z-index: 10000 !important;
 }
 
-.Toastify__toast-container--top-right .decash-toast-top-right.Toastify__toast {
-  padding: 0 0 0 22px;
+.Toastify__toast-container--bottom-right .decash-toast-bottom-right.Toastify__toast {
+  padding: 0;
   margin-bottom: 10px;
   min-height: unset;
 }
 
-.Toastify__toast-container--top-right .decash-toast-top-right.Toastify__toast > .Toastify__progress-bar--wrp {
+.Toastify__toast-container--bottom-right .decash-toast-bottom-right.Toastify__toast > .Toastify__progress-bar--wrp {
   pointer-events: none;
 }
 
 @media screen and (max-width: 768px) {
-  .Toastify__toast-container--top-right .decash-toast-top-right.Toastify__toast {
-    padding: 0 var(--toastify-toast-padding);
-    top: 65px;
+  .Toastify__toast-container--bottom-right .decash-toast-bottom-right.Toastify__toast {
+    padding: 0;
   }
 }
 

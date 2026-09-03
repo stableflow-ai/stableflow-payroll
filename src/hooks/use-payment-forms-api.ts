@@ -15,6 +15,7 @@ import { useAuthStore } from "@/stores/auth";
 export type {
   PaymentFormCategory,
   PaymentFormDetail,
+  PaymentFormRecipient,
   PaymentFormSummary,
 } from "@/mocks/payment-forms";
 export { PAYMENT_FORM_CATEGORY } from "@/mocks/payment-forms";

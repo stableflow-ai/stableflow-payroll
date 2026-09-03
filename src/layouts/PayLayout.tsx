@@ -1,12 +1,18 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { Outlet, useLocation } from "react-router-dom";
+import { IconMenu } from "@/components/icons";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { HeaderWalletCapsule } from "@/components/layout/HeaderWalletCapsule";
-import { HEADER_ACCOUNT_MENU_VARIANT } from "@/components/layout/config";
+import {
+  HEADER_ACCOUNT_MENU_VARIANT,
+  HEADER_ACCOUNT_TRIGGER_LABEL,
+} from "@/components/layout/config";
+import { Drawer } from "@/components/ui/drawer/Drawer";
+import { DRAWER_SIDE } from "@/components/ui/drawer/config";
 import { useBatchPayoutCommitQueue } from "@/hooks/use-batch-payout-commit-queue";
 import { useQuickPayCommitQueue } from "@/hooks/use-quick-pay-commit-queue";
 import { PaymentModeTabs } from "@/views/pay/components/PaymentModeTabs";
-import { PaySidebar } from "@/views/pay/components/PaySidebar";
+import { PayNav, PaySidebar } from "@/views/pay/components/PaySidebar";
 import {
   MOCK_ORGANIZATION_NAME,
   isPayModePath,
@@ -22,10 +28,12 @@ export function PayLayout() {
   useBatchPayoutCommitQueue();
   const { pathname } = useLocation();
   const [headerExtra, setHeaderExtraState] = useState<ReactNode>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
   const setHeaderExtra = useCallback((node: ReactNode) => {
     setHeaderExtraState(node);
   }, []);
   const showModeTabs = isPayModePath(pathname);
+  const closeMenu = () => setMenuOpen(false);
 
   return (
     <div className="flex flex-col lg:min-h-svh lg:flex-row">
@@ -33,13 +41,25 @@ export function PayLayout() {
         <a href="/pay" className="shrink-0">
           <img src="/logo.svg" alt="Stableflow Pay" className="h-[30px] w-auto" />
         </a>
-        <div className="min-w-0 flex-1">
-          <p className="font-montserrat text-xs font-medium text-[#909090]">
-            {MOCK_ORGANIZATION_NAME}
-          </p>
-          <HeaderAccountMenu variant={HEADER_ACCOUNT_MENU_VARIANT.Sidebar} />
+        <div className="flex justify-end items-center gap-3 flex-1">
+          <div className="min-w-0">
+            <p className="font-montserrat text-xs font-medium text-[#909090]">
+              {MOCK_ORGANIZATION_NAME}
+            </p>
+            <HeaderAccountMenu
+              variant={HEADER_ACCOUNT_MENU_VARIANT.Sidebar}
+              triggerLabel={HEADER_ACCOUNT_TRIGGER_LABEL.Name}
+            />
+          </div>
+          <button
+            type="button"
+            aria-label="Menu"
+            onClick={() => setMenuOpen(true)}
+            className="shrink-0 text-black"
+          >
+            <IconMenu className="h-6 w-6" />
+          </button>
         </div>
-        <HeaderWalletCapsule />
       </div>
       <PaySidebar />
       <div className="min-w-0 flex-1 px-2 py-4 md:px-5 lg:px-[26px] lg:py-[15px]">
@@ -63,6 +83,14 @@ export function PayLayout() {
           <Outlet context={{ setHeaderExtra } satisfies PayLayoutOutletContext} />
         </div>
       </div>
+      <Drawer
+        open={menuOpen}
+        onClose={closeMenu}
+        side={DRAWER_SIDE.Top}
+        title=""
+      >
+        <PayNav onNavigate={closeMenu} />
+      </Drawer>
     </div>
   );
 }

@@ -16,15 +16,22 @@ import { ResetPasswordDialog } from "@/views/auth/ResetPasswordDialog";
 import { RESET_PASSWORD_VARIANT } from "@/views/auth/config";
 import {
   HEADER_ACCOUNT_MENU_VARIANT,
+  HEADER_ACCOUNT_TRIGGER_LABEL,
   HEADER_AVATAR_SRC,
   type HeaderAccountMenuVariant,
+  type HeaderAccountTriggerLabel,
 } from "./config";
 
 export function HeaderAccountMenu(props: {
   variant?: HeaderAccountMenuVariant;
+  triggerLabel?: HeaderAccountTriggerLabel;
   className?: string;
 }) {
-  const { variant = HEADER_ACCOUNT_MENU_VARIANT.Capsule, className } = props;
+  const {
+    variant = HEADER_ACCOUNT_MENU_VARIANT.Capsule,
+    triggerLabel = HEADER_ACCOUNT_TRIGGER_LABEL.Email,
+    className,
+  } = props;
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
@@ -98,10 +105,17 @@ export function HeaderAccountMenu(props: {
         />
         {isSidebar ? (
           <>
-            <span className="min-w-0 flex-1 truncate text-left font-montserrat text-sm font-medium text-black">
-              {user?.email}
+            <span className="min-w-0 flex-1 truncate text-left font-montserrat text-sm font-medium text-black max-w-[100px]">
+              {triggerLabel === HEADER_ACCOUNT_TRIGGER_LABEL.Name
+                ? (user?.name || user?.email)
+                : user?.email}
             </span>
-            <IconArrowDown className="h-1 w-2.5 shrink-0 text-black" />
+            <IconArrowDown
+              className={cn(
+                "h-1 w-2.5 shrink-0 text-black translate-y-0.5 duration-150",
+                open ? "rotate-180" : "",
+              )}
+            />
           </>
         ) : (
           <IconMenu className="text-black" />
@@ -109,49 +123,49 @@ export function HeaderAccountMenu(props: {
       </button>
       {open && typeof document !== "undefined"
         ? createPortal(
-            <div
-              ref={panelRef}
-              role="menu"
-              style={panelStyle}
-              className="z-1100 w-[249px] overflow-hidden rounded-[12px] border border-[#E0E0E0] bg-[#fdfdfd] shadow-[0_0_20px_rgba(0,0,0,0.06)]"
-            >
-              <div className="flex h-[70px] items-center gap-2 px-4">
-                <img
-                  src={HEADER_AVATAR_SRC}
-                  alt=""
-                  className="size-10 rounded-full object-cover"
-                />
-                <div className="min-w-0">
-                  <p className="truncate font-montserrat text-base font-medium text-black">
-                    {user?.name}
-                  </p>
-                  <p className="truncate font-montserrat text-sm font-normal text-black">{user?.email}</p>
-                </div>
+          <div
+            ref={panelRef}
+            role="menu"
+            style={panelStyle}
+            className="z-1100 w-[249px] overflow-hidden rounded-[12px] border border-[#E0E0E0] bg-[#fdfdfd] shadow-[0_0_20px_rgba(0,0,0,0.06)]"
+          >
+            <div className="flex h-[70px] items-center gap-2 px-4">
+              <img
+                src={HEADER_AVATAR_SRC}
+                alt=""
+                className="size-10 rounded-full object-cover"
+              />
+              <div className="min-w-0">
+                <p className="truncate font-montserrat text-base font-medium text-black">
+                  {user?.name}
+                </p>
+                <p className="truncate font-montserrat text-sm font-normal text-black">{user?.email}</p>
               </div>
-              <div className="h-px bg-[#E0E0E0]" />
-              <div className="py-2">
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={openResetPassword}
-                  className="flex h-10 w-full duration-150 hover:text-black items-center gap-2.5 px-[19px] font-montserrat text-sm font-medium text-[#606060]"
-                >
-                  <IconResetPassword className="shrink-0" />
-                  Reset Password
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={closeAndLogout}
-                  className="flex h-10 w-full duration-150 hover:text-danger items-center gap-2.5 px-[19px] font-montserrat text-sm font-medium text-[#606060]"
-                >
-                  <IconLogout className="shrink-0" />
-                  Logout
-                </button>
-              </div>
-            </div>,
-            document.body,
-          )
+            </div>
+            <div className="h-px bg-[#E0E0E0]" />
+            <div className="py-2">
+              <button
+                type="button"
+                role="menuitem"
+                onClick={openResetPassword}
+                className="flex h-10 w-full duration-150 hover:text-black items-center gap-2.5 px-[19px] font-montserrat text-sm font-medium text-[#606060]"
+              >
+                <IconResetPassword className="shrink-0" />
+                Reset Password
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={closeAndLogout}
+                className="flex h-10 w-full duration-150 hover:text-danger items-center gap-2.5 px-[19px] font-montserrat text-sm font-medium text-[#606060]"
+              >
+                <IconLogout className="shrink-0" />
+                Logout
+              </button>
+            </div>
+          </div>,
+          document.body,
+        )
         : null}
       <ResetPasswordDialog
         open={resetOpen}

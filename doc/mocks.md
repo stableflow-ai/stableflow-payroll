@@ -51,7 +51,7 @@ Never import a fixture into a view. Go through the same hook the real API will u
 
 | Domain | Mock file | Reader hook | Notes |
 | --- | --- | --- | --- |
-| `paymentForms` | `src/mocks/payment-forms.ts` | `usePaymentFormsQuery` / `usePaymentFormQuery` | Saved batch forms for Payment by form. Quote and send still use `POST /v1/payroll/batches`. |
+| `paymentForms` | `src/mocks/payment-forms.ts` | `usePaymentFormsQuery` / `usePaymentFormQuery` | Saved batch forms for Payment by form. Detail includes `recipients` (name, email, net pay) and optional `nextPayDate` for the Details drawer. `payments` is derived from `recipients` and still feeds `POST /v1/payroll/batches`. |
 
 ## Constraints
 
