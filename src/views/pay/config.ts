@@ -1,26 +1,102 @@
 import type { ComponentType } from "react";
-import { IconBatchUp, IconDuration, IconRecords, IconUp } from "@/components/icons";
+import {
+  IconHistory,
+  IconOperations,
+  IconOverview,
+  IconPayment,
+  IconSetting,
+  IconTeam,
+} from "@/components/icons";
 import type { IconProps } from "@/components/icons/types";
 import { PAYOUT_SYMBOLS } from "@/stores/intents-tokens";
 
-export const PAY_NAV_GROUP = {
-  Payout: "payout",
-  Request: "request",
+/** TODO(api): organization name until the profile contract exposes it. */
+export const MOCK_ORGANIZATION_NAME = "Eureka Labs";
+
+export const PAY_FORM_PATH = "/pay/form";
+
+export const PAY_NAV_ID = {
+  Overview: "overview",
+  Payment: "payment",
+  Operations: "operations",
+  Payroll: "payroll",
+  Reimbursement: "reimbursement",
+  Bonus: "bonus",
+  Team: "team",
+  History: "history",
+  Setting: "setting",
 } as const;
 
-export const PAY_NAV_ITEMS = [
-  { label: "Single Payout", to: "/pay", icon: IconUp, iconClassName: undefined, group: PAY_NAV_GROUP.Payout },
-  { label: "Batch Payout", to: "/pay/batch", icon: IconBatchUp, iconClassName: undefined, group: PAY_NAV_GROUP.Payout },
-  { label: "Pending Payouts", to: "/pay/pending", icon: IconDuration, iconClassName: undefined, group: PAY_NAV_GROUP.Payout },
-  { label: "Transaction History", to: "/pay/history", icon: IconRecords, iconClassName: undefined, group: PAY_NAV_GROUP.Payout },
-  // { label: "Request Payment", to: "/pay/request", icon: IconUp, iconClassName: "rotate-180", group: PAY_NAV_GROUP.Request },
-] as const satisfies ReadonlyArray<{
+export type PayNavLeaf = {
+  id: string;
   label: string;
   to: string;
+  icon?: ComponentType<IconProps>;
+  match?: readonly string[];
+};
+
+export type PayNavGroupItem = {
+  id: string;
+  label: string;
   icon: ComponentType<IconProps>;
-  iconClassName: string | undefined;
-  group: (typeof PAY_NAV_GROUP)[keyof typeof PAY_NAV_GROUP];
-}>;
+  children: readonly PayNavLeaf[];
+};
+
+export type PayNavItem = PayNavLeaf | PayNavGroupItem;
+
+export function isPayNavGroup(item: PayNavItem): item is PayNavGroupItem {
+  return "children" in item;
+}
+
+export const PAY_NAV_ITEMS: readonly PayNavItem[] = [
+  { id: PAY_NAV_ID.Overview, label: "Overview", to: "/pay/overview", icon: IconOverview },
+  {
+    id: PAY_NAV_ID.Payment,
+    label: "Payment",
+    to: "/pay",
+    icon: IconPayment,
+    match: ["/pay", PAY_FORM_PATH],
+  },
+  {
+    id: PAY_NAV_ID.Operations,
+    label: "Operations",
+    icon: IconOperations,
+    children: [
+      { id: PAY_NAV_ID.Payroll, label: "Payroll", to: "/pay/batch" },
+      { id: PAY_NAV_ID.Reimbursement, label: "Reimbursement", to: "/pay/reimbursement" },
+      { id: PAY_NAV_ID.Bonus, label: "Bonus", to: "/pay/bonus" },
+    ],
+  },
+  { id: PAY_NAV_ID.Team, label: "Team", to: "/pay/team", icon: IconTeam },
+  { id: PAY_NAV_ID.History, label: "History", to: "/pay/history", icon: IconHistory },
+  { id: PAY_NAV_ID.Setting, label: "Setting", to: "/pay/setting", icon: IconSetting },
+];
+
+export const PAY_MODE_TABS = [
+  { label: "Single Payment", to: "/pay" },
+  { label: "Payment by form", to: PAY_FORM_PATH },
+] as const;
+
+export function isPayModePath(pathname: string): boolean {
+  return pathname === "/pay" || pathname === PAY_FORM_PATH;
+}
+
+export function isPayNavLeafActive(item: PayNavLeaf, pathname: string): boolean {
+  if (item.match) return item.match.includes(pathname);
+  return pathname === item.to;
+}
+
+export function payTitleForPath(pathname: string): string {
+  for (const item of PAY_NAV_ITEMS) {
+    if (isPayNavGroup(item)) {
+      const child = item.children.find((row) => row.to === pathname);
+      if (child) return child.label;
+      continue;
+    }
+    if (isPayNavLeafActive(item, pathname)) return item.label;
+  }
+  return PAY_ROUTE_TITLES[pathname] ?? "Pay";
+}
 
 /** Hosted-checkout return page. Sent as `success_url` when creating a payment. */
 export const PAYOUT_RESULT_PATH = "/pay/result";
@@ -37,6 +113,8 @@ export const PAYOUT_RESULT_STATUS = {
 /** Titles for Pay routes that are not in the sidebar. */
 export const PAY_ROUTE_TITLES: Record<string, string> = {
   [PAYOUT_RESULT_PATH]: "Payment Result",
+  "/pay/pending": "Pending Payouts",
+  "/pay/request": "Request Payment",
 };
 
 export const PAYOUT_TABLE_COLUMNS =

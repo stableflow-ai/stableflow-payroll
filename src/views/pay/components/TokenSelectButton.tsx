@@ -13,7 +13,7 @@ export function TokenSelectButton(props: {
       type="button"
       onClick={onClick}
       disabled={disabled}
-      className="inline-flex h-9 shrink-0 items-center gap-2 rounded-[18px] border border-black/10 px-3 font-montserrat text-sm font-medium text-black transition-colors hover:bg-black/5 disabled:pointer-events-none disabled:opacity-60"
+      className="inline-flex h-9 shrink-0 items-center gap-2 rounded-[18px] border border-black/10 px-2.5 font-montserrat text-sm font-medium text-black transition-colors hover:bg-black/5 disabled:pointer-events-none disabled:opacity-60"
     >
       {token ? (
         <>
@@ -28,7 +28,10 @@ export function TokenSelectButton(props: {
           {token.symbol}
         </>
       ) : (
-        "Token"
+        <>
+          <span className="size-5 rounded-[12px] bg-[#d9d9d9]" />
+          <span className="opacity-30">Token</span>
+        </>
       )}
       <IconArrowDown className="h-1.5 w-2.5 text-black/60" />
     </button>

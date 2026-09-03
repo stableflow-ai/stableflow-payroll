@@ -9,6 +9,7 @@ import { PendingPayoutsView } from "@/views/pay/PendingPayoutsView";
 import { RequestPayView } from "@/views/pay/RequestPayView";
 import { RequestPaymentView } from "@/views/pay/RequestPaymentView";
 import { PayoutResultView } from "@/views/pay/PayoutResultView";
+import { PayPlaceholderView } from "@/views/pay/PayPlaceholderView";
 import { SinglePayoutView } from "@/views/pay/SinglePayoutView";
 import { TransactionHistoryView } from "@/views/pay/TransactionHistoryView";
 import { AppLayout } from "@/layouts/AppLayout";
@@ -67,8 +68,14 @@ export const router = createBrowserRouter([
             element: <PayLayout />,
             children: [
               { path: "/pay", element: <SinglePayoutView /> },
+              { path: "/pay/form", element: <PayPlaceholderView /> },
+              { path: "/pay/overview", element: <PayPlaceholderView /> },
               { path: "/pay/result", element: <PayoutResultView /> },
               { path: "/pay/batch", element: <BatchPayoutView /> },
+              { path: "/pay/reimbursement", element: <PayPlaceholderView /> },
+              { path: "/pay/bonus", element: <PayPlaceholderView /> },
+              { path: "/pay/team", element: <PayPlaceholderView /> },
+              { path: "/pay/setting", element: <PayPlaceholderView /> },
               { path: "/pay/request", element: <RequestPaymentView /> },
               { path: "/pay/pending", element: <PendingPayoutsView /> },
               { path: "/pay/history", element: <TransactionHistoryView /> },

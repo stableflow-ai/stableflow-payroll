@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
+import { IconArrowDown } from "@/components/icons/arrow-down";
 import { IconLogout } from "@/components/icons/logout";
 import { IconMenu } from "@/components/icons/menu";
 import { IconResetPassword } from "@/components/icons/reset-password";
@@ -9,12 +10,21 @@ import {
   FLOATING_SIDE,
   useFloatingPosition,
 } from "@/components/ui/overlay/use-floating-position";
+import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import { ResetPasswordDialog } from "@/views/auth/ResetPasswordDialog";
 import { RESET_PASSWORD_VARIANT } from "@/views/auth/config";
-import { HEADER_AVATAR_SRC } from "./config";
+import {
+  HEADER_ACCOUNT_MENU_VARIANT,
+  HEADER_AVATAR_SRC,
+  type HeaderAccountMenuVariant,
+} from "./config";
 
-export function HeaderAccountMenu() {
+export function HeaderAccountMenu(props: {
+  variant?: HeaderAccountMenuVariant;
+  className?: string;
+}) {
+  const { variant = HEADER_ACCOUNT_MENU_VARIANT.Capsule, className } = props;
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const logout = useAuthStore((state) => state.logout);
@@ -22,12 +32,13 @@ export function HeaderAccountMenu() {
   const panelRef = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [resetOpen, setResetOpen] = useState(false);
+  const isSidebar = variant === HEADER_ACCOUNT_MENU_VARIANT.Sidebar;
   const panelStyle = useFloatingPosition({
     open,
     triggerRef,
     panelRef,
     side: FLOATING_SIDE.Bottom,
-    align: FLOATING_ALIGN.End,
+    align: isSidebar ? FLOATING_ALIGN.Start : FLOATING_ALIGN.End,
     offset: 8,
   });
 
@@ -70,14 +81,31 @@ export function HeaderAccountMenu() {
         aria-haspopup="menu"
         aria-expanded={open}
         onClick={() => setOpen((current) => !current)}
-        className="inline-flex h-10 w-[74px] items-center justify-between rounded-[20px] border border-white bg-[#fdfdfd] pr-3.5 pl-1 shadow-[0_0_20px_rgba(0,0,0,0.06)]"
+        className={cn(
+          isSidebar
+            ? "inline-flex w-full min-w-0 items-center gap-2.5"
+            : "inline-flex h-10 w-[74px] items-center justify-between rounded-[20px] border border-white bg-[#fdfdfd] pr-3.5 pl-1 shadow-[0_0_20px_rgba(0,0,0,0.06)]",
+          className,
+        )}
       >
         <img
           src={HEADER_AVATAR_SRC}
           alt=""
-          className="size-[30px] rounded-full object-cover"
+          className={cn(
+            "shrink-0 rounded-full object-cover",
+            isSidebar ? "size-5 rounded-[15px]" : "size-[30px]",
+          )}
         />
-        <IconMenu className="text-black" />
+        {isSidebar ? (
+          <>
+            <span className="min-w-0 flex-1 truncate text-left font-montserrat text-sm font-medium text-black">
+              {user?.email}
+            </span>
+            <IconArrowDown className="h-1 w-2.5 shrink-0 text-black" />
+          </>
+        ) : (
+          <IconMenu className="text-black" />
+        )}
       </button>
       {open && typeof document !== "undefined"
         ? createPortal(

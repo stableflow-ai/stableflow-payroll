@@ -4,11 +4,12 @@ import { cn } from "@/lib/utils";
 
 export function AppLayout() {
   const { pathname } = useLocation();
-  const isSidebarLayout = pathname.startsWith("/pay") || pathname.startsWith("/partner");
+  const isPayLayout = pathname.startsWith("/pay");
+  const isSidebarLayout = isPayLayout || pathname.startsWith("/partner");
 
   return (
     <div className="min-h-svh bg-[#f6f6f6]">
-      <AppHeader />
+      {isPayLayout ? null : <AppHeader />}
       <main
         className={cn(
           "w-full",

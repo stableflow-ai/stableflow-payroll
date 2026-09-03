@@ -101,7 +101,7 @@ export function SinglePayoutView() {
 
   return (
     <>
-      <Card className="mx-auto w-full max-w-[776px] px-6 py-7 sm:px-8">
+      <Card className="mx-auto w-full max-w-[600px] px-[30px] py-[30px]">
         <RecipientAddressField
           value={addressInput}
           matched={matched}
@@ -121,7 +121,7 @@ export function SinglePayoutView() {
               decimals={AMOUNT_MAX_DECIMALS}
               onNumberChange={setAmount}
               placeholder="0"
-              className="min-w-0 flex-1 bg-transparent font-montserrat text-[26px] font-medium text-black outline-none"
+              className="min-w-0 flex-1 bg-transparent font-montserrat text-[26px] font-medium text-black outline-none placeholder:text-black/30"
             />
             <TokenSelectButton
               token={destToken}
@@ -142,7 +142,7 @@ export function SinglePayoutView() {
             value={memo}
             maxLength={MEMO_MAX_LENGTH}
             onChange={(event) => setMemo(event.target.value)}
-            placeholder="Intention of transfer"
+            placeholder="What's this for?"
             className="h-9 min-w-0 flex-1 rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-3 font-montserrat text-sm text-black outline-none placeholder:text-black/30"
           />
         </div>
@@ -154,7 +154,7 @@ export function SinglePayoutView() {
           disabled={!canSend}
           onClick={() => void handleSend()}
         >
-          Send Payment
+          {canSend || sending ? "Send Payment" : "Starts from adding recipient"}
         </Button>
       </Card>
 

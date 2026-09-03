@@ -11,7 +11,7 @@ Only two areas are released: **Auth** and **Pay**. Everything else is either a p
 | Area | Routes | Status | Notes |
 | --- | --- | --- | --- |
 | Auth | `/login`, `/register` | Released | Detailed below. Reset password is a dialog, not a route. |
-| Pay | `/pay`, `/pay/result`, `/pay/batch`, `/pay/pending`, `/pay/history`, `/pay/request` | Released | Detailed below. Requires a session. |
+| Pay | `/pay`, `/pay/form`, `/pay/overview`, `/pay/result`, `/pay/batch`, `/pay/reimbursement`, `/pay/bonus`, `/pay/team`, `/pay/history`, `/pay/setting`, `/pay/pending`, `/pay/request` | Released | Detailed below. Requires a session. Placeholder routes render `PayPlaceholderView`. |
 | Marketing | `/howitworks` | Live, not detailed here | Static public page linked from the auth screens. |
 | Public payer | `/p/:id` | Disabled | Route commented out in `src/router/index.tsx`; `src/views/pay/RequestPayView.tsx` still exists. Anonymous page that pays a payment request created in `/pay/request`, rendered inside `AppLayout` but outside `RequireAuth`. |
 | Home | `/` | Disabled | Route commented out in `src/router/index.tsx`; `src/views/home/` still exists. |
@@ -24,11 +24,13 @@ Do not re-enable a disabled route, or document one here, without being asked.
 
 ## Shell
 
-`AppLayout` (`src/layouts/AppLayout.tsx`) wraps everything except the auth screens and `/howitworks`: a 63px `AppHeader` over a `#f6f6f6` page. Pay and Partner paths render full-bleed; other paths get a centred `max-w-[1252px]` container. With only `/pay/*` enabled underneath it, the centred branch is currently unreachable.
+`AppLayout` (`src/layouts/AppLayout.tsx`) wraps everything except the auth screens and `/howitworks`. On `/pay/*` it is a `#f6f6f6` page with no top header; PayLayout owns the chrome. Partner paths are still full-bleed. Other paths get a centred `max-w-[1252px]` container plus `AppHeader`. With only `/pay/*` enabled underneath it, the centred branch is currently unreachable.
 
-`AppHeader` (`src/components/layout/`) holds the logo (links to `/pay`), the nav from `HEADER_NAV_ITEMS` (only `Pay` is enabled), `HeaderWalletCapsule` (multi-chain connect state), and `HeaderAccountMenu` (user, change password, log out). Below `md` the nav moves to a second scrollable row.
+`AppHeader` (`src/components/layout/`) is unused on `/pay/*`. It still holds the logo, `HEADER_NAV_ITEMS`, `HeaderWalletCapsule`, and the capsule variant of `HeaderAccountMenu` for a future Home / Analytics shell.
 
-`PayLayout` (`src/layouts/PayLayout.tsx`) adds the Pay sidebar, the page title (the active `PAY_NAV_ITEMS` entry, falling back to `PAY_ROUTE_TITLES` for routes that are not in the sidebar), and a `setHeaderExtra` outlet context so a child view can inject a control next to the title. It also mounts `useQuickPayCommitQueue()` and `useBatchPayoutCommitQueue()`, which drain the persisted submit queues in the background.
+`PayLayout` (`src/layouts/PayLayout.tsx`) is the authenticated Pay chrome: a 220px left sidebar (`PaySidebar`) with a right divider, a content header (page title from `payTitleForPath`, optional `setHeaderExtra`, and `HeaderWalletCapsule` on the right), and `PaymentModeTabs` on `/pay` and `/pay/form`. It also mounts `useQuickPayCommitQueue()` and `useBatchPayoutCommitQueue()`, which drain the persisted submit queues in the background. Below `lg` the logo, mock organization name, account menu, and wallet move to a slim top row and the nav becomes a horizontal scroller.
+
+`PaySidebar` (`src/views/pay/components/PaySidebar.tsx`) shows `/logo.svg`, a mocked organization name (`MOCK_ORGANIZATION_NAME` = Eureka Labs), the sidebar variant of `HeaderAccountMenu` (email trigger; Reset Password / Logout), a horizontal rule under the account, then the nav tree from `PAY_NAV_ITEMS`. Active items use a white 200px pill and `#06f` text. Operations is a collapsible group (Payroll, Reimbursement, Bonus).
 
 ## Auth
 
@@ -43,7 +45,7 @@ Both screens share `AuthShell`: a blue brand panel (logo, headline, three featur
 
 Validation lives in `src/views/auth/config.ts` as pure `*RuleError` / `*FormError` functions (name ≤ 50, email ≤ 100 and pattern-checked, password 8–50, invite code ≤ 10, confirm must match). The first failing rule is shown as an error toast; the request is not sent.
 
-**Reset password** is `ResetPasswordDialog`, opened from "Forgot Password?" on `/login` (`guest` variant) and from the header account menu (`authed` variant).
+**Reset password** is `ResetPasswordDialog`, opened from "Forgot Password?" on `/login` (`guest` variant) and from the account menu (`authed` variant).
 
 - `guest`: email → `POST /v1/payroll/reset-password/code` (60-second resend cooldown) → email + code + new password → `POST /v1/payroll/reset-password`.
 - `authed`: current password + new password → `POST /v1/payroll/change-password`.
@@ -58,15 +60,15 @@ Validation lives in `src/views/auth/config.ts` as pure `*RuleError` / `*FormErro
 
 Files: `src/views/pay/`. Constants: `src/views/pay/config.ts`. Sidebar: `PaySidebar` reads `PAY_NAV_ITEMS`.
 
-Sidebar entries: Single Payout, Batch Payout, Pending Payouts (badge = number of pending payouts), Transaction History. The Request Payment entry and its group divider are commented out, so `/pay/request` is reachable only by URL.
+Sidebar entries: Overview (placeholder), Payment (`/pay` and `/pay/form`), Operations (Payroll = existing Batch Payout at `/pay/batch`; Reimbursement and Bonus placeholders), Team (placeholder), History (`/pay/history`), Setting (placeholder). Pending Payouts is not in the sidebar; `/pay/pending` remains reachable by URL. Request Payment is also URL-only.
 
 Shared building blocks: `TokenSelectDialog` (chain + token picker, optional balances), `PayoutsTable` (Recipient / Amount / Asset / Memo / Time / Status with an explorer link), `RecipientAddressField` + `RecipientsDialog` + `ContactFormDialog` (address book), `usePayOriginToken` and `usePaymentWallet` (paying token and matching wallet).
 
 Amounts are limited to `AMOUNT_MAX_DECIMALS` (6) in the inputs, memos to `MEMO_MAX_LENGTH` (200), and slippage is fixed at `QUICK_PAY_SLIPPAGE_TOLERANCE` (5).
 
-### `/pay` — Single Payout
+### `/pay` — Single Payment
 
-One card: recipient address (chain detected from the address by `detectAddressChainKind`, matched against the address book), amount plus recipient token, and memo. Changing the address to another chain clears the selected token; a default USDT → USDC → first-available token for that chain is then picked by `defaultDestToken`.
+Title **Payment**. A centred `PaymentModeTabs` control switches Single Payment (`/pay`) and Payment by form (`/pay/form`, placeholder). One card: recipient (search / paste address, address book), amount plus recipient token, and memo. Changing the address to another chain clears the selected token; a default USDT → USDC → first-available token for that chain is then picked by `defaultDestToken`. The empty submit label is **Starts from adding recipient**; once the form can send it becomes **Send Payment**. There is no Notify Recipient control.
 
 The address book dialogs create, edit, and delete recipients through `useContacts` → `/v1/payroll/recipient*`.
 
@@ -82,7 +84,7 @@ Where the hosted checkout returns after a **successful** payment; it is not in t
 
 The pre-checkout quote / swap / broadcast path (`useSinglePayQuote`, `useSinglePaySwap`, `transferToDepositAddress`, `enqueueQuickPayCommit`) is no longer used by this screen. `RequestPayView` still calls it. Do not delete it.
 
-### `/pay/batch` — Batch Payout
+### `/pay/batch` — Payroll (Batch Payout)
 
 Three page steps (`upload` → `validate` → `preview`) with a two-dot `BatchStepper` injected into the layout header.
 
@@ -94,7 +96,7 @@ The paying chain is restricted to `BATCH_BLOCKCHAINS` from `src/config/chains.ts
 
 ### `/pay/pending` — Pending Payouts
 
-Read-only `PayoutsTable` over `GET /v1/payroll/payments/pending`. Every row renders as Pending. The query polls every 8 seconds while the list is non-empty and stops when it drains; the same query drives the sidebar badge.
+Read-only `PayoutsTable` over `GET /v1/payroll/payments/pending`. Every row renders as Pending. The query polls every 8 seconds while the list is non-empty and stops when it drains. The page is not in the sidebar; it is reachable at `/pay/pending`.
 
 ### `/pay/history` — Transaction History
 

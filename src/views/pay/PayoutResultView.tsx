@@ -117,7 +117,7 @@ export function PayoutResultView() {
 
       <Link to="/pay" className="mt-8 block">
         <Button size="lg" className="w-full">
-          Back to Single Payout
+          Back to Payment
         </Button>
       </Link>
     </Card>
