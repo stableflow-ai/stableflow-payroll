@@ -4,7 +4,7 @@ Path: `src/components/ui/table/Table.tsx`
 
 CSS Grid compound component. The header row and every body row share one `columns` template through context, so a scrollbar can never shift header cells out of line with body cells.
 
-Scroll model: **one** `overflow-auto` container. Header and body sit in a `w-max min-w-full` wrapper, so a horizontal scrollbar also carries the header. `TableHeader` is `position: sticky; top: 0` with a `#FDFDFD` background, and `scrollbar-gutter: stable` is set on the scroller. Cells use `min-w-0` so header and body resolve to the same track sizes.
+Scroll model: **one** `overflow-auto` container. Header and body sit in a `min-w-full` wrapper so `fr` tracks size against the card width (long cell text can `truncate` instead of stretching the table). `TableHeader` is `position: sticky; top: 0` with a `#FDFDFD` background, and `scrollbar-gutter: stable` is set on the scroller. Rows keep `min-w-min`; if column mins exceed the card, the scroller still pans horizontally and the header stays aligned. Cells use `min-w-0` so header and body resolve to the same track sizes.
 
 The root is a [Card](card.md). Set a max height on `className` or `scrollClassName` to enable vertical scrolling.
 
@@ -69,4 +69,6 @@ import { PAYOUT_TABLE_COLUMNS } from "@/views/pay/config";
 - Keep the column template in the feature's `config.ts` (`PAYOUT_TABLE_COLUMNS`, `RECEIVED_PAYMENT_TABLE_COLUMNS`), not inline, so the header and the row cannot drift apart.
 - Do not add a second `overflow` on `TableBody`; that is what breaks header alignment.
 - Header and body must stay inside the same `Table` so they share `columns`.
+- Do not wrap rows in `w-max`. That makes `fr` tracks grow with content and blocks `truncate`.
+- Overflowing cells need `min-w-0` (already on `TableCell`) plus `truncate` on the text node.
 - The empty state is the caller's job — render a placeholder inside `TableBody` when there are no rows.

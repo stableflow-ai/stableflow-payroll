@@ -53,7 +53,7 @@ export function Table(props: TableProps) {
           className={cn("min-h-0 flex-1 overflow-auto", scrollClassName)}
           style={{ scrollbarGutter: "stable" }}
         >
-          <div className="w-max min-w-full">{children}</div>
+          <div className="min-w-full">{children}</div>
         </div>
         {footer ? <div className="shrink-0">{footer}</div> : null}
       </Card>
