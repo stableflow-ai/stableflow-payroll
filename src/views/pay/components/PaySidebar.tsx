@@ -38,7 +38,7 @@ function LeafLink({ item }: { item: PayNavLeaf }) {
 
 function OperationsGroup({ item }: { item: PayNavGroupItem }) {
   const { pathname } = useLocation();
-  const childActive = item.children.some((child) => child.to === pathname);
+  const childActive = item.children.some((child) => isPayNavLeafActive(child, pathname));
   const [open, setOpen] = useState(true);
   const Icon = item.icon;
 
@@ -73,7 +73,7 @@ function OperationsGroup({ item }: { item: PayNavGroupItem }) {
               key={child.to}
               to={child.to}
               end
-              className={navLinkClass(child.to === pathname)}
+              className={navLinkClass(isPayNavLeafActive(child, pathname))}
             >
               <span className="lg:pl-6">{child.label}</span>
             </NavLink>

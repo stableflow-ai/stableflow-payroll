@@ -62,7 +62,7 @@ export const PAY_NAV_ITEMS: readonly PayNavItem[] = [
     label: "Operations",
     icon: IconOperations,
     children: [
-      { id: PAY_NAV_ID.Payroll, label: "Payroll", to: "/pay/batch" },
+      { id: PAY_NAV_ID.Payroll, label: "Payroll", to: "/pay/payroll", match: ["/pay/payroll", "/pay/batch"] },
       { id: PAY_NAV_ID.Reimbursement, label: "Reimbursement", to: "/pay/reimbursement" },
       { id: PAY_NAV_ID.Bonus, label: "Bonus", to: "/pay/bonus" },
     ],
@@ -89,7 +89,7 @@ export function isPayNavLeafActive(item: PayNavLeaf, pathname: string): boolean 
 export function payTitleForPath(pathname: string): string {
   for (const item of PAY_NAV_ITEMS) {
     if (isPayNavGroup(item)) {
-      const child = item.children.find((row) => row.to === pathname);
+      const child = item.children.find((row) => isPayNavLeafActive(row, pathname));
       if (child) return child.label;
       continue;
     }
