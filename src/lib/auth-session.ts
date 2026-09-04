@@ -1,4 +1,4 @@
-import { AUTH_USER_ROLE, type AuthSession, type AuthUser } from "@/types/auth";
+import { AUTH_USER_ROLE, type AuthOrganization, type AuthSession, type AuthUser } from "@/types/auth";
 
 const SESSION_KEY = "stableflow-pay.session";
 
@@ -20,11 +20,22 @@ function getStorage(): Storage | null {
   }
 }
 
+function hydrateOrganization(value: unknown): AuthOrganization | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (!value || typeof value !== "object") return undefined;
+  const name = (value as { name?: unknown }).name;
+  if (typeof name !== "string") return undefined;
+  const trimmed = name.trim();
+  return trimmed ? { name: trimmed } : null;
+}
+
 function isAuthUserRecord(value: unknown): value is {
   id: number;
   email: string;
   name: string;
   role?: unknown;
+  organization?: unknown;
 } {
   if (!value || typeof value !== "object") return false;
   const user = value as AuthUser;
@@ -35,18 +46,25 @@ function isAuthUserRecord(value: unknown): value is {
   );
 }
 
-function hydrateUser(user: { id: number; email: string; name: string; role?: unknown }): AuthUser {
+function hydrateUser(user: {
+  id: number;
+  email: string;
+  name: string;
+  role?: unknown;
+  organization?: unknown;
+}): AuthUser {
   return {
     id: user.id,
     email: user.email,
     name: user.name,
     role: user.role === AUTH_USER_ROLE.Employee ? AUTH_USER_ROLE.Employee : AUTH_USER_ROLE.Admin,
+    organization: hydrateOrganization(user.organization),
   };
 }
 
 function isAuthSessionRecord(value: unknown): value is {
   token: string;
-  user: { id: number; email: string; name: string; role?: unknown };
+  user: { id: number; email: string; name: string; role?: unknown; organization?: unknown };
 } {
   if (!value || typeof value !== "object") return false;
   const session = value as AuthSession;

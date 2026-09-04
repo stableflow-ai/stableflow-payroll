@@ -13,7 +13,7 @@ A mock is temporary scaffolding. It ships with a `TODO(api)` marker and is delet
 | `src/mocks/config.ts` | `MOCK_ENABLED` switchboard and the derived `MockDomain` type |
 | `src/mocks/<domain>.ts` | Fixtures and the reader function for one domain |
 
-`MOCK_ENABLED` currently mocks `paymentForms`, `team`, `employeeOverview`, `adminOverview`, `payroll`, `expense`, and `bonus`. Every other page reads the real API.
+`MOCK_ENABLED` currently mocks `paymentForms`, `team`, `employeeOverview`, `adminOverview`, `payroll`, `expense`, `bonus`, `organization`, and `invite`. Every other page reads the real API.
 
 ## How a page reads mock data
 
@@ -58,6 +58,8 @@ Never import a fixture into a view. Go through the same hook the real API will u
 | `payroll` | `src/mocks/payroll.ts` | `usePayrollOverviewQuery` | Payroll dashboard (`/pay/payroll`) until the overview contract exists. `getPayrollOverviewMock("empty" \| "filled")` — the page header **Sample data** switch toggles empty vs filled Next Payroll, Recent Payouts, and Payroll History (Figma `2604:16561` / `2604:16798`). |
 | `expense` | `src/mocks/expense.ts` | `useExpenseOverviewQuery` | Expense dashboard (`/pay/expense`) until the overview contract exists. |
 | `bonus` | `src/mocks/bonus.ts` | `useBonusOverviewQuery` | Bonus dashboard (`/pay/bonus`) until the overview contract exists. `getBonusOverviewMock("empty" \| "filled")` — Sample data toggles empty vs filled pending bonuses (Figma `2672:7309`: individual + expandable group rows with Pay Now / Paying), Recent Payouts, and Bonus History. |
+| `organization` | `src/mocks/organization.ts` | `useCreateOrganizationMutation` | Admin create-organization step at `/register/organization`. Success writes `organization.name` onto the session user. |
+| `invite` | `src/mocks/invite.ts` | `useInvitePreviewQuery` / `useInviteRegisterMutation` | Employee invite landing at `/invite/:orgId`. Preview returns inviter email, avatar, and organization name; Sign up creates a mocked employee session bound to that organization. |
 
 ## Constraints
 

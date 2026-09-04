@@ -54,7 +54,7 @@ src/
   router/                      route table (index.tsx) and guards (guards.tsx)
   layouts/                     AppLayout, PayLayout, PartnerLayout
     views/                       one folder per area; see product.md
-    auth/                      login, register, reset password
+    auth/                      login, register, create organization, invite register, reset password
     pay/                       single, form, batch, pending, history, team, request (+ disabled public payer)
     payroll/                   payroll dashboard (mocked until the API exists)
     expense/                   expense dashboard (mocked until the API exists)

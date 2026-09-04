@@ -2,12 +2,16 @@ import { Link } from "react-router-dom";
 import { HEADER_AVATAR_SRC } from "@/components/layout/config";
 import { nameInitials } from "@/components/recipient-avatar/RecipientAvatar";
 import { Card } from "@/components/ui/card/Card";
+import { organizationName } from "@/lib/auth-role";
+import { useAuthStore } from "@/stores/auth";
 import { MOCK_ORGANIZATION_NAME } from "@/views/pay/config";
 import { OVERVIEW_LINK_CLASS } from "./config";
 
 export function OrgSummaryCard(props: { ownerEmail: string; teamMemberCount: number }) {
   const { ownerEmail, teamMemberCount } = props;
-  const initials = nameInitials(MOCK_ORGANIZATION_NAME);
+  const user = useAuthStore((state) => state.user);
+  const orgName = organizationName(user) ?? MOCK_ORGANIZATION_NAME;
+  const initials = nameInitials(orgName);
 
   return (
     <Card>
@@ -19,7 +23,7 @@ export function OrgSummaryCard(props: { ownerEmail: string; teamMemberCount: num
           {initials}
         </span>
         <h2 className="font-montserrat text-xl font-medium capitalize text-black">
-          {MOCK_ORGANIZATION_NAME}
+          {orgName}
         </h2>
       </div>
       <div className="mt-6 grid grid-cols-1 gap-6 md:grid-cols-3">

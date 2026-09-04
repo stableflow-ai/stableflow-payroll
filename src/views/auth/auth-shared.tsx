@@ -4,7 +4,8 @@ import { ApiError } from "@/lib/api-error";
 import { IconAlert, IconEye, IconEyeHidden } from "@/components/icons";
 import { cn } from "@/lib/utils";
 import {
-  AUTH_CARD_CLASS,
+  AUTH_COMPACT_INPUT_CLASS,
+  AUTH_FORM_CLASS,
   AUTH_INPUT_CLASS,
   AUTH_LABEL_CLASS,
 } from "./config";
@@ -19,7 +20,7 @@ export function AuthBetaBanner() {
         <IconAlert className="h-[7px] w-[2px]" />
       </span>
       <span className="font-montserrat text-sm font-medium text-[#3f8afb]">
-        Stableflow Pay is currently in beta.
+        Pay. Stableflow is currently in beta.
       </span>
     </div>
   );
@@ -37,6 +38,9 @@ export function AuthField({
   autoComplete,
   maxLength,
   trailing,
+  labelTrailing,
+  labelClassName,
+  inputClassName,
   className,
 }: {
   id: string;
@@ -50,12 +54,16 @@ export function AuthField({
   autoComplete?: string;
   maxLength?: number;
   trailing?: ReactNode;
+  labelTrailing?: ReactNode;
+  labelClassName?: string;
+  inputClassName?: string;
   className?: string;
 }) {
   return (
     <div className={cn("mt-5", className)}>
-      <label htmlFor={id} className={AUTH_LABEL_CLASS}>
+      <label htmlFor={id} className={cn(AUTH_LABEL_CLASS, labelClassName)}>
         {label}
+        {labelTrailing}
       </label>
       <div className="relative mt-2.5">
         <input
@@ -68,7 +76,7 @@ export function AuthField({
           readOnly={readOnly}
           maxLength={maxLength}
           autoComplete={autoComplete ?? (type === "password" ? "current-password" : "on")}
-          className={cn(AUTH_INPUT_CLASS, trailing && "pr-12")}
+          className={cn(AUTH_INPUT_CLASS, trailing && "pr-12", inputClassName)}
         />
         {trailing ? (
           <div className="absolute inset-y-0 right-3 flex items-center">{trailing}</div>
@@ -87,6 +95,8 @@ export function AuthPasswordField({
   autoComplete,
   maxLength,
   className,
+  labelClassName,
+  inputClassName,
 }: {
   id: string;
   label: string;
@@ -96,6 +106,8 @@ export function AuthPasswordField({
   autoComplete?: string;
   maxLength?: number;
   className?: string;
+  labelClassName?: string;
+  inputClassName?: string;
 }) {
   const [visible, setVisible] = useState(false);
 
@@ -110,6 +122,8 @@ export function AuthPasswordField({
       autoComplete={autoComplete}
       maxLength={maxLength}
       className={className}
+      labelClassName={labelClassName}
+      inputClassName={inputClassName}
       trailing={
         <button
           type="button"
@@ -130,4 +144,4 @@ export function authErrorMessage(error: unknown, fallback = "Something went wron
   return fallback;
 }
 
-export { AUTH_CARD_CLASS };
+export { AUTH_COMPACT_INPUT_CLASS, AUTH_FORM_CLASS };

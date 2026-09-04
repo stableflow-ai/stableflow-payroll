@@ -3,7 +3,7 @@ import { NavLink, useLocation } from "react-router-dom";
 import { IconArrowDown } from "@/components/icons/arrow-down";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { HEADER_ACCOUNT_MENU_VARIANT } from "@/components/layout/config";
-import { userRole } from "@/lib/auth-role";
+import { organizationName, userRole } from "@/lib/auth-role";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import {
@@ -107,6 +107,9 @@ export function PayNav(props: { onNavigate?: () => void; className?: string }) {
 }
 
 export function PaySidebar() {
+  const user = useAuthStore((state) => state.user);
+  const orgName = organizationName(user) ?? MOCK_ORGANIZATION_NAME;
+
   return (
     <aside className="hidden shrink-0 flex-col lg:sticky lg:top-0 lg:flex lg:h-svh lg:w-[220px] lg:overflow-y-auto lg:border-r lg:border-black/10">
       <div className="px-[21px] pt-5 pb-4">
@@ -114,7 +117,7 @@ export function PaySidebar() {
           <img src="/logo.svg" alt="Stableflow Pay" className="h-[30px] w-auto" />
         </a>
         <p className="mt-3.5 font-montserrat text-xs font-medium text-[#909090]">
-          {MOCK_ORGANIZATION_NAME}
+          {orgName}
         </p>
         <div className="mt-2.5">
           <HeaderAccountMenu variant={HEADER_ACCOUNT_MENU_VARIANT.Sidebar} />

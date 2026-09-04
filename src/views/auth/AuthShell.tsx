@@ -1,6 +1,7 @@
 import type { ComponentType, CSSProperties, ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { IconLock, IconNode, IconShield } from "@/components/icons";
+import { cn } from "@/lib/utils";
 import { AUTH_BRAND_BG, AUTH_PANEL_BG, type AuthFeatureIconKey } from "./config";
 
 const FEATURE_ICONS: Record<
@@ -12,19 +13,27 @@ const FEATURE_ICONS: Record<
   node: IconNode,
 };
 
+const FEATURES = [
+  { icon: "lock" as AuthFeatureIconKey, title: "Confidential by default" },
+  { icon: "shield" as AuthFeatureIconKey, title: "Self-custodial" },
+  { icon: "node" as AuthFeatureIconKey, title: "Cross-chain" },
+] as const;
+
 export function AuthShell({
   children,
   panelTop,
-  cardClassName,
+  panelHeader,
+  contentClassName,
 }: {
   children: ReactNode;
   panelTop?: ReactNode;
-  cardClassName?: string;
+  panelHeader?: ReactNode;
+  contentClassName?: string;
 }) {
   return (
     <main className="flex min-h-svh flex-col md:flex-row">
       <aside
-        className="relative flex w-full shrink-0 flex-col overflow-hidden px-6 py-8 md:w-[min(740px,45%)] md:min-h-svh md:px-12 md:py-14 lg:px-16"
+        className="relative flex w-full shrink-0 flex-col overflow-hidden px-6 py-8 md:w-[min(870px,57.5%)] md:min-h-svh md:px-16 md:py-14 lg:px-20"
         style={{ backgroundColor: AUTH_BRAND_BG }}
       >
         <img
@@ -37,56 +46,30 @@ export function AuthShell({
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
           <img
             src="/logo-white.svg"
-            alt="Stableflow Pay"
-            className="h-auto w-[154px]"
-            width={154}
-            height={58}
+            alt="Pay. Stableflow"
+            className="h-auto w-[112px]"
+            width={112}
+            height={34}
           />
 
-          <h1 className="mt-10 max-w-[558px] font-montserrat text-[32px] font-semibold capitalize leading-tight text-white md:mt-16 md:text-[46px]">
+          <h1 className="mt-10 max-w-[558px] font-montserrat text-[28px] font-semibold capitalize leading-tight text-white md:mt-16 md:text-[36px]">
             Confidential Payments.
           </h1>
-          <p className="mt-4 max-w-[558px] font-montserrat text-[16px] font-normal leading-[1.5] text-white md:mt-5 md:text-[20px]">
+          <p className="mt-3 max-w-[558px] font-montserrat text-[14px] font-normal leading-[1.5] text-white md:mt-4">
             Send across chains without creating a direct public link between sender and recipient.
           </p>
 
-          <ul className="mt-8 hidden flex-col gap-8 md:mt-12 md:flex">
-            {(
-              [
-                {
-                  icon: "lock" as AuthFeatureIconKey,
-                  title: "Confidential by default",
-                  body: "Reduce direct public sender  recipient linkage.",
-                },
-                {
-                  icon: "shield" as AuthFeatureIconKey,
-                  title: "Self-custodial",
-                  body: "Your wallet. Your funds. You authorize every payment",
-                },
-                {
-                  icon: "node" as AuthFeatureIconKey,
-                  title: "Cross-chain",
-                  body: "Pay across supported network whilethe recipient receives on another.",
-                },
-              ] as const
-            ).map((feature) => {
+          <ul className="mt-8 hidden flex-col gap-8 md:mt-10 md:flex">
+            {FEATURES.map((feature) => {
               const Icon = FEATURE_ICONS[feature.icon];
               return (
-                <li key={feature.title} className="flex max-w-[480px] items-start gap-4">
-                  <span
-                    className="grid size-10 shrink-0 place-items-center rounded-[12px] bg-[rgba(0,0,0,0.1)] text-white"
-                    aria-hidden
-                  >
-                    <Icon className="size-5" />
+                <li key={feature.title} className="flex items-center gap-3">
+                  <span className="grid size-8 shrink-0 place-items-center text-white" aria-hidden>
+                    <Icon className="size-8" />
                   </span>
-                  <div>
-                    <p className="font-montserrat text-[20px] font-semibold capitalize text-white">
-                      {feature.title}
-                    </p>
-                    <p className="mt-1 font-montserrat text-[14px] font-normal leading-[1.5] text-white">
-                      {feature.body}
-                    </p>
-                  </div>
+                  <p className="font-montserrat text-[16px] font-semibold capitalize text-white">
+                    {feature.title}
+                  </p>
                 </li>
               );
             })}
@@ -94,24 +77,9 @@ export function AuthShell({
 
           <Link
             to="/howitworks"
-            className="mt-8 inline-flex items-center gap-1.5 font-montserrat text-sm font-normal text-white transition-opacity hover:opacity-70 md:mt-auto md:pt-10"
+            className="mt-8 inline-flex items-center font-montserrat text-sm font-normal text-white transition-opacity hover:opacity-70 md:mt-auto md:pt-10"
           >
             How it works
-            <svg
-              className="shrink-0"
-              width="13"
-              height="9"
-              viewBox="0 0 13 9"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                d="M0.5 4.5H12M8 8.5L12 4.5L8 0.5"
-                stroke="#fff"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
           </Link>
         </div>
       </aside>
@@ -120,9 +88,12 @@ export function AuthShell({
         className="relative flex flex-1 flex-col items-center justify-start px-4 py-10 sm:px-6 md:justify-center md:py-12"
         style={{ backgroundColor: AUTH_PANEL_BG }}
       >
-        <div className="relative z-10 flex w-full max-w-[420px] flex-col items-center">
-          {panelTop ? <div className="mb-5 flex justify-center">{panelTop}</div> : null}
-          <div className={`w-full ${cardClassName ?? ""}`}>{children}</div>
+        {panelHeader ? (
+          <div className="absolute top-5 right-5 z-20 md:right-7">{panelHeader}</div>
+        ) : null}
+        <div className={cn("relative z-10 flex w-full flex-col items-center", contentClassName)}>
+          {panelTop ? <div className="mb-8 flex justify-center">{panelTop}</div> : null}
+          {children}
         </div>
       </section>
     </main>

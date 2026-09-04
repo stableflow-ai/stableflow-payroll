@@ -5,11 +5,16 @@ export const AUTH_USER_ROLE = {
 
 export type AuthUserRole = (typeof AUTH_USER_ROLE)[keyof typeof AUTH_USER_ROLE];
 
+export interface AuthOrganization {
+  name: string;
+}
+
 export interface AuthUser {
   id: number;
   email: string;
   name: string;
   role: AuthUserRole;
+  organization?: AuthOrganization | null;
 }
 
 export interface LoginBody {

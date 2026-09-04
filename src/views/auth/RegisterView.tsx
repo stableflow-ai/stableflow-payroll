@@ -1,6 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button/Button";
+import { Icon2Right } from "@/components/icons/to-right";
 import { useRegisterMutation } from "@/hooks/use-auth-api";
 import useToast from "@/hooks/use-toast";
 import { AuthShell } from "./AuthShell";
@@ -9,7 +10,7 @@ import {
   AuthField,
   AuthPasswordField,
   authErrorMessage,
-  AUTH_CARD_CLASS,
+  AUTH_FORM_CLASS,
 } from "./auth-shared";
 import {
   AUTH_LINK_ACCENT_CLASS,
@@ -21,7 +22,7 @@ import {
   PASSWORD_MIN_LENGTH,
   registerFormError,
 } from "./config";
-import { loginPathWithReturnTo, returnToFromSearch } from "./return-to";
+import { loginPathWithReturnTo, postAuthPath, returnToFromSearch } from "./return-to";
 
 export function RegisterView() {
   const navigate = useNavigate();
@@ -44,13 +45,13 @@ export function RegisterView() {
       return;
     }
     try {
-      await registerMutation.mutateAsync({
+      const session = await registerMutation.mutateAsync({
         name: name.trim(),
         email: email.trim(),
         password,
         inviteCode: inviteCode.trim(),
       });
-      navigate(returnTo ?? "/", { replace: true });
+      navigate(postAuthPath(session.user, returnTo), { replace: true });
     } catch (cause) {
       toast.fail({
         title: authErrorMessage(cause, "Unable to create account"),
@@ -60,7 +61,7 @@ export function RegisterView() {
 
   return (
     <AuthShell panelTop={<AuthBetaBanner />}>
-      <form onSubmit={submit} className={AUTH_CARD_CLASS}>
+      <form onSubmit={submit} className={AUTH_FORM_CLASS}>
         <h1 className="text-center font-montserrat text-xl font-semibold text-black">
           Create account
         </h1>
@@ -124,8 +125,12 @@ export function RegisterView() {
 
         <p className={`block ${AUTH_LINK_CLASS}`}>
           Already have an account?{" "}
-          <Link to={loginPathWithReturnTo(returnTo)} className={AUTH_LINK_ACCENT_CLASS}>
+          <Link
+            to={loginPathWithReturnTo(returnTo)}
+            className={`inline-flex items-center ${AUTH_LINK_ACCENT_CLASS}`}
+          >
             Sign in
+            <Icon2Right className="ml-1" />
           </Link>
         </p>
       </form>

@@ -12,7 +12,7 @@ import type { IconProps } from "@/components/icons/types";
 import { AUTH_USER_ROLE, type AuthUserRole } from "@/types/auth";
 import { PAYOUT_SYMBOLS } from "@/stores/intents-tokens";
 
-/** TODO(api): organization name until the profile contract exposes it. */
+/** TODO(api): fallback organization name when profile has none. */
 export const MOCK_ORGANIZATION_NAME = "Eureka Labs";
 
 export const PAY_FORM_PATH = "/pay/form";

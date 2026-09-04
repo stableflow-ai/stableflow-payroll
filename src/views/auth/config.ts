@@ -1,13 +1,19 @@
 export const AUTH_BRAND_BG = "#3F8AFB";
 export const AUTH_PANEL_BG = "#F6F6F6";
 
-export const AUTH_CARD_CLASS =
-  "flex w-full max-w-[420px] flex-col rounded-[20px] border border-white bg-[#fdfdfd] px-7 pt-8 pb-8 shadow-[0_0_20px_rgba(0,0,0,0.06)]";
+export const AUTH_FORM_CLASS = "flex w-full max-w-[400px] flex-col";
+
+export const AUTH_ONBOARDING_FORM_CLASS = "flex min-h-[520px] w-full max-w-[540px] flex-col";
 
 export const AUTH_LABEL_CLASS = "font-montserrat text-[14px] font-medium text-[#909090]";
 
+export const AUTH_ONBOARDING_LABEL_CLASS = "font-montserrat text-[14px] font-medium text-[#606060]";
+
 export const AUTH_INPUT_CLASS =
-  "h-[42px] w-full rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-4 font-montserrat text-sm font-medium text-black outline-none placeholder:text-black/30 focus:border-[#c8c8c8]";
+  "h-[42px] w-full rounded-[6px] border border-[#e3e3e3] bg-white px-4 font-montserrat text-sm font-medium text-black outline-none placeholder:text-black/30 focus:border-[#c8c8c8]";
+
+export const AUTH_COMPACT_INPUT_CLASS =
+  "h-9 w-full rounded-[6px] border border-[#e3e3e3] bg-white px-4 font-montserrat text-sm font-medium text-black outline-none placeholder:text-black/30 focus:border-[#c8c8c8]";
 
 export const AUTH_LINK_CLASS =
   "mt-5 text-center font-montserrat text-sm font-medium text-[#909090]";
@@ -18,6 +24,8 @@ export const AUTH_FEATURE_ICON_KEYS = ["lock", "shield", "node"] as const;
 export type AuthFeatureIconKey = (typeof AUTH_FEATURE_ICON_KEYS)[number];
 
 export const NAME_MAX_LENGTH = 50;
+export const ORGANIZATION_NAME_MAX_LENGTH = 50;
+export const LOGO_URL_MAX_LENGTH = 200;
 export const INVITE_CODE_MAX_LENGTH = 10;
 export const EMAIL_MAX_LENGTH = 100;
 export const CODE_MAX_LENGTH = 20;
@@ -132,5 +140,49 @@ export function authedResetFormError(
     passwordRuleError(currentPassword) ??
     passwordRuleError(newPassword) ??
     confirmPasswordRuleError(newPassword, confirmPassword)
+  );
+}
+
+export function organizationNameRuleError(name: string): string | null {
+  const trimmed = name.trim();
+  if (!trimmed) return "Organization name is required";
+  if (trimmed.length > ORGANIZATION_NAME_MAX_LENGTH) {
+    return `Organization name must be at most ${ORGANIZATION_NAME_MAX_LENGTH} characters`;
+  }
+  return null;
+}
+
+export function logoUrlRuleError(logoUrl: string): string | null {
+  const trimmed = logoUrl.trim();
+  if (!trimmed) return null;
+  if (trimmed.length > LOGO_URL_MAX_LENGTH) {
+    return `Logo URL must be at most ${LOGO_URL_MAX_LENGTH} characters`;
+  }
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+      return "Enter a valid URL";
+    }
+  } catch {
+    return "Enter a valid URL";
+  }
+  return null;
+}
+
+export function createOrganizationFormError(name: string, logoUrl: string): string | null {
+  return organizationNameRuleError(name) ?? logoUrlRuleError(logoUrl);
+}
+
+export function inviteRegisterFormError(
+  name: string,
+  email: string,
+  password: string,
+  confirmPassword: string,
+): string | null {
+  return (
+    nameRuleError(name) ??
+    emailRuleError(email) ??
+    passwordRuleError(password) ??
+    confirmPasswordRuleError(password, confirmPassword)
   );
 }

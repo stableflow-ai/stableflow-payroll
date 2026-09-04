@@ -11,7 +11,7 @@ import { Drawer } from "@/components/ui/drawer/Drawer";
 import { DRAWER_SIDE } from "@/components/ui/drawer/config";
 import { useBatchPayoutCommitQueue } from "@/hooks/use-batch-payout-commit-queue";
 import { useQuickPayCommitQueue } from "@/hooks/use-quick-pay-commit-queue";
-import { isEmployee, userRole } from "@/lib/auth-role";
+import { isEmployee, organizationName, userRole } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { PaymentModeTabs } from "@/views/pay/components/PaymentModeTabs";
 import { PayNav, PaySidebar } from "@/views/pay/components/PaySidebar";
@@ -37,6 +37,7 @@ export function PayLayout() {
   }, []);
   const showModeTabs = isPayModePath(pathname) && !isEmployee(user);
   const closeMenu = () => setMenuOpen(false);
+  const orgName = organizationName(user) ?? MOCK_ORGANIZATION_NAME;
 
   return (
     <div className="flex flex-col lg:min-h-svh lg:flex-row">
@@ -47,7 +48,7 @@ export function PayLayout() {
         <div className="flex justify-end items-center gap-3 flex-1">
           <div className="min-w-0">
             <p className="font-montserrat text-xs font-medium text-[#909090]">
-              {MOCK_ORGANIZATION_NAME}
+              {orgName}
             </p>
             <HeaderAccountMenu
               variant={HEADER_ACCOUNT_MENU_VARIANT.Sidebar}

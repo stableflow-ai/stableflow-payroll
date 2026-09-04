@@ -98,8 +98,8 @@ export function usePaymentsQuery(params: PayPaymentsQuery) {
 ```tsx
 const loginMutation = useLoginMutation();
 
-await loginMutation.mutateAsync({ email, password });  // writes the session
-navigate(returnTo ?? "/", { replace: true });
+const session = await loginMutation.mutateAsync({ email, password });  // writes the session
+navigate(postAuthPath(session.user, returnTo));
 ```
 
 ## Endpoints
@@ -120,7 +120,7 @@ Only Auth, Single Payout (`/payments`), and Batch Payout (`/batches`) are served
 | GET | `/v1/payroll/profile` | yes | — | `AuthUser` | `getProfile` | `useProfileQuery` |
 | POST | `/v1/payroll/profile` | yes | `UpdateProfileBody` | — | `updateProfile` | `useUpdateProfileMutation` |
 
-`AuthUser` includes `role`: `"admin"` | `"employee"`. Login, register, and profile are typed as already returning that field (`http<AuthSession>` / `http<AuthUser>`). Do not remap it until the backend uses a different name. Stored sessions without `role` hydrate as admin.
+`AuthUser` includes `role`: `"admin"` | `"employee"`, and optional `organization?: { name: string } | null`. Login, register, and profile are typed as already returning those fields (`http<AuthSession>` / `http<AuthUser>`). Do not remap them until the backend uses a different name. Stored sessions without `role` hydrate as admin. `organization.name` that is missing or blank means the admin still needs `/register/organization`. Create-organization and invite-register endpoints are mocked; they are not in this table.
 
 ### Payments (hosted checkout) — `src/api/payout.ts`, `src/types/payout.ts`, `src/hooks/use-single-payout-api.ts`
 
