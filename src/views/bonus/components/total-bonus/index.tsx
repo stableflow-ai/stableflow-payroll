@@ -74,7 +74,7 @@ export function TotalBonusChart(props: {
                 isEmpty && "opacity-30",
               )}
             >
-              {formatAmount(currentValue)}
+              {currentValue}
             </span>
             <span className="font-montserrat text-xs font-normal text-[#aaa]">
               {periodLabel}

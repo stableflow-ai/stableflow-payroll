@@ -13,7 +13,7 @@ import { cn } from "@/lib/utils";
 import { useIntentsTokensStore } from "@/stores/intents-tokens";
 import { amountError } from "@/views/pay/batch-utils";
 import { BatchTokenTrigger } from "@/views/pay/components/batch/BatchTokenTrigger";
-import type { BonusPendingList, BonusPendingRow } from "@/mocks/bonus";
+import type { BonusPendingList } from "@/mocks/bonus";
 import {
   BONUS_DRAWER_TITLE,
   BONUS_FORM_AMOUNT_MAX_DECIMALS,
@@ -25,11 +25,10 @@ import {
 } from "../../config";
 import {
   createEmptyBonusFormRow,
-  formRowFromPending,
+  defaultBonusPayDate,
   formRowsToPendingList,
   isBonusFormValid,
   patchBonusFormRow,
-  payDateFromLabel,
   refillBonusFormTokens,
   type BonusFormRow,
 } from "../../utils";
@@ -37,15 +36,13 @@ import {
 export function BonusFormDrawer(props: {
   open: boolean;
   mode: BonusDrawerMode;
-  initialPayDate?: string;
-  initialRows?: BonusPendingRow[];
   onClose: () => void;
   onSave: (list: BonusPendingList) => void;
 }) {
-  const { open, mode, initialPayDate, initialRows, onClose, onSave } = props;
+  const { open, mode, onClose, onSave } = props;
   const tokens = useIntentsTokensStore((state) => state.tokens);
   const findByChainAndSymbol = useIntentsTokensStore((state) => state.findByChainAndSymbol);
-  const [payDate, setPayDate] = useState<BonusPayDate>(() => payDateFromLabel(initialPayDate));
+  const [payDate, setPayDate] = useState<BonusPayDate>(() => defaultBonusPayDate());
   const [rows, setRows] = useState<BonusFormRow[]>(() => [createEmptyBonusFormRow()]);
   const [destRowId, setDestRowId] = useState<string | null>(null);
 
@@ -54,12 +51,8 @@ export function BonusFormDrawer(props: {
       setDestRowId(null);
       return;
     }
-    setPayDate(payDateFromLabel(initialPayDate));
-    setRows(
-      initialRows && initialRows.length > 0
-        ? initialRows.map((row) => formRowFromPending(row, findByChainAndSymbol))
-        : [createEmptyBonusFormRow()],
-    );
+    setPayDate(defaultBonusPayDate());
+    setRows([createEmptyBonusFormRow()]);
   }, [open]);
 
   useEffect(() => {
@@ -158,7 +151,7 @@ export function BonusFormDrawer(props: {
             disabled={!canSave}
             onClick={() => {
               // TODO(api): persist the bonus draft when the contract exists.
-              onSave(formRowsToPendingList(rows, payDate));
+              onSave(formRowsToPendingList(rows));
             }}
           >
             Save

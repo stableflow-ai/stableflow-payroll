@@ -2,11 +2,13 @@ import type {
   BonusChartRange,
   BonusMockVariant,
   BonusPayoutStatus,
+  BonusRowAction,
 } from "@/views/bonus/config";
 import {
   BONUS_CHART_RANGE,
   BONUS_MOCK_VARIANT,
   BONUS_PAYOUT_STATUS,
+  BONUS_ROW_ACTION,
 } from "@/views/bonus/config";
 
 export type BonusChartPoint = {
@@ -24,6 +26,32 @@ export type BonusRecentPayout = {
   status: BonusPayoutStatus;
 };
 
+export type BonusPendingMember = {
+  id: string;
+  name: string;
+  address: string;
+  amount: string;
+  token: string;
+};
+
+export type BonusPendingItem = {
+  id: string;
+  title: string;
+  amount: string;
+  token: string;
+  action: BonusRowAction;
+  members: BonusPendingMember[];
+};
+
+export type BonusPendingList = {
+  totalAmount: string;
+  token: string;
+  /** Top-level pending bonus entries (not expanded member count). */
+  entryCount: number;
+  items: BonusPendingItem[];
+};
+
+/** Flat row used when seeding the Add/Edit drawer from a single-member item. */
 export type BonusPendingRow = {
   id: string;
   name: string;
@@ -31,13 +59,6 @@ export type BonusPendingRow = {
   token: string;
   network: string;
   amount: string;
-};
-
-export type BonusPendingList = {
-  totalPayout: string;
-  members: number;
-  payDate: string;
-  rows: BonusPendingRow[];
 };
 
 export type BonusHistoryItem = {
@@ -50,6 +71,7 @@ export type BonusHistoryItem = {
 
 export type BonusOverview = {
   totalBonus: string;
+  totalBonusToken: string;
   totalChangePercent: number | null;
   members: number;
   membersChangePercent: number | null;
@@ -68,47 +90,32 @@ const EMPTY_CHART_POINTS: BonusChartPoint[] = [
   { label: "Apr", value: 0 },
   { label: "May", value: 0 },
   { label: "Jun", value: 0 },
-  { label: "Jul", value: 0, highlighted: true },
+  { label: "Jul", value: 0 },
   { label: "Aug", value: 0 },
 ];
 
 const FILLED_CHART_POINTS: BonusChartPoint[] = [
-  { label: "Mar", value: 120 },
-  { label: "Apr", value: 280 },
-  { label: "May", value: 360 },
-  { label: "Jun", value: 420 },
-  { label: "Jul", value: 540, highlighted: true },
-  { label: "Aug", value: 480 },
+  { label: "Mar", value: 0 },
+  { label: "Apr", value: 0 },
+  { label: "May", value: 0 },
+  { label: "Jun", value: 0 },
+  { label: "Jul", value: 0 },
+  { label: "Aug", value: 600, highlighted: true },
 ];
 
-const PENDING_ROW_NAMES = ["Andrew", "Hannah Petty", "Albert", "Zoey"] as const;
-const PENDING_ROW_AMOUNTS = ["500", "300", "500", "800"] as const;
-const PENDING_RECIPIENT_ADDRESS = "0x253a1b2c3d4e5f678901234567890abcdefef602";
+const MEMBER_ADDRESS = "0x253a1b2c3d4e5f678901234567890abcdefef602";
 const RECENT_RECIPIENT_ADDRESS = "0x541a1b2c3d4e5f678901234567890abcdef58dc1";
-
-function filledPendingRows(): BonusPendingRow[] {
-  return Array.from({ length: 8 }, (_, index) => {
-    const cycle = index % PENDING_ROW_NAMES.length;
-    return {
-      id: `bonus-member-${index + 1}`,
-      name: PENDING_ROW_NAMES[cycle],
-      address: PENDING_RECIPIENT_ADDRESS,
-      token: "USDC",
-      network: "near",
-      amount: PENDING_ROW_AMOUNTS[cycle],
-    };
-  });
-}
 
 function getBonusOverviewEmptyMock(): BonusOverview {
   return {
     totalBonus: "0",
+    totalBonusToken: "",
     totalChangePercent: null,
     members: 0,
     membersChangePercent: null,
     chartRange: BONUS_CHART_RANGE.Months6,
     chartPeriodLabel: "August, 2026",
-    chartCurrentValue: "0",
+    chartCurrentValue: "$0",
     chartPoints: EMPTY_CHART_POINTS,
     recentPayouts: [],
     failedRecentCount: 0,
@@ -119,99 +126,130 @@ function getBonusOverviewEmptyMock(): BonusOverview {
 
 function getBonusOverviewFilledMock(): BonusOverview {
   return {
-    totalBonus: "4800",
-    totalChangePercent: 12,
-    members: 8,
-    membersChangePercent: 4,
+    totalBonus: "600",
+    totalBonusToken: "Near",
+    totalChangePercent: 10,
+    members: 9,
+    membersChangePercent: 20,
     chartRange: BONUS_CHART_RANGE.Months6,
-    chartPeriodLabel: "July, 2026",
-    chartCurrentValue: "540",
+    chartPeriodLabel: "August, 2026",
+    chartCurrentValue: "Near",
     chartPoints: FILLED_CHART_POINTS,
     recentPayouts: [
       {
         id: "bonus-payout-1",
-        amount: "500",
-        token: "USDT",
-        network: "base",
-        recipient: RECENT_RECIPIENT_ADDRESS,
-        status: BONUS_PAYOUT_STATUS.Pending,
-      },
-      {
-        id: "bonus-payout-2",
-        amount: "800",
-        token: "USDC",
-        network: "arb",
-        recipient: RECENT_RECIPIENT_ADDRESS,
-        status: BONUS_PAYOUT_STATUS.Pending,
-      },
-      {
-        id: "bonus-payout-3",
-        amount: "300",
-        token: "USDC",
-        network: "arb",
-        recipient: RECENT_RECIPIENT_ADDRESS,
-        status: BONUS_PAYOUT_STATUS.Failed,
-      },
-      {
-        id: "bonus-payout-4",
-        amount: "500",
-        token: "USDC",
+        amount: "200",
+        token: "Near",
         network: "near",
         recipient: RECENT_RECIPIENT_ADDRESS,
-        status: BONUS_PAYOUT_STATUS.Paid,
-      },
-      {
-        id: "bonus-payout-5",
-        amount: "800",
-        token: "USDC",
-        network: "sol",
-        recipient: RECENT_RECIPIENT_ADDRESS,
-        status: BONUS_PAYOUT_STATUS.Paid,
-      },
-      {
-        id: "bonus-payout-6",
-        amount: "300",
-        token: "USDT",
-        network: "base",
-        recipient: RECENT_RECIPIENT_ADDRESS,
-        status: BONUS_PAYOUT_STATUS.Paid,
+        status: BONUS_PAYOUT_STATUS.Pending,
       },
     ],
-    failedRecentCount: 1,
+    failedRecentCount: 0,
     pending: {
-      totalPayout: "4200",
-      members: 8,
-      payDate: "Oct. 1, 2026",
-      rows: filledPendingRows(),
+      totalAmount: "600",
+      token: "Near",
+      entryCount: 3,
+      items: [
+        {
+          id: "bonus-andrew",
+          title: "Andrew",
+          amount: "200",
+          token: "Near",
+          action: BONUS_ROW_ACTION.Paying,
+          members: [
+            {
+              id: "bonus-andrew-m1",
+              name: "Andrew",
+              address: MEMBER_ADDRESS,
+              amount: "200",
+              token: "Near",
+            },
+          ],
+        },
+        {
+          id: "bonus-team-a",
+          title: "Project Bonus - Team A",
+          amount: "800",
+          token: "Near",
+          action: BONUS_ROW_ACTION.PayNow,
+          members: [
+            {
+              id: "bonus-team-a-1",
+              name: "Alice",
+              address: MEMBER_ADDRESS,
+              amount: "200",
+              token: "Near",
+            },
+            {
+              id: "bonus-team-a-2",
+              name: "Bill",
+              address: MEMBER_ADDRESS,
+              amount: "200",
+              token: "Near",
+            },
+            {
+              id: "bonus-team-a-3",
+              name: "Carol",
+              address: MEMBER_ADDRESS,
+              amount: "200",
+              token: "Near",
+            },
+            {
+              id: "bonus-team-a-4",
+              name: "Dave",
+              address: MEMBER_ADDRESS,
+              amount: "200",
+              token: "Near",
+            },
+          ],
+        },
+        {
+          id: "bonus-team-b",
+          title: "Project Bonus - Team B",
+          amount: "600",
+          token: "Near",
+          action: BONUS_ROW_ACTION.PayNow,
+          members: [
+            {
+              id: "bonus-team-b-1",
+              name: "Alice",
+              address: MEMBER_ADDRESS,
+              amount: "200",
+              token: "Near",
+            },
+            {
+              id: "bonus-team-b-2",
+              name: "Bill",
+              address: MEMBER_ADDRESS,
+              amount: "200",
+              token: "Near",
+            },
+            {
+              id: "bonus-team-b-3",
+              name: "Andrew",
+              address: MEMBER_ADDRESS,
+              amount: "200",
+              token: "Near",
+            },
+          ],
+        },
+      ],
     },
     history: [
       {
         id: "history-august",
         title: "August Bonus",
-        totalPayout: "4800",
-        memberCount: 8,
+        totalPayout: "600",
+        memberCount: 9,
         executedAt: "2026-09-01",
       },
       {
         id: "history-july",
         title: "July Bonus",
-        totalPayout: "5400",
+        totalPayout: "540",
         memberCount: 8,
         executedAt: "2026-08-01",
-      },
-      {
-        id: "history-june",
-        title: "June Bonus",
-        totalPayout: "4200",
-        memberCount: 6,
-        executedAt: "2026-07-01",
-      },
-      {
-        id: "history-may",
-        title: "May Bonus",
-        totalPayout: "3600",
-        memberCount: 6,
-        executedAt: "2026-06-01",
       },
     ],
   };

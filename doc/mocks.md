@@ -56,7 +56,7 @@ Never import a fixture into a view. Go through the same hook the real API will u
 | `employeeOverview` | `src/mocks/employee-overview.ts` | `useEmployeeOverviewQuery` | Employee dashboard at `/`. Stats, Payment Volume series, open requests, recent payments. Daily / Weekly volume arrays are empty so the chart still draws a zero grid. |
 | `payroll` | `src/mocks/payroll.ts` | `usePayrollOverviewQuery` | Payroll dashboard (`/pay/payroll`) until the overview contract exists. `getPayrollOverviewMock("empty" \| "filled")` — the page header **Sample data** switch toggles empty vs filled Next Payroll, Recent Payouts, and Payroll History (Figma `2604:16561` / `2604:16798`). |
 | `expense` | `src/mocks/expense.ts` | `useExpenseOverviewQuery` | Expense dashboard (`/pay/expense`) until the overview contract exists. |
-| `bonus` | `src/mocks/bonus.ts` | `useBonusOverviewQuery` | Bonus dashboard (`/pay/bonus`) until the overview contract exists. `getBonusOverviewMock("empty" \| "filled")` — the page header **Sample data** switch toggles empty vs filled pending bonuses, Recent Payouts, and Bonus History. |
+| `bonus` | `src/mocks/bonus.ts` | `useBonusOverviewQuery` | Bonus dashboard (`/pay/bonus`) until the overview contract exists. `getBonusOverviewMock("empty" \| "filled")` — Sample data toggles empty vs filled pending bonuses (Figma `2672:7309`: individual + expandable group rows with Pay Now / Paying), Recent Payouts, and Bonus History. |
 
 ## Constraints
 

@@ -114,7 +114,7 @@ Dashboard for the Operations → Expense nav item. Stats, a six-month total-expe
 
 Files: `src/views/bonus/`. Mock: `src/mocks/bonus.ts`.
 
-Dashboard for the Operations → Bonus nav item. Stats (Total Bonus, Members), a six-month total-bonus chart, recent payouts, and Bonuses to be paid / Bonus History tabs. Data is mocked until the backend contract exists. A header **Sample data** switch toggles the empty create-bonus CTA (Download Template, Import CSV, Add Bonus) vs filled pending bonuses and Bonus History. **Add Bonus** / **Add a new Bonus** and **Edit** open a right-side drawer (`Add Bonus` / `Edit Bonus`) instead of `/pay/batch`. Import CSV and Pay Now still go to `/pay/batch`.
+Dashboard for the Operations → Bonus nav item. Stats (Total Bonus with token label, Members), a six-month total-bonus chart, recent payouts, and Bonuses to be paid / Bonus History tabs. Data is mocked until the backend contract exists. A header **Sample data** switch toggles the empty create-bonus CTA vs filled pending bonuses (individual + expandable group rows with Pay Now / Paying) and Bonus History (Figma `2672:7309`). **Add Bonus** opens a right-side drawer. Import CSV and Pay Now still go to `/pay/batch`.
 
 ### `/pay/batch` — Create Payroll (Batch Payout)
 

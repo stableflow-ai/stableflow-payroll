@@ -1,6 +1,3 @@
-import { IconPlus } from "@/components/icons/plus";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
 import type { BonusHistoryItem, BonusPendingList } from "@/mocks/bonus";
@@ -38,45 +35,29 @@ export function BonusRunsCard(props: {
   pending: BonusPendingList | null;
   history: BonusHistoryItem[];
   onAddBonus: () => void;
-  onEditBonus: () => void;
 }) {
-  const { tab, onTabChange, pending, history, onAddBonus, onEditBonus } = props;
-  const showToolbar = Boolean(pending) || history.length > 0;
+  const { tab, onTabChange, pending, history, onAddBonus } = props;
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div className="flex items-end gap-8">
-          <TabButton
-            active={tab === BONUS_TAB.ToBePaid}
-            onClick={() => onTabChange(BONUS_TAB.ToBePaid)}
-          >
-            Bonuses to be paid
-          </TabButton>
-          <TabButton
-            active={tab === BONUS_TAB.History}
-            onClick={() => onTabChange(BONUS_TAB.History)}
-          >
-            Bonus History
-          </TabButton>
-        </div>
-        {showToolbar ? (
-          <div className="flex items-center gap-2 pb-1">
-            <Button
-              variant={BUTTON_VARIANT.Normal}
-              className="h-9 rounded-[10px] border-black/10 px-4 text-sm text-black"
-              onClick={onAddBonus}
-            >
-              <IconPlus className="size-3 shrink-0" />
-              Add a new Bonus
-            </Button>
-          </div>
-        ) : null}
+      <div className="flex flex-wrap items-end gap-8">
+        <TabButton
+          active={tab === BONUS_TAB.ToBePaid}
+          onClick={() => onTabChange(BONUS_TAB.ToBePaid)}
+        >
+          Bonuses to be paid
+        </TabButton>
+        <TabButton
+          active={tab === BONUS_TAB.History}
+          onClick={() => onTabChange(BONUS_TAB.History)}
+        >
+          Bonus History
+        </TabButton>
       </div>
       <Card className="mt-3 px-5 py-6 sm:px-8">
         {tab === BONUS_TAB.ToBePaid ? (
           pending ? (
-            <PendingBonusPanel list={pending} onEdit={onEditBonus} />
+            <PendingBonusPanel list={pending} onAddBonus={onAddBonus} />
           ) : (
             <CreateBonusEmpty onAddBonus={onAddBonus} />
           )

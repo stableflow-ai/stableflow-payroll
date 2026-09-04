@@ -79,6 +79,7 @@ export function BonusView() {
     <div className="flex flex-col gap-5">
       <StatsCard
         totalBonus={data.totalBonus}
+        totalBonusToken={data.totalBonusToken}
         totalChangePercent={data.totalChangePercent}
         members={data.members}
         membersChangePercent={data.membersChangePercent}
@@ -102,18 +103,11 @@ export function BonusView() {
         pending={pending}
         history={data.history}
         onAddBonus={() => setDrawerMode(BONUS_DRAWER_MODE.Add)}
-        onEditBonus={() => setDrawerMode(BONUS_DRAWER_MODE.Edit)}
       />
       <BonusFormDrawer
         key={drawerMode ?? "closed"}
         open={drawerMode !== null}
         mode={drawerMode ?? BONUS_DRAWER_MODE.Add}
-        initialPayDate={
-          drawerMode === BONUS_DRAWER_MODE.Edit ? pending?.payDate : undefined
-        }
-        initialRows={
-          drawerMode === BONUS_DRAWER_MODE.Edit ? pending?.rows : undefined
-        }
         onClose={() => setDrawerMode(null)}
         onSave={(list) => {
           setPendingOverride(list);

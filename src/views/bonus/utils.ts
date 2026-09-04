@@ -8,10 +8,15 @@ import {
   resolveImportToken,
   type FindTokenByChainAndSymbol,
 } from "@/views/pay/batch-utils";
-import type { BonusPendingList, BonusPendingRow } from "@/mocks/bonus";
+import type {
+  BonusPendingItem,
+  BonusPendingList,
+  BonusPendingRow,
+} from "@/mocks/bonus";
 import {
   BONUS_PAY_DATE,
   BONUS_PAY_DATE_OPTIONS,
+  BONUS_ROW_ACTION,
   type BonusPayDate,
 } from "./config";
 
@@ -30,6 +35,12 @@ export type BonusFormRow = {
 export type BonusFormRowPatch = Partial<
   Pick<BonusFormRow, "name" | "address" | "amount" | "token">
 >;
+
+export function formatBonusTokenAmount(amount: string, token: string) {
+  const trimmed = amount.trim();
+  if (!token) return trimmed || "0";
+  return `${trimmed || "0"} ${token}`;
+}
 
 export function defaultBonusPayDate(): BonusPayDate {
   return BONUS_PAY_DATE.NextMonth1st;
@@ -84,6 +95,26 @@ export function formRowFromPending(
     rawToken: row.token,
     rawNetwork: row.network,
   };
+}
+
+export function pendingItemsToFormRows(
+  items: BonusPendingItem[],
+  findByChainAndSymbol: FindTokenByChainAndSymbol,
+): BonusFormRow[] {
+  const rows: BonusPendingRow[] = [];
+  for (const item of items) {
+    for (const member of item.members) {
+      rows.push({
+        id: member.id,
+        name: member.name,
+        address: member.address,
+        token: member.token,
+        network: "near",
+        amount: member.amount,
+      });
+    }
+  }
+  return rows.map((row) => formRowFromPending(row, findByChainAndSymbol));
 }
 
 export function patchBonusFormRow(
@@ -169,26 +200,33 @@ export function sumBonusFormAmounts(rows: BonusFormRow[]): string {
   }, "0");
 }
 
-export function formRowsToPendingList(
-  rows: BonusFormRow[],
-  payDate: BonusPayDate,
-): BonusPendingList {
-  const mapped: BonusPendingRow[] = rows.map((row) => {
+export function formRowsToPendingList(rows: BonusFormRow[]): BonusPendingList {
+  const items: BonusPendingItem[] = rows.map((row) => {
     const symbol = row.token?.symbol ?? normalizeSymbol(row.rawToken) ?? row.rawToken;
-    const network = row.token?.blockchain ?? row.rawNetwork;
+    const amount = row.amount.trim();
+    const name = row.name.trim();
     return {
       id: row.id,
-      name: row.name.trim(),
-      address: row.address.trim(),
+      title: name,
+      amount,
       token: symbol,
-      network,
-      amount: row.amount.trim(),
+      action: BONUS_ROW_ACTION.PayNow,
+      members: [
+        {
+          id: `${row.id}-member`,
+          name,
+          address: row.address.trim(),
+          amount,
+          token: symbol,
+        },
+      ],
     };
   });
+  const token = items[0]?.token ?? "";
   return {
-    totalPayout: sumBonusFormAmounts(rows),
-    members: mapped.length,
-    payDate: payDateLabel(payDate),
-    rows: mapped,
+    totalAmount: sumBonusFormAmounts(rows),
+    token,
+    entryCount: items.length,
+    items,
   };
 }

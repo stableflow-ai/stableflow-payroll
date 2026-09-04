@@ -1,10 +1,11 @@
 import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
-import { formatAmount } from "@/utils";
 import { BONUS_CHANGE_UP_CLASS } from "../../config";
+import { formatBonusTokenAmount } from "../../utils";
 
 export type StatsCardProps = {
   totalBonus: string;
+  totalBonusToken: string;
   totalChangePercent: number | null;
   members: number;
   membersChangePercent: number | null;
@@ -50,6 +51,7 @@ function StatColumn(props: {
 export function StatsCard(props: StatsCardProps) {
   const {
     totalBonus,
+    totalBonusToken,
     totalChangePercent,
     members,
     membersChangePercent,
@@ -59,7 +61,7 @@ export function StatsCard(props: StatsCardProps) {
     <Card className="grid grid-cols-1 gap-6 py-[22px] sm:grid-cols-2 sm:gap-8">
       <StatColumn
         label="Total Bonus"
-        value={formatAmount(totalBonus)}
+        value={formatBonusTokenAmount(totalBonus, totalBonusToken)}
         hint="from last month"
         hintValue={formatChange(totalChangePercent)}
         hintTone={totalChangePercent == null ? "muted" : "up"}

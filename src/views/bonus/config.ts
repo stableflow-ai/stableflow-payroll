@@ -65,6 +65,14 @@ export const BONUS_PAYOUT_STATUS = {
 export type BonusPayoutStatus =
   (typeof BONUS_PAYOUT_STATUS)[keyof typeof BONUS_PAYOUT_STATUS];
 
+export const BONUS_ROW_ACTION = {
+  Paying: "paying",
+  PayNow: "pay_now",
+} as const;
+
+export type BonusRowAction =
+  (typeof BONUS_ROW_ACTION)[keyof typeof BONUS_ROW_ACTION];
+
 export const BONUS_CHART_LINE_COLOR = "#6284F5";
 export const BONUS_CHART_HIGHLIGHT_COLOR = "#3F8AFB";
 export const BONUS_CHART_Y_MAX = 600;
@@ -74,7 +82,7 @@ export const BONUS_STATUS_FAILED_CLASS = "text-[#E43222]";
 export const BONUS_STATUS_PAID_CLASS = "text-[#84A20F]";
 
 export const PENDING_BONUS_TABLE_COLUMNS =
-  "minmax(120px,1.2fr) minmax(140px,1.1fr) minmax(140px,1fr) minmax(80px,0.6fr)";
+  "minmax(160px,1.4fr) minmax(88px,0.7fr) minmax(100px,0.9fr) minmax(140px,1.1fr) minmax(120px,0.9fr)";
 
 export const IMPORT_CSV_TEMPLATE_FILENAME = "bonus-import-template.csv";
 export const IMPORT_CSV_TEMPLATE = [
