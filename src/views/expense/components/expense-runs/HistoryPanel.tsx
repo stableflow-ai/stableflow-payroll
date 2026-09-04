@@ -6,11 +6,11 @@ import { IconExportLink } from "@/components/icons/link";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_VARIANT } from "@/components/ui/button/config";
 import { SearchInput } from "@/components/ui/search-input/SearchInput";
-import type { ReimbursementHistoryRow } from "@/mocks/reimbursement";
+import type { ExpenseHistoryRow } from "@/mocks/expense";
 import { HISTORY_EXPORT_FILENAME } from "../../config";
 import { HistoryTable } from "./HistoryTable";
 
-function matchesSearch(row: ReimbursementHistoryRow, query: string) {
+function matchesSearch(row: ExpenseHistoryRow, query: string) {
   if (!query) return true;
   const haystack = [
     row.name,
@@ -19,7 +19,7 @@ function matchesSearch(row: ReimbursementHistoryRow, query: string) {
     row.receiptName,
     row.address,
     row.amount,
-    row.reimbursement,
+    row.expense,
   ]
     .filter(Boolean)
     .join(" ")
@@ -27,14 +27,14 @@ function matchesSearch(row: ReimbursementHistoryRow, query: string) {
   return haystack.includes(query);
 }
 
-function exportHistoryCsv(rows: ReimbursementHistoryRow[]) {
-  const header = "name,purpose,description,reimbursement,address,token,network,amount,status";
+function exportHistoryCsv(rows: ExpenseHistoryRow[]) {
+  const header = "name,purpose,description,expense,address,token,network,amount,status";
   const body = rows.map((row) =>
     [
       row.name,
       row.purpose,
       row.receiptName ?? row.description ?? "",
-      row.reimbursement,
+      row.expense,
       row.address,
       row.token,
       row.network,
@@ -53,7 +53,7 @@ function exportHistoryCsv(rows: ReimbursementHistoryRow[]) {
   URL.revokeObjectURL(url);
 }
 
-export function HistoryPanel({ items }: { items: ReimbursementHistoryRow[] }) {
+export function HistoryPanel({ items }: { items: ExpenseHistoryRow[] }) {
   const [search, setSearch] = useState("");
   const [range, setRange] = useState(() => lastNDaysRange(DATE_RANGE_PRESET.Days30));
 
@@ -86,7 +86,7 @@ export function HistoryPanel({ items }: { items: ReimbursementHistoryRow[] }) {
       </div>
       {filtered.length === 0 ? (
         <div className="flex min-h-[280px] items-center justify-center">
-          <p className="font-montserrat text-sm text-[#aaa]">No reimbursement history</p>
+          <p className="font-montserrat text-sm text-[#aaa]">No expense history</p>
         </div>
       ) : (
         <div className="mt-5">

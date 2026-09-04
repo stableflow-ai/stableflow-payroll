@@ -11,12 +11,12 @@ import { Card } from "@/components/ui/card/Card";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/utils";
-import type { ReimbursementChartPoint } from "@/mocks/reimbursement";
+import type { ExpenseChartPoint } from "@/mocks/expense";
 import {
-  REIMBURSEMENT_CHART_LINE_COLOR,
-  REIMBURSEMENT_CHART_RANGE_OPTIONS,
-  REIMBURSEMENT_CHART_Y_MAX,
-  type ReimbursementChartRange,
+  EXPENSE_CHART_LINE_COLOR,
+  EXPENSE_CHART_RANGE_OPTIONS,
+  EXPENSE_CHART_Y_MAX,
+  type ExpenseChartRange,
 } from "../../config";
 
 function formatYTick(value: number) {
@@ -46,23 +46,23 @@ function ChartTooltip({
   );
 }
 
-export function TotalReimbursementChart(props: {
-  range: ReimbursementChartRange;
-  onRangeChange: (range: ReimbursementChartRange) => void;
+export function TotalExpenseChart(props: {
+  range: ExpenseChartRange;
+  onRangeChange: (range: ExpenseChartRange) => void;
   periodLabel: string;
   currentValue: string;
-  points: ReimbursementChartPoint[];
+  points: ExpenseChartPoint[];
 }) {
   const { range, onRangeChange, periodLabel, currentValue, points } = props;
   const isEmpty = points.every((point) => point.value === 0);
-  const yMax = Math.max(REIMBURSEMENT_CHART_Y_MAX, ...points.map((point) => point.value));
+  const yMax = Math.max(EXPENSE_CHART_Y_MAX, ...points.map((point) => point.value));
 
   return (
     <Card className="flex min-h-[454px] flex-col">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="font-montserrat text-base font-medium capitalize text-black">
-            Total reimbursement
+            Total expense
           </h2>
           <p className="mt-2 flex flex-wrap items-baseline gap-1.5">
             <span
@@ -80,8 +80,8 @@ export function TotalReimbursementChart(props: {
         </div>
         <Dropdown
           value={range}
-          onChange={(value) => onRangeChange(value as ReimbursementChartRange)}
-          options={[...REIMBURSEMENT_CHART_RANGE_OPTIONS]}
+          onChange={(value) => onRangeChange(value as ExpenseChartRange)}
+          options={[...EXPENSE_CHART_RANGE_OPTIONS]}
           triggerClassName="h-9 w-[135px] rounded-[18px] border-black/10 bg-transparent px-4 text-xs text-[#606060]"
         />
       </div>
@@ -113,7 +113,7 @@ export function TotalReimbursementChart(props: {
                 />
               )}
               cursor={{
-                stroke: REIMBURSEMENT_CHART_LINE_COLOR,
+                stroke: EXPENSE_CHART_LINE_COLOR,
                 strokeWidth: 1,
                 strokeDasharray: "4 4",
               }}
@@ -121,17 +121,17 @@ export function TotalReimbursementChart(props: {
             <Line
               type="linear"
               dataKey="value"
-              stroke={REIMBURSEMENT_CHART_LINE_COLOR}
+              stroke={EXPENSE_CHART_LINE_COLOR}
               strokeWidth={2}
               dot={{
                 r: 6,
-                fill: REIMBURSEMENT_CHART_LINE_COLOR,
+                fill: EXPENSE_CHART_LINE_COLOR,
                 stroke: "#fff",
                 strokeWidth: 2,
               }}
               activeDot={{
                 r: 6,
-                fill: REIMBURSEMENT_CHART_LINE_COLOR,
+                fill: EXPENSE_CHART_LINE_COLOR,
                 stroke: "#fff",
                 strokeWidth: 2,
               }}

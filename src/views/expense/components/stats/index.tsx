@@ -2,17 +2,17 @@ import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/utils";
 import {
-  REIMBURSEMENT_CHANGE_DOWN_CLASS,
-  REIMBURSEMENT_CHANGE_UP_CLASS,
+  EXPENSE_CHANGE_DOWN_CLASS,
+  EXPENSE_CHANGE_UP_CLASS,
 } from "../../config";
 
 export type StatsCardProps = {
-  totalReimbursement: string;
+  totalExpense: string;
   totalChangePercent: number | null;
-  reimbursedCount: number;
-  reimbursedChangePercent: number | null;
-  reimbursementCount: number;
-  reimbursementChangePercent: number | null;
+  expensedCount: number;
+  expensedChangePercent: number | null;
+  expenseCount: number;
+  expenseChangePercent: number | null;
 };
 
 function formatChange(value: number | null) {
@@ -46,8 +46,8 @@ function StatColumn(props: {
         <span
           className={cn(
             "font-medium",
-            hintTone === "up" && REIMBURSEMENT_CHANGE_UP_CLASS,
-            hintTone === "down" && REIMBURSEMENT_CHANGE_DOWN_CLASS,
+            hintTone === "up" && EXPENSE_CHANGE_UP_CLASS,
+            hintTone === "down" && EXPENSE_CHANGE_DOWN_CLASS,
             hintTone === "muted" && "text-[#aaa]",
           )}
         >
@@ -61,36 +61,36 @@ function StatColumn(props: {
 
 export function StatsCard(props: StatsCardProps) {
   const {
-    totalReimbursement,
+    totalExpense,
     totalChangePercent,
-    reimbursedCount,
-    reimbursedChangePercent,
-    reimbursementCount,
-    reimbursementChangePercent,
+    expensedCount,
+    expensedChangePercent,
+    expenseCount,
+    expenseChangePercent,
   } = props;
 
   return (
     <Card className="grid grid-cols-1 gap-6 py-[22px] sm:grid-cols-3 sm:gap-8">
       <StatColumn
-        label="Total reimbursement"
-        value={formatAmount(totalReimbursement)}
+        label="Total expense"
+        value={formatAmount(totalExpense)}
         hint="from last month"
         hintValue={formatChange(totalChangePercent)}
         hintTone={changeTone(totalChangePercent)}
       />
       <StatColumn
-        label="Number of reimbursed"
-        value={String(reimbursedCount)}
+        label="Number of expensed"
+        value={String(expensedCount)}
         hint="from last month"
-        hintValue={formatChange(reimbursedChangePercent)}
-        hintTone={changeTone(reimbursedChangePercent)}
+        hintValue={formatChange(expensedChangePercent)}
+        hintTone={changeTone(expensedChangePercent)}
       />
       <StatColumn
-        label="Number of reimbursements"
-        value={String(reimbursementCount)}
+        label="Number of expenses"
+        value={String(expenseCount)}
         hint="from last month"
-        hintValue={formatChange(reimbursementChangePercent)}
-        hintTone={changeTone(reimbursementChangePercent)}
+        hintValue={formatChange(expenseChangePercent)}
+        hintTone={changeTone(expenseChangePercent)}
       />
     </Card>
   );

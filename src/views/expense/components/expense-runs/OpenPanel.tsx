@@ -1,5 +1,5 @@
 import { formatAmount } from "@/utils";
-import type { ReimbursementOpenList } from "@/mocks/reimbursement";
+import type { ExpenseOpenList } from "@/mocks/expense";
 import { OpenTable } from "./OpenTable";
 
 function formatSplitUsd(value: string) {
@@ -12,13 +12,13 @@ function formatSplitUsd(value: string) {
   };
 }
 
-export function OpenPanel({ list }: { list: ReimbursementOpenList }) {
+export function OpenPanel({ list }: { list: ExpenseOpenList }) {
   const total = formatSplitUsd(list.total);
 
   if (list.rows.length === 0) {
     return (
       <div className="flex min-h-[280px] items-center justify-center">
-        <p className="font-montserrat text-sm text-[#aaa]">No open reimbursements</p>
+        <p className="font-montserrat text-sm text-[#aaa]">No open expenses</p>
       </div>
     );
   }
@@ -28,7 +28,7 @@ export function OpenPanel({ list }: { list: ReimbursementOpenList }) {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:max-w-[760px]">
         <div>
           <p className="font-montserrat text-sm font-medium text-[#606060]">
-            Open reimbursement
+            Open expense
           </p>
           <p className="mt-1.5 font-montserrat text-[20px] font-semibold capitalize text-black">
             <span>{total.whole}</span>
@@ -39,7 +39,7 @@ export function OpenPanel({ list }: { list: ReimbursementOpenList }) {
         </div>
         <div>
           <p className="font-montserrat text-sm font-medium capitalize text-[#606060]">
-            Number of reimbursements
+            Number of expenses
           </p>
           <p className="mt-1.5 font-montserrat text-[20px] font-semibold capitalize text-black">
             {list.count}

@@ -12,10 +12,10 @@ import {
 import { chainDisplayName } from "@/config/chains";
 import { formatAmount } from "@/utils";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";
-import type { ReimbursementOpenRow } from "@/mocks/reimbursement";
+import type { ExpenseOpenRow } from "@/mocks/expense";
 import {
-  OPEN_REIMBURSEMENT_TABLE_COLUMNS,
-  REIMBURSEMENT_ROW_ACTION,
+  OPEN_EXPENSE_TABLE_COLUMNS,
+  EXPENSE_ROW_ACTION,
 } from "../../config";
 
 function ReceiptCell({ name }: { name: string }) {
@@ -30,8 +30,8 @@ function ReceiptCell({ name }: { name: string }) {
   );
 }
 
-function RowAction({ action }: { action: ReimbursementOpenRow["action"] }) {
-  if (action === REIMBURSEMENT_ROW_ACTION.Paying) {
+function RowAction({ action }: { action: ExpenseOpenRow["action"] }) {
+  if (action === EXPENSE_ROW_ACTION.Paying) {
     return (
       <Button
         loading
@@ -50,17 +50,17 @@ function RowAction({ action }: { action: ReimbursementOpenRow["action"] }) {
   );
 }
 
-export function OpenTable({ rows }: { rows: ReimbursementOpenRow[] }) {
+export function OpenTable({ rows }: { rows: ExpenseOpenRow[] }) {
   return (
     <Table
-      columns={OPEN_REIMBURSEMENT_TABLE_COLUMNS}
+      columns={OPEN_EXPENSE_TABLE_COLUMNS}
       className="border-0 bg-transparent p-0 shadow-none"
     >
       <TableHeader className="border-b-0 bg-transparent">
         <TableHead>Name</TableHead>
         <TableHead>Purpose</TableHead>
         <TableHead>Receipt</TableHead>
-        <TableHead>Reimbursement</TableHead>
+        <TableHead>Expense</TableHead>
         <TableHead>Address</TableHead>
         <TableHead>Payout Preference</TableHead>
         <TableHead>Amount</TableHead>
@@ -77,7 +77,7 @@ export function OpenTable({ rows }: { rows: ReimbursementOpenRow[] }) {
             <TableCell>
               <ReceiptCell name={row.receiptName} />
             </TableCell>
-            <TableCell>{formatAmount(row.reimbursement)}</TableCell>
+            <TableCell>{formatAmount(row.expense)}</TableCell>
             <TableCell>
               <PayoutRecipientCell address={row.address} />
             </TableCell>

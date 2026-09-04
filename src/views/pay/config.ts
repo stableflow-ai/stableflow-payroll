@@ -20,7 +20,7 @@ export const PAY_NAV_ID = {
   Payment: "payment",
   Operations: "operations",
   Payroll: "payroll",
-  Reimbursement: "reimbursement",
+  Expense: "expense",
   Bonus: "bonus",
   Team: "team",
   History: "history",
@@ -63,7 +63,7 @@ export const PAY_NAV_ITEMS: readonly PayNavItem[] = [
     icon: IconOperations,
     children: [
       { id: PAY_NAV_ID.Payroll, label: "Payroll", to: "/pay/payroll", match: ["/pay/payroll", "/pay/batch"] },
-      { id: PAY_NAV_ID.Reimbursement, label: "Reimbursement", to: "/pay/reimbursement" },
+      { id: PAY_NAV_ID.Expense, label: "Expense", to: "/pay/expense" },
       { id: PAY_NAV_ID.Bonus, label: "Bonus", to: "/pay/bonus" },
     ],
   },

@@ -14,15 +14,15 @@ import { chainDisplayName, txExplorerUrl } from "@/config/chains";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/utils";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";
-import type { ReimbursementHistoryRow } from "@/mocks/reimbursement";
+import type { ExpenseHistoryRow } from "@/mocks/expense";
 import {
-  HISTORY_REIMBURSEMENT_TABLE_COLUMNS,
-  REIMBURSEMENT_HISTORY_FAILED_CLASS,
-  REIMBURSEMENT_HISTORY_PAID_CLASS,
-  REIMBURSEMENT_PAYOUT_STATUS,
+  HISTORY_EXPENSE_TABLE_COLUMNS,
+  EXPENSE_HISTORY_FAILED_CLASS,
+  EXPENSE_HISTORY_PAID_CLASS,
+  EXPENSE_PAYOUT_STATUS,
 } from "../../config";
 
-function DescriptionCell({ row }: { row: ReimbursementHistoryRow }) {
+function DescriptionCell({ row }: { row: ExpenseHistoryRow }) {
   if (row.receiptName) {
     return (
       <span
@@ -38,13 +38,13 @@ function DescriptionCell({ row }: { row: ReimbursementHistoryRow }) {
   return <span className="truncate font-normal text-black">{row.description}</span>;
 }
 
-function StatusCell({ row }: { row: ReimbursementHistoryRow }) {
-  if (row.status === REIMBURSEMENT_PAYOUT_STATUS.Failed) {
+function StatusCell({ row }: { row: ExpenseHistoryRow }) {
+  if (row.status === EXPENSE_PAYOUT_STATUS.Failed) {
     return (
       <span
         className={cn(
           "inline-flex h-[26px] items-center gap-1 rounded-[15px] border border-[rgba(255,83,83,0.5)] bg-white px-2",
-          REIMBURSEMENT_HISTORY_FAILED_CLASS,
+          EXPENSE_HISTORY_FAILED_CLASS,
         )}
       >
         <IconAlert className="h-[7px] w-0.5 shrink-0" />
@@ -56,7 +56,7 @@ function StatusCell({ row }: { row: ReimbursementHistoryRow }) {
   const explorerUrl = txExplorerUrl(row.network, row.txHash);
 
   return (
-    <span className={cn("inline-flex items-center gap-1.5", REIMBURSEMENT_HISTORY_PAID_CLASS)}>
+    <span className={cn("inline-flex items-center gap-1.5", EXPENSE_HISTORY_PAID_CLASS)}>
       <IconCheck2 className="size-3.5 shrink-0" />
       Paid
       {explorerUrl ? (
@@ -76,17 +76,17 @@ function StatusCell({ row }: { row: ReimbursementHistoryRow }) {
   );
 }
 
-export function HistoryTable({ rows }: { rows: ReimbursementHistoryRow[] }) {
+export function HistoryTable({ rows }: { rows: ExpenseHistoryRow[] }) {
   return (
     <Table
-      columns={HISTORY_REIMBURSEMENT_TABLE_COLUMNS}
+      columns={HISTORY_EXPENSE_TABLE_COLUMNS}
       className="border-0 bg-transparent p-0 shadow-none"
     >
       <TableHeader className="border-b-0 bg-transparent">
         <TableHead>Name</TableHead>
         <TableHead>Purpose</TableHead>
         <TableHead className="normal-case">Description / Receipt</TableHead>
-        <TableHead>Reimbursement</TableHead>
+        <TableHead>Expense</TableHead>
         <TableHead>Address</TableHead>
         <TableHead>Payout Preference</TableHead>
         <TableHead>Amount</TableHead>
@@ -103,7 +103,7 @@ export function HistoryTable({ rows }: { rows: ReimbursementHistoryRow[] }) {
             <TableCell>
               <DescriptionCell row={row} />
             </TableCell>
-            <TableCell>{formatAmount(row.reimbursement)}</TableCell>
+            <TableCell>{formatAmount(row.expense)}</TableCell>
             <TableCell>
               <PayoutRecipientCell address={row.address} />
             </TableCell>

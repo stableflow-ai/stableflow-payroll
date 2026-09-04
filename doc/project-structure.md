@@ -57,7 +57,7 @@ src/
     auth/                      login, register, reset password
     pay/                       single, batch, pending, history, request (+ disabled public payer)
     payroll/                   payroll dashboard (mocked until the API exists)
-    reimbursement/             reimbursement dashboard (mocked until the API exists)
+    expense/                   expense dashboard (mocked until the API exists)
     bonus/                     bonus dashboard (mocked until the API exists)
     how-it-works/              public marketing page
     home/, analytics/, partner/  routes currently disabled

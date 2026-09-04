@@ -1,22 +1,22 @@
 import { useState } from "react";
-import { useReimbursementOverviewQuery } from "@/hooks/use-reimbursement-api";
+import { useExpenseOverviewQuery } from "@/hooks/use-expense-api";
 import { IconLoading } from "@/components/icons/loading";
 import { RecentPayoutsCard } from "./components/recent-payouts";
-import { ReimbursementRunsCard } from "./components/reimbursement-runs";
+import { ExpenseRunsCard } from "./components/expense-runs";
 import { StatsCard } from "./components/stats";
-import { TotalReimbursementChart } from "./components/total-reimbursement";
+import { TotalExpenseChart } from "./components/total-expense";
 import {
-  REIMBURSEMENT_CHART_RANGE,
-  REIMBURSEMENT_TAB,
-  type ReimbursementChartRange,
-  type ReimbursementTab
+  EXPENSE_CHART_RANGE,
+  EXPENSE_TAB,
+  type ExpenseChartRange,
+  type ExpenseTab
 } from "./config";
 
-export function ReimbursementView() {
-  const overview = useReimbursementOverviewQuery();
-  const [tab, setTab] = useState<ReimbursementTab>(REIMBURSEMENT_TAB.Open);
-  const [chartRange, setChartRange] = useState<ReimbursementChartRange>(
-    REIMBURSEMENT_CHART_RANGE.Months6
+export function ExpenseView() {
+  const overview = useExpenseOverviewQuery();
+  const [tab, setTab] = useState<ExpenseTab>(EXPENSE_TAB.Open);
+  const [chartRange, setChartRange] = useState<ExpenseChartRange>(
+    EXPENSE_CHART_RANGE.Months6
   );
 
   const data = overview.data;
@@ -34,7 +34,7 @@ export function ReimbursementView() {
       <p className="font-montserrat text-sm text-danger">
         {overview.error instanceof Error
           ? overview.error.message
-          : "Failed to load reimbursement"}
+          : "Failed to load expense"}
       </p>
     );
   }
@@ -42,15 +42,15 @@ export function ReimbursementView() {
   return (
     <div className="flex flex-col gap-5">
       <StatsCard
-        totalReimbursement={data.totalReimbursement}
+        totalExpense={data.totalExpense}
         totalChangePercent={data.totalChangePercent}
-        reimbursedCount={data.reimbursedCount}
-        reimbursedChangePercent={data.reimbursedChangePercent}
-        reimbursementCount={data.reimbursementCount}
-        reimbursementChangePercent={data.reimbursementChangePercent}
+        expensedCount={data.expensedCount}
+        expensedChangePercent={data.expensedChangePercent}
+        expenseCount={data.expenseCount}
+        expenseChangePercent={data.expenseChangePercent}
       />
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,452px)]">
-        <TotalReimbursementChart
+        <TotalExpenseChart
           range={chartRange}
           onRangeChange={setChartRange}
           periodLabel={data.chartPeriodLabel}
@@ -59,7 +59,7 @@ export function ReimbursementView() {
         />
         <RecentPayoutsCard items={data.recentPayouts} />
       </div>
-      <ReimbursementRunsCard
+      <ExpenseRunsCard
         tab={tab}
         onTabChange={setTab}
         open={data.open}

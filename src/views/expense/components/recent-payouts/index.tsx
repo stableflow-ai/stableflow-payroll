@@ -5,38 +5,38 @@ import { Card } from "@/components/ui/card/Card";
 import { chainDisplayName } from "@/config/chains";
 import { cn } from "@/lib/utils";
 import { formatAddress, formatAmount } from "@/utils";
-import type { ReimbursementRecentPayout } from "@/mocks/reimbursement";
+import type { ExpenseRecentPayout } from "@/mocks/expense";
 import {
-  REIMBURSEMENT_PAYOUT_STATUS,
-  REIMBURSEMENT_STATUS_FAILED_CLASS,
-  REIMBURSEMENT_STATUS_PAID_CLASS,
-  REIMBURSEMENT_STATUS_PENDING_CLASS,
-  type ReimbursementPayoutStatus,
+  EXPENSE_PAYOUT_STATUS,
+  EXPENSE_STATUS_FAILED_CLASS,
+  EXPENSE_STATUS_PAID_CLASS,
+  EXPENSE_STATUS_PENDING_CLASS,
+  type ExpensePayoutStatus,
 } from "../../config";
 
-function statusLabel(status: ReimbursementPayoutStatus) {
-  if (status === REIMBURSEMENT_PAYOUT_STATUS.Failed) return "Failed";
-  if (status === REIMBURSEMENT_PAYOUT_STATUS.Paid) return "Paid";
+function statusLabel(status: ExpensePayoutStatus) {
+  if (status === EXPENSE_PAYOUT_STATUS.Failed) return "Failed";
+  if (status === EXPENSE_PAYOUT_STATUS.Paid) return "Paid";
   return "Pending";
 }
 
-function StatusMark({ status }: { status: ReimbursementPayoutStatus }) {
-  if (status === REIMBURSEMENT_PAYOUT_STATUS.Failed) {
+function StatusMark({ status }: { status: ExpensePayoutStatus }) {
+  if (status === EXPENSE_PAYOUT_STATUS.Failed) {
     return (
       <span
         className={cn(
           "flex size-[26px] shrink-0 items-center justify-center rounded-full bg-[#E43222]/15 font-montserrat text-xs font-medium",
-          REIMBURSEMENT_STATUS_FAILED_CLASS,
+          EXPENSE_STATUS_FAILED_CLASS,
         )}
       >
         !
       </span>
     );
   }
-  if (status === REIMBURSEMENT_PAYOUT_STATUS.Paid) {
+  if (status === EXPENSE_PAYOUT_STATUS.Paid) {
     return (
       <span className="flex size-[26px] shrink-0 items-center justify-center rounded-full bg-[#84A20F]/15">
-        <IconCheck className={cn("size-3", REIMBURSEMENT_STATUS_PAID_CLASS)} />
+        <IconCheck className={cn("size-3", EXPENSE_STATUS_PAID_CLASS)} />
       </span>
     );
   }
@@ -47,17 +47,17 @@ function StatusMark({ status }: { status: ReimbursementPayoutStatus }) {
   );
 }
 
-function statusClass(status: ReimbursementPayoutStatus) {
-  if (status === REIMBURSEMENT_PAYOUT_STATUS.Failed) {
-    return REIMBURSEMENT_STATUS_FAILED_CLASS;
+function statusClass(status: ExpensePayoutStatus) {
+  if (status === EXPENSE_PAYOUT_STATUS.Failed) {
+    return EXPENSE_STATUS_FAILED_CLASS;
   }
-  if (status === REIMBURSEMENT_PAYOUT_STATUS.Paid) {
-    return REIMBURSEMENT_STATUS_PAID_CLASS;
+  if (status === EXPENSE_PAYOUT_STATUS.Paid) {
+    return EXPENSE_STATUS_PAID_CLASS;
   }
-  return REIMBURSEMENT_STATUS_PENDING_CLASS;
+  return EXPENSE_STATUS_PENDING_CLASS;
 }
 
-export function RecentPayoutsCard(props: { items: ReimbursementRecentPayout[] }) {
+export function RecentPayoutsCard(props: { items: ExpenseRecentPayout[] }) {
   const { items } = props;
 
   return (

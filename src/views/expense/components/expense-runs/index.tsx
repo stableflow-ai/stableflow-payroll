@@ -1,10 +1,10 @@
 import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
 import type {
-  ReimbursementHistoryRow,
-  ReimbursementOpenList,
-} from "@/mocks/reimbursement";
-import { REIMBURSEMENT_TAB, type ReimbursementTab } from "../../config";
+  ExpenseHistoryRow,
+  ExpenseOpenList,
+} from "@/mocks/expense";
+import { EXPENSE_TAB, type ExpenseTab } from "../../config";
 import { HistoryPanel } from "./HistoryPanel";
 import { OpenPanel } from "./OpenPanel";
 
@@ -31,11 +31,11 @@ function TabButton(props: {
   );
 }
 
-export function ReimbursementRunsCard(props: {
-  tab: ReimbursementTab;
-  onTabChange: (tab: ReimbursementTab) => void;
-  open: ReimbursementOpenList;
-  history: ReimbursementHistoryRow[];
+export function ExpenseRunsCard(props: {
+  tab: ExpenseTab;
+  onTabChange: (tab: ExpenseTab) => void;
+  open: ExpenseOpenList;
+  history: ExpenseHistoryRow[];
 }) {
   const { tab, onTabChange, open, history } = props;
 
@@ -43,20 +43,20 @@ export function ReimbursementRunsCard(props: {
     <div>
       <div className="flex items-end gap-8">
         <TabButton
-          active={tab === REIMBURSEMENT_TAB.Open}
-          onClick={() => onTabChange(REIMBURSEMENT_TAB.Open)}
+          active={tab === EXPENSE_TAB.Open}
+          onClick={() => onTabChange(EXPENSE_TAB.Open)}
         >
-          Open reimbursement
+          Open expense
         </TabButton>
         <TabButton
-          active={tab === REIMBURSEMENT_TAB.History}
-          onClick={() => onTabChange(REIMBURSEMENT_TAB.History)}
+          active={tab === EXPENSE_TAB.History}
+          onClick={() => onTabChange(EXPENSE_TAB.History)}
         >
-          Reimbursement History
+          Expense History
         </TabButton>
       </div>
       <Card className="mt-3 px-5 py-6 sm:px-8">
-        {tab === REIMBURSEMENT_TAB.Open ? (
+        {tab === EXPENSE_TAB.Open ? (
           <OpenPanel list={open} />
         ) : (
           <HistoryPanel items={history} />

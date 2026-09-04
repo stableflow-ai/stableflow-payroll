@@ -13,7 +13,7 @@ A mock is temporary scaffolding. It ships with a `TODO(api)` marker and is delet
 | `src/mocks/config.ts` | `MOCK_ENABLED` switchboard and the derived `MockDomain` type |
 | `src/mocks/<domain>.ts` | Fixtures and the reader function for one domain |
 
-`MOCK_ENABLED` currently mocks `payroll`, `reimbursement`, and `bonus` — those dashboards read fixtures until their contracts exist.
+`MOCK_ENABLED` currently mocks `payroll`, `expense`, and `bonus` — those dashboards read fixtures until their contracts exist.
 
 ## How a page reads mock data
 
@@ -52,7 +52,7 @@ Never import a fixture into a view. Go through the same hook the real API will u
 | Domain | Mock file | Reader hook | Notes |
 | --- | --- | --- | --- |
 | payroll | `src/mocks/payroll.ts` | `usePayrollOverviewQuery` | Payroll dashboard (`/pay/payroll`) until the overview contract exists. `getPayrollOverviewMock("empty" \| "filled")` — the page header **Sample data** switch toggles empty vs filled Next Payroll, Recent Payouts, and Payroll History (Figma `2604:16561` / `2604:16798`). |
-| reimbursement | `src/mocks/reimbursement.ts` | `useReimbursementOverviewQuery` | Reimbursement dashboard (`/pay/reimbursement`) until the overview contract exists. |
+| expense | `src/mocks/expense.ts` | `useExpenseOverviewQuery` | Expense dashboard (`/pay/expense`) until the overview contract exists. |
 | bonus | `src/mocks/bonus.ts` | `useBonusOverviewQuery` | Bonus dashboard (`/pay/bonus`) until the overview contract exists. `getBonusOverviewMock("empty" \| "filled")` — the page header **Sample data** switch toggles empty vs filled pending bonuses, Recent Payouts, and Bonus History. |
 
 ## Constraints

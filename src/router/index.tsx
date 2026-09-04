@@ -6,7 +6,7 @@ import { HomeView } from "@/views/home/HomeView";
 import { AnalyticsView } from "@/views/analytics/AnalyticsView";
 import { BatchPayoutView } from "@/views/pay/BatchPayoutView";
 import { PayrollView } from "@/views/payroll";
-import { ReimbursementView } from "@/views/reimbursement";
+import { ExpenseView } from "@/views/expense";
 import { BonusView } from "@/views/bonus";
 import { PendingPayoutsView } from "@/views/pay/PendingPayoutsView";
 import { RequestPayView } from "@/views/pay/RequestPayView";
@@ -76,7 +76,8 @@ export const router = createBrowserRouter([
               { path: "/pay/result", element: <PayoutResultView /> },
               { path: "/pay/payroll", element: <PayrollView /> },
               { path: "/pay/batch", element: <BatchPayoutView /> },
-              { path: "/pay/reimbursement", element: <ReimbursementView /> },
+              { path: "/pay/expense", element: <ExpenseView /> },
+              { path: "/pay/reimbursement", element: <Navigate to="/pay/expense" replace /> },
               { path: "/pay/bonus", element: <BonusView /> },
               { path: "/pay/team", element: <PayPlaceholderView /> },
               { path: "/pay/setting", element: <PayPlaceholderView /> },
