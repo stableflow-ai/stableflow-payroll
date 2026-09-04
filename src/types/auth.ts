@@ -1,7 +1,15 @@
+export const AUTH_USER_ROLE = {
+  Admin: "admin",
+  Employee: "employee",
+} as const;
+
+export type AuthUserRole = (typeof AUTH_USER_ROLE)[keyof typeof AUTH_USER_ROLE];
+
 export interface AuthUser {
   id: number;
   email: string;
   name: string;
+  role: AuthUserRole;
 }
 
 export interface LoginBody {

@@ -4,10 +4,12 @@ import {
   IconOperations,
   IconOverview,
   IconPayment,
+  IconRequest,
   IconSetting,
   IconTeam,
 } from "@/components/icons";
 import type { IconProps } from "@/components/icons/types";
+import { AUTH_USER_ROLE, type AuthUserRole } from "@/types/auth";
 import { PAYOUT_SYMBOLS } from "@/stores/intents-tokens";
 
 /** TODO(api): organization name until the profile contract exposes it. */
@@ -18,6 +20,7 @@ export const PAY_FORM_PATH = "/pay/form";
 export const PAY_NAV_ID = {
   Overview: "overview",
   Payment: "payment",
+  RequestPayment: "request",
   Operations: "operations",
   Payroll: "payroll",
   Reimbursement: "reimbursement",
@@ -49,7 +52,7 @@ export function isPayNavGroup(item: PayNavItem): item is PayNavGroupItem {
 }
 
 export const PAY_NAV_ITEMS: readonly PayNavItem[] = [
-  { id: PAY_NAV_ID.Overview, label: "Overview", to: "/pay/overview", icon: IconOverview },
+  { id: PAY_NAV_ID.Overview, label: "Overview", to: "/", icon: IconOverview },
   {
     id: PAY_NAV_ID.Payment,
     label: "Payment",
@@ -72,6 +75,39 @@ export const PAY_NAV_ITEMS: readonly PayNavItem[] = [
   { id: PAY_NAV_ID.Setting, label: "Setting", to: "/pay/setting", icon: IconSetting },
 ];
 
+const EMPLOYEE_REQUEST_NAV: PayNavLeaf = {
+  id: PAY_NAV_ID.RequestPayment,
+  label: "Request Payment",
+  to: "/pay/request",
+  icon: IconRequest,
+};
+
+const EMPLOYEE_HIDDEN_NAV_IDS = new Set<string>([PAY_NAV_ID.Operations, PAY_NAV_ID.Team]);
+
+export function payNavItemsForRole(role: AuthUserRole): readonly PayNavItem[] {
+  if (role !== AUTH_USER_ROLE.Employee) return PAY_NAV_ITEMS;
+
+  const items: PayNavItem[] = [];
+  for (const item of PAY_NAV_ITEMS) {
+    if (isPayNavGroup(item) || EMPLOYEE_HIDDEN_NAV_IDS.has(item.id)) continue;
+    if (item.id === PAY_NAV_ID.Payment) {
+      items.push({ ...item, match: ["/pay"] });
+      items.push(EMPLOYEE_REQUEST_NAV);
+      continue;
+    }
+    items.push(item);
+  }
+  return items;
+}
+
+export const PAY_ADMIN_ONLY_PATHS = [
+  PAY_FORM_PATH,
+  "/pay/batch",
+  "/pay/reimbursement",
+  "/pay/bonus",
+  "/pay/team",
+] as const;
+
 export const PAY_MODE_TABS = [
   { label: "Single Payment", to: "/pay" },
   { label: "Payment by form", to: PAY_FORM_PATH },
@@ -86,8 +122,8 @@ export function isPayNavLeafActive(item: PayNavLeaf, pathname: string): boolean 
   return pathname === item.to;
 }
 
-export function payTitleForPath(pathname: string): string {
-  for (const item of PAY_NAV_ITEMS) {
+export function payTitleForPath(pathname: string, role: AuthUserRole = AUTH_USER_ROLE.Admin): string {
+  for (const item of payNavItemsForRole(role)) {
     if (isPayNavGroup(item)) {
       const child = item.children.find((row) => row.to === pathname);
       if (child) return child.label;

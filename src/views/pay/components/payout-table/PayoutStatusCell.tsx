@@ -25,7 +25,7 @@ function ExplorerLink({ href, className }: { href: string | null; className?: st
       href={href}
       target="_blank"
       rel="noreferrer"
-      className={cn("shrink-0 text-black", className)}
+      className={cn("shrink-0 text-[#AAA] hover:text-black duration-150", className)}
       aria-label="View transaction"
     >
       <IconOutLink />

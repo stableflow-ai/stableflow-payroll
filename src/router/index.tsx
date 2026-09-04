@@ -11,6 +11,7 @@ import { RequestPaymentView } from "@/views/pay/RequestPaymentView";
 import { PayoutResultView } from "@/views/pay/PayoutResultView";
 import { PaymentByFormView } from "@/views/pay/PaymentByFormView";
 import { PayPlaceholderView } from "@/views/pay/PayPlaceholderView";
+import { OverviewView } from "@/views/pay/OverviewView";
 import { SinglePayoutView } from "@/views/pay/SinglePayoutView";
 import { TransactionHistoryView } from "@/views/pay/TransactionHistoryView";
 import { TeamView } from "@/views/pay/TeamView";
@@ -21,7 +22,7 @@ import { ApiKeysView } from "@/views/partner/ApiKeysView";
 import { PartnerPlaceholderView } from "@/views/partner/PartnerPlaceholderView";
 import { PartnerRegistrationView } from "@/views/partner/PartnerRegistrationView";
 import { ReportsView } from "@/views/partner/ReportsView";
-import { RedirectIfAuthed, RequireAuth, RequirePartner } from "./guards";
+import { RedirectEmployeeFromAdminPay, RedirectIfAuthed, RequireAuth, RequirePartner } from "./guards";
 
 export const router = createBrowserRouter([
   {
@@ -63,24 +64,26 @@ export const router = createBrowserRouter([
           //   element: <AnalyticsView />,
           // },
           {
-            path: "/",
-            element: <Navigate to="/pay" replace />,
-          },
-          {
-            element: <PayLayout />,
+            element: <RedirectEmployeeFromAdminPay />,
             children: [
-              { path: "/pay", element: <SinglePayoutView /> },
-              { path: "/pay/form", element: <PaymentByFormView /> },
-              { path: "/pay/overview", element: <PayPlaceholderView /> },
-              { path: "/pay/result", element: <PayoutResultView /> },
-              { path: "/pay/batch", element: <BatchPayoutView /> },
-              { path: "/pay/reimbursement", element: <PayPlaceholderView /> },
-              { path: "/pay/bonus", element: <PayPlaceholderView /> },
-              { path: "/pay/team", element: <TeamView /> },
-              { path: "/pay/setting", element: <PayPlaceholderView /> },
-              { path: "/pay/request", element: <RequestPaymentView /> },
-              { path: "/pay/pending", element: <PendingPayoutsView /> },
-              { path: "/pay/history", element: <TransactionHistoryView /> },
+              {
+                element: <PayLayout />,
+                children: [
+                  { path: "/", element: <OverviewView /> },
+                  { path: "/pay/overview", element: <Navigate to="/" replace /> },
+                  { path: "/pay", element: <SinglePayoutView /> },
+                  { path: "/pay/form", element: <PaymentByFormView /> },
+                  { path: "/pay/result", element: <PayoutResultView /> },
+                  { path: "/pay/batch", element: <BatchPayoutView /> },
+                  { path: "/pay/reimbursement", element: <PayPlaceholderView /> },
+                  { path: "/pay/bonus", element: <PayPlaceholderView /> },
+                  { path: "/pay/team", element: <TeamView /> },
+                  { path: "/pay/setting", element: <PayPlaceholderView /> },
+                  { path: "/pay/request", element: <RequestPaymentView /> },
+                  { path: "/pay/pending", element: <PendingPayoutsView /> },
+                  { path: "/pay/history", element: <TransactionHistoryView /> },
+                ],
+              },
             ],
           },
           // {
@@ -105,6 +108,6 @@ export const router = createBrowserRouter([
   },
   {
     path: "*",
-    element: <Navigate to="/pay" replace />,
+    element: <Navigate to="/" replace />,
   },
 ]);

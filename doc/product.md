@@ -11,26 +11,26 @@ Only two areas are released: **Auth** and **Pay**. Everything else is either a p
 | Area | Routes | Status | Notes |
 | --- | --- | --- | --- |
 | Auth | `/login`, `/register` | Released | Detailed below. Reset password is a dialog, not a route. |
-| Pay | `/pay`, `/pay/form`, `/pay/overview`, `/pay/result`, `/pay/batch`, `/pay/reimbursement`, `/pay/bonus`, `/pay/team`, `/pay/history`, `/pay/setting`, `/pay/pending`, `/pay/request` | Released | Detailed below. Requires a session. Placeholder routes (`/pay/overview`, `/pay/reimbursement`, `/pay/bonus`, `/pay/setting`) render `PayPlaceholderView`. |
+| Pay | `/`, `/pay`, `/pay/form`, `/pay/result`, `/pay/batch`, `/pay/reimbursement`, `/pay/bonus`, `/pay/team`, `/pay/history`, `/pay/setting`, `/pay/pending`, `/pay/request` | Released | Detailed below. Requires a session. Overview is `/` (`/pay/overview` redirects there). Placeholder routes (`/pay/reimbursement`, `/pay/bonus`, `/pay/setting`, and admin Overview) render `PayPlaceholderView`. |
 | Marketing | `/howitworks` | Live, not detailed here | Static public page linked from the auth screens. |
 | Public payer | `/p/:id` | Disabled | Route commented out in `src/router/index.tsx`; `src/views/pay/RequestPayView.tsx` still exists. Anonymous page that pays a payment request created in `/pay/request`, rendered inside `AppLayout` but outside `RequireAuth`. |
-| Home | `/` | Disabled | Route commented out in `src/router/index.tsx`; `src/views/home/` still exists. |
+| Home | — | Disabled | `src/views/home/` still exists; do not re-enable `HomeView`. `/` is Pay Overview, not Home. |
 | Analytics | `/analytics` | Disabled | Route commented out; `src/views/analytics/` still exists. |
 | Partner | `/partner`, `/partner/api-keys`, `/partner/reports`, `/partner/support`, `/partner/terms`, `/partner/docs` | Disabled | Routes and `PartnerLayout` commented out; `src/views/partner/` and `RequirePartner` still exist. |
 
 Do not re-enable a disabled route, or document one here, without being asked.
 
-`/` and unmatched paths redirect to `/pay`. Unsigned visitors then hit `RequireAuth` and land on `/login?returnTo=/pay`.
+`/` is Overview inside `PayLayout`. Unmatched paths redirect to `/`. Unsigned visitors then hit `RequireAuth` and land on `/login?returnTo=/`.
 
 ## Shell
 
-`AppLayout` (`src/layouts/AppLayout.tsx`) wraps everything except the auth screens and `/howitworks`. On `/pay/*` it is a `#f6f6f6` page with no top header; PayLayout owns the chrome. Partner paths are still full-bleed. Other paths get a centred `max-w-[1252px]` container plus `AppHeader`. With only `/pay/*` enabled underneath it, the centred branch is currently unreachable.
+`AppLayout` (`src/layouts/AppLayout.tsx`) wraps everything except the auth screens and `/howitworks`. On `/` and `/pay/*` it is a `#f6f6f6` page with no top header; PayLayout owns the chrome. Partner paths are still full-bleed. Other paths get a centred `max-w-[1252px]` container plus `AppHeader`. With only Pay enabled underneath it, the centred branch is currently unreachable.
 
-`AppHeader` (`src/components/layout/`) is unused on `/pay/*`. It still holds the logo, `HEADER_NAV_ITEMS`, `HeaderWalletCapsule`, and the capsule variant of `HeaderAccountMenu` for a future Home / Analytics shell.
+`AppHeader` (`src/components/layout/`) is unused on `/` and `/pay/*`. It still holds the logo, `HEADER_NAV_ITEMS`, `HeaderWalletCapsule`, and the capsule variant of `HeaderAccountMenu` for a future Home / Analytics shell.
 
-`PayLayout` (`src/layouts/PayLayout.tsx`) is the authenticated Pay chrome: a 220px left sidebar (`PaySidebar`) with a right divider, a content header (page title from `payTitleForPath`, optional `setHeaderExtra`, and `HeaderWalletCapsule` on the right), and `PaymentModeTabs` on `/pay` and `/pay/form`. It also mounts `useQuickPayCommitQueue()` and `useBatchPayoutCommitQueue()`, which drain the persisted submit queues in the background. Below `lg` the sidebar is hidden. A compact top row shows the logo, the mock organization name stacked above the account menu (avatar, name, dropdown), and a menu button on the right that opens a top Drawer with `PAY_NAV_ITEMS`. The wallet capsule is desktop-only.
+`PayLayout` (`src/layouts/PayLayout.tsx`) is the authenticated Pay chrome: a 220px left sidebar (`PaySidebar`) with a right divider, a content header (page title from `payTitleForPath`, optional `setHeaderExtra`, and `HeaderWalletCapsule` on the right), and `PaymentModeTabs` on `/pay` and `/pay/form` for **admin** only. It also mounts `useQuickPayCommitQueue()` and `useBatchPayoutCommitQueue()`, which drain the persisted submit queues in the background. Below `lg` the sidebar is hidden. A compact top row shows the logo (links to `/`), the mock organization name stacked above the account menu (avatar, name, dropdown), and a menu button on the right that opens a top Drawer with the role-filtered nav. The wallet capsule is desktop-only.
 
-`PaySidebar` (`src/views/pay/components/PaySidebar.tsx`) is desktop-only (`lg` and up). It shows `/logo.svg`, a mocked organization name (`MOCK_ORGANIZATION_NAME` = Eureka Labs), the sidebar variant of `HeaderAccountMenu` (email trigger; Reset Password / Logout), a horizontal rule under the account, then the nav tree from `PAY_NAV_ITEMS` via shared `PayNav`. Active items use a white pill and `#06f` text. Operations is a collapsible group (Payroll, Reimbursement, Bonus). The same `PayNav` renders inside the mobile top Drawer.
+`PaySidebar` (`src/views/pay/components/PaySidebar.tsx`) is desktop-only (`lg` and up). On `lg` it is sticky to the viewport (`top-0`, `h-svh`) so it does not scroll with the main column; if the nav is taller than the viewport it scrolls inside the aside. It shows `/logo.svg` (links to `/`), a mocked organization name (`MOCK_ORGANIZATION_NAME` = Eureka Labs), the sidebar variant of `HeaderAccountMenu` (email trigger; Reset Password / Logout), a horizontal rule under the account, then the nav tree from `payNavItemsForRole` via shared `PayNav`. Active items use a white pill and `#06f` text. Operations is a collapsible group (Payroll, Reimbursement, Bonus) for admin. The same `PayNav` renders inside the mobile top Drawer.
 
 ## Auth
 
@@ -50,25 +50,31 @@ Validation lives in `src/views/auth/config.ts` as pure `*RuleError` / `*FormErro
 - `guest`: email → `POST /v1/payroll/reset-password/code` (60-second resend cooldown) → email + code + new password → `POST /v1/payroll/reset-password`.
 - `authed`: current password + new password → `POST /v1/payroll/change-password`.
 
-**Session.** `useLoginMutation` / `useRegisterMutation` call `applySession(token, user)`, which writes `stableflow-pay.session` to `localStorage` and updates `useAuthStore`. `useAuthStore` re-reads that key on first import, so a reload restores the session synchronously. `SessionBootstrap` in `src/App.tsx` runs `useProfileQuery()` to validate the token against `GET /v1/payroll/profile` in the background and refresh the cached user. `POST /v1/payroll/profile` (`useUpdateProfileMutation`) changes the display name; no screen uses it yet.
+**Session.** `useLoginMutation` / `useRegisterMutation` call `applySession(token, user)`, which writes `stableflow-pay.session` to `localStorage` and updates `useAuthStore`. `useAuthStore` re-reads that key on first import, so a reload restores the session synchronously. `SessionBootstrap` in `src/App.tsx` runs `useProfileQuery()` to validate the token against `GET /v1/payroll/profile` in the background and refresh the cached user. `POST /v1/payroll/profile` (`useUpdateProfileMutation`) changes the display name; no screen uses it yet. `AuthUser.role` is `"admin"` or `"employee"` and is assumed to already be on the login / profile payload. Stored sessions that predate `role` hydrate as admin.
 
-**Redirects.** `RequireAuth` sends anonymous visitors to `/login?returnTo=<path+search>`. `RedirectIfAuthed` sends signed-in visitors away from `/login` and `/register` to `returnTo` or `/pay`. After a successful login the view navigates to `returnTo ?? "/pay"`. `safeReturnTo` in `return-to.ts` rejects anything that is not a same-origin absolute path and refuses to bounce back to `/login` or `/register`.
+**Redirects.** `RequireAuth` sends anonymous visitors to `/login?returnTo=<path+search>`. `RedirectIfAuthed` sends signed-in visitors away from `/login` and `/register` to `returnTo` or `/`. After a successful login the view navigates to `returnTo ?? "/"`. `safeReturnTo` in `return-to.ts` rejects anything that is not a same-origin absolute path and refuses to bounce back to `/login` or `/register`. Employees who open `/pay/form`, `/pay/batch`, `/pay/reimbursement`, `/pay/bonus`, or `/pay/team` are sent to `/`.
 
 **401.** Any authenticated request that returns 401 clears the stored session and calls `notifyUnauthorized()`, which `src/stores/auth.ts` has wired to `logout()` (clears the store and the whole TanStack Query cache). The next render hits `RequireAuth` and lands on `/login`.
 
 ## Pay
 
-Files: `src/views/pay/`. Constants: `src/views/pay/config.ts`. Sidebar: `PaySidebar` reads `PAY_NAV_ITEMS`.
+Files: `src/views/pay/`. Constants: `src/views/pay/config.ts`. Sidebar: `PaySidebar` reads `payNavItemsForRole(user.role)`.
 
-Sidebar entries: Overview (placeholder), Payment (`/pay` and `/pay/form`), Operations (Payroll = existing Batch Payout at `/pay/batch`; Reimbursement and Bonus placeholders), Team (`/pay/team`), History (`/pay/history`), Setting (placeholder). Pending Payouts is not in the sidebar; `/pay/pending` remains reachable by URL. Request Payment is also URL-only.
+**Admin** sidebar: Overview (`/`), Payment (`/pay` and `/pay/form`), Operations (Payroll = existing Batch Payout at `/pay/batch`; Reimbursement and Bonus placeholders), Team (`/pay/team`), History (`/pay/history`), Setting (placeholder). Pending Payouts is not in the sidebar; `/pay/pending` remains reachable by URL. Request Payment is URL-only for admin.
+
+**Employee** sidebar: Overview (`/`), Payment (`/pay` only, no mode tabs), Request Payment (`/pay/request`), History, Setting. No Operations or Team.
 
 Shared building blocks: `TokenSelectDialog` (chain + token picker, optional balances), `PayoutsTable` (Recipient / Amount / Asset / Memo / Time / Status with an explorer link), `RecipientAddressField` + `RecipientsDialog` + `ContactFormDialog` (address book), `PaymentByFormCard` (reusable Payment by form card), `PaymentFormDetailsDrawer` (Total Valued details), `SinglePayoutCard` (reusable Single Payment card, including Team Pay Now), `usePayOriginToken` and `usePaymentWallet` (paying token and matching wallet).
 
 Amounts are limited to `AMOUNT_MAX_DECIMALS` (6) in the inputs, memos to `MEMO_MAX_LENGTH` (200), and slippage is fixed at `QUICK_PAY_SLIPPAGE_TOLERANCE` (5).
 
+### `/` — Overview
+
+Title **Overview**. `OverviewView` reads `AuthUser.role`. Admin still sees `PayPlaceholderView`. Employee sees a mock dashboard (`employeeOverview` in [mocks.md](mocks.md)): greeting, Total Income / Payment Transaction and Total Payout / Payout Transaction cards, a grouped Payment Volume bar chart (Income green, Payout purple; Daily / Weekly / Monthly; grid stays visible when a period has no values), Open Requests (link to `/pay/request`), and Recent Payments (link to `/pay/history`). `/pay/overview` redirects here.
+
 ### `/pay` — Single Payment
 
-Title **Payment**. A centred `PaymentModeTabs` control switches Single Payment (`/pay`) and Payment by form (`/pay/form`). One card: recipient (search / paste address, address book), amount plus recipient token, and purpose. Changing the address to another chain clears the selected token; a default USDT → USDC → first-available token for that chain is then picked by `defaultDestToken`. The empty submit label is **Starts from adding recipient**; once the form can send it becomes **Send Payment**. There is no Notify Recipient control.
+Title **Payment**. For **admin**, a centred `PaymentModeTabs` control switches Single Payment (`/pay`) and Payment by form (`/pay/form`). Employees do not see the tabs. One card: recipient (search / paste address, address book), amount plus recipient token, and purpose. Changing the address to another chain clears the selected token; a default USDT → USDC → first-available token for that chain is then picked by `defaultDestToken`. The empty submit label is **Starts from adding recipient**; once the form can send it becomes **Send Payment**. There is no Notify Recipient control.
 
 The form lives in `SinglePayoutCard` so Team Pay Now can mount the same card in a dialog with a locked recipient. The address book dialogs create, edit, and delete recipients through `useContacts` → `/v1/payroll/recipient*`.
 

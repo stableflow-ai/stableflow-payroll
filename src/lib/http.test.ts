@@ -10,7 +10,7 @@ import { http, httpBlob } from "./http";
 
 const API_BASE = "https://test-api.stableflow.ai";
 
-const SAMPLE_USER = { id: 1, email: "a@b.com", name: "Ada" };
+const SAMPLE_USER = { id: 1, email: "a@b.com", name: "Ada", role: "admin" as const };
 
 function createMemoryStorage(): Storage {
   const map = new Map<string, string>();

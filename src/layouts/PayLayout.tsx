@@ -11,6 +11,8 @@ import { Drawer } from "@/components/ui/drawer/Drawer";
 import { DRAWER_SIDE } from "@/components/ui/drawer/config";
 import { useBatchPayoutCommitQueue } from "@/hooks/use-batch-payout-commit-queue";
 import { useQuickPayCommitQueue } from "@/hooks/use-quick-pay-commit-queue";
+import { isEmployee, userRole } from "@/lib/auth-role";
+import { useAuthStore } from "@/stores/auth";
 import { PaymentModeTabs } from "@/views/pay/components/PaymentModeTabs";
 import { PayNav, PaySidebar } from "@/views/pay/components/PaySidebar";
 import {
@@ -27,18 +29,19 @@ export function PayLayout() {
   useQuickPayCommitQueue();
   useBatchPayoutCommitQueue();
   const { pathname } = useLocation();
+  const user = useAuthStore((state) => state.user);
   const [headerExtra, setHeaderExtraState] = useState<ReactNode>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const setHeaderExtra = useCallback((node: ReactNode) => {
     setHeaderExtraState(node);
   }, []);
-  const showModeTabs = isPayModePath(pathname);
+  const showModeTabs = isPayModePath(pathname) && !isEmployee(user);
   const closeMenu = () => setMenuOpen(false);
 
   return (
     <div className="flex flex-col lg:min-h-svh lg:flex-row">
       <div className="flex items-center gap-3 border-b border-black/10 px-2 py-3 md:px-5 lg:hidden">
-        <a href="/pay" className="shrink-0">
+        <a href="/" className="shrink-0">
           <img src="/logo.svg" alt="Stableflow Pay" className="h-[30px] w-auto" />
         </a>
         <div className="flex justify-end items-center gap-3 flex-1">
@@ -65,7 +68,7 @@ export function PayLayout() {
       <div className="min-w-0 flex-1 px-2 py-4 md:px-5 lg:px-[26px] lg:py-[15px]">
         <div className="relative flex items-center justify-between gap-3">
           <h1 className="font-montserrat text-[20px] font-medium text-black">
-            {payTitleForPath(pathname)}
+            {payTitleForPath(pathname, userRole(user))}
           </h1>
           <div className="flex items-center gap-3">
             {headerExtra}

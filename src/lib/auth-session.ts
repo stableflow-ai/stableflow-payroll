@@ -1,4 +1,4 @@
-import type { AuthSession, AuthUser } from "@/types/auth";
+import { AUTH_USER_ROLE, type AuthSession, type AuthUser } from "@/types/auth";
 
 const SESSION_KEY = "stableflow-pay.session";
 
@@ -20,7 +20,12 @@ function getStorage(): Storage | null {
   }
 }
 
-function isAuthUser(value: unknown): value is AuthUser {
+function isAuthUserRecord(value: unknown): value is {
+  id: number;
+  email: string;
+  name: string;
+  role?: unknown;
+} {
   if (!value || typeof value !== "object") return false;
   const user = value as AuthUser;
   return (
@@ -30,10 +35,26 @@ function isAuthUser(value: unknown): value is AuthUser {
   );
 }
 
-function isAuthSession(value: unknown): value is AuthSession {
+function hydrateUser(user: { id: number; email: string; name: string; role?: unknown }): AuthUser {
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role === AUTH_USER_ROLE.Employee ? AUTH_USER_ROLE.Employee : AUTH_USER_ROLE.Admin,
+  };
+}
+
+function isAuthSessionRecord(value: unknown): value is {
+  token: string;
+  user: { id: number; email: string; name: string; role?: unknown };
+} {
   if (!value || typeof value !== "object") return false;
   const session = value as AuthSession;
-  return typeof session.token === "string" && session.token.length > 0 && isAuthUser(session.user);
+  return (
+    typeof session.token === "string" &&
+    session.token.length > 0 &&
+    isAuthUserRecord(session.user)
+  );
 }
 
 export function getStoredSession(): AuthSession | null {
@@ -43,7 +64,8 @@ export function getStoredSession(): AuthSession | null {
     const raw = storage.getItem(SESSION_KEY);
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
-    return isAuthSession(parsed) ? parsed : null;
+    if (!isAuthSessionRecord(parsed)) return null;
+    return { token: parsed.token, user: hydrateUser(parsed.user) };
   } catch {
     return null;
   }

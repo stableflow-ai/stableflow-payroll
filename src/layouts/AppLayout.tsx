@@ -4,7 +4,7 @@ import { cn } from "@/lib/utils";
 
 export function AppLayout() {
   const { pathname } = useLocation();
-  const isPayLayout = pathname.startsWith("/pay");
+  const isPayLayout = pathname === "/" || pathname.startsWith("/pay");
   const isSidebarLayout = isPayLayout || pathname.startsWith("/partner");
 
   return (

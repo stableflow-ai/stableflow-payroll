@@ -45,6 +45,7 @@ export * from "./team";
 export * from "./history";
 export * from "./setting";
 export * from "./payroll";
+export * from "./request";
 export * from "./reimbursement";
 export * from "./bonus";
 export * from "./more";

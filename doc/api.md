@@ -99,7 +99,7 @@ export function usePaymentsQuery(params: PayPaymentsQuery) {
 const loginMutation = useLoginMutation();
 
 await loginMutation.mutateAsync({ email, password });  // writes the session
-navigate(returnTo ?? "/pay", { replace: true });
+navigate(returnTo ?? "/", { replace: true });
 ```
 
 ## Endpoints
@@ -119,6 +119,8 @@ Only Auth, Single Payout (`/payments`), and Batch Payout (`/batches`) are served
 | POST | `/v1/payroll/reset-password` | no | `ResetPasswordBody` | — | `resetPassword` | `useResetPasswordMutation` |
 | GET | `/v1/payroll/profile` | yes | — | `AuthUser` | `getProfile` | `useProfileQuery` |
 | POST | `/v1/payroll/profile` | yes | `UpdateProfileBody` | — | `updateProfile` | `useUpdateProfileMutation` |
+
+`AuthUser` includes `role`: `"admin"` | `"employee"`. Login, register, and profile are typed as already returning that field (`http<AuthSession>` / `http<AuthUser>`). Do not remap it until the backend uses a different name. Stored sessions without `role` hydrate as admin.
 
 ### Payments (hosted checkout) — `src/api/payout.ts`, `src/types/payout.ts`, `src/hooks/use-single-payout-api.ts`
 

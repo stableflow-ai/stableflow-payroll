@@ -1,8 +1,10 @@
 import type { ReactNode } from "react";
 import { Navigate, Outlet, useLocation, useSearchParams } from "react-router-dom";
 import { usePartnerQuery } from "@/hooks/use-partner-api";
+import { isEmployee } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { loginPathWithReturnTo, returnToFromSearch } from "@/views/auth/return-to";
+import { PAY_ADMIN_ONLY_PATHS } from "@/views/pay/config";
 
 export function RequireAuth() {
   const user = useAuthStore((state) => state.user);
@@ -43,8 +45,22 @@ export function RedirectIfAuthed({ children }: { children: ReactNode }) {
   const [params] = useSearchParams();
 
   if (user) {
-    return <Navigate to={returnToFromSearch(params.toString()) ?? "/pay"} replace />;
+    return <Navigate to={returnToFromSearch(params.toString()) ?? "/"} replace />;
   }
 
   return children;
+}
+
+export function RedirectEmployeeFromAdminPay() {
+  const user = useAuthStore((state) => state.user);
+  const { pathname } = useLocation();
+
+  if (
+    isEmployee(user) &&
+    PAY_ADMIN_ONLY_PATHS.some((path) => path === pathname)
+  ) {
+    return <Navigate to="/" replace />;
+  }
+
+  return <Outlet />;
 }

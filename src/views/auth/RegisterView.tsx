@@ -50,7 +50,7 @@ export function RegisterView() {
         password,
         inviteCode: inviteCode.trim(),
       });
-      navigate(returnTo ?? "/pay", { replace: true });
+      navigate(returnTo ?? "/", { replace: true });
     } catch (cause) {
       toast.fail({
         title: authErrorMessage(cause, "Unable to create account"),
