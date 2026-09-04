@@ -10,7 +10,7 @@ import {
   returnToFromSearch,
   safeReturnTo,
 } from "@/views/auth/return-to";
-import { PAY_ADMIN_ONLY_PATHS } from "@/views/pay/config";
+import { PAY_ADMIN_ONLY_PATHS, PAY_EMPLOYEE_ONLY_PATHS } from "@/views/pay/config";
 
 export function RequireAuth() {
   const user = useAuthStore((state) => state.user);
@@ -94,6 +94,13 @@ export function RedirectEmployeeFromAdminPay() {
   if (
     isEmployee(user) &&
     PAY_ADMIN_ONLY_PATHS.some((path) => path === pathname)
+  ) {
+    return <Navigate to="/" replace />;
+  }
+
+  if (
+    !isEmployee(user) &&
+    PAY_EMPLOYEE_ONLY_PATHS.some((path) => path === pathname)
   ) {
     return <Navigate to="/" replace />;
   }

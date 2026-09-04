@@ -14,10 +14,12 @@ import { useQuickPayCommitQueue } from "@/hooks/use-quick-pay-commit-queue";
 import { isEmployee, organizationName, userRole } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { PaymentModeTabs } from "@/views/pay/components/PaymentModeTabs";
+import { RequestPaymentTabs } from "@/views/pay/components/request/RequestPaymentTabs";
 import { PayNav, PaySidebar } from "@/views/pay/components/PaySidebar";
 import {
   MOCK_ORGANIZATION_NAME,
   isPayModePath,
+  isRequestPaymentPath,
   payTitleForPath,
 } from "@/views/pay/config";
 
@@ -36,6 +38,7 @@ export function PayLayout() {
     setHeaderExtraState(node);
   }, []);
   const showModeTabs = isPayModePath(pathname) && !isEmployee(user);
+  const showRequestTabs = isRequestPaymentPath(pathname);
   const closeMenu = () => setMenuOpen(false);
   const orgName = organizationName(user) ?? MOCK_ORGANIZATION_NAME;
 
@@ -68,9 +71,13 @@ export function PayLayout() {
       <PaySidebar />
       <div className="min-w-0 flex-1">
         <div className="relative flex h-[65px] items-center justify-between gap-3 border-b border-black/10 px-2 md:px-5 lg:px-[26px]">
-          <h1 className="font-montserrat text-[20px] font-medium text-black">
-            {payTitleForPath(pathname, userRole(user))}
-          </h1>
+          {showRequestTabs ? (
+            <RequestPaymentTabs />
+          ) : (
+            <h1 className="font-montserrat text-[20px] font-medium text-black">
+              {payTitleForPath(pathname, userRole(user))}
+            </h1>
+          )}
           <div className="flex items-center gap-3">
             {headerExtra}
             <div className="hidden lg:block">

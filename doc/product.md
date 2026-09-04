@@ -11,7 +11,7 @@ Only two areas are released: **Auth** and **Pay**. Everything else is either a p
 | Area | Routes | Status | Notes |
 | --- | --- | --- | --- |
 | Auth | `/login`, `/register`, `/register/organization`, `/invite/:orgId` | Released | Detailed below. Reset password is a dialog, not a route. |
-| Pay | `/`, `/pay`, `/pay/form`, `/pay/result`, `/pay/payroll`, `/pay/batch`, `/pay/expense`, `/pay/bonus`, `/pay/team`, `/pay/history`, `/pay/setting`, `/pay/pending`, `/pay/request` | Released | Detailed below. Requires a session. Overview is `/` (`/pay/overview` redirects there). `/pay/reimbursement` redirects to `/pay/expense`. |
+| Pay | `/`, `/pay`, `/pay/form`, `/pay/result`, `/pay/payroll`, `/pay/batch`, `/pay/expense`, `/pay/bonus`, `/pay/team`, `/pay/history`, `/pay/setting`, `/pay/pending`, `/pay/request`, `/pay/requests` | Released | Detailed below. Requires a session. Overview is `/` (`/pay/overview` redirects there). `/pay/reimbursement` redirects to `/pay/expense`. |
 | Marketing | `/howitworks` | Live, not detailed here | Static public page linked from the auth screens. |
 | Public payer | `/p/:id` | Disabled | Route commented out in `src/router/index.tsx`; `src/views/pay/RequestPayView.tsx` still exists. Anonymous page that pays a payment request created in `/pay/request`, rendered inside `AppLayout` but outside `RequireAuth`. |
 | Home | — | Disabled | `src/views/home/` still exists; do not re-enable `HomeView`. `/` is Pay Overview, not Home. |
@@ -65,7 +65,7 @@ Validation lives in `src/views/auth/config.ts` as pure `*RuleError` / `*FormErro
 
 **Session.** `useLoginMutation` / `useRegisterMutation` call `applySession(token, user)`, which writes `stableflow-pay.session` to `localStorage` and updates `useAuthStore`. `useAuthStore` re-reads that key on first import, so a reload restores the session synchronously. `SessionBootstrap` in `src/App.tsx` runs `useProfileQuery()` to validate the token against `GET /v1/payroll/profile` in the background and refresh the cached user. Tokens that start with `mock:` skip the profile query so invite-register mocks are not logged out by a 401. `POST /v1/payroll/profile` (`useUpdateProfileMutation`) changes the display name from Settings → Profile. `AuthUser.role` is `"admin"` or `"employee"` and is assumed to already be on the login / profile payload. Stored sessions that predate `role` hydrate as admin. Login, register, and profile are assumed to return optional `organization.name`; `hasOrganization` is true only when that name is non-empty after trim.
 
-**Redirects.** `RequireAuth` sends anonymous visitors to `/login?returnTo=<path+search>`. `RedirectIfAuthed` sends signed-in visitors away from `/login`, `/register`, and `/invite/:orgId` through `postAuthPath` (admin without an organization → `/register/organization`, otherwise `returnTo` or `/`). After a successful login or register the view uses the same helper. `safeReturnTo` in `return-to.ts` rejects anything that is not a same-origin absolute path and refuses to bounce back to `/login`, `/register`, `/register/organization`, or `/invite`. Employees who open `/pay/form`, `/pay/batch`, `/pay/payroll`, `/pay/expense`, `/pay/reimbursement`, `/pay/bonus`, or `/pay/team` are sent to `/`.
+**Redirects.** `RequireAuth` sends anonymous visitors to `/login?returnTo=<path+search>`. `RedirectIfAuthed` sends signed-in visitors away from `/login`, `/register`, and `/invite/:orgId` through `postAuthPath` (admin without an organization → `/register/organization`, otherwise `returnTo` or `/`). After a successful login or register the view uses the same helper. `safeReturnTo` in `return-to.ts` rejects anything that is not a same-origin absolute path and refuses to bounce back to `/login`, `/register`, `/register/organization`, or `/invite`. Employees who open `/pay/form`, `/pay/batch`, `/pay/payroll`, `/pay/expense`, `/pay/reimbursement`, `/pay/bonus`, or `/pay/team` are sent to `/`. Admins who open `/pay/request` or `/pay/requests` are sent to `/`.
 
 **401.** Any authenticated request that returns 401 clears the stored session and calls `notifyUnauthorized()`, which `src/stores/auth.ts` has wired to `logout()` (clears the store and the whole TanStack Query cache). The next render hits `RequireAuth` and lands on `/login`.
 
@@ -73,9 +73,9 @@ Validation lives in `src/views/auth/config.ts` as pure `*RuleError` / `*FormErro
 
 Files: `src/views/pay/`. Constants: `src/views/pay/config.ts`. Sidebar: `PaySidebar` reads `payNavItemsForRole(user.role)`.
 
-**Admin** sidebar: Overview (`/`), Payment (`/pay` and `/pay/form`), Operations (Payroll dashboard at `/pay/payroll`, create flow still at `/pay/batch`; Expense dashboard at `/pay/expense`; Bonus dashboard at `/pay/bonus`), Team (`/pay/team`), History (`/pay/history`), Settings (`/pay/setting`). Pending Payouts is not in the sidebar; `/pay/pending` remains reachable by URL. Request Payment is URL-only for admin.
+**Admin** sidebar: Overview (`/`), Payment (`/pay` and `/pay/form`), Operations (Payroll dashboard at `/pay/payroll`, create flow still at `/pay/batch`; Expense dashboard at `/pay/expense`; Bonus dashboard at `/pay/bonus`), Team (`/pay/team`), History (`/pay/history`), Settings (`/pay/setting`). Pending Payouts is not in the sidebar; `/pay/pending` remains reachable by URL. Request Payment is employee-only.
 
-**Employee** sidebar: Overview (`/`), Payment (`/pay` only, no mode tabs), Request Payment (`/pay/request`), History, Settings. No Operations or Team.
+**Employee** sidebar: Overview (`/`), Payment (`/pay` only, no mode tabs), Request Payment (`/pay/request` and `/pay/requests`), History, Settings. No Operations or Team.
 
 Shared building blocks: `TokenSelectDialog` (chain + token picker, optional balances), `PayoutsTable` (Recipient / Amount / Asset / Memo / Time / Status with an explorer link), `RecipientAddressField` + `RecipientsDialog` + `ContactFormDialog` (address book), `PaymentByFormCard` + `PaymentByFormDialog` (Payment by form, including locked-form Pay Now), `PaymentFormDetailsDrawer` (Total Valued details), `SinglePayoutCard` + `SinglePayoutDialog` (Single Payment, including locked-recipient Pay Now), `usePayOriginToken` and `usePaymentWallet` (paying token and matching wallet).
 
@@ -124,7 +124,7 @@ Renders `PaymentByFormCard` with `formId` + `formLocked` (Form dropdown disabled
 
 ### `/` — Overview
 
-Title **Overview**. `OverviewView` reads `AuthUser.role`. Admin sees a mock dashboard (`adminOverview` in [mocks.md](mocks.md)): organization summary (owner, team count linking to `/pay/team`, Update Settings linking to `/pay/setting`), a Payments card (Total Payment / Number of Payments with View all to `/pay/history`, area chart with Volume vs Transaction and Daily / Weekly / Monthly; Transaction uses `#84A20F`; hover tooltip shows both series), and High Priority (payroll, expense requests, failed history). Employee sees a mock dashboard (`employeeOverview` in [mocks.md](mocks.md)): greeting, Total Income / Payment Transaction and Total Payout / Payout Transaction cards, a grouped Payment Volume bar chart (Income green, Payout purple; Daily / Weekly / Monthly; grid stays visible when a period has no values), Open Requests (link to `/pay/request`), and Recent Payments (link to `/pay/history`). `/pay/overview` redirects here.
+Title **Overview**. `OverviewView` reads `AuthUser.role`. Admin sees a mock dashboard (`adminOverview` in [mocks.md](mocks.md)): organization summary (owner, team count linking to `/pay/team`, Update Settings linking to `/pay/setting`), a Payments card (Total Payment / Number of Payments with View all to `/pay/history`, area chart with Volume vs Transaction and Daily / Weekly / Monthly; Transaction uses `#84A20F`; hover tooltip shows both series), and High Priority (payroll, expense requests, failed history). Employee sees a mock dashboard (`employeeOverview` in [mocks.md](mocks.md)): greeting, Total Income / Payment Transaction and Total Payout / Payout Transaction cards, a grouped Payment Volume bar chart (Income green, Payout purple; Daily / Weekly / Monthly; grid stays visible when a period has no values), Open Requests (link to `/pay/requests`), and Recent Payments (link to `/pay/history`). `/pay/overview` redirects here.
 
 ### `/pay` — Single Payment
 
@@ -190,15 +190,15 @@ Mock data (`history` in [mocks.md](mocks.md)) until that contract exists. Top ba
 
 Columns: Amount, Source, arrow, Received, Destination, From, To, Time. Source / Destination show token logo and `SYMBOL · Chain`. From / To truncate the address, copy it, and open the tx explorer (`txHash` on the source chain, `destinationTxHash` on the destination). Pagination sits in the card footer. Export does not call `/payments/export`.
 
-### `/pay/request` — Request Payment
+### `/pay/request` and `/pay/requests` — Request Payment
 
-Reachable by URL only; the sidebar entry is commented out.
+Employee-only. Header tabs replace the layout title: **Request Payment** (`/pay/request`) and **Requests** (`/pay/requests`). Admins who open either path are sent to `/`. Overview Open Requests "View All" goes to `/pay/requests`.
 
-The merchant fills in a receiving address (auto-filled from the connected wallet for the selected token's chain), amount, token, payment name, and description, then generates a shareable `/p/:id` link through `POST /v1/payroll/request`. An advanced option switches the request to `private` mode, which activates a confidential Near Intents account (`src/lib/confidential/`) and stores a separate `private_recipient_address`.
+The form is Purpose (required, `name` on the API; help tooltip explains it is the short name the payer sees), optional Description (`memo`), Payment setting (amount + token via `TokenSelectDialog`), and Receiving Address (auto-filled from the connected wallet for the selected token's chain). **Save as default** is visible only; it does not persist or call an API yet. There is no private / Receive Privately mode.
 
-The generated link does not resolve while the public payer route is disabled. Both halves of this flow are off the released surface; treat them as one unit if either is re-enabled.
+**Generate Payment Request** posts `POST /v1/payroll/request` with `mode: standard`. On success a dialog shows the generated `{origin}/p/{id}` URL. **Copy Link** copies it. **Preview** is visible and does nothing; opening the public payer (`/p/:id`) is out of scope while that route stays commented out.
 
-Below the form, `ReceivedPaymentList` shows the merchant's requests with their status (`pending`, `submitted`, `completed`, `withdrawing`, `withdrawed`, `failed`), lets them disable a request (`POST /v1/payroll/request/{id}/disable`), and withdraw funds received privately (`useRequestWithdraw` → `POST /v1/payroll/request/withdraw`). `GET /v1/payroll/request/withdraw/count` polls every two minutes for the withdrawable count.
+`/pay/requests` lists the employee's requests from `GET /v1/payroll/request/list`. Columns: Purpose (name, copy-link control, created time), Request Payment (`amount SYMBOL · Chain`), Receive Address, Paid Address, Paid Time, Status. Status is Pending (`pending` / `submitted`, `#3f8afb`), Complete (`completed`, `#84a20f`, explorer link on `destination_tx_hash`), or Failed. There is no withdraw, disable, or refresh switch.
 
 ### `/pay/team` — Team
 

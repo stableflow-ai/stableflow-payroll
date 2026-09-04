@@ -74,11 +74,15 @@ export const PAY_NAV_ITEMS: readonly PayNavItem[] = [
   { id: PAY_NAV_ID.Setting, label: "Settings", to: "/pay/setting", icon: IconSetting },
 ];
 
+export const PAY_REQUEST_PATH = "/pay/request";
+export const PAY_REQUESTS_PATH = "/pay/requests";
+
 const EMPLOYEE_REQUEST_NAV: PayNavLeaf = {
   id: PAY_NAV_ID.RequestPayment,
   label: "Request Payment",
-  to: "/pay/request",
+  to: PAY_REQUEST_PATH,
   icon: IconRequest,
+  match: [PAY_REQUEST_PATH, PAY_REQUESTS_PATH],
 };
 
 const EMPLOYEE_HIDDEN_NAV_IDS = new Set<string>([PAY_NAV_ID.Operations, PAY_NAV_ID.Team]);
@@ -109,13 +113,24 @@ export const PAY_ADMIN_ONLY_PATHS = [
   "/pay/team",
 ] as const;
 
+export const PAY_EMPLOYEE_ONLY_PATHS = [PAY_REQUEST_PATH, PAY_REQUESTS_PATH] as const;
+
 export const PAY_MODE_TABS = [
   { label: "Single Payment", to: "/pay" },
   { label: "Payment by form", to: PAY_FORM_PATH },
 ] as const;
 
+export const PAY_REQUEST_TABS = [
+  { label: "Request Payment", to: PAY_REQUEST_PATH },
+  { label: "Requests", to: PAY_REQUESTS_PATH },
+] as const;
+
 export function isPayModePath(pathname: string): boolean {
   return pathname === "/pay" || pathname === PAY_FORM_PATH;
+}
+
+export function isRequestPaymentPath(pathname: string): boolean {
+  return pathname === PAY_REQUEST_PATH || pathname === PAY_REQUESTS_PATH;
 }
 
 export function isPayNavLeafActive(item: PayNavLeaf, pathname: string): boolean {
@@ -151,13 +166,14 @@ export const PAYOUT_RESULT_STATUS = {
 export const PAY_ROUTE_TITLES: Record<string, string> = {
   [PAYOUT_RESULT_PATH]: "Payment Result",
   "/pay/pending": "Pending Payouts",
-  "/pay/request": "Request Payment",
+  [PAY_REQUEST_PATH]: "Request Payment",
+  [PAY_REQUESTS_PATH]: "Requests",
 };
 
 export const PAYOUT_TABLE_COLUMNS =
   "minmax(150px,1.3fr) minmax(72px,0.5fr) minmax(140px,1fr) minmax(130px,1fr) minmax(150px,1fr) minmax(150px,0.95fr)";
-export const RECEIVED_PAYMENT_TABLE_COLUMNS =
-  "minmax(160px,1.2fr) minmax(150px,1.1fr) minmax(148px,0.95fr) minmax(148px,0.95fr) minmax(130px,0.9fr) minmax(118px,0.85fr) minmax(72px,0.45fr)";
+export const REQUESTS_TABLE_COLUMNS =
+  "minmax(180px,1.3fr) minmax(160px,1.1fr) minmax(140px,0.95fr) minmax(140px,0.95fr) minmax(140px,0.95fr) minmax(110px,0.7fr)";
 export const EXPORT_FILENAME_STAMP = "yyyyMMdd-HHmmss";
 
 export const AMOUNT_MAX_DECIMALS = 6;
@@ -180,9 +196,14 @@ export const PAY_REQUEST_STATUS = {
   Pending: "pending",
   Submitted: "submitted",
   Completed: "completed",
-  Withdrawing: "withdrawing",
-  Withdrawed: "withdrawed",
   Failed: "failed",
+} as const;
+
+export const PAY_REQUEST_STATUS_CLASS = {
+  [PAY_REQUEST_STATUS.Pending]: "text-[#3f8afb]",
+  [PAY_REQUEST_STATUS.Submitted]: "text-[#3f8afb]",
+  [PAY_REQUEST_STATUS.Completed]: "text-[#84a20f]",
+  [PAY_REQUEST_STATUS.Failed]: "text-danger",
 } as const;
 
 export const PAY_REQUEST_MODE = {
@@ -190,7 +211,6 @@ export const PAY_REQUEST_MODE = {
   Private: "private",
 } as const;
 
-export const REQUEST_LIST_REFRESH_MS = 30_000;
 export const REQUEST_WITHDRAW_COUNT_POLL_MS = 120_000;
 
 export const IMPORT_MAX_ROWS = 50;

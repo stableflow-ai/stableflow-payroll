@@ -10,12 +10,17 @@ import {
 } from "@/api/request-payment";
 import { useAuthStore } from "@/stores/auth";
 import type { PayCreateRequestParam } from "@/types/request-payment";
-import { REQUEST_WITHDRAW_COUNT_POLL_MS } from "@/views/pay/config";
+import {
+  PAY_REQUEST_PATH,
+  PAY_REQUESTS_PATH,
+  REQUEST_WITHDRAW_COUNT_POLL_MS,
+} from "@/views/pay/config";
 
 export function useRequestPaymentsQuery() {
   const token = useAuthStore((state) => state.token);
   const location = useLocation();
-  const onRequestPage = location.pathname === "/pay/request";
+  const onRequestPage =
+    location.pathname === PAY_REQUEST_PATH || location.pathname === PAY_REQUESTS_PATH;
   return useQuery({
     queryKey: queryKeys.request.payments,
     queryFn: getRequestPayments,

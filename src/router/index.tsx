@@ -13,6 +13,7 @@ import { BonusView } from "@/views/bonus";
 import { PendingPayoutsView } from "@/views/pay/PendingPayoutsView";
 import { RequestPayView } from "@/views/pay/RequestPayView";
 import { RequestPaymentView } from "@/views/pay/RequestPaymentView";
+import { RequestsView } from "@/views/pay/RequestsView";
 import { PayoutResultView } from "@/views/pay/PayoutResultView";
 import { PaymentByFormView } from "@/views/pay/PaymentByFormView";
 import { SettingView } from "@/views/pay/SettingView";
@@ -106,6 +107,7 @@ export const router = createBrowserRouter([
                       { path: "/pay/team", element: <TeamView /> },
                       { path: "/pay/setting", element: <SettingView /> },
                       { path: "/pay/request", element: <RequestPaymentView /> },
+                      { path: "/pay/requests", element: <RequestsView /> },
                       { path: "/pay/pending", element: <PendingPayoutsView /> },
                       { path: "/pay/history", element: <TransactionHistoryView /> },
                     ],

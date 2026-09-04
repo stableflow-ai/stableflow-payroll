@@ -2,11 +2,9 @@ import { describe, expect, it } from "vitest";
 import {
   applyRequestPayoutFields,
   buildPaymentRequestUrl,
-  canWithdrawRequest,
   formatCouponAmount,
   parsePaymentRequestId,
   truncateMiddle,
-  pendingWithdrawCount,
   receivedPaymentStatusLabel,
   receivingAddressError,
   requestStatusExplorerUrl,
@@ -67,9 +65,9 @@ describe("received payment view", () => {
   const item: PayRequestItem = {
     id: 7,
     amount: "12.5",
-    mode: PAY_REQUEST_MODE.Private,
+    mode: PAY_REQUEST_MODE.Standard,
     network: "arb",
-    private_recipient_address: "intents.near",
+    private_recipient_address: "",
     recipient_address: "0x1111111111111111111111111111111111111111",
     status: PAY_REQUEST_STATUS.Completed,
     token: "USDC",
@@ -79,43 +77,39 @@ describe("received payment view", () => {
     payer: "0x2222222222222222222222222222222222222222",
     paid_at: "2026-08-21T08:51:55.754Z",
     destination_tx_hash: "0xcomplete",
-    withdraw_tx_hash: "0xwithdraw",
+    withdraw_tx_hash: "",
   };
 
-  it("maps chain display fields and pending withdraw", () => {
+  it("maps chain display fields", () => {
     const row = toReceivedPaymentView(item);
     expect(row.network).toBe("Arbitrum");
     expect(row.blockchain).toBe("arb");
-    expect(row.private).toBe(true);
     expect(row.paymentName).toBe("Invoice-Adward-July");
     expect(row.paidAddress).toBe("0x2222222222222222222222222222222222222222");
-    expect(canWithdrawRequest(row)).toBe(true);
-    expect(pendingWithdrawCount([item])).toBe(1);
-    expect(pendingWithdrawCount([{ ...item, mode: PAY_REQUEST_MODE.Standard }])).toBe(0);
   });
 
-  it("labels non-withdraw statuses", () => {
+  it("labels request statuses", () => {
+    expect(receivedPaymentStatusLabel(toReceivedPaymentView(item))).toBe("Complete");
     expect(receivedPaymentStatusLabel(toReceivedPaymentView({
       ...item,
-      mode: PAY_REQUEST_MODE.Standard,
-    }))).toBe("Received");
+      status: PAY_REQUEST_STATUS.Pending,
+    }))).toBe("Pending");
+    expect(receivedPaymentStatusLabel(toReceivedPaymentView({
+      ...item,
+      status: PAY_REQUEST_STATUS.Submitted,
+    }))).toBe("Pending");
     expect(receivedPaymentStatusLabel(toReceivedPaymentView({
       ...item,
       status: PAY_REQUEST_STATUS.Failed,
     }))).toBe("Failed");
   });
 
-  it("picks explorer hashes by status", () => {
+  it("picks explorer hashes for completed requests", () => {
+    expect(requestStatusExplorerUrl(toReceivedPaymentView(item))).toContain("0xcomplete");
     expect(requestStatusExplorerUrl(toReceivedPaymentView({
       ...item,
-      status: PAY_REQUEST_STATUS.Withdrawed,
-    }))).toContain("0xwithdraw");
-    expect(requestStatusExplorerUrl(toReceivedPaymentView({
-      ...item,
-      mode: PAY_REQUEST_MODE.Standard,
-      status: PAY_REQUEST_STATUS.Completed,
-    }))).toContain("0xcomplete");
-    expect(requestStatusExplorerUrl(toReceivedPaymentView(item))).toBeNull();
+      status: PAY_REQUEST_STATUS.Pending,
+    }))).toBeNull();
   });
 });
 

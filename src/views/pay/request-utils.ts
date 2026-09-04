@@ -6,10 +6,7 @@ import { normalizeSymbol } from "@/stores/intents-tokens";
 import { formatAmount, type WalletChainKind } from "@/utils";
 import type { ChainKind } from "@/wallet";
 import { detectAddressKind } from "./batch-utils";
-import {
-  PAY_REQUEST_MODE,
-  PAY_REQUEST_STATUS,
-} from "./config";
+import { PAY_REQUEST_STATUS, PAY_REQUEST_STATUS_CLASS } from "./config";
 import { detectAddressChainKind } from "./utils";
 
 const USER_REJECTED_PATTERNS = [
@@ -81,20 +78,8 @@ export type ReceivedPaymentView = {
   paidAddress: string;
   paidAt: string;
   completedTxHash: string;
-  withdrawedTxHash: string;
-  private: boolean;
   status: string;
 };
-
-export function canWithdrawRequest(row: Pick<ReceivedPaymentView, "private" | "status">): boolean {
-  return row.private && row.status === PAY_REQUEST_STATUS.Completed;
-}
-
-export function pendingWithdrawCount(items: readonly PayRequestItem[]): number {
-  return items.filter(
-    (row) => row.mode === PAY_REQUEST_MODE.Private && row.status === PAY_REQUEST_STATUS.Completed,
-  ).length;
-}
 
 export function toReceivedPaymentView(item: PayRequestItem): ReceivedPaymentView {
   const chain = getChainByNetwork(item.network);
@@ -116,33 +101,35 @@ export function toReceivedPaymentView(item: PayRequestItem): ReceivedPaymentView
     paidAddress: item.payer,
     paidAt: item.paid_at,
     completedTxHash: item.destination_tx_hash,
-    withdrawedTxHash: item.withdraw_tx_hash,
-    private: item.mode === PAY_REQUEST_MODE.Private,
     status: item.status,
   };
 }
 
 export function receivedPaymentStatusLabel(row: ReceivedPaymentView): string {
-  if (row.status === PAY_REQUEST_STATUS.Completed) return "Received";
-  if (row.status === PAY_REQUEST_STATUS.Withdrawed) return "Withdrawed";
-  if (row.status === PAY_REQUEST_STATUS.Withdrawing) return "Withdrawing";
+  if (row.status === PAY_REQUEST_STATUS.Completed) return "Complete";
   if (row.status === PAY_REQUEST_STATUS.Pending) return "Pending";
-  if (row.status === PAY_REQUEST_STATUS.Submitted) return "Submitted";
+  if (row.status === PAY_REQUEST_STATUS.Submitted) return "Pending";
   if (row.status === PAY_REQUEST_STATUS.Failed) return "Failed";
   return row.status;
 }
 
-export function requestStatusExplorerUrl(row: ReceivedPaymentView): string | null {
-  if (row.status === PAY_REQUEST_STATUS.Withdrawed) {
-    return txExplorerUrl(row.blockchain, row.withdrawedTxHash);
+export function receivedPaymentStatusClass(status: string): string {
+  if (status === PAY_REQUEST_STATUS.Completed) return PAY_REQUEST_STATUS_CLASS[PAY_REQUEST_STATUS.Completed];
+  if (status === PAY_REQUEST_STATUS.Failed) return PAY_REQUEST_STATUS_CLASS[PAY_REQUEST_STATUS.Failed];
+  if (status === PAY_REQUEST_STATUS.Pending || status === PAY_REQUEST_STATUS.Submitted) {
+    return PAY_REQUEST_STATUS_CLASS[PAY_REQUEST_STATUS.Pending];
   }
-  if (!row.private && row.status === PAY_REQUEST_STATUS.Completed) {
+  return "text-[#aaa]";
+}
+
+export function requestStatusExplorerUrl(row: ReceivedPaymentView): string | null {
+  if (row.status === PAY_REQUEST_STATUS.Completed) {
     return txExplorerUrl(row.blockchain, row.completedTxHash);
   }
   return null;
 }
 
-export function formatCouponAmount(amount: string): { whole: string; fraction: string } {
+export function formatCouponAmount(amount: string): { whole: string; fraction?: string } {
   const formatted = formatAmount(amount, { prefix: "", maxDecimals: 6, padDecimals: false });
   const [whole, fraction] = formatted.split(".");
   return { whole, fraction };
