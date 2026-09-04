@@ -25,4 +25,8 @@ pnpm-debug.log*
 .env.*.local
 
 doc.local/
-.cursor/
+
+# Cursor (keep project skills)
+.cursor/*
+!.cursor/skills/
+!.cursor/skills/**
