@@ -4,23 +4,25 @@ import { usePayrollOverviewQuery } from "@/hooks/use-payroll-api";
 import { IconLoading } from "@/components/icons/loading";
 import { Switch } from "@/components/ui/switch/Switch";
 import type { PayLayoutOutletContext } from "@/layouts/PayLayout";
+import type { PayrollNextRun } from "@/mocks/payroll";
+import { PaymentByFormDialog } from "@/views/pay/components/payment-form/PaymentByFormDialog";
 import { PayrollRunsCard } from "./components/payroll-runs";
 import { RecentPayoutsCard } from "./components/recent-payouts";
 import { StatsCard } from "./components/stats";
 import { TotalPayrollChart } from "./components/total-payroll";
+import { PayrollFormDrawer } from "./components/payroll-form-drawer";
 import {
   IMPORT_CSV_TEMPLATE_FILENAME,
   PAYROLL_CHART_RANGE,
   PAYROLL_DRAWER_MODE,
   PAYROLL_MOCK_VARIANT,
+  PAYROLL_PAY_NOW_FORM_ID,
   PAYROLL_TAB,
   type PayrollChartRange,
   type PayrollDrawerMode,
   type PayrollMockVariant,
   type PayrollTab
 } from "./config";
-import { PayrollFormDrawer } from "./components/payroll-form-drawer";
-import type { PayrollNextRun } from "@/mocks/payroll";
 
 export function PayrollView() {
   const { setHeaderExtra } = useOutletContext<PayLayoutOutletContext>();
@@ -35,6 +37,7 @@ export function PayrollView() {
   const [netPayById, setNetPayById] = useState<Record<string, string>>({});
   const [drawerMode, setDrawerMode] = useState<PayrollDrawerMode | null>(null);
   const [nextPayrollOverride, setNextPayrollOverride] = useState<PayrollNextRun | null>(null);
+  const [payingFormId, setPayingFormId] = useState<string | null>(null);
 
   useEffect(() => {
     setHeaderExtra(
@@ -49,6 +52,7 @@ export function PayrollView() {
             setNetPayById({});
             setNextPayrollOverride(null);
             setDrawerMode(null);
+            setPayingFormId(null);
           }}
           aria-label="Sample data"
         />
@@ -145,6 +149,12 @@ export function PayrollView() {
         onExport={handleExport}
         onAddPayroll={() => setDrawerMode(PAYROLL_DRAWER_MODE.Add)}
         onEditPayroll={() => setDrawerMode(PAYROLL_DRAWER_MODE.Edit)}
+        onPayNow={() => setPayingFormId(PAYROLL_PAY_NOW_FORM_ID)}
+      />
+      <PaymentByFormDialog
+        open={Boolean(payingFormId)}
+        formId={payingFormId}
+        onClose={() => setPayingFormId(null)}
       />
       <PayrollFormDrawer
         key={drawerMode ?? "closed"}

@@ -15,6 +15,7 @@ import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutR
 import type { ExpenseOpenRow } from "@/mocks/expense";
 import {
   OPEN_EXPENSE_TABLE_COLUMNS,
+  EXPENSE_PAY_NOW_FORM_ID,
   EXPENSE_ROW_ACTION,
 } from "../../config";
 
@@ -30,7 +31,11 @@ function ReceiptCell({ name }: { name: string }) {
   );
 }
 
-function RowAction({ action }: { action: ExpenseOpenRow["action"] }) {
+function RowAction(props: {
+  action: ExpenseOpenRow["action"];
+  onPayNow: () => void;
+}) {
+  const { action, onPayNow } = props;
   if (action === EXPENSE_ROW_ACTION.Paying) {
     return (
       <Button
@@ -43,14 +48,21 @@ function RowAction({ action }: { action: ExpenseOpenRow["action"] }) {
   }
 
   return (
-    <Button className="h-9 min-w-[113px] rounded-[10px] px-4 text-sm">
+    <Button
+      className="h-9 min-w-[113px] rounded-[10px] px-4 text-sm"
+      onClick={onPayNow}
+    >
       <IconUp className="size-3.5 shrink-0" />
       Pay Now
     </Button>
   );
 }
 
-export function OpenTable({ rows }: { rows: ExpenseOpenRow[] }) {
+export function OpenTable(props: {
+  rows: ExpenseOpenRow[];
+  onPayNow: (formId: string) => void;
+}) {
+  const { rows, onPayNow } = props;
   return (
     <Table
       columns={OPEN_EXPENSE_TABLE_COLUMNS}
@@ -86,7 +98,10 @@ export function OpenTable({ rows }: { rows: ExpenseOpenRow[] }) {
             </TableCell>
             <TableCell>{formatAmount(row.amount, { prefix: "" })}</TableCell>
             <TableCell className="justify-end">
-              <RowAction action={row.action} />
+              <RowAction
+                action={row.action}
+                onPayNow={() => onPayNow(EXPENSE_PAY_NOW_FORM_ID)}
+              />
             </TableCell>
           </TableRow>
         ))}

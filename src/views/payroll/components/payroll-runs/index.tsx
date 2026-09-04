@@ -43,6 +43,7 @@ export function PayrollRunsCard(props: {
   onExport: () => void;
   onAddPayroll: () => void;
   onEditPayroll: () => void;
+  onPayNow: () => void;
 }) {
   const {
     tab,
@@ -53,7 +54,8 @@ export function PayrollRunsCard(props: {
     onNetPayChange,
     onExport,
     onAddPayroll,
-    onEditPayroll
+    onEditPayroll,
+    onPayNow
   } = props;
   const showToolbar = Boolean(nextPayroll) || history.length > 0;
 
@@ -103,6 +105,7 @@ export function PayrollRunsCard(props: {
               netPayById={netPayById}
               onNetPayChange={onNetPayChange}
               onEdit={onEditPayroll}
+              onPayNow={onPayNow}
             />
           ) : (
             <CreatePayrollEmpty onAddPayroll={onAddPayroll} />

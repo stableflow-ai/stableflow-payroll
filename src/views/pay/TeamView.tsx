@@ -15,11 +15,11 @@ import useToast from "@/hooks/use-toast";
 import { organizationName } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { TeamActionButtons } from "./components/setting/TeamActionButtons";
+import { SinglePayoutDialog } from "./components/single-payout/SinglePayoutDialog";
 import { RemoveMemberDialog } from "./components/team/RemoveMemberDialog";
 import { TeamInviteDialog } from "./components/team/TeamInviteDialog";
 import { TeamMemberFormDialog } from "./components/team/TeamMemberFormDialog";
 import { TeamMemberMenu } from "./components/team/TeamMemberMenu";
-import { TeamPayNowDialog } from "./components/team/TeamPayNowDialog";
 import { TeamWalletCell } from "./components/team/TeamWalletCell";
 import { TEAM_PAGE_SIZE, TEAM_TABLE_COLUMNS } from "./components/team/config";
 import { dash, memberDisplayWallet, memberMatchesSearch, organizationInviteUrl } from "./components/team/utils";
@@ -175,9 +175,13 @@ export function TeamView() {
         onClose={() => setInviteOpen(false)}
       />
 
-      <TeamPayNowDialog
+      <SinglePayoutDialog
         open={Boolean(paying)}
-        member={paying}
+        recipient={
+          paying
+            ? { name: paying.name, address: memberDisplayWallet(paying) ?? "" }
+            : null
+        }
         onClose={() => setPaying(null)}
       />
 

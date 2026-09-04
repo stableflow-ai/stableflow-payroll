@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { IconArrowDown } from "@/components/icons/arrow-down";
 import { IconProcessing } from "@/components/icons/processing";
 import { IconUp } from "@/components/icons/up";
@@ -17,14 +16,17 @@ import { cn } from "@/lib/utils";
 import type { BonusPendingItem } from "@/mocks/bonus";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";
 import {
-  BONUS_CREATE_PATH,
+  BONUS_PAY_NOW_FORM_ID,
   BONUS_ROW_ACTION,
   PENDING_BONUS_TABLE_COLUMNS,
 } from "../../config";
 import { formatBonusTokenAmount } from "../../utils";
 
-function ActionCell({ item }: { item: BonusPendingItem }) {
-  const navigate = useNavigate();
+function ActionCell(props: {
+  item: BonusPendingItem;
+  onPayNow: (formId: string) => void;
+}) {
+  const { item, onPayNow } = props;
 
   if (item.action === BONUS_ROW_ACTION.Paying) {
     return (
@@ -39,10 +41,16 @@ function ActionCell({ item }: { item: BonusPendingItem }) {
     );
   }
 
+  const formId =
+    BONUS_PAY_NOW_FORM_ID[item.id as keyof typeof BONUS_PAY_NOW_FORM_ID];
+
   return (
     <Button
       className="h-9 min-w-[113px] rounded-[10px] px-3 text-sm"
-      onClick={() => navigate(BONUS_CREATE_PATH)}
+      onClick={() => {
+        if (!formId) return;
+        onPayNow(formId);
+      }}
     >
       <IconUp className="size-3.5 shrink-0" />
       Pay Now
@@ -50,7 +58,11 @@ function ActionCell({ item }: { item: BonusPendingItem }) {
   );
 }
 
-function BonusItemBlock({ item }: { item: BonusPendingItem }) {
+function BonusItemBlock(props: {
+  item: BonusPendingItem;
+  onPayNow: (formId: string) => void;
+}) {
+  const { item, onPayNow } = props;
   const isGroup = item.members.length > 1;
   const [expanded, setExpanded] = useState(() =>
     isGroup && /team b/i.test(item.title),
@@ -95,7 +107,7 @@ function BonusItemBlock({ item }: { item: BonusPendingItem }) {
           ) : null}
         </TableCell>
         <TableCell>
-          <ActionCell item={item} />
+          <ActionCell item={item} onPayNow={onPayNow} />
         </TableCell>
       </TableRow>
       {isGroup && expanded ? (
@@ -125,7 +137,11 @@ function BonusItemBlock({ item }: { item: BonusPendingItem }) {
   );
 }
 
-export function PendingBonusTable({ items }: { items: BonusPendingItem[] }) {
+export function PendingBonusTable(props: {
+  items: BonusPendingItem[];
+  onPayNow: (formId: string) => void;
+}) {
+  const { items, onPayNow } = props;
   return (
     <Table
       columns={PENDING_BONUS_TABLE_COLUMNS}
@@ -140,7 +156,7 @@ export function PendingBonusTable({ items }: { items: BonusPendingItem[] }) {
       </TableHeader>
       <TableBody className="mt-1 flex flex-col gap-4">
         {items.map((item) => (
-          <BonusItemBlock key={item.id} item={item} />
+          <BonusItemBlock key={item.id} item={item} onPayNow={onPayNow} />
         ))}
       </TableBody>
     </Table>

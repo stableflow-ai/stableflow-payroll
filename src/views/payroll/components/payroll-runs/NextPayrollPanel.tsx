@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { IconPen } from "@/components/icons/pen";
 import { IconUp } from "@/components/icons/up";
 import { Button } from "@/components/ui/button/Button";
@@ -15,7 +14,7 @@ import {
 import { chainDisplayName } from "@/config/chains";
 import { formatAmount } from "@/utils";
 import type { PayrollNextRun } from "@/mocks/payroll";
-import { NEXT_PAYROLL_TABLE_COLUMNS, PAYROLL_CREATE_PATH } from "../../config";
+import { NEXT_PAYROLL_TABLE_COLUMNS } from "../../config";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";
 
 export function NextPayrollPanel(props: {
@@ -23,9 +22,9 @@ export function NextPayrollPanel(props: {
   netPayById: Record<string, string>;
   onNetPayChange: (id: string, value: string) => void;
   onEdit: () => void;
+  onPayNow: () => void;
 }) {
-  const { run, netPayById, onNetPayChange, onEdit } = props;
-  const navigate = useNavigate();
+  const { run, netPayById, onNetPayChange, onEdit, onPayNow } = props;
 
   return (
     <div className="flex flex-col gap-5">
@@ -61,7 +60,7 @@ export function NextPayrollPanel(props: {
           </Button>
           <Button
             className="h-9 min-w-[123px] rounded-[10px] px-4 text-sm"
-            onClick={() => navigate(PAYROLL_CREATE_PATH)}
+            onClick={onPayNow}
           >
             <IconUp className="size-3.5 shrink-0" />
             Pay Now

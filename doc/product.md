@@ -77,9 +77,50 @@ Files: `src/views/pay/`. Constants: `src/views/pay/config.ts`. Sidebar: `PaySide
 
 **Employee** sidebar: Overview (`/`), Payment (`/pay` only, no mode tabs), Request Payment (`/pay/request`), History, Settings. No Operations or Team.
 
-Shared building blocks: `TokenSelectDialog` (chain + token picker, optional balances), `PayoutsTable` (Recipient / Amount / Asset / Memo / Time / Status with an explorer link), `RecipientAddressField` + `RecipientsDialog` + `ContactFormDialog` (address book), `PaymentByFormCard` (reusable Payment by form card), `PaymentFormDetailsDrawer` (Total Valued details), `SinglePayoutCard` (reusable Single Payment card, including Team Pay Now), `usePayOriginToken` and `usePaymentWallet` (paying token and matching wallet).
+Shared building blocks: `TokenSelectDialog` (chain + token picker, optional balances), `PayoutsTable` (Recipient / Amount / Asset / Memo / Time / Status with an explorer link), `RecipientAddressField` + `RecipientsDialog` + `ContactFormDialog` (address book), `PaymentByFormCard` + `PaymentByFormDialog` (Payment by form, including locked-form Pay Now), `PaymentFormDetailsDrawer` (Total Valued details), `SinglePayoutCard` + `SinglePayoutDialog` (Single Payment, including locked-recipient Pay Now), `usePayOriginToken` and `usePaymentWallet` (paying token and matching wallet).
 
 Amounts are limited to `AMOUNT_MAX_DECIMALS` (6) in the inputs, memos to `MEMO_MAX_LENGTH` (200), and slippage is fixed at `QUICK_PAY_SLIPPAGE_TOLERANCE` (5).
+
+### Pay Now dialogs
+
+Reusable Pay Now overlays. Mount them from the page; do not wrap them in another Dialog.
+
+**Which dialog**
+
+- Single payment with a locked recipient → `SinglePayoutDialog` (same folder as `SinglePayoutCard`).
+- Batch / Payment by form with a locked Form → `PaymentByFormDialog` (same folder as `PaymentByFormCard`).
+
+**`SinglePayoutDialog`**
+
+Import: `@/views/pay/components/single-payout/SinglePayoutDialog`.
+
+Props: `open`, `onClose`, `recipient: { name: string; address: string } | null`.
+
+Renders `SinglePayoutCard` with `recipientLocked` when `recipient.address` is set. The caller must supply a wallet. Current caller: `/pay/team` (maps `memberDisplayWallet` into `recipient`).
+
+```tsx
+<SinglePayoutDialog
+  open={Boolean(paying)}
+  recipient={paying}
+  onClose={() => setPaying(null)}
+/>
+```
+
+**`PaymentByFormDialog`**
+
+Import: `@/views/pay/components/payment-form/PaymentByFormDialog`.
+
+Props: `open`, `onClose`, `formId: string | null`.
+
+Renders `PaymentByFormCard` with `formId` + `formLocked` (Form dropdown disabled; details still load by id). Closes on successful send (`onSettled`). Current callers: `/pay/payroll`, `/pay/expense`, `/pay/bonus`.
+
+```tsx
+<PaymentByFormDialog
+  open={Boolean(payingFormId)}
+  formId={payingFormId}
+  onClose={() => setPayingFormId(null)}
+/>
+```
 
 ### `/` — Overview
 
@@ -89,7 +130,7 @@ Title **Overview**. `OverviewView` reads `AuthUser.role`. Admin sees a mock dash
 
 Title **Payment**. For **admin**, a centred `PaymentModeTabs` control switches Single Payment (`/pay`) and Payment by form (`/pay/form`). Employees do not see the tabs. One card: recipient (search / paste address, address book), amount plus recipient token, and purpose. Changing the address to another chain clears the selected token; a default USDT → USDC → first-available token for that chain is then picked by `defaultDestToken`. The empty submit label is **Starts from adding recipient**; once the form can send it becomes **Send Payment**. There is no Notify Recipient control.
 
-The form lives in `SinglePayoutCard` so Team Pay Now can mount the same card in a dialog with a locked recipient. The address book dialogs create, edit, and delete recipients through `useContacts` → `/v1/payroll/recipient*`.
+The form lives in `SinglePayoutCard` so `SinglePayoutDialog` can mount the same card with a locked recipient. The address book dialogs create, edit, and delete recipients through `useContacts` → `/v1/payroll/recipient*`.
 
 **Send Payment** posts to `/v1/payroll/payments` (`useCreatePayrollPaymentMutation`) with the amount, the recipient, the destination `network` / `symbol` from `payoutNetworkToken`, the optional purpose (`memo` on the API), and `success_url` = `{origin}/pay/result`. The backend creates a hosted checkout session and answers with `pay_url`; the browser is sent there with `window.location.assign`. Payment itself happens on the hosted checkout, so this screen never touches a wallet.
 
@@ -97,7 +138,7 @@ There is no notify-recipient field: the endpoint has no `notifyEmail` parameter.
 
 ### `/pay/form` — Payment by form
 
-Title **Payment**. Same `PaymentModeTabs` as Single Payment. The page wraps `PaymentByFormCard` in a 600px card so a later dialog can mount the same card with `formId` + `formLocked` (Form dropdown disabled; details still load by id).
+Title **Payment**. Same `PaymentModeTabs` as Single Payment. The page wraps `PaymentByFormCard` in a 600px card. `PaymentByFormDialog` mounts the same card with `formId` + `formLocked` (Form dropdown disabled; details still load by id).
 
 The Form dropdown lists saved batch payouts (Payroll / Reimbursement / Bonus, name, USD total). List and detail are mock data (`paymentForms` in [mocks.md](mocks.md)) until that contract exists. Picking a row loads its payment rows, then the payer chooses the You Pay wallet, chain, and token (`YouPaySection` with `BATCH_BLOCKCHAINS`). That posts `POST /v1/payroll/batches` (`useCreatePayrollBatchQuery`) and fills You Pay / Est. Cost from `totalSourceAmount`. **Send Payment** signs and broadcasts like Payroll (`broadcastBatchPayout`). Empty CTA is **Select Category**.
 
@@ -115,19 +156,19 @@ The pre-checkout quote / swap / broadcast path (`useSinglePayQuote`, `useSingleP
 
 Files: `src/views/payroll/`. Mock: `src/mocks/payroll.ts`.
 
-Dashboard for the Operations → Payroll nav item. Stats, a six-month total-payroll chart, recent payouts, and Next Payroll / Payroll History tabs. Data is mocked until the backend contract exists. A header **Sample data** switch toggles the empty create-payroll CTA (Download Template, Import CSV, Add Payroll) vs filled Next Payroll and Payroll History (pending / failed / paid run cards). **Add Payroll** / **Add a new Payroll** and **Edit** open a right-side drawer (`Add Payroll` / `Edit Payroll`) instead of `/pay/batch`. Import CSV and Pay Now still go to `/pay/batch`.
+Dashboard for the Operations → Payroll nav item. Stats, a six-month total-payroll chart, recent payouts, and Next Payroll / Payroll History tabs. Data is mocked until the backend contract exists. A header **Sample data** switch toggles the empty create-payroll CTA (Download Template, Import CSV, Add Payroll) vs filled Next Payroll and Payroll History (pending / failed / paid run cards). **Add Payroll** / **Add a new Payroll** and **Edit** open a right-side drawer (`Add Payroll` / `Edit Payroll`) instead of `/pay/batch`. Import CSV still goes to `/pay/batch`. **Pay Now** opens `PaymentByFormDialog` with `PAYROLL_PAY_NOW_FORM_ID` (`form-september-payroll`).
 
 ### `/pay/expense` — Expense
 
 Files: `src/views/expense/`. Mock: `src/mocks/expense.ts`.
 
-Dashboard for the Operations → Expense nav item. Stats, a six-month total-expense chart, recent payouts, and Open expense / Expense History tabs. History has a name/address/amount search, a last-30-days date filter, and client-side CSV export. Data is mocked until the backend contract exists. Pay Now does not submit yet.
+Dashboard for the Operations → Expense nav item. Stats, a six-month total-expense chart, recent payouts, and Open expense / Expense History tabs. History has a name/address/amount search, a last-30-days date filter, and client-side CSV export. Data is mocked until the backend contract exists. **Pay Now** on an open row (not Paying) opens `PaymentByFormDialog` with `EXPENSE_PAY_NOW_FORM_ID` (`form-open-reimbursement`).
 
 ### `/pay/bonus` — Bonus
 
 Files: `src/views/bonus/`. Mock: `src/mocks/bonus.ts`.
 
-Dashboard for the Operations → Bonus nav item. Stats (Total Bonus with token label, Members), a six-month total-bonus chart, recent payouts, and Bonuses to be paid / Bonus History tabs. Data is mocked until the backend contract exists. A header **Sample data** switch toggles the empty create-bonus CTA vs filled pending bonuses (individual + expandable group rows with Pay Now / Paying) and Bonus History (Figma `2672:7309`). **Add Bonus** opens a right-side drawer. Import CSV and Pay Now still go to `/pay/batch`.
+Dashboard for the Operations → Bonus nav item. Stats (Total Bonus with token label, Members), a six-month total-bonus chart, recent payouts, and Bonuses to be paid / Bonus History tabs. Data is mocked until the backend contract exists. A header **Sample data** switch toggles the empty create-bonus CTA vs filled pending bonuses (individual + expandable group rows with Pay Now / Paying) and Bonus History (Figma `2672:7309`). **Add Bonus** opens a right-side drawer. Import CSV still goes to `/pay/batch`. **Pay Now** opens `PaymentByFormDialog` with `BONUS_PAY_NOW_FORM_ID` (`bonus-team-a` → `form-2026-bonus-team-a`, `bonus-team-b` → `form-2026-bonus-team-b`). Paying rows stay disabled.
 
 ### `/pay/batch` — Create Payroll (Batch Payout)
 
@@ -169,7 +210,7 @@ Add Member (white dashed border + plus) and Invite (black + link icon) share `Te
 
 **Invite** immediately shows `{origin}/invite/{orgId}` (`orgId` is the organization-name slug, or `default`) with Copy. It does not add a row.
 
-Row menu: Edit, Pay Now, Remove. Remove asks for confirmation. **Pay Now** opens `SinglePayoutCard` in a dialog with the member as a locked recipient, then the same hosted-checkout Send Payment path as `/pay`. Members without a wallet cannot Pay Now.
+Row menu: Edit, Pay Now, Remove. Remove asks for confirmation. **Pay Now** opens `SinglePayoutDialog` with the member as a locked recipient (`name` + wallet from `memberDisplayWallet`), then the same hosted-checkout Send Payment path as `/pay`. Members without a wallet cannot Pay Now.
 
 ### `/pay/setting` — Settings
 

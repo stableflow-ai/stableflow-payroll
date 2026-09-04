@@ -1,5 +1,6 @@
 export const PAYROLL_CREATE_PATH = "/pay/batch";
 export const PAYROLL_HISTORY_PATH = "/pay/history";
+export const PAYROLL_PAY_NOW_FORM_ID = "form-september-payroll";
 
 export const PAYROLL_DRAWER_MODE = {
   Add: "add",

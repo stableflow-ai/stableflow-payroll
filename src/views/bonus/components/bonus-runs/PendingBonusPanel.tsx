@@ -8,8 +8,9 @@ import { PendingBonusTable } from "./PendingBonusTable";
 export function PendingBonusPanel(props: {
   list: BonusPendingList;
   onAddBonus: () => void;
+  onPayNow: (formId: string) => void;
 }) {
-  const { list, onAddBonus } = props;
+  const { list, onAddBonus, onPayNow } = props;
 
   return (
     <div className="flex flex-col gap-5">
@@ -42,7 +43,7 @@ export function PendingBonusPanel(props: {
         </Button>
       </div>
       <div className="border-t border-black/10 pt-4">
-        <PendingBonusTable items={list.items} />
+        <PendingBonusTable items={list.items} onPayNow={onPayNow} />
       </div>
     </div>
   );

@@ -73,6 +73,11 @@ export const BONUS_ROW_ACTION = {
 export type BonusRowAction =
   (typeof BONUS_ROW_ACTION)[keyof typeof BONUS_ROW_ACTION];
 
+export const BONUS_PAY_NOW_FORM_ID = {
+  "bonus-team-a": "form-2026-bonus-team-a",
+  "bonus-team-b": "form-2026-bonus-team-b",
+} as const;
+
 export const BONUS_CHART_LINE_COLOR = "#6284F5";
 export const BONUS_CHART_HIGHLIGHT_COLOR = "#3F8AFB";
 export const BONUS_CHART_Y_MAX = 600;
