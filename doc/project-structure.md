@@ -56,6 +56,9 @@ src/
     views/                       one folder per area; see product.md
     auth/                      login, register, reset password
     pay/                       single, form, batch, pending, history, team, request (+ disabled public payer)
+    payroll/                   payroll dashboard (mocked until the API exists)
+    expense/                   expense dashboard (mocked until the API exists)
+    bonus/                     bonus dashboard (mocked until the API exists)
     how-it-works/              public marketing page
     home/, analytics/, partner/  routes currently disabled
   components/

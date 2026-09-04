@@ -23,7 +23,7 @@ export const PAY_NAV_ID = {
   RequestPayment: "request",
   Operations: "operations",
   Payroll: "payroll",
-  Reimbursement: "reimbursement",
+  Expense: "expense",
   Bonus: "bonus",
   Team: "team",
   History: "history",
@@ -65,8 +65,8 @@ export const PAY_NAV_ITEMS: readonly PayNavItem[] = [
     label: "Operations",
     icon: IconOperations,
     children: [
-      { id: PAY_NAV_ID.Payroll, label: "Payroll", to: "/pay/batch" },
-      { id: PAY_NAV_ID.Reimbursement, label: "Reimbursement", to: "/pay/reimbursement" },
+      { id: PAY_NAV_ID.Payroll, label: "Payroll", to: "/pay/payroll", match: ["/pay/payroll", "/pay/batch"] },
+      { id: PAY_NAV_ID.Expense, label: "Expense", to: "/pay/expense" },
       { id: PAY_NAV_ID.Bonus, label: "Bonus", to: "/pay/bonus" },
     ],
   },
@@ -103,6 +103,8 @@ export function payNavItemsForRole(role: AuthUserRole): readonly PayNavItem[] {
 export const PAY_ADMIN_ONLY_PATHS = [
   PAY_FORM_PATH,
   "/pay/batch",
+  "/pay/payroll",
+  "/pay/expense",
   "/pay/reimbursement",
   "/pay/bonus",
   "/pay/team",
@@ -125,7 +127,7 @@ export function isPayNavLeafActive(item: PayNavLeaf, pathname: string): boolean 
 export function payTitleForPath(pathname: string, role: AuthUserRole = AUTH_USER_ROLE.Admin): string {
   for (const item of payNavItemsForRole(role)) {
     if (isPayNavGroup(item)) {
-      const child = item.children.find((row) => row.to === pathname);
+      const child = item.children.find((row) => isPayNavLeafActive(row, pathname));
       if (child) return child.label;
       continue;
     }

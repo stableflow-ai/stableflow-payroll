@@ -11,7 +11,7 @@ Only two areas are released: **Auth** and **Pay**. Everything else is either a p
 | Area | Routes | Status | Notes |
 | --- | --- | --- | --- |
 | Auth | `/login`, `/register` | Released | Detailed below. Reset password is a dialog, not a route. |
-| Pay | `/`, `/pay`, `/pay/form`, `/pay/result`, `/pay/batch`, `/pay/reimbursement`, `/pay/bonus`, `/pay/team`, `/pay/history`, `/pay/setting`, `/pay/pending`, `/pay/request` | Released | Detailed below. Requires a session. Overview is `/` (`/pay/overview` redirects there). Placeholder routes (`/pay/reimbursement`, `/pay/bonus`, `/pay/setting`, and admin Overview) render `PayPlaceholderView`. |
+| Pay | `/`, `/pay`, `/pay/form`, `/pay/result`, `/pay/payroll`, `/pay/batch`, `/pay/expense`, `/pay/bonus`, `/pay/team`, `/pay/history`, `/pay/setting`, `/pay/pending`, `/pay/request` | Released | Detailed below. Requires a session. Overview is `/` (`/pay/overview` redirects there). `/pay/reimbursement` redirects to `/pay/expense`. Placeholder routes (`/pay/setting` and admin Overview) render `PayPlaceholderView`. |
 | Marketing | `/howitworks` | Live, not detailed here | Static public page linked from the auth screens. |
 | Public payer | `/p/:id` | Disabled | Route commented out in `src/router/index.tsx`; `src/views/pay/RequestPayView.tsx` still exists. Anonymous page that pays a payment request created in `/pay/request`, rendered inside `AppLayout` but outside `RequireAuth`. |
 | Home | — | Disabled | `src/views/home/` still exists; do not re-enable `HomeView`. `/` is Pay Overview, not Home. |
@@ -30,7 +30,7 @@ Do not re-enable a disabled route, or document one here, without being asked.
 
 `PayLayout` (`src/layouts/PayLayout.tsx`) is the authenticated Pay chrome: a 220px left sidebar (`PaySidebar`) with a right divider, a content header (page title from `payTitleForPath`, optional `setHeaderExtra`, and `HeaderWalletCapsule` on the right), and `PaymentModeTabs` on `/pay` and `/pay/form` for **admin** only. It also mounts `useQuickPayCommitQueue()` and `useBatchPayoutCommitQueue()`, which drain the persisted submit queues in the background. Below `lg` the sidebar is hidden. A compact top row shows the logo (links to `/`), the mock organization name stacked above the account menu (avatar, name, dropdown), and a menu button on the right that opens a top Drawer with the role-filtered nav. The wallet capsule is desktop-only.
 
-`PaySidebar` (`src/views/pay/components/PaySidebar.tsx`) is desktop-only (`lg` and up). On `lg` it is sticky to the viewport (`top-0`, `h-svh`) so it does not scroll with the main column; if the nav is taller than the viewport it scrolls inside the aside. It shows `/logo.svg` (links to `/`), a mocked organization name (`MOCK_ORGANIZATION_NAME` = Eureka Labs), the sidebar variant of `HeaderAccountMenu` (email trigger; Reset Password / Logout), a horizontal rule under the account, then the nav tree from `payNavItemsForRole` via shared `PayNav`. Active items use a white pill and `#06f` text. Operations is a collapsible group (Payroll, Reimbursement, Bonus) for admin. The same `PayNav` renders inside the mobile top Drawer.
+`PaySidebar` (`src/views/pay/components/PaySidebar.tsx`) is desktop-only (`lg` and up). On `lg` it is sticky to the viewport (`top-0`, `h-svh`) so it does not scroll with the main column; if the nav is taller than the viewport it scrolls inside the aside. It shows `/logo.svg` (links to `/`), a mocked organization name (`MOCK_ORGANIZATION_NAME` = Eureka Labs), the sidebar variant of `HeaderAccountMenu` (email trigger; Reset Password / Logout), a horizontal rule under the account, then the nav tree from `payNavItemsForRole` via shared `PayNav`. Active items use a white pill and `#06f` text. Operations is a collapsible group (Payroll, Expense, Bonus) for admin. The same `PayNav` renders inside the mobile top Drawer.
 
 ## Auth
 
@@ -52,7 +52,7 @@ Validation lives in `src/views/auth/config.ts` as pure `*RuleError` / `*FormErro
 
 **Session.** `useLoginMutation` / `useRegisterMutation` call `applySession(token, user)`, which writes `stableflow-pay.session` to `localStorage` and updates `useAuthStore`. `useAuthStore` re-reads that key on first import, so a reload restores the session synchronously. `SessionBootstrap` in `src/App.tsx` runs `useProfileQuery()` to validate the token against `GET /v1/payroll/profile` in the background and refresh the cached user. `POST /v1/payroll/profile` (`useUpdateProfileMutation`) changes the display name; no screen uses it yet. `AuthUser.role` is `"admin"` or `"employee"` and is assumed to already be on the login / profile payload. Stored sessions that predate `role` hydrate as admin.
 
-**Redirects.** `RequireAuth` sends anonymous visitors to `/login?returnTo=<path+search>`. `RedirectIfAuthed` sends signed-in visitors away from `/login` and `/register` to `returnTo` or `/`. After a successful login the view navigates to `returnTo ?? "/"`. `safeReturnTo` in `return-to.ts` rejects anything that is not a same-origin absolute path and refuses to bounce back to `/login` or `/register`. Employees who open `/pay/form`, `/pay/batch`, `/pay/reimbursement`, `/pay/bonus`, or `/pay/team` are sent to `/`.
+**Redirects.** `RequireAuth` sends anonymous visitors to `/login?returnTo=<path+search>`. `RedirectIfAuthed` sends signed-in visitors away from `/login` and `/register` to `returnTo` or `/`. After a successful login the view navigates to `returnTo ?? "/"`. `safeReturnTo` in `return-to.ts` rejects anything that is not a same-origin absolute path and refuses to bounce back to `/login` or `/register`. Employees who open `/pay/form`, `/pay/batch`, `/pay/payroll`, `/pay/expense`, `/pay/reimbursement`, `/pay/bonus`, or `/pay/team` are sent to `/`.
 
 **401.** Any authenticated request that returns 401 clears the stored session and calls `notifyUnauthorized()`, which `src/stores/auth.ts` has wired to `logout()` (clears the store and the whole TanStack Query cache). The next render hits `RequireAuth` and lands on `/login`.
 
@@ -60,7 +60,7 @@ Validation lives in `src/views/auth/config.ts` as pure `*RuleError` / `*FormErro
 
 Files: `src/views/pay/`. Constants: `src/views/pay/config.ts`. Sidebar: `PaySidebar` reads `payNavItemsForRole(user.role)`.
 
-**Admin** sidebar: Overview (`/`), Payment (`/pay` and `/pay/form`), Operations (Payroll = existing Batch Payout at `/pay/batch`; Reimbursement and Bonus placeholders), Team (`/pay/team`), History (`/pay/history`), Setting (placeholder). Pending Payouts is not in the sidebar; `/pay/pending` remains reachable by URL. Request Payment is URL-only for admin.
+**Admin** sidebar: Overview (`/`), Payment (`/pay` and `/pay/form`), Operations (Payroll dashboard at `/pay/payroll`, create flow still at `/pay/batch`; Expense dashboard at `/pay/expense`; Bonus dashboard at `/pay/bonus`), Team (`/pay/team`), History (`/pay/history`), Setting (placeholder). Pending Payouts is not in the sidebar; `/pay/pending` remains reachable by URL. Request Payment is URL-only for admin.
 
 **Employee** sidebar: Overview (`/`), Payment (`/pay` only, no mode tabs), Request Payment (`/pay/request`), History, Setting. No Operations or Team.
 
@@ -98,7 +98,25 @@ Where the hosted checkout returns after a **successful** payment; it is not in t
 
 The pre-checkout quote / swap / broadcast path (`useSinglePayQuote`, `useSinglePaySwap`, `transferToDepositAddress`, `enqueueQuickPayCommit`) is no longer used by this screen. `RequestPayView` still calls it. Do not delete it.
 
-### `/pay/batch` — Payroll (Batch Payout)
+### `/pay/payroll` — Payroll
+
+Files: `src/views/payroll/`. Mock: `src/mocks/payroll.ts`.
+
+Dashboard for the Operations → Payroll nav item. Stats, a six-month total-payroll chart, recent payouts, and Next Payroll / Payroll History tabs. Data is mocked until the backend contract exists. A header **Sample data** switch toggles the empty create-payroll CTA (Download Template, Import CSV, Add Payroll) vs filled Next Payroll and Payroll History (pending / failed / paid run cards). **Add Payroll** / **Add a new Payroll** and **Edit** open a right-side drawer (`Add Payroll` / `Edit Payroll`) instead of `/pay/batch`. Import CSV and Pay Now still go to `/pay/batch`.
+
+### `/pay/expense` — Expense
+
+Files: `src/views/expense/`. Mock: `src/mocks/expense.ts`.
+
+Dashboard for the Operations → Expense nav item. Stats, a six-month total-expense chart, recent payouts, and Open expense / Expense History tabs. History has a name/address/amount search, a last-30-days date filter, and client-side CSV export. Data is mocked until the backend contract exists. Pay Now does not submit yet.
+
+### `/pay/bonus` — Bonus
+
+Files: `src/views/bonus/`. Mock: `src/mocks/bonus.ts`.
+
+Dashboard for the Operations → Bonus nav item. Stats (Total Bonus, Members), a six-month total-bonus chart, recent payouts, and Bonuses to be paid / Bonus History tabs. Data is mocked until the backend contract exists. A header **Sample data** switch toggles the empty create-bonus CTA (Download Template, Import CSV, Add Bonus) vs filled pending bonuses and Bonus History. **Add Bonus** / **Add a new Bonus** and **Edit** open a right-side drawer (`Add Bonus` / `Edit Bonus`) instead of `/pay/batch`. Import CSV and Pay Now still go to `/pay/batch`.
+
+### `/pay/batch` — Create Payroll (Batch Payout)
 
 Three page steps (`upload` → `validate` → `preview`) with a two-dot `BatchStepper` injected into the layout header.
 

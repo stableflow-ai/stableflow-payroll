@@ -5,6 +5,9 @@ import { HowItWorksView } from "@/views/how-it-works/HowItWorksView";
 import { HomeView } from "@/views/home/HomeView";
 import { AnalyticsView } from "@/views/analytics/AnalyticsView";
 import { BatchPayoutView } from "@/views/pay/BatchPayoutView";
+import { PayrollView } from "@/views/payroll";
+import { ExpenseView } from "@/views/expense";
+import { BonusView } from "@/views/bonus";
 import { PendingPayoutsView } from "@/views/pay/PendingPayoutsView";
 import { RequestPayView } from "@/views/pay/RequestPayView";
 import { RequestPaymentView } from "@/views/pay/RequestPaymentView";
@@ -74,9 +77,11 @@ export const router = createBrowserRouter([
                   { path: "/pay", element: <SinglePayoutView /> },
                   { path: "/pay/form", element: <PaymentByFormView /> },
                   { path: "/pay/result", element: <PayoutResultView /> },
+                  { path: "/pay/payroll", element: <PayrollView /> },
                   { path: "/pay/batch", element: <BatchPayoutView /> },
-                  { path: "/pay/reimbursement", element: <PayPlaceholderView /> },
-                  { path: "/pay/bonus", element: <PayPlaceholderView /> },
+                  { path: "/pay/expense", element: <ExpenseView /> },
+                  { path: "/pay/reimbursement", element: <Navigate to="/pay/expense" replace /> },
+                  { path: "/pay/bonus", element: <BonusView /> },
                   { path: "/pay/team", element: <TeamView /> },
                   { path: "/pay/setting", element: <PayPlaceholderView /> },
                   { path: "/pay/request", element: <RequestPaymentView /> },

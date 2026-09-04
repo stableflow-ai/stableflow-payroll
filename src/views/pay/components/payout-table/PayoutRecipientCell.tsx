@@ -3,13 +3,21 @@ import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import useToast from "@/hooks/use-toast";
 import { formatAddress } from "@/utils";
 
-export function PayoutRecipientCell({ address }: { address: string }) {
+export function PayoutRecipientCell({
+  address,
+  prefix = 4,
+  suffix = 5,
+}: {
+  address: string;
+  prefix?: number;
+  suffix?: number;
+}) {
   const toast = useToast();
 
   return (
     <span className="inline-flex min-w-0 items-center gap-1.5">
       <Tooltip content={address} triggerClassName="min-w-0">
-        <span className="truncate">{formatAddress(address)}</span>
+        <span className="truncate">{formatAddress(address, prefix, suffix)}</span>
       </Tooltip>
       <button
         type="button"
