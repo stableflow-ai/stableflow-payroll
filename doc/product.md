@@ -11,7 +11,7 @@ Only two areas are released: **Auth** and **Pay**. Everything else is either a p
 | Area | Routes | Status | Notes |
 | --- | --- | --- | --- |
 | Auth | `/login`, `/register`, `/register/organization`, `/invite/:orgId` | Released | Detailed below. Reset password is a dialog, not a route. |
-| Pay | `/`, `/pay`, `/pay/form`, `/pay/result`, `/pay/payroll`, `/pay/batch`, `/pay/expense`, `/pay/bonus`, `/pay/team`, `/pay/history`, `/pay/setting`, `/pay/pending`, `/pay/request` | Released | Detailed below. Requires a session. Overview is `/` (`/pay/overview` redirects there). `/pay/reimbursement` redirects to `/pay/expense`. `/pay/setting` still renders `PayPlaceholderView`. |
+| Pay | `/`, `/pay`, `/pay/form`, `/pay/result`, `/pay/payroll`, `/pay/batch`, `/pay/expense`, `/pay/bonus`, `/pay/team`, `/pay/history`, `/pay/setting`, `/pay/pending`, `/pay/request` | Released | Detailed below. Requires a session. Overview is `/` (`/pay/overview` redirects there). `/pay/reimbursement` redirects to `/pay/expense`. |
 | Marketing | `/howitworks` | Live, not detailed here | Static public page linked from the auth screens. |
 | Public payer | `/p/:id` | Disabled | Route commented out in `src/router/index.tsx`; `src/views/pay/RequestPayView.tsx` still exists. Anonymous page that pays a payment request created in `/pay/request`, rendered inside `AppLayout` but outside `RequireAuth`. |
 | Home | — | Disabled | `src/views/home/` still exists; do not re-enable `HomeView`. `/` is Pay Overview, not Home. |
@@ -43,7 +43,7 @@ Auth screens share `AuthShell`: a blue brand panel (logo, headline, three featur
 | `/login` | Email, password | `POST /v1/payroll/auth/login` |
 | `/register` | Name, email, password, confirm password, invite code | `POST /v1/payroll/auth/register` |
 | `/register/organization` | Organization name (required, ≤ 50), logo URL (optional; if set, http(s) URL ≤ 200) | Mock until the create-organization contract exists |
-| `/invite/:orgId` | Name, email, password, confirm password | Mock invite preview + register-and-bind until that contract exists |
+| `/invite/:orgId` | Step 1: email, password, confirm password. Step 2 Profile Setting: name, position, EVM, plus Integration-enabled fields | Mock invite preview + register-and-bind until that contract exists |
 
 `/register` is admin-only. Invite code stays required. Employees join through `/invite/:orgId`, not `/register`.
 
@@ -51,14 +51,19 @@ Validation lives in `src/views/auth/config.ts` as pure `*RuleError` / `*FormErro
 
 **Create organization.** After login or register, `postAuthPath` sends an admin whose `organization.name` is missing to `/register/organization`. That page is authenticated (`RedirectIfHasOrganization`): guests go to `/login`, employees and admins who already have an organization go to `/`. The top-right chip shows the current email and a logout control (hover `text-danger`) so the user can switch accounts before creating an organization. Create organization is mocked (`organization` in [mocks.md](mocks.md)); on success the session user is updated with `organization.name` and the app continues to `returnTo` or `/`. `RequireOrganization` wraps Pay routes so an admin without an organization cannot enter the homepage.
 
-**Employee invite.** `/invite/:orgId` is a public page. It loads a mock preview (inviter email, avatar, organization name), then Sign up creates a mocked employee session bound to that organization. "Already have an account. Login" goes to `/login` and does not auto-join the organization. Signed-in visitors are sent away by `RedirectIfAuthed`.
+**Employee invite.** `/invite/:orgId` is a public page. It loads a mock preview (inviter email, avatar, organization name, and the current Integration settings). Sign up is two local steps; the session is not written until Continue on step 2, so `RedirectIfAuthed` does not kick the visitor out mid-flow.
+
+1. **Sign up.** Email, password, confirm password. Name is not collected here.
+2. **Profile Setting.** Organization name, avatar, and the step-1 email at the top. Fixed fields: Name, Position (optional), EVM Wallet Address (required). Email / Telegram / Slack / SOLANA / NEAR / Tron appear only when that Integration channel is on; Required channels must be filled. The account email from step 1 is reused when the Email channel is on — it is not asked again. Continue calls `registerWithInvite`, then goes to `/`.
+
+"Already have an account. Login" on step 1 goes to `/login` and does not auto-join the organization. Signed-in visitors are sent away by `RedirectIfAuthed`.
 
 **Reset password** is `ResetPasswordDialog`, opened from "Forgot Password?" on `/login` (`guest` variant) and from the account menu (`authed` variant).
 
 - `guest`: email → `POST /v1/payroll/reset-password/code` (60-second resend cooldown) → email + code + new password → `POST /v1/payroll/reset-password`.
 - `authed`: current password + new password → `POST /v1/payroll/change-password`.
 
-**Session.** `useLoginMutation` / `useRegisterMutation` call `applySession(token, user)`, which writes `stableflow-pay.session` to `localStorage` and updates `useAuthStore`. `useAuthStore` re-reads that key on first import, so a reload restores the session synchronously. `SessionBootstrap` in `src/App.tsx` runs `useProfileQuery()` to validate the token against `GET /v1/payroll/profile` in the background and refresh the cached user. Tokens that start with `mock:` skip the profile query so invite-register mocks are not logged out by a 401. `POST /v1/payroll/profile` (`useUpdateProfileMutation`) changes the display name; no screen uses it yet. `AuthUser.role` is `"admin"` or `"employee"` and is assumed to already be on the login / profile payload. Stored sessions that predate `role` hydrate as admin. Login, register, and profile are assumed to return optional `organization.name`; `hasOrganization` is true only when that name is non-empty after trim.
+**Session.** `useLoginMutation` / `useRegisterMutation` call `applySession(token, user)`, which writes `stableflow-pay.session` to `localStorage` and updates `useAuthStore`. `useAuthStore` re-reads that key on first import, so a reload restores the session synchronously. `SessionBootstrap` in `src/App.tsx` runs `useProfileQuery()` to validate the token against `GET /v1/payroll/profile` in the background and refresh the cached user. Tokens that start with `mock:` skip the profile query so invite-register mocks are not logged out by a 401. `POST /v1/payroll/profile` (`useUpdateProfileMutation`) changes the display name from Settings → Profile. `AuthUser.role` is `"admin"` or `"employee"` and is assumed to already be on the login / profile payload. Stored sessions that predate `role` hydrate as admin. Login, register, and profile are assumed to return optional `organization.name`; `hasOrganization` is true only when that name is non-empty after trim.
 
 **Redirects.** `RequireAuth` sends anonymous visitors to `/login?returnTo=<path+search>`. `RedirectIfAuthed` sends signed-in visitors away from `/login`, `/register`, and `/invite/:orgId` through `postAuthPath` (admin without an organization → `/register/organization`, otherwise `returnTo` or `/`). After a successful login or register the view uses the same helper. `safeReturnTo` in `return-to.ts` rejects anything that is not a same-origin absolute path and refuses to bounce back to `/login`, `/register`, `/register/organization`, or `/invite`. Employees who open `/pay/form`, `/pay/batch`, `/pay/payroll`, `/pay/expense`, `/pay/reimbursement`, `/pay/bonus`, or `/pay/team` are sent to `/`.
 
@@ -68,9 +73,9 @@ Validation lives in `src/views/auth/config.ts` as pure `*RuleError` / `*FormErro
 
 Files: `src/views/pay/`. Constants: `src/views/pay/config.ts`. Sidebar: `PaySidebar` reads `payNavItemsForRole(user.role)`.
 
-**Admin** sidebar: Overview (`/`), Payment (`/pay` and `/pay/form`), Operations (Payroll dashboard at `/pay/payroll`, create flow still at `/pay/batch`; Expense dashboard at `/pay/expense`; Bonus dashboard at `/pay/bonus`), Team (`/pay/team`), History (`/pay/history`), Setting (placeholder). Pending Payouts is not in the sidebar; `/pay/pending` remains reachable by URL. Request Payment is URL-only for admin.
+**Admin** sidebar: Overview (`/`), Payment (`/pay` and `/pay/form`), Operations (Payroll dashboard at `/pay/payroll`, create flow still at `/pay/batch`; Expense dashboard at `/pay/expense`; Bonus dashboard at `/pay/bonus`), Team (`/pay/team`), History (`/pay/history`), Settings (`/pay/setting`). Pending Payouts is not in the sidebar; `/pay/pending` remains reachable by URL. Request Payment is URL-only for admin.
 
-**Employee** sidebar: Overview (`/`), Payment (`/pay` only, no mode tabs), Request Payment (`/pay/request`), History, Setting. No Operations or Team.
+**Employee** sidebar: Overview (`/`), Payment (`/pay` only, no mode tabs), Request Payment (`/pay/request`), History, Settings. No Operations or Team.
 
 Shared building blocks: `TokenSelectDialog` (chain + token picker, optional balances), `PayoutsTable` (Recipient / Amount / Asset / Memo / Time / Status with an explorer link), `RecipientAddressField` + `RecipientsDialog` + `ContactFormDialog` (address book), `PaymentByFormCard` (reusable Payment by form card), `PaymentFormDetailsDrawer` (Total Valued details), `SinglePayoutCard` (reusable Single Payment card, including Team Pay Now), `usePayOriginToken` and `usePaymentWallet` (paying token and matching wallet).
 
@@ -140,11 +145,9 @@ Read-only `PayoutsTable` over `GET /v1/payroll/payments/pending`. Every row rend
 
 ### `/pay/history` — Transaction History
 
-Filters: address search, status (`All` / `Complete` / `Failed`), asset (`All` plus `PAYOUT_SYMBOLS`), and a `DateRangePicker` defaulting to the last 30 days. Every filter change resets to page 1, and "Clear Filter" is enabled only when something differs from the defaults.
+Mock data (`history` in [mocks.md](mocks.md)) until that contract exists. Top bar: Search, `DateRangePicker` (last 30 days), Export CSV of the current filter result. Card toolbar (same grid as v3 Reports Transactions): Source Network, Source Token, Destination Network, Destination Token, Amount (`All` / `0-1,000` / `1,000-10,000` / `>10,000`), Status (`All` / `Success` / `Failed`). Network options are `FIXED_CHAINS` plus All; token options are `PAYOUT_SYMBOLS` plus All. Every filter change resets to page 1. The table has no Status column.
 
-The table is server-paginated at `HISTORY_PAGE_SIZE` (10) through `GET /v1/payroll/payments`; dates are sent as Unix seconds. Status text comes from `paymentRowStatus` (`completed`/`complete` → Complete, `failed` → Failed, anything else → Pending) and each row links to the chain explorer via `txExplorerUrl`.
-
-"Export CSV" is injected into the layout header and calls `GET /v1/payroll/payments/export` with the same filters minus paging. The downloaded filename is the server's `Content-Disposition` name with a `yyyyMMdd-HHmmss` stamp appended.
+Columns: Amount, Source, arrow, Received, Destination, From, To, Time. Source / Destination show token logo and `SYMBOL · Chain`. From / To truncate the address, copy it, and open the tx explorer (`txHash` on the source chain, `destinationTxHash` on the destination). Pagination sits in the card footer. Export does not call `/payments/export`.
 
 ### `/pay/request` — Request Payment
 
@@ -158,13 +161,25 @@ Below the form, `ReceivedPaymentList` shows the merchant's requests with their s
 
 ### `/pay/team` — Team
 
-Search, paginated member table (Name, Position, Schedule, Email, Wallet), Add Member, and Invite. List CRUD is mock data (`team` in [mocks.md](mocks.md)) until that contract exists. Schedule is display-only; Add/Edit does not set it, so a new member shows `-`. Wallet prefers EVM, then Solana, then NEAR.
+Search, paginated member table (Name, Position, Schedule, Email, Wallet), Add Member, and Invite. List CRUD is mock data (`team` in [mocks.md](mocks.md)) until that contract exists. Schedule is display-only; Add/Edit does not set it, so a new member shows `-`. Wallet prefers EVM, then Solana, then NEAR, then Tron.
 
-**Add / Edit** is a dialog: Name required; Position, Email, and the three wallet fields optional. A filled wallet must match that chain (`validateAddress`). Save stays disabled while Name is empty or a filled field is invalid.
+Add Member (white dashed border + plus) and Invite (black + link icon) share `TeamActionButtons` with Settings → Organization.
 
-**Invite** copies the old Recipients invite form (Name, Email, Type = Employee locked, Role). It does not add a row. Mock send, then a success toast.
+**Add / Edit** is a dialog driven by Settings Integration: Name and EVM are always shown (EVM required). Position is optional. Email / Telegram / Slack / SOLANA / NEAR / Tron render only when that channel is on; Required channels must be filled. Name and Position ≤ 50. A filled wallet must match that chain (`validateAddress`, including Tron). Save stays disabled while a required field is empty or a filled field is invalid.
+
+**Invite** immediately shows `{origin}/invite/{orgId}` (`orgId` is the organization-name slug, or `default`) with Copy. It does not add a row.
 
 Row menu: Edit, Pay Now, Remove. Remove asks for confirmation. **Pay Now** opens `SinglePayoutCard` in a dialog with the member as a locked recipient, then the same hosted-checkout Send Payment path as `/pay`. Members without a wallet cannot Pay Now.
+
+### `/pay/setting` — Settings
+
+`SettingView`. Employee sees Profile only. Admin sees Profile, Organization, and Integration.
+
+**Profile.** Name is editable; Account Email is read-only. Reset Password opens the authed `ResetPasswordDialog`. Save (bottom right) calls `POST /v1/payroll/profile` and updates the session name.
+
+**Organization (admin).** Organization Name and optional Logo URL, same validation as create organization. Add Member / Invite use the same buttons and dialogs as Team. Save (bottom right) mocks `useUpdateOrganizationMutation` and writes `organization.name` onto the session.
+
+**Integration (admin, mock).** Channel of notification: Email, Telegram, Slack. Wallet Address: EVM (always on, Required, no switch), SOLANA, NEAR, Tron. Each unlocked card has a Switch and a Required / Optional dropdown (disabled when the switch is off). Changes write the in-memory mock immediately; there is no Save. Telegram / Slack logos live in `public/setting/`. Email uses `IconEmail`. These settings drive Add Member and Invite Profile Setting.
 
 ## Wallet and payout capability
 

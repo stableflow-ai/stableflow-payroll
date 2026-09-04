@@ -45,7 +45,7 @@ Copy `.env.example` to `.env.local`.
 public/
   logo.svg, logo-white.svg     product logos
   auth/                        auth page decoration (SVG)
-  avatar/, pay/, howitwork/    page art (PNG)
+  avatar/, pay/, howitwork/, setting/    page art (PNG / brand SVG)
 src/
   main.tsx                     Buffer/process globals, QueryClientProvider, WalletProvider
   App.tsx                      RouterProvider, ToastContainer, session bootstrap
@@ -55,7 +55,7 @@ src/
   layouts/                     AppLayout, PayLayout, PartnerLayout
     views/                       one folder per area; see product.md
     auth/                      login, register, create organization, invite register, reset password
-    pay/                       single, form, batch, pending, history, team, request (+ disabled public payer)
+    pay/                       single, form, batch, pending, history, team, setting, request (+ disabled public payer)
     payroll/                   payroll dashboard (mocked until the API exists)
     expense/                   expense dashboard (mocked until the API exists)
     bonus/                     bonus dashboard (mocked until the API exists)

@@ -9,12 +9,14 @@
  */
 import { HEADER_AVATAR_SRC } from "@/components/layout/config";
 import { AUTH_USER_ROLE, type AuthSession } from "@/types/auth";
+import { readIntegrationSettings, type IntegrationSettings } from "./settings";
 
 export type InvitePreview = {
   orgId: string;
   organizationName: string;
   inviterEmail: string;
   inviterAvatar: string;
+  integration: IntegrationSettings;
 };
 
 export type InviteRegisterInput = {
@@ -22,9 +24,18 @@ export type InviteRegisterInput = {
   name: string;
   email: string;
   password: string;
+  position?: string;
+  telegram?: string;
+  slack?: string;
+  wallets?: {
+    evm: string;
+    solana: string;
+    near: string;
+    tron: string;
+  };
 };
 
-const PREVIEWS: Record<string, InvitePreview> = {
+const PREVIEWS: Record<string, Omit<InvitePreview, "integration">> = {
   default: {
     orgId: "default",
     organizationName: "Eureka Labs",
@@ -48,6 +59,7 @@ export async function getInvitePreview(orgId: string): Promise<InvitePreview> {
   return {
     ...(PREVIEWS[trimmed] ?? PREVIEWS.default),
     orgId: trimmed,
+    integration: readIntegrationSettings(),
   };
 }
 

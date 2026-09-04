@@ -9,8 +9,15 @@
  */
 import { useMutation } from "@tanstack/react-query";
 import { MOCK_ENABLED } from "@/mocks/config";
-import { createOrganization, type CreateOrganizationInput } from "@/mocks/organization";
+import {
+  createOrganization,
+  readStoredOrganization,
+  updateOrganization,
+  type CreateOrganizationInput,
+} from "@/mocks/organization";
 import { useAuthStore } from "@/stores/auth";
+
+export { readStoredOrganization };
 
 export function useCreateOrganizationMutation() {
   const applySession = useAuthStore((state) => state.applySession);
@@ -23,6 +30,28 @@ export function useCreateOrganizationMutation() {
         throw new Error("Create organization is not available");
       }
       return createOrganization(body);
+    },
+    onSuccess: (organization) => {
+      if (!token || !user) return;
+      applySession(token, {
+        ...user,
+        organization: { name: organization.name },
+      });
+    },
+  });
+}
+
+export function useUpdateOrganizationMutation() {
+  const applySession = useAuthStore((state) => state.applySession);
+  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
+
+  return useMutation({
+    mutationFn: async (body: CreateOrganizationInput) => {
+      if (!MOCK_ENABLED.organization) {
+        throw new Error("Update organization is not available");
+      }
+      return updateOrganization(body);
     },
     onSuccess: (organization) => {
       if (!token || !user) return;

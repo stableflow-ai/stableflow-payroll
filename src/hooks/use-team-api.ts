@@ -13,9 +13,7 @@ import {
   createTeamMember,
   listTeamMembers,
   removeTeamMember,
-  sendTeamInvite,
   updateTeamMember,
-  type TeamInviteWrite,
   type TeamMemberWrite,
 } from "@/mocks/team";
 import { useAuthStore } from "@/stores/auth";
@@ -59,9 +57,6 @@ export function useTeamMemberMutations() {
     },
     onSuccess: invalidate,
   });
-  const inviteMutation = useMutation({
-    mutationFn: (body: TeamInviteWrite) => sendTeamInvite(body),
-  });
 
-  return { createMutation, updateMutation, removeMutation, inviteMutation };
+  return { createMutation, updateMutation, removeMutation };
 }

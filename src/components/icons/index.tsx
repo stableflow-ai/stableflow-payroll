@@ -49,6 +49,7 @@ export * from "./request";
 export * from "./reimbursement";
 export * from "./bonus";
 export * from "./more";
+export * from "./email";
 export * from "./field-error";
 export * from "./download";
 export * from "./import-file";

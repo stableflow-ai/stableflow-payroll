@@ -18,6 +18,8 @@ export type CreatedOrganization = {
   logoUrl?: string;
 };
 
+let storedOrganization: CreatedOrganization | null = null;
+
 function delay(ms: number) {
   return new Promise((resolve) => {
     window.setTimeout(resolve, ms);
@@ -26,8 +28,22 @@ function delay(ms: number) {
 
 export async function createOrganization(input: CreateOrganizationInput): Promise<CreatedOrganization> {
   await delay(400);
-  return {
+  storedOrganization = {
     name: input.name.trim(),
     logoUrl: input.logoUrl?.trim() || undefined,
   };
+  return { ...storedOrganization };
+}
+
+export async function updateOrganization(input: CreateOrganizationInput): Promise<CreatedOrganization> {
+  await delay(300);
+  storedOrganization = {
+    name: input.name.trim(),
+    logoUrl: input.logoUrl?.trim() || undefined,
+  };
+  return { ...storedOrganization };
+}
+
+export function readStoredOrganization(): CreatedOrganization | null {
+  return storedOrganization ? { ...storedOrganization } : null;
 }

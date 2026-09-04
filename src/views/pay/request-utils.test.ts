@@ -120,9 +120,9 @@ describe("received payment view", () => {
 });
 
 describe("formatCouponAmount", () => {
-  it("pads two decimal places", () => {
-    expect(formatCouponAmount("500")).toEqual({ whole: "500", fraction: "00" });
-    expect(formatCouponAmount("12.5")).toEqual({ whole: "12", fraction: "50" });
+  it("splits whole and fraction without padding", () => {
+    expect(formatCouponAmount("500")).toEqual({ whole: "500", fraction: undefined });
+    expect(formatCouponAmount("12.5")).toEqual({ whole: "12", fraction: "5" });
   });
 });
 

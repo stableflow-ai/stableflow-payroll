@@ -8,6 +8,8 @@ export const MOCK_ENABLED = {
   bonus: true,
   organization: true,
   invite: true,
+  history: true,
+  settings: true,
 } as const;
 
 export type MockDomain = keyof typeof MOCK_ENABLED;

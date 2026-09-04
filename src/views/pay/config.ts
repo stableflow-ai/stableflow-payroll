@@ -10,7 +10,6 @@ import {
 } from "@/components/icons";
 import type { IconProps } from "@/components/icons/types";
 import { AUTH_USER_ROLE, type AuthUserRole } from "@/types/auth";
-import { PAYOUT_SYMBOLS } from "@/stores/intents-tokens";
 
 /** TODO(api): fallback organization name when profile has none. */
 export const MOCK_ORGANIZATION_NAME = "Eureka Labs";
@@ -72,7 +71,7 @@ export const PAY_NAV_ITEMS: readonly PayNavItem[] = [
   },
   { id: PAY_NAV_ID.Team, label: "Team", to: "/pay/team", icon: IconTeam },
   { id: PAY_NAV_ID.History, label: "History", to: "/pay/history", icon: IconHistory },
-  { id: PAY_NAV_ID.Setting, label: "Setting", to: "/pay/setting", icon: IconSetting },
+  { id: PAY_NAV_ID.Setting, label: "Settings", to: "/pay/setting", icon: IconSetting },
 ];
 
 const EMPLOYEE_REQUEST_NAV: PayNavLeaf = {
@@ -159,18 +158,7 @@ export const PAYOUT_TABLE_COLUMNS =
   "minmax(150px,1.3fr) minmax(72px,0.5fr) minmax(140px,1fr) minmax(130px,1fr) minmax(150px,1fr) minmax(150px,0.95fr)";
 export const RECEIVED_PAYMENT_TABLE_COLUMNS =
   "minmax(160px,1.2fr) minmax(150px,1.1fr) minmax(148px,0.95fr) minmax(148px,0.95fr) minmax(130px,0.9fr) minmax(118px,0.85fr) minmax(72px,0.45fr)";
-export const HISTORY_PAGE_SIZE = 10;
 export const EXPORT_FILENAME_STAMP = "yyyyMMdd-HHmmss";
-export const HISTORY_STATUS_FILTER = {
-  All: "all",
-  Complete: "completed",
-  Failed: "failed",
-} as const;
-
-export const HISTORY_ASSET_FILTER = {
-  All: "all",
-  ...Object.fromEntries(PAYOUT_SYMBOLS.map((symbol) => [symbol, symbol])),
-} as const;
 
 export const AMOUNT_MAX_DECIMALS = 6;
 export const QUOTE_DEBOUNCE_MS = 900;

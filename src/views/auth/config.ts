@@ -20,6 +20,11 @@ export const AUTH_LINK_CLASS =
 
 export const AUTH_LINK_ACCENT_CLASS = "text-[#3f8afb] hover:text-[#3f8afb]/90";
 
+export const INVITE_STEP = {
+  SignUp: 1,
+  Profile: 2,
+} as const;
+
 export const AUTH_FEATURE_ICON_KEYS = ["lock", "shield", "node"] as const;
 export type AuthFeatureIconKey = (typeof AUTH_FEATURE_ICON_KEYS)[number];
 
@@ -173,16 +178,23 @@ export function createOrganizationFormError(name: string, logoUrl: string): stri
   return organizationNameRuleError(name) ?? logoUrlRuleError(logoUrl);
 }
 
+export function inviteSignUpFormError(
+  email: string,
+  password: string,
+  confirmPassword: string,
+): string | null {
+  return (
+    emailRuleError(email) ??
+    passwordRuleError(password) ??
+    confirmPasswordRuleError(password, confirmPassword)
+  );
+}
+
 export function inviteRegisterFormError(
   name: string,
   email: string,
   password: string,
   confirmPassword: string,
 ): string | null {
-  return (
-    nameRuleError(name) ??
-    emailRuleError(email) ??
-    passwordRuleError(password) ??
-    confirmPasswordRuleError(password, confirmPassword)
-  );
+  return nameRuleError(name) ?? inviteSignUpFormError(email, password, confirmPassword);
 }

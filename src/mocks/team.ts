@@ -10,6 +10,7 @@ export type TeamMemberWallets = {
   evm: string;
   solana: string;
   near: string;
+  tron: string;
 };
 
 export type TeamMember = {
@@ -18,6 +19,8 @@ export type TeamMember = {
   position: string;
   schedule: TeamSchedule;
   email: string;
+  telegram: string;
+  slack: string;
   wallets: TeamMemberWallets;
 };
 
@@ -25,6 +28,8 @@ export type TeamMemberWrite = {
   name: string;
   position: string;
   email: string;
+  telegram: string;
+  slack: string;
   wallets: TeamMemberWallets;
 };
 
@@ -44,7 +49,7 @@ const ADDR = {
 } as const;
 
 function emptyWallets(): TeamMemberWallets {
-  return { evm: "", solana: "", near: "" };
+  return { evm: "", solana: "", near: "", tron: "" };
 }
 
 function member(
@@ -60,6 +65,8 @@ function member(
     position: fields.position ?? "",
     schedule: fields.schedule ?? TEAM_SCHEDULE.Monthly,
     email: fields.email ?? "",
+    telegram: fields.telegram ?? "",
+    slack: fields.slack ?? "",
     wallets: { ...emptyWallets(), ...fields.wallets },
   };
 }
@@ -191,7 +198,7 @@ let members: TeamMember[] = INITIAL_MEMBERS.map(cloneMember);
 let nextId = INITIAL_MEMBERS.length + 1;
 
 function cloneWallets(wallets: TeamMemberWallets): TeamMemberWallets {
-  return { evm: wallets.evm, solana: wallets.solana, near: wallets.near };
+  return { evm: wallets.evm, solana: wallets.solana, near: wallets.near, tron: wallets.tron };
 }
 
 function cloneMember(row: TeamMember): TeamMember {
@@ -201,6 +208,8 @@ function cloneMember(row: TeamMember): TeamMember {
     position: row.position,
     schedule: row.schedule,
     email: row.email,
+    telegram: row.telegram,
+    slack: row.slack,
     wallets: cloneWallets(row.wallets),
   };
 }
@@ -210,10 +219,13 @@ function normalizeWrite(input: TeamMemberWrite): TeamMemberWrite {
     name: input.name.trim(),
     position: input.position.trim(),
     email: input.email.trim(),
+    telegram: input.telegram.trim(),
+    slack: input.slack.trim(),
     wallets: {
       evm: input.wallets.evm.trim(),
       solana: input.wallets.solana.trim(),
       near: input.wallets.near.trim(),
+      tron: input.wallets.tron.trim(),
     },
   };
 }
