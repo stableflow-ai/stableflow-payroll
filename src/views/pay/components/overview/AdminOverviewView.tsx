@@ -30,8 +30,7 @@ function AdminOverviewBody(props: { data: AdminOverview }) {
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,800px)_minmax(0,432px)]">
         <PaymentsCard
           totalPayment={data.totalPayment}
-          totalTransactions={data.totalTransactions}
-          payrollRecipientCount={data.payrollRecipientCount}
+          paymentCount={data.paymentCount}
           range={range}
           onRangeChange={setRange}
           metric={metric}

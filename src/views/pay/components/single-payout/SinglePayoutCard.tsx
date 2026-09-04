@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { IconQuestion } from "@/components/icons/question";
 import { Button } from "@/components/ui/button/Button";
 import { InputNumber } from "@/components/ui/input-number/InputNumber";
@@ -6,8 +6,10 @@ import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
 import { useCreatePayrollPaymentMutation } from "@/hooks/use-single-payout-api";
 import { useContacts, type Contact } from "@/hooks/use-contacts";
+import { useTeamMembersQuery } from "@/hooks/use-team-api";
 import useToast from "@/hooks/use-toast";
-import { sameAddress } from "@/utils";
+import { isEmployee } from "@/lib/auth-role";
+import { useAuthStore } from "@/stores/auth";
 import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
 import { ContactFormDialog } from "../ContactFormDialog";
 import { DeleteContactDialog } from "../DeleteContactDialog";
@@ -21,12 +23,11 @@ import {
   parsePositiveDecimal,
   payoutNetworkToken,
 } from "../../utils";
-
-function matchContact(address: string, contacts: Contact[]): Contact | null {
-  const kind = detectAddressChainKind(address);
-  if (!kind) return null;
-  return contacts.find((row) => sameAddress(row.wallet, address, kind)) ?? null;
-}
+import {
+  matchContact,
+  matchTeamMember,
+  teamMembersToContacts,
+} from "./utils";
 
 export function SinglePayoutCard(props: {
   recipientLocked?: boolean;
@@ -34,7 +35,17 @@ export function SinglePayoutCard(props: {
 }) {
   const { recipientLocked = false, initialRecipient } = props;
   const toast = useToast();
-  const { contacts, addContact, updateContact, deleteContact, isPending: contactsPending } = useContacts();
+  const user = useAuthStore((state) => state.user);
+  const employee = isEmployee(user);
+  const { contacts, addContact, updateContact, deleteContact, isPending: contactsPending } =
+    useContacts({ enabled: employee && !recipientLocked });
+  const teamQuery = useTeamMembersQuery(!employee && !recipientLocked);
+  const teamContacts = useMemo(
+    () => teamMembersToContacts(teamQuery.data ?? []),
+    [teamQuery.data],
+  );
+  const bookContacts = employee ? contacts : teamContacts;
+  const bookLoading = employee ? contactsPending : teamQuery.isPending;
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const tokens = useIntentsTokensStore((s) => s.tokens);
   const createPayment = useCreatePayrollPaymentMutation();
@@ -63,7 +74,10 @@ export function SinglePayoutCard(props: {
         email: null,
       }
     : null;
-  const matched = lockedMatch ?? matchContact(addressInput, contacts);
+  const matched = lockedMatch
+    ?? (employee
+      ? matchContact(addressInput, contacts)
+      : matchTeamMember(addressInput, teamQuery.data ?? []));
   const destLockChainKind = detectAddressChainKind(addressInput);
   const destinationAddress = destLockChainKind ? addressInput.trim() : "";
   const amountDecimals = parsePositiveDecimal(amount, AMOUNT_MAX_DECIMALS);
@@ -182,58 +196,63 @@ export function SinglePayoutCard(props: {
           <RecipientsDialog
             open={bookOpen}
             onClose={() => setBookOpen(false)}
-            contacts={contacts}
-            loading={contactsPending}
+            contacts={bookContacts}
+            loading={bookLoading}
             selectedAddress={addressInput}
+            manageable={employee}
             onSelect={(contact) => {
               setAddressInput(contact.wallet);
               setBookOpen(false);
             }}
-            onAdd={() => {
+            onAdd={employee ? () => {
               setEditing(null);
               setFormOpen(true);
-            }}
-            onEdit={(contact) => {
+            } : undefined}
+            onEdit={employee ? (contact) => {
               setEditing(contact);
               setFormOpen(true);
-            }}
-            onDelete={(contact) => setDeleting(contact)}
+            } : undefined}
+            onDelete={employee ? (contact) => setDeleting(contact) : undefined}
           />
 
-          <ContactFormDialog
-            open={formOpen}
-            onClose={() => {
-              setFormOpen(false);
-              setEditing(null);
-            }}
-            contact={editing}
-            onSave={(input) => {
-              const save = editing ? updateContact(editing.id, input) : addContact(input);
-              void save.catch((error) => {
-                toast.fail({
-                  title: error instanceof Error ? error.message : "Failed to save recipient",
-                });
-              });
-              setFormOpen(false);
-              setEditing(null);
-            }}
-          />
-
-          <DeleteContactDialog
-            open={Boolean(deleting)}
-            onClose={() => setDeleting(null)}
-            contact={deleting}
-            onConfirm={() => {
-              if (deleting) {
-                void deleteContact(deleting.id).catch((error) => {
-                  toast.fail({
-                    title: error instanceof Error ? error.message : "Failed to delete recipient",
+          {employee ? (
+            <>
+              <ContactFormDialog
+                open={formOpen}
+                onClose={() => {
+                  setFormOpen(false);
+                  setEditing(null);
+                }}
+                contact={editing}
+                onSave={(input) => {
+                  const save = editing ? updateContact(editing.id, input) : addContact(input);
+                  void save.catch((error) => {
+                    toast.fail({
+                      title: error instanceof Error ? error.message : "Failed to save recipient",
+                    });
                   });
-                });
-              }
-              setDeleting(null);
-            }}
-          />
+                  setFormOpen(false);
+                  setEditing(null);
+                }}
+              />
+
+              <DeleteContactDialog
+                open={Boolean(deleting)}
+                onClose={() => setDeleting(null)}
+                contact={deleting}
+                onConfirm={() => {
+                  if (deleting) {
+                    void deleteContact(deleting.id).catch((error) => {
+                      toast.fail({
+                        title: error instanceof Error ? error.message : "Failed to delete recipient",
+                      });
+                    });
+                  }
+                  setDeleting(null);
+                }}
+              />
+            </>
+          ) : null}
         </>
       )}
     </>

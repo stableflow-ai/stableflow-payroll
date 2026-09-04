@@ -29,12 +29,12 @@ export { TEAM_SCHEDULE } from "@/mocks/team";
 
 const TEAM_MEMBERS_KEY = ["team-members"] as const;
 
-export function useTeamMembersQuery() {
+export function useTeamMembersQuery(enabled = true) {
   const token = useAuthStore((state) => state.token);
   return useQuery({
     queryKey: TEAM_MEMBERS_KEY,
     queryFn: () => listTeamMembers(),
-    enabled: Boolean(token) && MOCK_ENABLED.team,
+    enabled: Boolean(token) && MOCK_ENABLED.team && enabled,
   });
 }
 

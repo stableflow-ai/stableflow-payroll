@@ -15,12 +15,24 @@ export function RecipientsDialog(props: {
   contacts: Contact[];
   selectedAddress: string;
   onSelect: (contact: Contact) => void;
-  onAdd: () => void;
-  onEdit: (contact: Contact) => void;
-  onDelete: (contact: Contact) => void;
+  onAdd?: () => void;
+  onEdit?: (contact: Contact) => void;
+  onDelete?: (contact: Contact) => void;
   loading?: boolean;
+  manageable?: boolean;
 }) {
-  const { loading, open, onClose, contacts, selectedAddress, onSelect, onAdd, onEdit, onDelete } = props;
+  const {
+    loading,
+    open,
+    onClose,
+    contacts,
+    selectedAddress,
+    onSelect,
+    onAdd,
+    onEdit,
+    onDelete,
+    manageable = true,
+  } = props;
 
   return (
     <Dialog
@@ -29,10 +41,12 @@ export function RecipientsDialog(props: {
       title="Recipients"
       cardClassName="w-full md:w-[500px]"
       headerAction={
-        <Button size="sm" className="gap-1.5 px-3" onClick={onAdd}>
-          <IconPlus className="size-3 text-white" />
-          Add
-        </Button>
+        manageable ? (
+          <Button size="sm" className="gap-1.5 px-3" onClick={onAdd}>
+            <IconPlus className="size-3 text-white" />
+            Add
+          </Button>
+        ) : undefined
       }
     >
       <ul className="flex max-h-[min(70vh,520px)] flex-col gap-1">
@@ -57,24 +71,26 @@ export function RecipientsDialog(props: {
                   <p className="truncate font-montserrat text-sm font-medium text-black">{contact.name}</p>
                   <p className="font-montserrat text-[10px] text-[#606060]">{formatAddress(contact.wallet)}</p>
                 </div>
-                <div className="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100">
-                  <button
-                    type="button"
-                    aria-label="Edit"
-                    className="cursor-pointer text-[#606060]"
-                    onClick={() => onEdit(contact)}
-                  >
-                    <IconPen className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Delete"
-                    className="cursor-pointer text-[#606060]"
-                    onClick={() => onDelete(contact)}
-                  >
-                    <IconDelete className="size-3.5" />
-                  </button>
-                </div>
+                {manageable ? (
+                  <div className="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100">
+                    <button
+                      type="button"
+                      aria-label="Edit"
+                      className="cursor-pointer text-[#606060]"
+                      onClick={() => onEdit?.(contact)}
+                    >
+                      <IconPen className="size-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Delete"
+                      className="cursor-pointer text-[#606060]"
+                      onClick={() => onDelete?.(contact)}
+                    >
+                      <IconDelete className="size-3.5" />
+                    </button>
+                  </div>
+                ) : null}
                 <Button size="sm" variant="normal" className="w-[79px]" onClick={() => onSelect(contact)}>
                   Select
                 </Button>

@@ -9,12 +9,12 @@ import {
 import { useAuthStore } from "@/stores/auth";
 import type { PayRecipientBody } from "@/types/recipient";
 
-export function useRecipientsQuery() {
+export function useRecipientsQuery(enabled = true) {
   const token = useAuthStore((state) => state.token);
   return useQuery({
     queryKey: queryKeys.recipient.all,
     queryFn: listRecipients,
-    enabled: Boolean(token),
+    enabled: Boolean(token) && enabled,
   });
 }
 

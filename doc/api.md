@@ -178,7 +178,7 @@ Both `submit` calls are driven by the persisted retry queues rather than a hook:
 | POST | `/v1/payroll/recipient/{id}` | yes | `PayRecipientBody` | `PayRecipient` | `updateRecipient` | `useRecipientMutations` |
 | DELETE | `/v1/payroll/recipient/{id}` | yes | — | — | `deleteRecipient` | `useRecipientMutations` |
 
-`useContacts` wraps these hooks and is what the Pay views use.
+`useContacts` wraps these hooks. Single Payment uses them for **employee** address books only; **admin** Recipients lists Team members instead (`useTeamMembersQuery`).
 
 ### Payment requests — `src/api/request-payment.ts`, `src/types/request-payment.ts`, `src/hooks/use-request-payment.ts`
 

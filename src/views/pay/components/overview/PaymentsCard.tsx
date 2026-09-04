@@ -90,8 +90,7 @@ function PaymentsTooltip(props: {
 
 export function PaymentsCard(props: {
   totalPayment: string;
-  totalTransactions: number;
-  payrollRecipientCount: number;
+  paymentCount: number;
   range: VolumePeriod;
   onRangeChange: (range: VolumePeriod) => void;
   metric: ChartMetric;
@@ -100,8 +99,7 @@ export function PaymentsCard(props: {
 }) {
   const {
     totalPayment,
-    totalTransactions,
-    payrollRecipientCount,
+    paymentCount,
     range,
     onRangeChange,
     metric,
@@ -141,7 +139,7 @@ export function PaymentsCard(props: {
 
   return (
     <Card className="flex min-h-[540px] flex-col">
-      <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
+      <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <section>
           <h2 className="font-montserrat text-base font-medium capitalize text-black">
             Total Payment
@@ -152,26 +150,13 @@ export function PaymentsCard(props: {
         </section>
         <section>
           <h2 className="font-montserrat text-base font-medium capitalize text-black">
-            Total Transactions
+            Number of Payments
           </h2>
           <div className="mt-2 flex flex-wrap items-baseline gap-2">
             <p className="font-montserrat text-[26px] font-medium text-black">
-              {totalTransactions}
+              {paymentCount}
             </p>
             <Link to="/pay/history" className={OVERVIEW_LINK_CLASS}>
-              View all →
-            </Link>
-          </div>
-        </section>
-        <section>
-          <h2 className="font-montserrat text-base font-medium capitalize text-black">
-            Payroll Recipient
-          </h2>
-          <div className="mt-2 flex flex-wrap items-baseline gap-2">
-            <p className="font-montserrat text-[26px] font-medium text-black">
-              {payrollRecipientCount}
-            </p>
-            <Link to="/pay/payroll" className={OVERVIEW_LINK_CLASS}>
               View all →
             </Link>
           </div>

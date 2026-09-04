@@ -26,8 +26,7 @@ export type AdminHighPriorityItem = {
 export type AdminOverview = {
   teamMemberCount: number;
   totalPayment: string;
-  totalTransactions: number;
-  payrollRecipientCount: number;
+  paymentCount: number;
   volume: Partial<Record<VolumePeriod, AdminOverviewChartPoint[]>>;
   highPriority: AdminHighPriorityItem[];
 };
@@ -35,8 +34,7 @@ export type AdminOverview = {
 const OVERVIEW: AdminOverview = {
   teamMemberCount: 8,
   totalPayment: "36520",
-  totalTransactions: 146,
-  payrollRecipientCount: 12,
+  paymentCount: 146,
   volume: {
     [VOLUME_PERIOD.Daily]: [
       { label: "Aug 1", volume: 42000, transaction: 8 },
