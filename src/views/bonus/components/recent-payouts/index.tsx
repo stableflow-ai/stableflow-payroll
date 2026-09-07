@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { IconAlertCircle } from "@/components/icons/alert";
 import { IconArrowDown } from "@/components/icons/arrow-down";
 import {
@@ -12,7 +11,6 @@ import { cn } from "@/lib/utils";
 import { formatAddress, formatAmount } from "@/utils";
 import type { BonusRecentPayout } from "@/mocks/bonus";
 import {
-  BONUS_HISTORY_PATH,
   BONUS_PAYOUT_STATUS,
   BONUS_STATUS_FAILED_CLASS,
   BONUS_STATUS_PAID_CLASS,
@@ -44,8 +42,9 @@ function statusClass(status: BonusPayoutStatus) {
 export function RecentPayoutsCard(props: {
   items: BonusRecentPayout[];
   failedCount: number;
+  onOpenHistory: () => void;
 }) {
-  const { items, failedCount } = props;
+  const { items, failedCount, onOpenHistory } = props;
 
   return (
     <Card className="flex min-h-[454px] flex-col">
@@ -68,9 +67,10 @@ export function RecentPayoutsCard(props: {
         <ul className="mt-4 flex flex-col">
           {items.map((item) => (
             <li key={item.id} className="border-b border-black/10 last:border-b-0">
-              <Link
-                to={BONUS_HISTORY_PATH}
-                className="flex items-center gap-3 py-3.5"
+              <button
+                type="button"
+                onClick={onOpenHistory}
+                className="flex w-full items-center gap-3 py-3.5 text-left"
               >
                 <StatusMark status={item.status} />
                 <span className="min-w-0 flex-1">
@@ -91,7 +91,7 @@ export function RecentPayoutsCard(props: {
                   {statusLabel(item.status)}
                 </span>
                 <IconArrowDown className="-rotate-90 text-black" />
-              </Link>
+              </button>
             </li>
           ))}
         </ul>

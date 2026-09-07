@@ -216,6 +216,7 @@ export function PayrollView() {
             if (!recent.hasNextPage || recent.isFetchingNextPage) return;
             void recent.fetchNextPage();
           }}
+          onOpenHistory={() => setTab(PAYROLL_TAB.History)}
         />
       </div>
       <PayrollRunsCard

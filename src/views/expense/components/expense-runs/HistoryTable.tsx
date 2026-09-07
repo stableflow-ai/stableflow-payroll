@@ -83,22 +83,22 @@ export function HistoryTable({ rows }: { rows: ExpenseHistoryRow[] }) {
       className="border-0 bg-transparent p-0 shadow-none"
     >
       <TableHeader className="border-b-0 bg-transparent">
-        <TableHead>Name</TableHead>
+        <TableHead className="first:pl-4">Name</TableHead>
         <TableHead>Purpose</TableHead>
         <TableHead className="normal-case">Description / Receipt</TableHead>
         <TableHead>Expense</TableHead>
         <TableHead>Address</TableHead>
         <TableHead>Payout Preference</TableHead>
         <TableHead>Amount</TableHead>
-        <TableHead>Status</TableHead>
+        <TableHead className="last:pr-4">Status</TableHead>
       </TableHeader>
       <TableBody className="flex flex-col gap-4">
         {rows.map((row) => (
           <TableRow
             key={row.id}
-            className="h-14 rounded-[12px] border-0 bg-[#f6f6f6] px-4 [&>*]:py-0"
+            className="h-14 rounded-[12px] border-0 bg-[#f6f6f6] [&>*]:py-0"
           >
-            <TableCell>{row.name}</TableCell>
+            <TableCell className="first:pl-4">{row.name}</TableCell>
             <TableCell>{row.purpose}</TableCell>
             <TableCell>
               <DescriptionCell row={row} />
@@ -111,7 +111,7 @@ export function HistoryTable({ rows }: { rows: ExpenseHistoryRow[] }) {
               {row.token} · {chainDisplayName(row.network)}
             </TableCell>
             <TableCell>{formatAmount(row.amount, { prefix: "" })}</TableCell>
-            <TableCell>
+            <TableCell className="last:pr-4">
               <StatusCell row={row} />
             </TableCell>
           </TableRow>

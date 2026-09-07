@@ -99,6 +99,7 @@ export function BonusView() {
         <RecentPayoutsCard
           items={data.recentPayouts}
           failedCount={data.failedRecentCount}
+          onOpenHistory={() => setTab(BONUS_TAB.History)}
         />
       </div>
       <BonusRunsCard

@@ -147,6 +147,7 @@ export function ExpenseView() {
             if (!recent.hasNextPage || recent.isFetchingNextPage) return;
             void recent.fetchNextPage();
           }}
+          onOpenHistory={() => setTab(EXPENSE_TAB.History)}
         />
       </div>
       <ExpenseRunsCard
