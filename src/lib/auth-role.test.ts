@@ -8,6 +8,7 @@ function user(role: AuthUser["role"]): AuthUser {
     email: "a@b.c",
     name: "Ada",
     role,
+    organization: null,
   };
 }
 

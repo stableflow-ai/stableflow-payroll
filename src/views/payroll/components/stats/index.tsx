@@ -1,9 +1,12 @@
+import { IconLoading } from "@/components/icons/loading";
 import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/utils";
 import { PAYROLL_CHANGE_UP_CLASS } from "../../config";
 
 export type StatsCardProps = {
+  loading?: boolean;
+  error?: string | null;
   totalThisMonth: string;
   totalChangePercent: number | null;
   recipients: number;
@@ -49,6 +52,8 @@ function StatColumn(props: {
 
 export function StatsCard(props: StatsCardProps) {
   const {
+    loading = false,
+    error = null,
     totalThisMonth,
     totalChangePercent,
     recipients,
@@ -59,26 +64,37 @@ export function StatsCard(props: StatsCardProps) {
 
   return (
     <Card className="grid grid-cols-1 gap-6 py-[22px] sm:grid-cols-3 sm:gap-8">
-      <StatColumn
-        label="Total Payroll This Month"
-        value={formatAmount(totalThisMonth)}
-        hint="from last month"
-        hintValue={formatChange(totalChangePercent)}
-        hintTone={totalChangePercent == null ? "muted" : "up"}
-      />
-      <StatColumn
-        label="Total Recipients"
-        value={String(recipients)}
-        hint="from last month"
-        hintValue={formatChange(recipientsChangePercent)}
-        hintTone={recipientsChangePercent == null ? "muted" : "up"}
-      />
-      <StatColumn
-        label="Average Salary"
-        value={formatAmount(averageSalary)}
-        hint="Maximum salary"
-        hintValue={formatAmount(maximumSalary)}
-      />
+      {loading ? (
+        <div className="flex min-h-[88px] items-center justify-center sm:col-span-3">
+          <IconLoading className="size-5 animate-spin text-[#909090]" />
+        </div>
+      ) : error ? (
+        <p className="font-montserrat text-sm text-danger sm:col-span-3">{error}</p>
+      ) : (
+        <>
+          <StatColumn
+            label="Total Payroll This Month"
+            value={formatAmount(totalThisMonth)}
+            hint="from last month"
+            hintValue={formatChange(totalChangePercent)}
+            hintTone={totalChangePercent == null ? "muted" : "up"}
+          />
+          <StatColumn
+            label="Total Recipients"
+            value={String(recipients)}
+            hint="from last month"
+            hintValue={formatChange(recipientsChangePercent)}
+            hintTone={recipientsChangePercent == null ? "muted" : "up"}
+          />
+          <StatColumn
+            label="Average Salary"
+            value={formatAmount(averageSalary)}
+            hint="Maximum salary"
+            hintValue={formatAmount(maximumSalary)}
+          />
+        </>
+      )}
     </Card>
   );
 }
+

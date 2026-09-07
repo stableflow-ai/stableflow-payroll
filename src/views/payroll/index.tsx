@@ -1,64 +1,81 @@
 import { useEffect, useMemo, useState } from "react";
 import { useOutletContext } from "react-router-dom";
-import { usePayrollOverviewQuery } from "@/hooks/use-payroll-api";
-import { IconLoading } from "@/components/icons/loading";
-import { Switch } from "@/components/ui/switch/Switch";
+import {
+  usePayrollCurrentStatsQuery,
+  usePayrollHistoryExportMutation,
+  usePayrollHistoryInfiniteQuery,
+  usePayrollImportMutation,
+  usePayrollNextQuery,
+  usePayrollRecentPayoutsInfiniteQuery,
+  usePayrollTotalPayoutQuery,
+  usePayrollUpdateMutation,
+} from "@/hooks/use-payroll-api";
+import useToast from "@/hooks/use-toast";
 import type { PayLayoutOutletContext } from "@/layouts/PayLayout";
+import { useAuthStore } from "@/stores/auth";
+import {
+  PAYROLL_CHART_RANGE,
+  PAYROLL_CHART_RANGE_PERIOD,
+  PAYROLL_DRAWER_MODE,
+  PAYROLL_PAYOUT_STATUS,
+  PAYROLL_TAB,
+  type PayrollChartRange,
+  type PayrollDrawerMode,
+  type PayrollTab
+} from "./config";
+import { PayrollFormDrawer } from "./components/payroll-form-drawer";
+import { PayrollHistoryDetailDrawer } from "./components/history-detail-drawer";
 import { PayrollRunsCard } from "./components/payroll-runs";
 import { RecentPayoutsCard } from "./components/recent-payouts";
 import { StatsCard } from "./components/stats";
 import { TotalPayrollChart } from "./components/total-payroll";
+import { type PayrollHistoryRun, type PayrollNextRun, type PayrollRecipientRow } from "@/types/payroll";
 import {
-  IMPORT_CSV_TEMPLATE_FILENAME,
-  PAYROLL_CHART_RANGE,
-  PAYROLL_DRAWER_MODE,
-  PAYROLL_MOCK_VARIANT,
-  PAYROLL_TAB,
-  type PayrollChartRange,
-  type PayrollDrawerMode,
-  type PayrollMockVariant,
-  type PayrollTab
-} from "./config";
-import { PayrollFormDrawer } from "./components/payroll-form-drawer";
-import type { PayrollNextRun } from "@/mocks/payroll";
+  mapPayrollChartSeries,
+  payrollNextRunToPayDay,
+  payrollPayDayToParam,
+  payrollUpdateDeleteIds,
+  recipientRowsToImportItems,
+  recipientRowsToUpdateItems,
+} from "./utils";
+
+function queryErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
+}
 
 export function PayrollView() {
   const { setHeaderExtra } = useOutletContext<PayLayoutOutletContext>();
-  const [variant, setVariant] = useState<PayrollMockVariant>(
-    PAYROLL_MOCK_VARIANT.Filled
-  );
-  const overview = usePayrollOverviewQuery(variant);
+  const toast = useToast();
+  const organizationId = useAuthStore((state) => state.user?.organization?.id ?? null);
+  const nextQuery = usePayrollNextQuery();
+  const historyQuery = usePayrollHistoryInfiniteQuery();
+  const current = usePayrollCurrentStatsQuery();
+  const importMutation = usePayrollImportMutation();
+  const updateMutation = usePayrollUpdateMutation();
+  const historyExportMutation = usePayrollHistoryExportMutation();
   const [tab, setTab] = useState<PayrollTab>(PAYROLL_TAB.Next);
   const [chartRange, setChartRange] = useState<PayrollChartRange>(
     PAYROLL_CHART_RANGE.Months6
   );
+  const totalPayout = usePayrollTotalPayoutQuery(
+    PAYROLL_CHART_RANGE_PERIOD[chartRange]
+  );
+  const recent = usePayrollRecentPayoutsInfiniteQuery();
   const [netPayById, setNetPayById] = useState<Record<string, string>>({});
   const [drawerMode, setDrawerMode] = useState<PayrollDrawerMode | null>(null);
+  const [drawerSeed, setDrawerSeed] = useState(0);
+  const [importRows, setImportRows] = useState<PayrollRecipientRow[] | null>(null);
+  const [editOriginalRows, setEditOriginalRows] = useState<PayrollRecipientRow[] | null>(null);
   const [nextPayrollOverride, setNextPayrollOverride] = useState<PayrollNextRun | null>(null);
+  const [historyDetailRun, setHistoryDetailRun] = useState<PayrollHistoryRun | null>(null);
+  const drawerSaving = importMutation.isPending || updateMutation.isPending;
 
   useEffect(() => {
-    setHeaderExtra(
-      <label className="flex items-center gap-2">
-        <span className="font-montserrat text-sm text-[#606060]">Sample data</span>
-        <Switch
-          checked={variant === PAYROLL_MOCK_VARIANT.Filled}
-          onCheckedChange={(checked) => {
-            setVariant(
-              checked ? PAYROLL_MOCK_VARIANT.Filled : PAYROLL_MOCK_VARIANT.Empty
-            );
-            setNetPayById({});
-            setNextPayrollOverride(null);
-            setDrawerMode(null);
-          }}
-          aria-label="Sample data"
-        />
-      </label>
-    );
+    setHeaderExtra(null);
     return () => setHeaderExtra(null);
-  }, [setHeaderExtra, variant]);
+  }, [setHeaderExtra]);
 
-  const data = overview.data;
-  const nextPayroll = nextPayrollOverride ?? data?.nextPayroll ?? null;
+  const nextPayroll = nextPayrollOverride ?? nextQuery.data ?? null;
   const initialNetPay = useMemo(() => {
     const next: Record<string, string> = {};
     for (const row of nextPayroll?.rows ?? []) {
@@ -68,100 +85,194 @@ export function PayrollView() {
   }, [nextPayroll]);
 
   const resolvedNetPay = { ...initialNetPay, ...netPayById };
+  const chartSeries = useMemo(
+    () => mapPayrollChartSeries(totalPayout.data ?? []),
+    [totalPayout.data]
+  );
+  const recentItems = useMemo(
+    () => recent.data?.pages.flat() ?? [],
+    [recent.data]
+  );
+  const historyItems = useMemo(
+    () => historyQuery.data?.pages.flatMap((page) => page.list) ?? [],
+    [historyQuery.data]
+  );
+  const failedRecentCount = recentItems.filter(
+    (item) => item.status === PAYROLL_PAYOUT_STATUS.Failed
+  ).length;
 
-  function handleExport() {
-    const header = "name,address,token,network,amount,net_pay";
-    const rows = (nextPayroll?.rows ?? []).map((row) =>
-      [
-        row.name,
-        row.address,
-        row.token,
-        row.network,
-        row.amount,
-        resolvedNetPay[row.id] ?? row.netPay
-      ].join(",")
-    );
-    const blob = new Blob([[header, ...rows].join("\n")], {
-      type: "text/csv;charset=utf-8"
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = IMPORT_CSV_TEMPLATE_FILENAME.replace("template", "export");
-    link.click();
-    URL.revokeObjectURL(url);
+  function openAddDrawer(rows?: PayrollRecipientRow[]) {
+    setImportRows(rows && rows.length > 0 ? rows : null);
+    setDrawerSeed((seed) => seed + 1);
+    setDrawerMode(PAYROLL_DRAWER_MODE.Add);
   }
 
-  if (overview.isPending || !data) {
-    return (
-      <div className="flex min-h-[320px] items-center justify-center">
-        <IconLoading className="size-5 animate-spin text-[#909090]" />
-      </div>
-    );
+  async function handleDrawerSave(run: PayrollNextRun) {
+    if (organizationId == null) {
+      toast.fail({ title: "Organization is missing" });
+      return;
+    }
+    try {
+      const schedule = payrollPayDayToParam(payrollNextRunToPayDay(run));
+      if (drawerMode === PAYROLL_DRAWER_MODE.Edit) {
+        const deleteIds = payrollUpdateDeleteIds(
+          editOriginalRows ?? nextPayroll?.rows ?? [],
+          run.rows,
+        );
+        await updateMutation.mutateAsync({
+          organizationId,
+          payrollDayType: schedule.payrollDayType,
+          ...(schedule.payrollDay != null ? { payrollDay: schedule.payrollDay } : {}),
+          items: recipientRowsToUpdateItems(run.rows),
+          ...(deleteIds.length > 0 ? { deleteIds } : {}),
+        });
+        toast.success({ title: "Payroll saved" });
+      } else {
+        const result = await importMutation.mutateAsync({
+          organizationId,
+          payrollDayType: schedule.payrollDayType,
+          ...(schedule.payrollDay != null ? { payrollDay: schedule.payrollDay } : {}),
+          items: recipientRowsToImportItems(run.rows),
+        });
+        toast.success({
+          title: result.count > 0 ? `Saved ${result.count} recipients` : "Payroll saved",
+        });
+      }
+      setNextPayrollOverride(null);
+      setNetPayById({});
+      setImportRows(null);
+      setEditOriginalRows(null);
+      setDrawerMode(null);
+    } catch (error) {
+      toast.fail({
+        title: queryErrorMessage(error, "Could not save payroll"),
+      });
+    }
   }
 
-  if (overview.isError) {
-    return (
-      <p className="font-montserrat text-sm text-danger">
-        {overview.error instanceof Error
-          ? overview.error.message
-          : "Failed to load payroll"}
-      </p>
-    );
+  async function handleExport() {
+    if (organizationId == null) {
+      toast.fail({ title: "Organization is missing" });
+      return;
+    }
+    try {
+      await historyExportMutation.mutateAsync();
+    } catch (error) {
+      toast.fail({
+        title: queryErrorMessage(error, "Could not export payroll history"),
+      });
+    }
   }
 
   return (
     <div className="flex flex-col gap-5">
       <StatsCard
-        totalThisMonth={data.totalThisMonth}
-        totalChangePercent={data.totalChangePercent}
-        recipients={data.recipients}
-        recipientsChangePercent={data.recipientsChangePercent}
-        averageSalary={data.averageSalary}
-        maximumSalary={data.maximumSalary}
+        loading={current.isLoading}
+        error={
+          current.isError
+            ? queryErrorMessage(current.error, "Failed to load payroll stats")
+            : null
+        }
+        totalThisMonth={current.data?.totalPayout ?? "0"}
+        totalChangePercent={current.data?.totalPayoutChange ?? null}
+        recipients={current.data?.payments ?? 0}
+        recipientsChangePercent={current.data?.paymentsChange ?? null}
+        averageSalary={current.data?.averageSalary ?? "0"}
+        maximumSalary={current.data?.maxSalary ?? "0"}
       />
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(260px,452px)]">
         <TotalPayrollChart
           range={chartRange}
           onRangeChange={setChartRange}
-          periodLabel={data.chartPeriodLabel}
-          currentValue={data.chartCurrentValue}
-          points={data.chartPoints}
+          periodLabel={chartSeries.periodLabel}
+          currentValue={chartSeries.currentValue}
+          points={chartSeries.points}
+          loading={totalPayout.isLoading}
+          error={
+            totalPayout.isError
+              ? queryErrorMessage(
+                  totalPayout.error,
+                  "Failed to load payroll chart"
+                )
+              : null
+          }
         />
         <RecentPayoutsCard
-          items={data.recentPayouts}
-          failedCount={data.failedRecentCount}
+          items={recentItems}
+          failedCount={failedRecentCount}
+          loading={recent.isLoading}
+          loadingMore={recent.isFetchingNextPage}
+          hasMore={Boolean(recent.hasNextPage)}
+          error={
+            recent.isError
+              ? queryErrorMessage(recent.error, "Failed to load recent payouts")
+              : null
+          }
+          onLoadMore={() => {
+            if (!recent.hasNextPage || recent.isFetchingNextPage) return;
+            void recent.fetchNextPage();
+          }}
         />
       </div>
       <PayrollRunsCard
         tab={tab}
         onTabChange={setTab}
         nextPayroll={nextPayroll}
-        history={data.history}
+        history={historyItems}
         netPayById={resolvedNetPay}
         onNetPayChange={(id, value) => {
-          setNetPayById((current) => ({ ...current, [id]: value }));
+          setNetPayById((currentPay) => ({ ...currentPay, [id]: value }));
         }}
         onExport={handleExport}
-        onAddPayroll={() => setDrawerMode(PAYROLL_DRAWER_MODE.Add)}
-        onEditPayroll={() => setDrawerMode(PAYROLL_DRAWER_MODE.Edit)}
+        exporting={historyExportMutation.isPending}
+        onAddPayroll={() => openAddDrawer()}
+        onEditPayroll={() => {
+          setEditOriginalRows(nextPayroll?.rows ?? []);
+          setDrawerMode(PAYROLL_DRAWER_MODE.Edit);
+        }}
+        onImported={openAddDrawer}
+        nextLoading={nextQuery.isLoading}
+        historyLoading={historyQuery.isLoading}
+        historyError={
+          historyQuery.isError
+            ? queryErrorMessage(historyQuery.error, "Failed to load payroll history")
+            : null
+        }
+        historyLoadingMore={historyQuery.isFetchingNextPage}
+        historyHasMore={Boolean(historyQuery.hasNextPage)}
+        onHistoryLoadMore={() => {
+          if (!historyQuery.hasNextPage || historyQuery.isFetchingNextPage) return;
+          void historyQuery.fetchNextPage();
+        }}
+        onViewHistoryDetails={setHistoryDetailRun}
+      />
+      <PayrollHistoryDetailDrawer
+        open={historyDetailRun !== null}
+        run={historyDetailRun}
+        onClose={() => setHistoryDetailRun(null)}
       />
       <PayrollFormDrawer
-        key={drawerMode ?? "closed"}
+        key={`${drawerMode ?? "closed"}-${drawerSeed}`}
         open={drawerMode !== null}
         mode={drawerMode ?? PAYROLL_DRAWER_MODE.Add}
-        initialPayDate={
-          drawerMode === PAYROLL_DRAWER_MODE.Edit ? nextPayroll?.payDate : undefined
+        saving={drawerSaving}
+        initialPayDay={
+          drawerMode === PAYROLL_DRAWER_MODE.Edit
+            ? payrollNextRunToPayDay(nextPayroll)
+            : undefined
         }
         initialRows={
-          drawerMode === PAYROLL_DRAWER_MODE.Edit ? nextPayroll?.rows : undefined
+          drawerMode === PAYROLL_DRAWER_MODE.Edit
+            ? nextPayroll?.rows
+            : importRows ?? undefined
         }
-        onClose={() => setDrawerMode(null)}
-        onSave={(run) => {
-          setNextPayrollOverride(run);
-          setNetPayById({});
+        onClose={() => {
+          if (drawerSaving) return;
           setDrawerMode(null);
+          setImportRows(null);
+          setEditOriginalRows(null);
         }}
+        onSave={handleDrawerSave}
       />
     </div>
   );

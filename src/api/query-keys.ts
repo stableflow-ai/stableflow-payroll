@@ -45,4 +45,18 @@ export const queryKeys = {
     analytics: (params: unknown) => [...queryKeys.partner.all, "analytics", params] as const,
     payments: (params: unknown) => [...queryKeys.partner.all, "payments", params] as const,
   },
+  payroll: {
+    all: ["payroll"] as const,
+    current: (organizationId: number, timezone: string) =>
+      [...queryKeys.payroll.all, "current", organizationId, timezone] as const,
+    totalPayout: (organizationId: number, period: string, timezone: string) =>
+      [...queryKeys.payroll.all, "total-payout", organizationId, period, timezone] as const,
+    recent: (organizationId: number) => [...queryKeys.payroll.all, "recent", organizationId] as const,
+    next: (organizationId: number, timezone: string) =>
+      [...queryKeys.payroll.all, "next", organizationId, timezone] as const,
+    history: (organizationId: number, timezone: string) =>
+      [...queryKeys.payroll.all, "history", organizationId, timezone] as const,
+    historyDetail: (organizationId: number, executionId: string, timezone: string) =>
+      [...queryKeys.payroll.all, "history-detail", organizationId, executionId, timezone] as const,
+  },
 } as const;

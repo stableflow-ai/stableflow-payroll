@@ -1,5 +1,6 @@
+import { useEffect, useRef } from "react";
 import { IconAlertCircle } from "@/components/icons/alert";
-import { IconOutLink } from "@/components/icons/link";
+import { IconLoading } from "@/components/icons/loading";
 import {
   IconPayoutPaid,
   IconPayoutPending
@@ -7,8 +8,8 @@ import {
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_VARIANT } from "@/components/ui/button/config";
 import { cn } from "@/lib/utils";
-import { formatAmount } from "@/utils";
-import type { PayrollHistoryRun } from "@/mocks/payroll";
+import type { PayrollHistoryRun } from "@/types/payroll";
+import { DATE_FORMAT, formatAmount, formatDate } from "@/utils";
 import { PAYROLL_RUN_STATUS, type PayrollRunStatus } from "../../config";
 
 function statusTone(status: PayrollRunStatus) {
@@ -33,7 +34,11 @@ function statusTone(status: PayrollRunStatus) {
   };
 }
 
-function HistoryCard({ run }: { run: PayrollHistoryRun }) {
+function HistoryCard(props: {
+  run: PayrollHistoryRun;
+  onViewDetails: (run: PayrollHistoryRun) => void;
+}) {
+  const { run, onViewDetails } = props;
   const tone = statusTone(run.status);
 
   return (
@@ -99,7 +104,7 @@ function HistoryCard({ run }: { run: PayrollHistoryRun }) {
               Execution Time
             </p>
             <p className="mt-2.5 font-montserrat text-sm font-medium text-black">
-              {run.executedAt}
+              {formatDate(run.executedAt, DATE_FORMAT.DateTime) || run.executedAt}
             </p>
           </div>
         </div>
@@ -107,6 +112,7 @@ function HistoryCard({ run }: { run: PayrollHistoryRun }) {
           <Button
             variant={BUTTON_VARIANT.Normal}
             className="h-9 rounded-[10px] border-[rgba(0,0,0,0.10)] bg-[#FFF] px-4 text-[14px] text-[#000] md:h-9 md:text-[14px]"
+            onClick={() => onViewDetails(run)}
           >
             View Details
           </Button>
@@ -123,7 +129,36 @@ function HistoryCard({ run }: { run: PayrollHistoryRun }) {
   );
 }
 
-export function HistoryPanel({ items }: { items: PayrollHistoryRun[] }) {
+export function HistoryPanel(props: {
+  items: PayrollHistoryRun[];
+  loadingMore?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+  onViewDetails: (run: PayrollHistoryRun) => void;
+}) {
+  const {
+    items,
+    loadingMore = false,
+    hasMore = false,
+    onLoadMore,
+    onViewDetails,
+  } = props;
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!hasMore || loadingMore || !onLoadMore) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) onLoadMore();
+      },
+      { rootMargin: "160px", threshold: 0.1 },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, onLoadMore, items.length]);
+
   if (items.length === 0) {
     return (
       <div className="flex min-h-[280px] items-center justify-center">
@@ -137,8 +172,14 @@ export function HistoryPanel({ items }: { items: PayrollHistoryRun[] }) {
   return (
     <div className="flex flex-col gap-5">
       {items.map((run) => (
-        <HistoryCard key={run.id} run={run} />
+        <HistoryCard key={run.id} run={run} onViewDetails={onViewDetails} />
       ))}
+      {hasMore ? <div ref={sentinelRef} className="h-4 shrink-0" aria-hidden /> : null}
+      {loadingMore ? (
+        <div className="flex items-center justify-center py-2">
+          <IconLoading className="size-4 animate-spin text-[#909090]" />
+        </div>
+      ) : null}
     </div>
   );
 }

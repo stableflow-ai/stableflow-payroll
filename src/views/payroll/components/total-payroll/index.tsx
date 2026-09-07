@@ -8,11 +8,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { IconLoading } from "@/components/icons/loading";
 import { Card } from "@/components/ui/card/Card";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/utils";
-import type { PayrollChartPoint } from "@/mocks/payroll";
+import type { PayrollChartPoint } from "@/types/payroll";
 import {
   PAYROLL_CHART_HIGHLIGHT_COLOR,
   PAYROLL_CHART_LINE_COLOR,
@@ -54,9 +55,19 @@ export function TotalPayrollChart(props: {
   periodLabel: string;
   currentValue: string;
   points: PayrollChartPoint[];
+  loading?: boolean;
+  error?: string | null;
 }) {
-  const { range, onRangeChange, periodLabel, currentValue, points } = props;
-  const isEmpty = points.every((point) => point.value === 0);
+  const {
+    range,
+    onRangeChange,
+    periodLabel,
+    currentValue,
+    points,
+    loading = false,
+    error = null,
+  } = props;
+  const isEmpty = !loading && points.every((point) => point.value === 0);
   const yMax = Math.max(PAYROLL_CHART_Y_MAX, ...points.map((point) => point.value));
   const highlightedLabel = points.find((point) => point.highlighted)?.label;
 
@@ -89,84 +100,94 @@ export function TotalPayrollChart(props: {
         />
       </div>
       <div className="mt-4 h-[320px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={points} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-            <CartesianGrid stroke="#e3e3e3" />
-            <defs>
-              <linearGradient id="payrollChartHighlight" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={PAYROLL_CHART_HIGHLIGHT_COLOR} stopOpacity={0.2} />
-                <stop offset="100%" stopColor={PAYROLL_CHART_HIGHLIGHT_COLOR} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <XAxis
-              dataKey="label"
-              axisLine={false}
-              tickLine={false}
-              tick={(tickProps) => {
-                const { x, y, payload } = tickProps;
-                const active = payload?.value === highlightedLabel;
-                return (
-                  <text
-                    x={x}
-                    y={y}
-                    dy={12}
-                    textAnchor="middle"
-                    fill={active ? "#606060" : "#aaa"}
-                    fontSize={12}
-                    fontFamily="Montserrat"
-                  >
-                    {payload?.value}
-                  </text>
-                );
-              }}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              domain={[0, yMax]}
-              ticks={[0, yMax / 4, yMax / 2, (yMax * 3) / 4, yMax]}
-              tickFormatter={formatYTick}
-              tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
-              width={48}
-            />
-            {highlightedLabel ? (
-              <ReferenceArea
-                x1={highlightedLabel}
-                x2={highlightedLabel}
-                fill="url(#payrollChartHighlight)"
-                ifOverflow="extendDomain"
+        {loading ? (
+          <div className="flex h-full items-center justify-center">
+            <IconLoading className="size-5 animate-spin text-[#909090]" />
+          </div>
+        ) : error ? (
+          <div className="flex h-full items-center justify-center">
+            <p className="font-montserrat text-sm text-danger">{error}</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={points} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+              <CartesianGrid stroke="#e3e3e3" />
+              <defs>
+                <linearGradient id="payrollChartHighlight" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={PAYROLL_CHART_HIGHLIGHT_COLOR} stopOpacity={0.2} />
+                  <stop offset="100%" stopColor={PAYROLL_CHART_HIGHLIGHT_COLOR} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="label"
+                axisLine={false}
+                tickLine={false}
+                tick={(tickProps) => {
+                  const { x, y, payload } = tickProps;
+                  const active = payload?.value === highlightedLabel;
+                  return (
+                    <text
+                      x={x}
+                      y={y}
+                      dy={12}
+                      textAnchor="middle"
+                      fill={active ? "#606060" : "#aaa"}
+                      fontSize={12}
+                      fontFamily="Montserrat"
+                    >
+                      {payload?.value}
+                    </text>
+                  );
+                }}
               />
-            ) : null}
-            <Tooltip
-              content={(tooltipProps) => (
-                <ChartTooltip
-                  active={tooltipProps.active}
-                  payload={tooltipProps.payload}
-                  label={tooltipProps.label}
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                domain={[0, yMax]}
+                ticks={[0, yMax / 4, yMax / 2, (yMax * 3) / 4, yMax]}
+                tickFormatter={formatYTick}
+                tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
+                width={48}
+              />
+              {highlightedLabel ? (
+                <ReferenceArea
+                  x1={highlightedLabel}
+                  x2={highlightedLabel}
+                  fill="url(#payrollChartHighlight)"
+                  ifOverflow="extendDomain"
                 />
-              )}
-              cursor={{ stroke: PAYROLL_CHART_LINE_COLOR, strokeWidth: 1, strokeDasharray: "4 4" }}
-            />
-            <Line
-              type="linear"
-              dataKey="value"
-              stroke={PAYROLL_CHART_LINE_COLOR}
-              strokeWidth={2}
-              dot={{
-                r: 6,
-                fill: PAYROLL_CHART_LINE_COLOR,
-                stroke: "#fff",
-                strokeWidth: 2,
-              }}
-              activeDot={{
-                r: 6,
-                fill: PAYROLL_CHART_LINE_COLOR,
-                stroke: "#fff",
-                strokeWidth: 2,
-              }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+              ) : null}
+              <Tooltip
+                content={(tooltipProps) => (
+                  <ChartTooltip
+                    active={tooltipProps.active}
+                    payload={tooltipProps.payload}
+                    label={tooltipProps.label}
+                  />
+                )}
+                cursor={{ stroke: PAYROLL_CHART_LINE_COLOR, strokeWidth: 1, strokeDasharray: "4 4" }}
+              />
+              <Line
+                type="linear"
+                dataKey="value"
+                stroke={PAYROLL_CHART_LINE_COLOR}
+                strokeWidth={2}
+                dot={{
+                  r: 6,
+                  fill: PAYROLL_CHART_LINE_COLOR,
+                  stroke: "#fff",
+                  strokeWidth: 2,
+                }}
+                activeDot={{
+                  r: 6,
+                  fill: PAYROLL_CHART_LINE_COLOR,
+                  stroke: "#fff",
+                  strokeWidth: 2,
+                }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </Card>
   );

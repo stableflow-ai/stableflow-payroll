@@ -5,11 +5,12 @@ import { normalizeSymbol } from "@/stores/intents-tokens";
 import { Big } from "@/utils";
 import type { WalletChainKind } from "@/utils";
 import { AMOUNT_MAX_DECIMALS, MEMO_MAX_LENGTH } from "./config";
-import { detectAddressChainKind, parsePositiveDecimal } from "./utils";
+import { detectAddressChainKind, isValidEmail, parsePositiveDecimal } from "./utils";
 
 export interface BatchDraft {
   id: string;
   address: string;
+  email: string;
   chainKind: WalletChainKind | null;
   addressError: string | null;
   amount: string;
@@ -20,17 +21,18 @@ export interface BatchDraft {
   tokenError: string | null;
 }
 
-export type BatchDraftPatch = Partial<Pick<BatchDraft, "address" | "amount" | "memo" | "token">>;
+export type BatchDraftPatch = Partial<Pick<BatchDraft, "address" | "email" | "amount" | "memo" | "token">>;
 
 export type FindTokenByChainAndSymbol = (
   blockchain: string,
   symbol: PayoutSymbol,
 ) => IntentsToken | undefined;
 
-type Field = "address" | "amount" | "token" | "network" | "memo";
+type Field = "address" | "email" | "amount" | "token" | "network" | "memo";
 
 const HEADER_ALIASES: Record<Field, string[]> = {
   address: ["recipient", "address", "wallet", "to", "destination"],
+  email: ["email", "mail", "e-mail"],
   amount: ["amount", "value"],
   token: ["token", "symbol", "asset"],
   network: ["network", "chain", "blockchain"],
@@ -108,6 +110,7 @@ export function createEmptyDraft(memo = ""): BatchDraft {
   return {
     id: crypto.randomUUID(),
     address: "",
+    email: "",
     chainKind: null,
     addressError: "Address cannot be empty",
     amount: "",
@@ -120,7 +123,7 @@ export function createEmptyDraft(memo = ""): BatchDraft {
 }
 
 export function createDraftFromRaw(
-  raw: { address: string; amount: string; token: string; network: string; memo: string },
+  raw: { address: string; email: string; amount: string; token: string; network: string; memo: string },
   findByChainAndSymbol: FindTokenByChainAndSymbol,
   defaultMemo: string,
 ): BatchDraft {
@@ -131,6 +134,7 @@ export function createDraftFromRaw(
   return {
     id: crypto.randomUUID(),
     address,
+    email: raw.email.trim(),
     chainKind: detected.chainKind,
     addressError: detected.error,
     amount: sanitizeDecimalInput(raw.amount),
@@ -142,6 +146,12 @@ export function createDraftFromRaw(
   };
 }
 
+export function batchEmailError(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return isValidEmail(trimmed) ? null : "Enter a valid email";
+}
+
 export function amountError(amount: string): string | null {
   if (!amount.trim()) return "Amount is required";
   if (!parsePositiveDecimal(amount, AMOUNT_MAX_DECIMALS)) return "Amount must be greater than 0";
@@ -150,6 +160,7 @@ export function amountError(amount: string): string | null {
 
 export function isDraftValid(row: BatchDraft): boolean {
   return !row.addressError
+    && !batchEmailError(row.email)
     && !!row.chainKind
     && !!row.token
     && !row.tokenError
@@ -237,7 +248,7 @@ function cellAt(row: string[], index: number | undefined): string {
   return String(row[index] ?? "").trim();
 }
 
-function isEmptyRaw(raw: { address: string; amount: string; token: string; network: string; memo: string }): boolean {
+function isEmptyRaw(raw: { address: string; email: string; amount: string; token: string; network: string; memo: string }): boolean {
   return !raw.address && !raw.amount && !raw.token && !raw.network && !raw.memo;
 }
 
@@ -249,7 +260,7 @@ export function parseImportRows(
   if (!values.length) return [];
   const headerMap = detectHeaderMap(values[0] ?? []);
   const dataRows = headerMap ? values.slice(1) : values;
-  const positional: Record<Field, number> = {
+  const positional: Partial<Record<Field, number>> = {
     address: 0,
     amount: 1,
     token: 2,
@@ -262,6 +273,7 @@ export function parseImportRows(
   for (const row of dataRows) {
     const raw = {
       address: cellAt(row, indexOf("address")),
+      email: cellAt(row, indexOf("email")),
       amount: cellAt(row, indexOf("amount")),
       token: cellAt(row, indexOf("token")),
       network: cellAt(row, indexOf("network")),

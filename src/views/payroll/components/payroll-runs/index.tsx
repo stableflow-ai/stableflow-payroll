@@ -1,10 +1,15 @@
 import { IconPlus } from "@/components/icons/plus";
 import { IconExportLink } from "@/components/icons/link";
+import { IconLoading } from "@/components/icons/loading";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
-import type { PayrollHistoryRun, PayrollNextRun } from "@/mocks/payroll";
+import type {
+  PayrollHistoryRun,
+  PayrollNextRun,
+  PayrollRecipientRow
+} from "@/types/payroll";
 import { PAYROLL_TAB, type PayrollTab } from "../../config";
 import { CreatePayrollEmpty } from "./CreatePayrollEmpty";
 import { HistoryPanel } from "./HistoryPanel";
@@ -41,8 +46,17 @@ export function PayrollRunsCard(props: {
   netPayById: Record<string, string>;
   onNetPayChange: (id: string, value: string) => void;
   onExport: () => void;
+  exporting?: boolean;
   onAddPayroll: () => void;
   onEditPayroll: () => void;
+  onImported: (rows: PayrollRecipientRow[]) => void;
+  nextLoading?: boolean;
+  historyLoading?: boolean;
+  historyError?: string | null;
+  historyLoadingMore?: boolean;
+  historyHasMore?: boolean;
+  onHistoryLoadMore?: () => void;
+  onViewHistoryDetails: (run: PayrollHistoryRun) => void;
 }) {
   const {
     tab,
@@ -52,10 +66,25 @@ export function PayrollRunsCard(props: {
     netPayById,
     onNetPayChange,
     onExport,
+    exporting = false,
     onAddPayroll,
-    onEditPayroll
+    onEditPayroll,
+    onImported,
+    nextLoading = false,
+    historyLoading = false,
+    historyError = null,
+    historyLoadingMore = false,
+    historyHasMore = false,
+    onHistoryLoadMore,
+    onViewHistoryDetails
   } = props;
-  const showToolbar = Boolean(nextPayroll) || history.length > 0;
+  const isNextTab = tab === PAYROLL_TAB.Next;
+  const tabLoading = isNextTab ? nextLoading : historyLoading;
+  const tabError = isNextTab ? null : historyError;
+  const showToolbar =
+    !tabLoading &&
+    !tabError &&
+    (isNextTab ? Boolean(nextPayroll) : history.length > 0);
 
   return (
     <div>
@@ -76,14 +105,17 @@ export function PayrollRunsCard(props: {
         </div>
         {showToolbar ? (
           <div className="flex items-center gap-2 pb-1">
-            <Button
-              variant={BUTTON_VARIANT.Normal}
-              className="h-9 rounded-[10px] border-black/10 px-4 text-sm text-black"
-              onClick={onExport}
-            >
-              <IconExportLink className="size-3.5 shrink-0" />
-              Export CSV
-            </Button>
+            {tab === PAYROLL_TAB.History ? (
+              <Button
+                variant={BUTTON_VARIANT.Normal}
+                loading={exporting}
+                className="h-9 rounded-[10px] border-black/10 px-4 text-sm text-black"
+                onClick={onExport}
+              >
+                {exporting ? null : <IconExportLink className="size-3.5 shrink-0" />}
+                Export CSV
+              </Button>
+            ) : null}
             <Button
               variant={BUTTON_VARIANT.Normal}
               className="h-9 rounded-[10px] border-black/10 px-4 text-sm text-black"
@@ -96,7 +128,13 @@ export function PayrollRunsCard(props: {
         ) : null}
       </div>
       <Card className="mt-3 px-5 py-6 sm:px-8">
-        {tab === PAYROLL_TAB.Next ? (
+        {tabLoading ? (
+          <div className="flex min-h-[240px] items-center justify-center">
+            <IconLoading className="size-5 animate-spin text-[#909090]" />
+          </div>
+        ) : tabError ? (
+          <p className="font-montserrat text-sm text-danger">{tabError}</p>
+        ) : tab === PAYROLL_TAB.Next ? (
           nextPayroll ? (
             <NextPayrollPanel
               run={nextPayroll}
@@ -105,10 +143,19 @@ export function PayrollRunsCard(props: {
               onEdit={onEditPayroll}
             />
           ) : (
-            <CreatePayrollEmpty onAddPayroll={onAddPayroll} />
+            <CreatePayrollEmpty
+              onAddPayroll={onAddPayroll}
+              onImported={onImported}
+            />
           )
         ) : (
-          <HistoryPanel items={history} />
+          <HistoryPanel
+            items={history}
+            loadingMore={historyLoadingMore}
+            hasMore={historyHasMore}
+            onLoadMore={onHistoryLoadMore}
+            onViewDetails={onViewHistoryDetails}
+          />
         )}
       </Card>
     </div>

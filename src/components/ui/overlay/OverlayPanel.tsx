@@ -40,7 +40,7 @@ export function OverlayPanel(props: OverlayPanelProps) {
         <h2
           className={cn(
             "min-h-5 font-montserrat text-[20px] font-semibold leading-normal text-black",
-            titleClassName,
+            titleClassName
           )}
         >
           {title}
@@ -50,12 +50,17 @@ export function OverlayPanel(props: OverlayPanelProps) {
           type="button"
           aria-label="Close"
           onClick={onClose}
-          className={cn("ml-auto shrink-0 cursor-pointer text-black", closeClassName)}
+          className={cn(
+            "ml-auto shrink-0 cursor-pointer text-black",
+            closeClassName
+          )}
         >
           {closeIcon ?? <IconClose className="size-3.25" />}
         </button>
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto">{children}</div>
+      <div className="min-h-0 flex-1 overflow-y-auto overflow-x-hidden">
+        {children}
+      </div>
     </Card>
   );
 }

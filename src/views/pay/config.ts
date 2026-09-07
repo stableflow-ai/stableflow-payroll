@@ -209,9 +209,9 @@ export const IMPORT_MAX_ROWS = 50;
 export const IMPORT_CSV_ACCEPT = ".csv,text/csv";
 export const IMPORT_CSV_TEMPLATE_FILENAME = "payout-import-template.csv";
 export const IMPORT_CSV_TEMPLATE = [
-  "recipient,amount,token,network,memo",
-  "0x557be3f47a45499385f60cd64e2ff455e42a3311,100,USDC,eth,payroll",
-  "stableflow.near,50,USDT,near,",
-  "9JXR51yBLBgfesHF8SJgKWkNnx4FxtJCxCc3AV31TBsn,25,USDC,sol,bonus",
-  "TJbLVQHYf61a36iC7oyxdMiNSoqTMKYAMv,1,USDT,tron",
+  "recipient,email,amount,token,network,memo",
+  "0x557be3f47a45499385f60cd64e2ff455e42a3311,alice@example.com,100,USDC,eth,payroll",
+  "stableflow.near,bob@example.com,50,USDT,near,",
+  "9JXR51yBLBgfesHF8SJgKWkNnx4FxtJCxCc3AV31TBsn,carol@example.com,25,USDC,sol,bonus",
+  "TJbLVQHYf61a36iC7oyxdMiNSoqTMKYAMv,dave@example.com,1,USDT,tron",
 ].join("\n");

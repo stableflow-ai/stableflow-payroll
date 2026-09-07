@@ -100,9 +100,9 @@ The pre-checkout quote / swap / broadcast path (`useSinglePayQuote`, `useSingleP
 
 ### `/pay/payroll` — Payroll
 
-Files: `src/views/payroll/`. Mock: `src/mocks/payroll.ts`.
+Files: `src/views/payroll/`. API: [api.md](api.md) salaries endpoints.
 
-Dashboard for the Operations → Payroll nav item. Stats, a six-month total-payroll chart, recent payouts, and Next Payroll / Payroll History tabs. Data is mocked until the backend contract exists. A header **Sample data** switch toggles the empty create-payroll CTA (Download Template, Import CSV, Add Payroll) vs filled Next Payroll and Payroll History (pending / failed / paid run cards). **Add Payroll** / **Add a new Payroll** and **Edit** open a right-side drawer (`Add Payroll` / `Edit Payroll`) instead of `/pay/batch`. Import CSV and Pay Now still go to `/pay/batch`.
+Dashboard for the Operations → Payroll nav item. Stats (`GET /v1/payroll/salaries/current`), a six-month total-payroll chart (`GET /v1/payroll/salaries/total-payout`), recent payouts with scroll-to-load (`GET /v1/payroll/salaries/recent`), Next Payroll (`GET /v1/payroll/salaries/next`), and Payroll History (`GET /v1/payroll/salaries/history`, paginated). Next Payroll rows show email after address. **View Details** on a history card opens a right-side drawer (Figma `2766:18971`) with `GET /v1/payroll/salaries/history/{execution_id}`. Each live block has its own loading state. An empty or failed next-payroll request shows the create-payroll CTA (Download Template, Import CSV, Add Payroll). **Add Payroll** / **Add a new Payroll** and **Edit** open a right-side drawer (`Add Payroll` / `Edit Payroll`) instead of `/pay/batch`. Set Pay Date offers First day of month, Last day of month, and Day of month. Day of month opens a 1–31 picker; choosing 1 or 31 still saves as `first_day` / `last_day`. **Import CSV** (Choose file or Google Docs) parses on this page and opens the Add Payroll drawer with the rows; **Save** posts `POST /v1/payroll/salaries/import` and stays on `/pay/payroll`. Edit drawer **Save** posts `POST /v1/payroll/salaries/update` (existing row ids, new rows without id, removed ids in `delete_ids`) and stays on `/pay/payroll`. Payroll History **Export CSV** calls `GET /v1/payroll/salaries/history/export` (`organization_id`, `timezone`) and is hidden on Next Payroll. Pay Now still goes to `/pay/batch`.
 
 ### `/pay/expense` — Expense
 
@@ -120,7 +120,7 @@ Dashboard for the Operations → Bonus nav item. Stats (Total Bonus with token l
 
 Three page steps (`upload` → `validate` → `preview`) with a two-dot `BatchStepper` injected into the layout header.
 
-1. **Upload.** Drop a CSV, pick a Google Sheet through the Picker, or start with one empty row. Template and accepted extensions are in `config.ts` (`IMPORT_CSV_TEMPLATE`, `IMPORT_CSV_ACCEPT`); columns are `recipient,amount,token,network,memo`. Imports are capped at `IMPORT_MAX_ROWS` (50) and the extra rows are dropped with a toast.
+1. **Upload.** Drop a CSV, pick a Google Sheet through the Picker, or start with one empty row. Template and accepted extensions are in `config.ts` (`IMPORT_CSV_TEMPLATE`, `IMPORT_CSV_ACCEPT`); columns are `recipient,email,amount,token,network,memo`. Email is optional. Imports are capped at `IMPORT_MAX_ROWS` (50) and the extra rows are dropped with a toast.
 2. **Validate.** An editable table of drafts with per-field status. `batch-utils.ts` owns parsing, patching, per-row validation, token resolution against the 1Click token list, totals, and the per-token breakdown. The paying token is chosen here; its balance is polled every `ORIGIN_BALANCE_POLL_MS` (20s).
 3. **Preview.** Totals, payout count, fee and cost from `POST /v1/payroll/batches` (`useCreatePayrollBatchQuery`, posted once when this step opens). A refresh control on the card (and an expired or already-used quote) posts again. Confirm stays disabled while the quote is stale, errored, or consumed. Confirm re-reads the wallet balance, refuses to continue when it is short of `totalSourceAmountRaw`, marks the `batchId` consumed, broadcasts through `broadcastBatchPayout`, then resets the flow. There is no submit after broadcast and no waiting page.
 

@@ -10,6 +10,7 @@ import { create } from "zustand";
 import {
   clearStoredSession,
   getStoredSession,
+  hydrateAuthUser,
   setOnUnauthorized,
   setStoredSession,
 } from "@/lib/auth-session";
@@ -32,8 +33,9 @@ function readInitialSession(): Pick<AuthState, "token" | "user"> {
 export const useAuthStore = create<AuthState>((set) => ({
   ...readInitialSession(),
   applySession: (token, user) => {
-    setStoredSession(token, user);
-    set({ token, user });
+    const nextUser = hydrateAuthUser(user);
+    setStoredSession(token, nextUser);
+    set({ token, user: nextUser });
   },
   logout: () => {
     clearStoredSession();

@@ -1,4 +1,5 @@
-import { AUTH_USER_ROLE, type AuthSession, type AuthUser } from "@/types/auth";
+import { apiNumber, apiText, asRecord } from "@/api/map";
+import { AUTH_USER_ROLE, type AuthOrganization, type AuthSession, type AuthUser } from "@/types/auth";
 
 const SESSION_KEY = "stableflow-pay.session";
 
@@ -25,6 +26,7 @@ function isAuthUserRecord(value: unknown): value is {
   email: string;
   name: string;
   role?: unknown;
+  organization?: unknown;
 } {
   if (!value || typeof value !== "object") return false;
   const user = value as AuthUser;
@@ -35,18 +37,37 @@ function isAuthUserRecord(value: unknown): value is {
   );
 }
 
-function hydrateUser(user: { id: number; email: string; name: string; role?: unknown }): AuthUser {
+function hydrateOrganization(value: unknown): AuthOrganization | null {
+  const row = asRecord(value);
+  if (!row) return null;
+  const id = apiNumber(row.id);
+  if (id == null) return null;
+  return {
+    id,
+    name: apiText(row.name),
+    logo: apiText(row.logo),
+  };
+}
+
+export function hydrateAuthUser(user: {
+  id: number;
+  email: string;
+  name: string;
+  role?: unknown;
+  organization?: unknown;
+}): AuthUser {
   return {
     id: user.id,
     email: user.email,
     name: user.name,
     role: user.role === AUTH_USER_ROLE.Employee ? AUTH_USER_ROLE.Employee : AUTH_USER_ROLE.Admin,
+    organization: hydrateOrganization(user.organization),
   };
 }
 
 function isAuthSessionRecord(value: unknown): value is {
   token: string;
-  user: { id: number; email: string; name: string; role?: unknown };
+  user: { id: number; email: string; name: string; role?: unknown; organization?: unknown };
 } {
   if (!value || typeof value !== "object") return false;
   const session = value as AuthSession;
@@ -65,7 +86,7 @@ export function getStoredSession(): AuthSession | null {
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
     if (!isAuthSessionRecord(parsed)) return null;
-    return { token: parsed.token, user: hydrateUser(parsed.user) };
+    return { token: parsed.token, user: hydrateAuthUser(parsed.user) };
   } catch {
     return null;
   }
@@ -78,7 +99,7 @@ export function getAuthToken(): string | null {
 export function setStoredSession(token: string, user: AuthUser): void {
   const storage = getStorage();
   if (!storage) return;
-  const session: AuthSession = { token, user };
+  const session: AuthSession = { token, user: hydrateAuthUser(user) };
   storage.setItem(SESSION_KEY, JSON.stringify(session));
 }
 

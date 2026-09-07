@@ -13,8 +13,8 @@ import {
   IMPORT_MAX_ROWS,
   MEMO_MAX_LENGTH,
 } from "../../config";
-import type { BatchDraft } from "../../batch-utils";
-import { amountError } from "../../batch-utils";
+import type { BatchDraft, BatchDraftPatch } from "../../batch-utils";
+import { amountError, batchEmailError } from "../../batch-utils";
 import { BatchFieldStatus } from "./BatchFieldStatus";
 import { BatchTokenTrigger } from "./BatchTokenTrigger";
 import { IconLoading } from "@/components/icons";
@@ -28,7 +28,7 @@ export function BatchValidateStep(props: {
   totalAmountLabel: string;
   onOpenOriginToken: () => void;
   onOpenDestToken: (rowId: string) => void;
-  onPatch: (rowId: string, patch: Partial<Pick<BatchDraft, "address" | "amount" | "memo">>) => void;
+  onPatch: (rowId: string, patch: BatchDraftPatch) => void;
   onAdd: () => void;
   onRemove: (rowId: string) => void;
   onBack: () => void;
@@ -78,8 +78,9 @@ export function BatchValidateStep(props: {
           </p>
         </div>
 
-        <div className="mt-8 hidden gap-3 font-montserrat text-sm font-medium text-[#606060] lg:grid lg:grid-cols-[minmax(0,1.5fr)_minmax(100px,0.5fr)_minmax(180px,0.8fr)_minmax(120px,0.55fr)_28px]">
+        <div className="mt-8 hidden gap-3 font-montserrat text-sm font-medium text-[#606060] lg:grid lg:grid-cols-[minmax(0,1.3fr)_minmax(140px,0.7fr)_minmax(100px,0.5fr)_minmax(180px,0.8fr)_minmax(120px,0.55fr)_28px]">
           <span>Recipient</span>
+          <span>Email</span>
           <span>Amount</span>
           <span>Prefer Token, Network</span>
           <span>Memo</span>
@@ -145,20 +146,23 @@ function BatchRow(props: {
   showErrors: boolean;
   canRemove: boolean;
   onOpenDestToken: () => void;
-  onPatch: (patch: Partial<Pick<BatchDraft, "address" | "amount" | "memo">>) => void;
+  onPatch: (patch: BatchDraftPatch) => void;
   onRemove: () => void;
 }) {
   const { row, showErrors, canRemove, onOpenDestToken, onPatch, onRemove } = props;
   const amountErr = amountError(row.amount);
+  const emailErr = batchEmailError(row.email);
   const showAddressStatus = Boolean(row.address.trim()) || showErrors;
   const addressOk = !row.addressError && Boolean(row.chainKind);
+  const showEmailStatus = Boolean(row.email.trim()) || (showErrors && Boolean(emailErr));
+  const emailOk = !emailErr;
   const showAmountStatus = Boolean(row.amount.trim()) || showErrors;
   const amountOk = !amountErr;
   const tokenInvalid = showErrors && (!row.token || Boolean(row.tokenError));
 
   return (
     <div
-      className="grid gap-3 lg:grid-cols-[minmax(0,1.5fr)_minmax(100px,0.5fr)_minmax(180px,0.8fr)_minmax(120px,0.55fr)_28px] lg:items-center"
+      className="grid gap-3 lg:grid-cols-[minmax(0,1.3fr)_minmax(140px,0.7fr)_minmax(100px,0.5fr)_minmax(180px,0.8fr)_minmax(120px,0.55fr)_28px] lg:items-center"
     >
       <label className="flex min-w-0 flex-col gap-1 lg:block">
         <span className="font-montserrat text-sm text-[#606060] lg:hidden">Recipient</span>
@@ -178,6 +182,27 @@ function BatchRow(props: {
             )}
           />
           {showAddressStatus ? <BatchFieldStatus ok={addressOk} /> : null}
+        </span>
+      </label>
+
+      <label className="flex min-w-0 flex-col gap-1 lg:block">
+        <span className="font-montserrat text-sm text-[#606060] lg:hidden">Email</span>
+        <span
+          className={cn(
+            "flex h-9 items-center gap-2 rounded-[6px] border bg-[#f6f6f6] px-3",
+            showEmailStatus && !emailOk ? "border-danger" : "border-[#e3e3e3]",
+          )}
+        >
+          <input
+            type="email"
+            value={row.email}
+            onChange={(event) => onPatch({ email: event.target.value })}
+            placeholder="Email"
+            className={cn(
+              "min-w-0 flex-1 bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
+              showEmailStatus && !emailOk ? "text-danger" : "text-black",
+            )}
+          />
         </span>
       </label>
 

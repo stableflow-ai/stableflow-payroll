@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table/Table";
 import { chainDisplayName } from "@/config/chains";
-import { formatAmount } from "@/utils";
+import { DATE_FORMAT, formatAmount, formatDate } from "@/utils";
 import type { PayrollNextRun } from "@/mocks/payroll";
 import { NEXT_PAYROLL_TABLE_COLUMNS, PAYROLL_CREATE_PATH } from "../../config";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";
@@ -46,7 +46,7 @@ export function NextPayrollPanel(props: {
           <div>
             <p className="font-montserrat text-sm font-medium text-[#606060]">Next Pay-date</p>
             <p className="mt-1.5 font-montserrat text-[20px] font-semibold text-black">
-              {run.payDate}
+              {formatDate(run.payDate, DATE_FORMAT.MonthDayYear) || run.payDate}
             </p>
           </div>
         </div>
@@ -72,6 +72,7 @@ export function NextPayrollPanel(props: {
         <TableHeader className="border-b-0 bg-transparent">
           <TableHead>Name</TableHead>
           <TableHead>Address</TableHead>
+          <TableHead>Email</TableHead>
           <TableHead>Payout Preference</TableHead>
           <TableHead>Amount</TableHead>
           <TableHead className="capitalize">Net Pay</TableHead>
@@ -85,6 +86,9 @@ export function NextPayrollPanel(props: {
               <TableCell>{row.name}</TableCell>
               <TableCell>
                 <PayoutRecipientCell address={row.address} prefix={5} suffix={5} />
+              </TableCell>
+              <TableCell>
+                <span className="min-w-0 truncate">{row.email}</span>
               </TableCell>
               <TableCell>
                 {row.token} · {chainDisplayName(row.network)}

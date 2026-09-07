@@ -30,6 +30,7 @@ export type BonusPendingMember = {
   id: string;
   name: string;
   address: string;
+  email: string;
   amount: string;
   token: string;
 };
@@ -56,6 +57,7 @@ export type BonusPendingRow = {
   id: string;
   name: string;
   address: string;
+  email: string;
   token: string;
   network: string;
   amount: string;
@@ -162,6 +164,7 @@ function getBonusOverviewFilledMock(): BonusOverview {
               id: "bonus-andrew-m1",
               name: "Andrew",
               address: MEMBER_ADDRESS,
+              email: "",
               amount: "200",
               token: "Near",
             },
@@ -178,6 +181,7 @@ function getBonusOverviewFilledMock(): BonusOverview {
               id: "bonus-team-a-1",
               name: "Alice",
               address: MEMBER_ADDRESS,
+              email: "",
               amount: "200",
               token: "Near",
             },
@@ -185,6 +189,7 @@ function getBonusOverviewFilledMock(): BonusOverview {
               id: "bonus-team-a-2",
               name: "Bill",
               address: MEMBER_ADDRESS,
+              email: "",
               amount: "200",
               token: "Near",
             },
@@ -192,6 +197,7 @@ function getBonusOverviewFilledMock(): BonusOverview {
               id: "bonus-team-a-3",
               name: "Carol",
               address: MEMBER_ADDRESS,
+              email: "",
               amount: "200",
               token: "Near",
             },
@@ -199,6 +205,7 @@ function getBonusOverviewFilledMock(): BonusOverview {
               id: "bonus-team-a-4",
               name: "Dave",
               address: MEMBER_ADDRESS,
+              email: "",
               amount: "200",
               token: "Near",
             },
@@ -215,6 +222,7 @@ function getBonusOverviewFilledMock(): BonusOverview {
               id: "bonus-team-b-1",
               name: "Alice",
               address: MEMBER_ADDRESS,
+              email: "",
               amount: "200",
               token: "Near",
             },
@@ -222,6 +230,7 @@ function getBonusOverviewFilledMock(): BonusOverview {
               id: "bonus-team-b-2",
               name: "Bill",
               address: MEMBER_ADDRESS,
+              email: "",
               amount: "200",
               token: "Near",
             },
@@ -229,6 +238,7 @@ function getBonusOverviewFilledMock(): BonusOverview {
               id: "bonus-team-b-3",
               name: "Andrew",
               address: MEMBER_ADDRESS,
+              email: "",
               amount: "200",
               token: "Near",
             },

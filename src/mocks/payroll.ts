@@ -1,8 +1,13 @@
 import type {
+  PayrollChartPoint,
+  PayrollHistoryRun,
+  PayrollNextRun,
+  PayrollRecentPayout,
+  PayrollRecipientRow,
+} from "@/types/payroll";
+import type {
   PayrollChartRange,
   PayrollMockVariant,
-  PayrollPayoutStatus,
-  PayrollRunStatus,
 } from "@/views/payroll/config";
 import {
   PAYROLL_CHART_RANGE,
@@ -11,48 +16,12 @@ import {
   PAYROLL_RUN_STATUS,
 } from "@/views/payroll/config";
 
-export type PayrollChartPoint = {
-  label: string;
-  value: number;
-  highlighted?: boolean;
-};
-
-export type PayrollRecentPayout = {
-  id: string;
-  amount: string;
-  token: string;
-  network: string;
-  recipient: string;
-  status: PayrollPayoutStatus;
-};
-
-export type PayrollRecipientRow = {
-  id: string;
-  name: string;
-  address: string;
-  token: string;
-  network: string;
-  amount: string;
-  netPay: string;
-};
-
-export type PayrollNextRun = {
-  totalPayout: string;
-  recipients: number;
-  payDate: string;
-  rows: PayrollRecipientRow[];
-};
-
-export type PayrollHistoryRun = {
-  id: string;
-  title: string;
-  status: PayrollRunStatus;
-  paidCount: number;
-  recipientCount: number;
-  totalPayout: string;
-  transactionCount: number;
-  failedCount: number;
-  executedAt: string;
+export type {
+  PayrollChartPoint,
+  PayrollHistoryRun,
+  PayrollNextRun,
+  PayrollRecentPayout,
+  PayrollRecipientRow,
 };
 
 export type PayrollOverview = {
@@ -102,6 +71,7 @@ function filledNextRows(): PayrollRecipientRow[] {
       id: `recipient-${index + 1}`,
       name: NEXT_ROW_NAMES[cycle],
       address: NEXT_RECIPIENT_ADDRESS,
+      email: "",
       token: "USDC",
       network: "near",
       amount: NEXT_ROW_AMOUNTS[cycle],

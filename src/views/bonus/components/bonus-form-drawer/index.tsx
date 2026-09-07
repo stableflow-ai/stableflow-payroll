@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button/Button";
 import { BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Drawer } from "@/components/ui/drawer/Drawer";
 import { DRAWER_SIDE } from "@/components/ui/drawer/config";
-import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { InputNumber } from "@/components/ui/input-number/InputNumber";
 import { cn } from "@/lib/utils";
 import { useIntentsTokensStore } from "@/stores/intents-tokens";
@@ -19,13 +18,11 @@ import {
   BONUS_FORM_AMOUNT_MAX_DECIMALS,
   BONUS_FORM_COLUMNS,
   BONUS_FORM_MAX_ROWS,
-  BONUS_PAY_DATE_OPTIONS,
   type BonusDrawerMode,
-  type BonusPayDate,
 } from "../../config";
 import {
+  bonusEmailError,
   createEmptyBonusFormRow,
-  defaultBonusPayDate,
   formRowsToPendingList,
   isBonusFormValid,
   patchBonusFormRow,
@@ -42,7 +39,7 @@ export function BonusFormDrawer(props: {
   const { open, mode, onClose, onSave } = props;
   const tokens = useIntentsTokensStore((state) => state.tokens);
   const findByChainAndSymbol = useIntentsTokensStore((state) => state.findByChainAndSymbol);
-  const [payDate, setPayDate] = useState<BonusPayDate>(() => defaultBonusPayDate());
+  const [title, setTitle] = useState("");
   const [rows, setRows] = useState<BonusFormRow[]>(() => [createEmptyBonusFormRow()]);
   const [destRowId, setDestRowId] = useState<string | null>(null);
 
@@ -51,7 +48,7 @@ export function BonusFormDrawer(props: {
       setDestRowId(null);
       return;
     }
-    setPayDate(defaultBonusPayDate());
+    setTitle("");
     setRows([createEmptyBonusFormRow()]);
   }, [open]);
 
@@ -61,7 +58,7 @@ export function BonusFormDrawer(props: {
   }, [open, tokens, findByChainAndSymbol]);
 
   const destRow = rows.find((row) => row.id === destRowId) ?? null;
-  const canSave = isBonusFormValid(rows);
+  const canSave = isBonusFormValid(rows, title);
 
   function patchRow(rowId: string, patch: Parameters<typeof patchBonusFormRow>[1]) {
     setRows((current) =>
@@ -77,64 +74,67 @@ export function BonusFormDrawer(props: {
       onClose={onClose}
       side={DRAWER_SIDE.Right}
       title={BONUS_DRAWER_TITLE[mode]}
-      cardClassName="h-full w-[min(100%,941px)] rounded-r-none p-6 sm:px-8 sm:pt-8 sm:pb-0"
+      panelClassName="w-[min(100%,1080px)]"
+      cardClassName="h-full rounded-r-none p-6 sm:px-8 sm:pt-8 sm:pb-0"
     >
       <div className="flex min-h-full flex-col">
-        <div className="min-w-[760px] flex-1 overflow-x-auto pb-6">
-          <div className="flex flex-col gap-6">
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-4">
-              <p className="shrink-0 font-montserrat text-sm font-medium text-[#606060]">
-                Set Pay Date
-              </p>
-              <Dropdown
-                className="w-full min-w-0 flex-1"
-                value={payDate}
-                onChange={(value) => setPayDate(value as BonusPayDate)}
-                options={[...BONUS_PAY_DATE_OPTIONS]}
-              />
-            </div>
+        <div className="min-w-[900px] flex-1 overflow-x-auto pb-6">
+          <div
+            className="grid items-center gap-2.5"
+            style={{ gridTemplateColumns: BONUS_FORM_COLUMNS }}
+          >
+            <p className="whitespace-nowrap font-montserrat text-sm font-medium text-[#606060]">
+              Bonus Title
+            </p>
+            <input
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder="Title"
+              className="col-span-5 h-9 min-w-0 w-full rounded-[6px] border border-[#e3e3e3] bg-white px-3 font-montserrat text-sm font-medium text-black outline-none placeholder:text-black/30"
+            />
+          </div>
 
-            <div>
-              <div
-                className="grid gap-2.5 font-montserrat text-sm font-medium text-[#aaa]"
-                style={{ gridTemplateColumns: BONUS_FORM_COLUMNS }}
-              >
-                <span>Name</span>
-                <span>Address</span>
-                <span>Payout Preference</span>
-                <span>Amount</span>
-                <span />
-              </div>
-              <div className="mt-3.5 flex flex-col gap-5">
-                {rows.map((row) => (
-                  <BonusFormRowFields
-                    key={row.id}
-                    row={row}
-                    canRemove={rows.length > 1}
-                    onPatch={(patch) => patchRow(row.id, patch)}
-                    onOpenToken={() => setDestRowId(row.id)}
-                    onRemove={() => {
-                      setRows((current) => current.filter((item) => item.id !== row.id));
-                    }}
-                  />
-                ))}
-              </div>
-              <button
-                type="button"
-                disabled={rows.length >= BONUS_FORM_MAX_ROWS}
-                onClick={() => {
-                  setRows((current) =>
-                    current.length >= BONUS_FORM_MAX_ROWS
-                      ? current
-                      : [...current, createEmptyBonusFormRow()],
-                  );
-                }}
-                className="mt-5 flex h-9 w-full items-center justify-center gap-2 rounded-[8px] border border-dashed border-black/20 font-montserrat text-sm font-medium text-black disabled:opacity-40"
-              >
-                <IconPlus className="size-3 shrink-0" />
-                Add one
-              </button>
+          <div className="mt-[30px] border-t border-black/10 pt-5">
+            <div
+              className="grid gap-2.5 font-montserrat text-sm font-medium text-[#aaa]"
+              style={{ gridTemplateColumns: BONUS_FORM_COLUMNS }}
+            >
+              <span>Name</span>
+              <span>Address</span>
+              <span>Email</span>
+              <span>Payout Preference</span>
+              <span>Amount</span>
+              <span />
             </div>
+            <div className="mt-4 flex flex-col gap-5">
+              {rows.map((row) => (
+                <BonusFormRowFields
+                  key={row.id}
+                  row={row}
+                  canRemove={rows.length > 1}
+                  onPatch={(patch) => patchRow(row.id, patch)}
+                  onOpenToken={() => setDestRowId(row.id)}
+                  onRemove={() => {
+                    setRows((current) => current.filter((item) => item.id !== row.id));
+                  }}
+                />
+              ))}
+            </div>
+            <button
+              type="button"
+              disabled={rows.length >= BONUS_FORM_MAX_ROWS}
+              onClick={() => {
+                setRows((current) =>
+                  current.length >= BONUS_FORM_MAX_ROWS
+                    ? current
+                    : [...current, createEmptyBonusFormRow()],
+                );
+              }}
+              className="mt-6 flex h-9 w-full items-center justify-center gap-2 rounded-[8px] border border-dashed border-black/20 font-montserrat text-sm font-medium text-black disabled:opacity-40"
+            >
+              <IconPlus className="size-3 shrink-0" />
+              Add one
+            </button>
           </div>
         </div>
 
@@ -151,7 +151,7 @@ export function BonusFormDrawer(props: {
             disabled={!canSave}
             onClick={() => {
               // TODO(api): persist the bonus draft when the contract exists.
-              onSave(formRowsToPendingList(rows));
+              onSave(formRowsToPendingList(rows, title));
             }}
           >
             Save
@@ -184,6 +184,7 @@ function BonusFormRowFields(props: {
 }) {
   const { row, canRemove, onPatch, onOpenToken, onRemove } = props;
   const addressInvalid = Boolean(row.address.trim()) && Boolean(row.addressError);
+  const emailInvalid = Boolean(bonusEmailError(row.email));
   const amountInvalid = Boolean(row.amount.trim()) && Boolean(amountError(row.amount));
 
   return (
@@ -218,6 +219,16 @@ function BonusFormRowFields(props: {
           </span>
         ) : null}
       </span>
+      <input
+        type="email"
+        value={row.email}
+        onChange={(event) => onPatch({ email: event.target.value })}
+        placeholder="Email"
+        className={cn(
+          "h-9 min-w-0 rounded-[6px] border bg-[#f6f6f6] px-2.5 font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
+          emailInvalid ? "border-[#FF5656] text-[#FF5656]" : "border-[#e3e3e3] text-black",
+        )}
+      />
       <BatchTokenTrigger token={row.token} showLogo onClick={onOpenToken} />
       <span
         className={cn(
@@ -241,7 +252,7 @@ function BonusFormRowFields(props: {
         aria-label="Remove row"
         disabled={!canRemove}
         onClick={onRemove}
-        className="inline-flex size-4 items-center justify-center text-black disabled:opacity-30"
+        className="inline-flex size-3.5 items-center justify-center justify-self-start text-black disabled:opacity-30"
       >
         <IconDelete className="size-3.5" />
       </button>

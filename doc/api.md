@@ -106,7 +106,7 @@ navigate(returnTo ?? "/", { replace: true });
 
 Paths are prefixed with `PAY_API_PREFIX` (`/v1/payroll`) or `NEARINTENTS_API_PREFIX` (`/v1/nearintents`) from `src/api/config.ts`. "Auth" is the default for that function; `caller` means the caller decides.
 
-Only Auth, Single Payout (`/payments`), and Batch Payout (`/batches`) are served by the Payroll backend. The Payout, Recipients, and Payment-request tables are the pre-Payroll contract kept unchanged under the new prefix; the screens that call them are not in scope yet, so those routes will 404. Do not treat them as a spec.
+Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), and the Payroll salaries dashboard endpoints are served by the Payroll backend. The Payout, Recipients, and Payment-request tables are the pre-Payroll contract kept unchanged under the new prefix; the screens that call them are not in scope yet, so those routes will 404. Do not treat them as a spec.
 
 ### Auth — `src/api/auth.ts`, `src/types/auth.ts`, `src/hooks/use-auth-api.ts`
 
@@ -120,7 +120,7 @@ Only Auth, Single Payout (`/payments`), and Batch Payout (`/batches`) are served
 | GET | `/v1/payroll/profile` | yes | — | `AuthUser` | `getProfile` | `useProfileQuery` |
 | POST | `/v1/payroll/profile` | yes | `UpdateProfileBody` | — | `updateProfile` | `useUpdateProfileMutation` |
 
-`AuthUser` includes `role`: `"admin"` | `"employee"`. Login, register, and profile are typed as already returning that field (`http<AuthSession>` / `http<AuthUser>`). Do not remap it until the backend uses a different name. Stored sessions without `role` hydrate as admin.
+`AuthUser` includes `role`: `"admin"` | `"employee"`, and `organization`: `{ id, name, logo } | null`. Login, register, and profile are typed as already returning those fields (`http<AuthSession>` / `http<AuthUser>`). Do not remap `role` until the backend uses a different name. Stored sessions without `role` hydrate as admin; stored sessions without `organization` hydrate as `null`. `hydrateAuthUser` reads `organization` with `asRecord` / `apiNumber` / `apiText`.
 
 ### Payments (hosted checkout) — `src/api/payout.ts`, `src/types/payout.ts`, `src/hooks/use-single-payout-api.ts`
 
@@ -147,6 +147,38 @@ The checkout returns to the `success_url` we send (`{origin}/pay/result`) only a
 Confirm signs and broadcasts that transaction. There is no submit call after broadcast. `GET .../transaction` is a status lookup; the page does not call it (success resets to the upload step). A consumed `batchId` is stored in `consumed-batches` before broadcast so the same deposit addresses are never paid twice.
 
 `notification.email` / `notification.slack` are omitted: the page does not collect them.
+
+### Payroll salaries — `src/api/payroll.ts`, `src/types/payroll.ts`, `src/hooks/use-payroll-api.ts`
+
+| Method | Path | Auth | Query | Data | API | Hook |
+| --- | --- | --- | --- | --- | --- | --- |
+| GET | `/v1/payroll/salaries/current` | yes | `organization_id`, `timezone` | `PayrollCurrentStats` | `getPayrollCurrentStats` | `usePayrollCurrentStatsQuery` |
+| GET | `/v1/payroll/salaries/total-payout` | yes | `organization_id`, `period`, `timezone` | `PayrollTotalPayoutPoint[]` | `getPayrollTotalPayout` | `usePayrollTotalPayoutQuery` |
+| GET | `/v1/payroll/salaries/recent` | yes | `organization_id`, `limit` | `PayrollRecentPayout[]` | `getPayrollRecentPayouts` | `usePayrollRecentPayoutsInfiniteQuery` |
+| GET | `/v1/payroll/salaries/next` | yes | `organization_id`, `timezone` | `PayrollNextRun \| null` | `getPayrollNext` | `usePayrollNextQuery` |
+| GET | `/v1/payroll/salaries/history` | yes | `organization_id`, `page`, `pageSize`, `timezone` | `PayrollHistoryResp` | `getPayrollHistory` | `usePayrollHistoryInfiniteQuery` |
+| GET | `/v1/payroll/salaries/history/{execution_id}` | yes | `organization_id`, `timezone` | `PayrollHistoryDetail` | `getPayrollHistoryDetail` | `usePayrollHistoryDetailQuery` |
+| GET | `/v1/payroll/salaries/history/export` | yes | `organization_id`, `timezone` | CSV file | `exportPayrollHistory` | `usePayrollHistoryExportMutation` |
+| POST | `/v1/payroll/salaries/import` | yes | body: `organization_id`, `payroll_day_type`, `items` | `PayrollImportResp` | `importPayrollSalaries` | `usePayrollImportMutation` |
+| POST | `/v1/payroll/salaries/update` | yes | body: `organization_id`, `payroll_day_type`, `items`, `delete_ids` | — | `updatePayrollSalaries` | `usePayrollUpdateMutation` |
+
+`organization_id` comes from `AuthUser.organization.id`. `timezone` is the browser IANA zone. Queries stay disabled until both the token and organization id are present.
+
+`period` is `day` \| `week` \| `month`. The Payroll chart currently only exposes Last 6 months and sends `month`.
+
+Recent payouts have no `page` in the contract, only `limit` (max 100). `usePayrollRecentPayoutsInfiniteQuery` requests `limit = page * 10` and keeps the new slice. `failedCount` is counted from loaded rows with status `failed`.
+
+`GET /salaries/next` returns `total_payout`, `recipients`, `payment_date`, and `list` (`PayrollOperationItem`: name, address, symbol, network, amount, net_pay). An empty `list` maps to `null` so the page shows the create-payroll empty state.
+
+`GET /salaries/history` is paginated (`page` / `pageSize`, max 100). `usePayrollHistoryInfiniteQuery` loads the next page on scroll. Each row maps `month` → title (`August Payroll`), `transactions` → paid count / transaction count, `recipients`, `total_payout`, and `execution_time`. The list contract has no status or failed count; status is `pending` when `transactions` is 0 and there are recipients, otherwise `paid`.
+
+`GET /salaries/history/{execution_id}` returns the same summary plus `list` (`PayrollOperationExecutionItem`). Rows map `recipient` → address, `destination_symbol` / `destination_network` → payout preference, `amount` / `net_pay`, `status` (`completed` → `paid`), and `destination_tx_hash`. Failed count is counted from loaded `failed` rows. The item has no email field; that line is omitted when empty.
+
+`GET /salaries/history/export` downloads the payroll history CSV. The Payroll History tab **Export CSV** button calls it with `organization_id` and the browser IANA `timezone`. Filename comes from `Content-Disposition`, falling back to `payroll-history.csv`.
+
+`POST /salaries/import` saves a draft next payroll. Set Pay Date is `first_day`, `last_day`, or `day_of_month`. Picking a day in the Day of month dialog sends **1** as `first_day`, **31** as `last_day`, and 2–30 as `day_of_month` plus `payroll_day`. Each item sends `name`, `address`, `amount`, `network`, `symbol`, and optional `email` / `description`. Success returns `{ batch_id, count }` and invalidates the payroll query namespace.
+
+`POST /salaries/update` saves edits to the current next payroll with the same pay-date mapping. Existing rows send their numeric `id`; newly added drawer rows omit `id`. Removed original ids go in `delete_ids`. Items send `name`, `address`, `amount`, `network`, `symbol`, and optional `email` (no `description`). Success invalidates the payroll query namespace.
 
 ### Payout (legacy wallet path) — `src/api/payout.ts`, `src/types/payout.ts`
 
@@ -221,3 +253,4 @@ All four pass `envelope: false`. They are called from `src/lib/confidential/` fo
 | `src/api/config.ts` | `PAY_API_PREFIX`, `NEARINTENTS_API_PREFIX` |
 | `src/api/query-keys.ts` | `queryKeys` factory |
 | `src/api/map.ts` | `asRecord`, `apiText`, `apiNumber` |
+| `src/api/payroll.ts` | Payroll salaries current / total-payout / recent |

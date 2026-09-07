@@ -14,21 +14,10 @@ export const BONUS_DRAWER_TITLE = {
   [BONUS_DRAWER_MODE.Edit]: "Edit Bonus",
 } as const;
 
-export const BONUS_PAY_DATE = {
-  NextMonth1st: "next-month-1st",
-} as const;
-
-export type BonusPayDate =
-  (typeof BONUS_PAY_DATE)[keyof typeof BONUS_PAY_DATE];
-
-export const BONUS_PAY_DATE_OPTIONS = [
-  { value: BONUS_PAY_DATE.NextMonth1st, label: "Every next month 1st" },
-] as const;
-
 export const BONUS_FORM_MAX_ROWS = 50;
 export const BONUS_FORM_AMOUNT_MAX_DECIMALS = 6;
 export const BONUS_FORM_COLUMNS =
-  "minmax(110px,126px) minmax(180px,1fr) minmax(160px,184px) 99px 16px";
+  "minmax(110px,126px) minmax(0,1fr) minmax(140px,180px) 184px 99px 38px";
 
 export const BONUS_TAB = {
   ToBePaid: "to_be_paid",
@@ -86,9 +75,9 @@ export const PENDING_BONUS_TABLE_COLUMNS =
 
 export const IMPORT_CSV_TEMPLATE_FILENAME = "bonus-import-template.csv";
 export const IMPORT_CSV_TEMPLATE = [
-  "recipient,amount,token,network,memo",
-  "0x557be3f47a45499385f60cd64e2ff455e42a3311,100,USDC,eth,bonus",
-  "stableflow.near,50,USDT,near,",
-  "9JXR51yBLBgfesHF8SJgKWkNnx4FxtJCxCc3AV31TBsn,25,USDC,sol,bonus",
-  "TJbLVQHYf61a36iC7oyxdMiNSoqTMKYAMv,1,USDT,tron",
+  "recipient,email,amount,token,network,memo",
+  "0x557be3f47a45499385f60cd64e2ff455e42a3311,alice@example.com,100,USDC,eth,bonus",
+  "stableflow.near,bob@example.com,50,USDT,near,",
+  "9JXR51yBLBgfesHF8SJgKWkNnx4FxtJCxCc3AV31TBsn,carol@example.com,25,USDC,sol,bonus",
+  "TJbLVQHYf61a36iC7oyxdMiNSoqTMKYAMv,dave@example.com,1,USDT,tron"
 ].join("\n");

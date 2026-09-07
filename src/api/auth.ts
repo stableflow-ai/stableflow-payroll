@@ -1,5 +1,6 @@
 import { PAY_API_PREFIX } from "@/api/config";
 import { http } from "@/lib/http";
+import { hydrateAuthUser } from "@/lib/auth-session";
 import type {
   AuthSession,
   AuthUser,
@@ -11,20 +12,28 @@ import type {
   UpdateProfileBody,
 } from "@/types/auth";
 
-export function login(body: LoginBody) {
-  return http<AuthSession>(`${PAY_API_PREFIX}/auth/login`, {
-    method: "POST",
-    body,
-    auth: false,
-  });
+function mapAuthSession(session: AuthSession): AuthSession {
+  return { token: session.token, user: hydrateAuthUser(session.user) };
 }
 
-export function register(body: RegisterBody) {
-  return http<AuthSession>(`${PAY_API_PREFIX}/auth/register`, {
-    method: "POST",
-    body,
-    auth: false,
-  });
+export async function login(body: LoginBody) {
+  return mapAuthSession(
+    await http<AuthSession>(`${PAY_API_PREFIX}/auth/login`, {
+      method: "POST",
+      body,
+      auth: false,
+    }),
+  );
+}
+
+export async function register(body: RegisterBody) {
+  return mapAuthSession(
+    await http<AuthSession>(`${PAY_API_PREFIX}/auth/register`, {
+      method: "POST",
+      body,
+      auth: false,
+    }),
+  );
 }
 
 export function changePassword(body: ChangePasswordBody) {
@@ -50,8 +59,9 @@ export function resetPassword(body: ResetPasswordBody) {
   });
 }
 
-export function getProfile() {
-  return http<AuthUser>(`${PAY_API_PREFIX}/profile`);
+export async function getProfile() {
+  const user = await http<AuthUser>(`${PAY_API_PREFIX}/profile`);
+  return hydrateAuthUser(user);
 }
 
 export function updateProfile(body: UpdateProfileBody) {

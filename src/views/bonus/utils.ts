@@ -8,22 +8,19 @@ import {
   resolveImportToken,
   type FindTokenByChainAndSymbol,
 } from "@/views/pay/batch-utils";
+import { isValidEmail } from "@/views/pay/utils";
 import type {
   BonusPendingItem,
   BonusPendingList,
   BonusPendingRow,
 } from "@/mocks/bonus";
-import {
-  BONUS_PAY_DATE,
-  BONUS_PAY_DATE_OPTIONS,
-  BONUS_ROW_ACTION,
-  type BonusPayDate,
-} from "./config";
+import { BONUS_ROW_ACTION } from "./config";
 
 export type BonusFormRow = {
   id: string;
   name: string;
   address: string;
+  email: string;
   chainKind: WalletChainKind | null;
   addressError: string | null;
   amount: string;
@@ -33,29 +30,19 @@ export type BonusFormRow = {
 };
 
 export type BonusFormRowPatch = Partial<
-  Pick<BonusFormRow, "name" | "address" | "amount" | "token">
+  Pick<BonusFormRow, "name" | "address" | "email" | "amount" | "token">
 >;
+
+export function bonusEmailError(value: string): string | null {
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  return isValidEmail(trimmed) ? null : "Enter a valid email";
+}
 
 export function formatBonusTokenAmount(amount: string, token: string) {
   const trimmed = amount.trim();
   if (!token) return trimmed || "0";
   return `${trimmed || "0"} ${token}`;
-}
-
-export function defaultBonusPayDate(): BonusPayDate {
-  return BONUS_PAY_DATE.NextMonth1st;
-}
-
-export function payDateLabel(value: BonusPayDate): string {
-  return (
-    BONUS_PAY_DATE_OPTIONS.find((option) => option.value === value)?.label ??
-    BONUS_PAY_DATE_OPTIONS[0].label
-  );
-}
-
-export function payDateFromLabel(label: string | undefined): BonusPayDate {
-  const match = BONUS_PAY_DATE_OPTIONS.find((option) => option.label === label);
-  return match?.value ?? defaultBonusPayDate();
 }
 
 export function createEmptyBonusFormRow(): BonusFormRow {
@@ -64,6 +51,7 @@ export function createEmptyBonusFormRow(): BonusFormRow {
     id: crypto.randomUUID(),
     name: "",
     address: "",
+    email: "",
     chainKind: detected.chainKind,
     addressError: detected.error,
     amount: "",
@@ -88,6 +76,7 @@ export function formRowFromPending(
     id: row.id,
     name: row.name,
     address: row.address,
+    email: row.email,
     chainKind: detected.chainKind,
     addressError: detected.error,
     amount: row.amount,
@@ -108,6 +97,7 @@ export function pendingItemsToFormRows(
         id: member.id,
         name: member.name,
         address: member.address,
+        email: member.email,
         token: member.token,
         network: "near",
         amount: member.amount,
@@ -178,14 +168,15 @@ export function isBonusFormRowValid(row: BonusFormRow): boolean {
   return (
     Boolean(row.name.trim()) &&
     !row.addressError &&
+    !bonusEmailError(row.email) &&
     Boolean(row.chainKind) &&
     Boolean(row.token) &&
     !amountError(row.amount)
   );
 }
 
-export function isBonusFormValid(rows: BonusFormRow[]): boolean {
-  return rows.length > 0 && rows.every(isBonusFormRowValid);
+export function isBonusFormValid(rows: BonusFormRow[], title: string): boolean {
+  return Boolean(title.trim()) && rows.length > 0 && rows.every(isBonusFormRowValid);
 }
 
 export function sumBonusFormAmounts(rows: BonusFormRow[]): string {
@@ -200,33 +191,36 @@ export function sumBonusFormAmounts(rows: BonusFormRow[]): string {
   }, "0");
 }
 
-export function formRowsToPendingList(rows: BonusFormRow[]): BonusPendingList {
-  const items: BonusPendingItem[] = rows.map((row) => {
+export function formRowsToPendingList(
+  rows: BonusFormRow[],
+  title: string,
+): BonusPendingList {
+  const members = rows.map((row) => {
     const symbol = row.token?.symbol ?? normalizeSymbol(row.rawToken) ?? row.rawToken;
-    const amount = row.amount.trim();
-    const name = row.name.trim();
     return {
       id: row.id,
-      title: name,
-      amount,
+      name: row.name.trim(),
+      address: row.address.trim(),
+      email: row.email.trim(),
+      amount: row.amount.trim(),
       token: symbol,
-      action: BONUS_ROW_ACTION.PayNow,
-      members: [
-        {
-          id: `${row.id}-member`,
-          name,
-          address: row.address.trim(),
-          amount,
-          token: symbol,
-        },
-      ],
     };
   });
-  const token = items[0]?.token ?? "";
+  const token = members[0]?.token ?? "";
+  const totalAmount = sumBonusFormAmounts(rows);
   return {
-    totalAmount: sumBonusFormAmounts(rows),
+    totalAmount,
     token,
-    entryCount: items.length,
-    items,
+    entryCount: 1,
+    items: [
+      {
+        id: crypto.randomUUID(),
+        title: title.trim(),
+        amount: totalAmount,
+        token,
+        action: BONUS_ROW_ACTION.PayNow,
+        members,
+      },
+    ],
   };
 }

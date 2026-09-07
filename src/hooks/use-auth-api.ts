@@ -32,7 +32,8 @@ function isSameUser(left: AuthUser, right: AuthUser): boolean {
     left.id === right.id &&
     left.email === right.email &&
     left.name === right.name &&
-    left.role === right.role
+    left.role === right.role &&
+    left.organization?.id === right.organization?.id
   );
 }
 
