@@ -34,9 +34,21 @@ export const queryKeys = {
   },
   request: {
     all: ["request"] as const,
-    payments: ["request", "payments"] as const,
+    list: (params: unknown) => [...queryKeys.request.all, "list", params] as const,
+    pending: (orgId: number, limit: number) =>
+      [...queryKeys.request.all, "pending", orgId, limit] as const,
+    recent: (orgId: number, limit: number) =>
+      [...queryKeys.request.all, "recent", orgId, limit] as const,
+    defaultAddresses: (orgId: number) =>
+      [...queryKeys.request.all, "default-addresses", orgId] as const,
     withdrawCount: ["request", "withdraw-count"] as const,
     detail: (id: number) => [...queryKeys.request.all, "detail", id] as const,
+  },
+  memberOverview: {
+    all: ["member-overview"] as const,
+    stats: (orgId: number) => [...queryKeys.memberOverview.all, "stats", orgId] as const,
+    payout: (orgId: number, period: string, timezone: string) =>
+      [...queryKeys.memberOverview.all, "payout", orgId, period, timezone] as const,
   },
   partner: {
     all: ["partner"] as const,

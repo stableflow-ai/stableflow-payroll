@@ -13,7 +13,7 @@ A mock is temporary scaffolding. It ships with a `TODO(api)` marker and is delet
 | `src/mocks/config.ts` | `MOCK_ENABLED` switchboard and the derived `MockDomain` type |
 | `src/mocks/<domain>.ts` | Fixtures and the reader function for one domain |
 
-`MOCK_ENABLED` currently mocks `employeeOverview` and `payroll`. Every other page reads the real API.
+`MOCK_ENABLED` currently mocks `payroll`. Every other page reads the real API.
 
 ## How a page reads mock data
 
@@ -51,7 +51,6 @@ Never import a fixture into a view. Go through the same hook the real API will u
 
 | Domain | Mock file | Reader hook | Notes |
 | --- | --- | --- | --- |
-| `employeeOverview` | `src/mocks/employee-overview.ts` | `useEmployeeOverviewQuery` | Employee dashboard at `/`. Stats, Payment Volume series, open requests, recent payments. Daily / Weekly volume arrays are empty so the chart still draws a zero grid. |
 | `payroll` | `src/mocks/payroll.ts` | `usePayrollOverviewQuery` | Fixtures remain for unused overview data. `/pay/payroll` stats, chart, recent payouts, Next Payroll, Payroll History, and history **View Details** call `/v1/payroll/salaries/*`. |
 
 ## Constraints

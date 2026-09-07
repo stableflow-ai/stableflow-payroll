@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   applyRequestPayoutFields,
   buildPaymentRequestUrl,
+  defaultAddressForNetwork,
   formatCouponAmount,
   parsePaymentRequestId,
   truncateMiddle,
@@ -10,8 +11,8 @@ import {
   requestStatusExplorerUrl,
   toReceivedPaymentView,
 } from "./request-utils";
-import { PAY_REQUEST_MODE, PAY_REQUEST_STATUS } from "./config";
-import type { PayRequestItem } from "@/types/request-payment";
+import { PAY_REQUEST_STATUS } from "./config";
+import type { PaymentRequestItem } from "@/types/request-payment";
 
 describe("receivingAddressError", () => {
   it("rejects empty and unrecognized addresses", () => {
@@ -31,8 +32,10 @@ describe("receivingAddressError", () => {
 });
 
 describe("payment request id", () => {
-  it("builds and parses a positive id", () => {
-    expect(buildPaymentRequestUrl("https://pay.example/", 42)).toBe("https://pay.example/p/42");
+  it("builds a form payment link from batch id", () => {
+    expect(buildPaymentRequestUrl("https://pay.example/", 42)).toBe(
+      "https://pay.example/pay/form?batch_id=42",
+    );
     expect(parsePaymentRequestId("42")).toBe(42);
     expect(parsePaymentRequestId(" 42 ")).toBe(42);
   });
@@ -62,22 +65,26 @@ describe("applyRequestPayoutFields", () => {
 });
 
 describe("received payment view", () => {
-  const item: PayRequestItem = {
-    id: 7,
+  const item: PaymentRequestItem = {
+    batchId: 7,
+    title: "Invoice request",
+    userId: 4,
+    name: "Andrew",
+    email: "a@example.com",
+    purpose: "Invoice-Adward-July",
+    description: "invoice",
     amount: "12.5",
-    mode: PAY_REQUEST_MODE.Standard,
+    symbol: "USDC",
     network: "arb",
-    private_recipient_address: "",
-    recipient_address: "0x1111111111111111111111111111111111111111",
+    recipient: "0x1111111111111111111111111111111111111111",
     status: PAY_REQUEST_STATUS.Completed,
-    token: "USDC",
-    name: "Invoice-Adward-July",
-    memo: "invoice",
-    created_at: "2026-08-20T08:51:55.754Z",
+    paymentId: "pay-7",
+    payerUserId: 1,
     payer: "0x2222222222222222222222222222222222222222",
-    paid_at: "2026-08-21T08:51:55.754Z",
-    destination_tx_hash: "0xcomplete",
-    withdraw_tx_hash: "",
+    paidAt: "2026-08-21T08:51:55.754Z",
+    createdAt: "2026-08-20T08:51:55.754Z",
+    updatedAt: "2026-08-21T08:51:55.754Z",
+    destinationTxHash: "0xcomplete",
   };
 
   it("maps chain display fields", () => {
@@ -100,16 +107,40 @@ describe("received payment view", () => {
     }))).toBe("Pending");
     expect(receivedPaymentStatusLabel(toReceivedPaymentView({
       ...item,
-      status: PAY_REQUEST_STATUS.Failed,
+      status: PAY_REQUEST_STATUS.Created,
+    }))).toBe("Pending");
+    expect(receivedPaymentStatusLabel(toReceivedPaymentView({
+      ...item,
+      status: PAY_REQUEST_STATUS.Processing,
+    }))).toBe("Pending");
+    expect(receivedPaymentStatusLabel(toReceivedPaymentView({
+      ...item,
+      status: PAY_REQUEST_STATUS.Expired,
     }))).toBe("Failed");
   });
 
-  it("picks explorer hashes for completed requests", () => {
+  it("picks explorer hashes when a receive tx hash is present", () => {
     expect(requestStatusExplorerUrl(toReceivedPaymentView(item))).toContain("0xcomplete");
     expect(requestStatusExplorerUrl(toReceivedPaymentView({
       ...item,
       status: PAY_REQUEST_STATUS.Pending,
+    }))).toContain("0xcomplete");
+    expect(requestStatusExplorerUrl(toReceivedPaymentView({
+      ...item,
+      destinationTxHash: "",
     }))).toBeNull();
+  });
+});
+
+describe("defaultAddressForNetwork", () => {
+  it("matches blockchain aliases and ignores blanks", () => {
+    const addresses = [
+      { address: "0xabc", network: "arb" },
+      { address: "near.near", network: "near" },
+    ];
+    expect(defaultAddressForNetwork(addresses, "arbitrum")).toBe("0xabc");
+    expect(defaultAddressForNetwork(addresses, "near")).toBe("near.near");
+    expect(defaultAddressForNetwork(addresses, "eth")).toBeNull();
   });
 });
 

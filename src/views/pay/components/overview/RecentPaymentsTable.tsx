@@ -11,15 +11,12 @@ import {
 import { chainDisplayName } from "@/config/chains";
 import { formatAmount, formatDate } from "@/utils";
 import { cn } from "@/lib/utils";
-import {
-  EMPLOYEE_PAYMENT_TYPE,
-  type EmployeeRecentPayment,
-} from "@/hooks/use-employee-overview-api";
+import { EMPLOYEE_PAYMENT_TYPE, type MemberRecentPayment } from "@/types/overview";
 import { PayoutRecipientCell } from "../payout-table/PayoutRecipientCell";
 import { PayoutStatusCell, paymentRowStatus } from "../payout-table/PayoutStatusCell";
 import { OVERVIEW_INCOME_COLOR, OVERVIEW_PAYOUT_COLOR, RECENT_PAYMENTS_COLUMNS } from "./config";
 
-function TypeBadge({ type }: { type: EmployeeRecentPayment["type"] }) {
+function TypeBadge({ type }: { type: MemberRecentPayment["type"] }) {
   const income = type === EMPLOYEE_PAYMENT_TYPE.Income;
   return (
     <span
@@ -36,7 +33,7 @@ function TypeBadge({ type }: { type: EmployeeRecentPayment["type"] }) {
   );
 }
 
-export function RecentPaymentsTable(props: { rows: EmployeeRecentPayment[] }) {
+export function RecentPaymentsTable(props: { rows: MemberRecentPayment[] }) {
   const { rows } = props;
 
   return (

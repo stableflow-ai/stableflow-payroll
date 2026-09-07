@@ -11,7 +11,7 @@ import { Card } from "@/components/ui/card/Card";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { formatAmount } from "@/utils";
 import type { VolumePeriod } from "@/types/payout";
-import type { EmployeeOverviewVolumePoint } from "@/hooks/use-employee-overview-api";
+import type { MemberOverviewPayoutPoint } from "@/types/overview";
 import {
   OVERVIEW_CHART_GRID,
   OVERVIEW_INCOME_COLOR,
@@ -22,7 +22,7 @@ import { formatVolumeAxis } from "./utils";
 
 function VolumeTooltip(props: {
   active?: boolean;
-  payload?: ReadonlyArray<{ payload?: EmployeeOverviewVolumePoint }>;
+  payload?: ReadonlyArray<{ payload?: MemberOverviewPayoutPoint }>;
 }) {
   const point = props.payload?.[0]?.payload;
   if (!props.active || !point) return null;
@@ -58,7 +58,7 @@ function VolumeTooltip(props: {
 export function PaymentVolumeCard(props: {
   range: VolumePeriod;
   onRangeChange: (range: VolumePeriod) => void;
-  points: EmployeeOverviewVolumePoint[];
+  points: MemberOverviewPayoutPoint[];
 }) {
   const { range, onRangeChange, points } = props;
 

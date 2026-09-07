@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { IconLink, IconOutLink } from "@/components/icons/link";
 import {
   Table,
@@ -12,7 +13,6 @@ import { cn } from "@/lib/utils";
 import useToast from "@/hooks/use-toast";
 import { formatAmount, formatAddress, formatDate } from "@/utils";
 import {
-  PAY_REQUEST_STATUS,
   PAYMENT_NAME_ELLIPSIS_PREFIX,
   PAYMENT_NAME_ELLIPSIS_SUFFIX,
   REQUESTS_TABLE_COLUMNS,
@@ -30,21 +30,23 @@ export function RequestsTable(props: {
   rows: ReceivedPaymentView[];
   loading?: boolean;
   error?: string | null;
+  footer?: ReactNode;
 }) {
-  const { rows, loading = false, error = null } = props;
+  const { rows, loading = false, error = null, footer } = props;
 
   return (
     <Table
       columns={REQUESTS_TABLE_COLUMNS}
       toolbar={
         <h2 className="mb-4 font-montserrat text-base font-medium text-black">
-          Request Payment
+          My Requests
         </h2>
       }
+      footer={footer}
     >
       <TableHeader className="border-b-0">
-        <TableHead className="first:pl-3">Purpose</TableHead>
-        <TableHead>Request Payment</TableHead>
+        <TableHead className="first:pl-3">Request for</TableHead>
+        <TableHead>Request to pay</TableHead>
         <TableHead>Receive Address</TableHead>
         <TableHead>Paid Address</TableHead>
         <TableHead>Paid Time</TableHead>
@@ -140,7 +142,7 @@ function RequestRow(props: { row: ReceivedPaymentView }) {
           >
             {statusLabel}
           </span>
-          {row.status === PAY_REQUEST_STATUS.Completed && explorerUrl ? (
+          {explorerUrl ? (
             <a
               href={explorerUrl}
               target="_blank"

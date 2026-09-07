@@ -88,6 +88,15 @@ export function findPayable(
   return list.find((row) => payableKeyId(row.key) === id) ?? null;
 }
 
+export function findExpensePayable(
+  list: readonly Payable[],
+  batchId: number,
+): Payable | null {
+  return list.find(
+    (row) => row.type === PAYABLE_TYPE.Expense && row.batchId === batchId,
+  ) ?? null;
+}
+
 /** Omits `notification` when nothing is selected. */
 export function payableNotificationIds(ids: readonly number[]): number[] | undefined {
   const unique = [...new Set(ids.filter((id) => Number.isFinite(id)))].sort((a, b) => a - b);

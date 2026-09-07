@@ -1,33 +1,50 @@
-/**
- * TODO(api): mock data until the employee overview contract exists.
- * Replace with:
- *   1. types in src/types/<domain>.ts
- *   2. a function in src/api/<domain>.ts
- *   3. a key in src/api/query-keys.ts
- *   4. queryFn -> the real api function
- *   5. delete src/mocks/employee-overview.ts and its MOCK_ENABLED entry
- */
 import { useQuery } from "@tanstack/react-query";
-import { MOCK_ENABLED } from "@/mocks/config";
-import { getEmployeeOverview } from "@/mocks/employee-overview";
+import { getMemberOverview, getMemberOverviewPayout } from "@/api/overview";
+import { queryKeys } from "@/api/query-keys";
+import { organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
+import type { VolumePeriod } from "@/types/payout";
+import { browserTimeZone } from "@/utils";
 
-export type {
-  EmployeeOpenRequest,
-  EmployeeOverview,
-  EmployeeOverviewVolumePoint,
-  EmployeePaymentType,
-  EmployeeRecentPayment,
-} from "@/mocks/employee-overview";
-export { EMPLOYEE_PAYMENT_TYPE } from "@/mocks/employee-overview";
+export {
+  EMPLOYEE_PAYMENT_TYPE,
+  type EmployeePaymentType,
+  type MemberOpenRequest,
+  type MemberOverviewPayoutPoint,
+  type MemberOverviewStats,
+  type MemberRecentPayment,
+} from "@/types/overview";
 
-const EMPLOYEE_OVERVIEW_KEY = ["employee-overview"] as const;
-
-export function useEmployeeOverviewQuery() {
+function useMemberOrganizationScope() {
   const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
+  const orgId = organizationId(user);
+  return {
+    orgId,
+    enabled: Boolean(token) && orgId !== null,
+  };
+}
+
+export function useMemberOverviewQuery() {
+  const { orgId, enabled } = useMemberOrganizationScope();
   return useQuery({
-    queryKey: EMPLOYEE_OVERVIEW_KEY,
-    queryFn: () => getEmployeeOverview(),
-    enabled: Boolean(token) && MOCK_ENABLED.employeeOverview,
+    queryKey: queryKeys.memberOverview.stats(orgId ?? -1),
+    queryFn: () => getMemberOverview(orgId!),
+    enabled,
+  });
+}
+
+export function useMemberOverviewPayoutQuery(period: VolumePeriod) {
+  const { orgId, enabled } = useMemberOrganizationScope();
+  const timezone = browserTimeZone();
+  return useQuery({
+    queryKey: queryKeys.memberOverview.payout(orgId ?? -1, period, timezone),
+    queryFn: () =>
+      getMemberOverviewPayout({
+        organizationId: orgId!,
+        period,
+        timezone,
+      }),
+    enabled,
   });
 }

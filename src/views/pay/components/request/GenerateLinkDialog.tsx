@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { IconLink, IconOutLink, IconSuccess } from "@/components/icons";
+import { IconLink, IconSuccess } from "@/components/icons";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_SIZE, BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Dialog } from "@/components/ui/dialog/Dialog";
@@ -46,30 +46,19 @@ export function GenerateLinkDialog(props: {
             {url}
           </p>
         </div>
-        <div className="mt-8 flex w-full gap-4">
-          <Button
-            type="button"
-            variant={BUTTON_VARIANT.Normal}
-            size={BUTTON_SIZE.Xl}
-            className="h-14 flex-1 border-[#e3e3e3] text-black shadow-none"
-          >
-            <IconOutLink className="size-3.5 shrink-0" />
-            Preview
-          </Button>
-          <Button
-            type="button"
-            variant={BUTTON_VARIANT.Normal}
-            size={BUTTON_SIZE.Xl}
-            loading={copying}
-            className="h-14 flex-1 border-[#e3e3e3] text-black shadow-none"
-            onClick={() => {
-              void copyLink();
-            }}
-          >
-            <IconLink className="size-3.5 shrink-0" />
-            Copy Link
-          </Button>
-        </div>
+        <Button
+          type="button"
+          variant={BUTTON_VARIANT.Normal}
+          size={BUTTON_SIZE.Xl}
+          loading={copying}
+          className="mt-8 h-14 w-full border-[#e3e3e3] text-black shadow-none"
+          onClick={() => {
+            void copyLink();
+          }}
+        >
+          <IconLink className="size-3.5 shrink-0" />
+          Copy Link
+        </Button>
       </div>
     </Dialog>
   );

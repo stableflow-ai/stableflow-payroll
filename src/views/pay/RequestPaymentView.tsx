@@ -5,9 +5,14 @@ import { Card } from "@/components/ui/card/Card";
 import { InputNumber } from "@/components/ui/input-number/InputNumber";
 import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
-import { useCreatePayRequestMutation } from "@/hooks/use-request-payment";
+import {
+  useCreatePayRequestMutation,
+  usePaymentRequestDefaultAddressesQuery,
+} from "@/hooks/use-request-payment";
 import { useConnectedWallets } from "@/hooks/use-wallet";
 import useToast from "@/hooks/use-toast";
+import { organizationId } from "@/lib/auth-role";
+import { useAuthStore } from "@/stores/auth";
 import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
 import { getAddressPlaceholder } from "@/utils";
 import { TokenSelectButton } from "./components/TokenSelectButton";
@@ -17,10 +22,10 @@ import {
   AMOUNT_MAX_DECIMALS,
   DESCRIPTION_MAX_LENGTH,
   PAYMENT_NAME_MAX_LENGTH,
-  PAY_REQUEST_MODE,
 } from "./config";
 import {
   buildPaymentRequestUrl,
+  defaultAddressForNetwork,
   receivingAddressError,
   tokenChainKind,
 } from "./request-utils";
@@ -31,7 +36,10 @@ const FIELD_CLASS =
 
 export function RequestPaymentView() {
   const toast = useToast();
+  const user = useAuthStore((state) => state.user);
+  const orgId = organizationId(user);
   const createMutation = useCreatePayRequestMutation();
+  const defaultsQuery = usePaymentRequestDefaultAddressesQuery();
   const owners = useConnectedWallets();
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
 
@@ -41,6 +49,7 @@ export function RequestPaymentView() {
   const [destDialogOpen, setDestDialogOpen] = useState(false);
   const [purpose, setPurpose] = useState("");
   const [description, setDescription] = useState("");
+  const [saveAsDefault, setSaveAsDefault] = useState(false);
   const [showAddressErrors, setShowAddressErrors] = useState(false);
   const [linkDialogOpen, setLinkDialogOpen] = useState(false);
   const [paymentLink, setPaymentLink] = useState("");
@@ -50,6 +59,7 @@ export function RequestPaymentView() {
 
   const destKind = tokenChainKind(destToken);
   const destLockChainKind = detectAddressChainKind(addressInput);
+  const defaultAddresses = defaultsQuery.data ?? [];
 
   useEffect(() => {
     void ensureFresh();
@@ -67,9 +77,14 @@ export function RequestPaymentView() {
   useEffect(() => {
     if (skipAutofillRef.current) return;
     if (addressInput.trim() || !destKind) return;
+    const saved = defaultAddressForNetwork(defaultAddresses, destToken?.blockchain);
+    if (saved) {
+      setAddressInput(saved);
+      return;
+    }
     const connected = owners[destKind];
     if (connected) setAddressInput(connected);
-  }, [addressInput, destKind, owners]);
+  }, [addressInput, destKind, destToken?.blockchain, owners, defaultAddresses]);
 
   const addressError = receivingAddressError(addressInput, destKind);
   const showAddressStatus = Boolean(addressInput.trim()) || showAddressErrors;
@@ -82,6 +97,10 @@ export function RequestPaymentView() {
 
   async function handleGenerate() {
     setShowAddressErrors(true);
+    if (orgId === null) {
+      toast.fail({ title: "Organization is missing" });
+      return;
+    }
     if (!destToken || !destKind) {
       toast.fail({ title: "Select a receiving token" });
       return;
@@ -105,14 +124,15 @@ export function RequestPaymentView() {
       const memo = description.trim();
       const created = await createMutation.mutateAsync({
         amount: amountForLink,
-        mode: PAY_REQUEST_MODE.Standard,
+        description: memo || undefined,
         network: destToken.blockchain,
-        recipient_address: addressInput.trim(),
-        token: destToken.symbol,
-        name,
-        memo: memo || undefined,
+        organizationId: orgId,
+        purpose: name,
+        recipient: addressInput.trim(),
+        symbol: destToken.symbol,
+        setDefaultAddress: saveAsDefault,
       });
-      setPaymentLink(buildPaymentRequestUrl(window.location.origin, created.id));
+      setPaymentLink(buildPaymentRequestUrl(window.location.origin, created.batchId));
       setLinkDialogOpen(true);
     } catch (err) {
       toast.fail({ title: formatQuoteErrorMessage(err, destToken.decimals) });
@@ -175,6 +195,8 @@ export function RequestPaymentView() {
               error={addressError}
               showStatus={showAddressStatus}
               placeholder={getAddressPlaceholder(destKind)}
+              saveAsDefault={saveAsDefault}
+              onSaveAsDefaultChange={setSaveAsDefault}
             />
           </div>
 

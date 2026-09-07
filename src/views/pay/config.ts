@@ -188,19 +188,26 @@ export const DESCRIPTION_MAX_LENGTH = 200;
 export const PAYMENT_NAME_MAX_LENGTH = 50;
 export const PAYMENT_NAME_ELLIPSIS_PREFIX = 8;
 export const PAYMENT_NAME_ELLIPSIS_SUFFIX = 8;
+export const REQUESTS_PAGE_SIZE = 10;
 
 export const PAY_REQUEST_STATUS = {
   Pending: "pending",
+  Created: "created",
+  Processing: "processing",
   Submitted: "submitted",
   Completed: "completed",
   Failed: "failed",
+  Expired: "expired",
 } as const;
 
 export const PAY_REQUEST_STATUS_CLASS = {
   [PAY_REQUEST_STATUS.Pending]: "text-[#3f8afb]",
+  [PAY_REQUEST_STATUS.Created]: "text-[#3f8afb]",
+  [PAY_REQUEST_STATUS.Processing]: "text-[#3f8afb]",
   [PAY_REQUEST_STATUS.Submitted]: "text-[#3f8afb]",
   [PAY_REQUEST_STATUS.Completed]: "text-[#84a20f]",
   [PAY_REQUEST_STATUS.Failed]: "text-danger",
+  [PAY_REQUEST_STATUS.Expired]: "text-danger",
 } as const;
 
 export const PAY_REQUEST_MODE = {

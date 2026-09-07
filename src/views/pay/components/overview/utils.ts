@@ -6,7 +6,7 @@ import {
   type OrganizationPayoutPoint,
 } from "@/types/organization";
 import { VOLUME_PERIOD, type VolumePeriod } from "@/types/payout";
-import type { EmployeeOverviewVolumePoint } from "@/hooks/use-employee-overview-api";
+import type { MemberOverviewPayoutPoint } from "@/types/overview";
 import {
   ADMIN_CHART_PLOT_RIGHT_MARGIN,
   ADMIN_CHART_X_TICK_CHAR_PX,
@@ -27,7 +27,7 @@ export function greetingName(name: string | null | undefined): string {
 export function emptyVolumeBuckets(
   period: VolumePeriod,
   now: Date = new Date(),
-): EmployeeOverviewVolumePoint[] {
+): MemberOverviewPayoutPoint[] {
   const count = OVERVIEW_VOLUME_BUCKETS[period];
   return Array.from({ length: count }, (_, index) => {
     const offset = count - 1 - index;
@@ -44,9 +44,9 @@ export function emptyVolumeBuckets(
 
 export function volumeChartPoints(
   period: VolumePeriod,
-  series: EmployeeOverviewVolumePoint[] | undefined,
+  series: MemberOverviewPayoutPoint[] | undefined,
   now: Date = new Date(),
-): EmployeeOverviewVolumePoint[] {
+): MemberOverviewPayoutPoint[] {
   if (series && series.length > 0) return series;
   return emptyVolumeBuckets(period, now);
 }

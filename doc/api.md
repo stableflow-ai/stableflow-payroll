@@ -106,7 +106,7 @@ navigate(postAuthPath(session.user, returnTo));
 
 Paths are prefixed with `PAY_API_PREFIX` (`/v1/payroll`) or `NEARINTENTS_API_PREFIX` (`/v1/nearintents`) from `src/api/config.ts`. "Auth" is the default for that function; `caller` means the caller decides.
 
-Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), Organizations, Team members, Recipients, Payroll salaries / expenses / bonuses, Payables, and Transaction History endpoints are served by the Payroll backend. The Payout and Payment-request tables are the pre-Payroll contract kept unchanged under the new prefix; the screens that call them are not in scope yet, so those routes will 404. Do not treat them as a spec.
+Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), Organizations, Team members, Recipients, Payroll salaries / expenses / bonuses, Payables, Transaction History, member Overview, and Payment requests (`/payment-requests*`) are served by the Payroll backend. The Payout table is the pre-Payroll contract kept unchanged under the new prefix; the screens that call those routes are not in scope yet, so they will 404. Do not treat them as a spec.
 
 ### Auth — `src/api/auth.ts`, `src/types/auth.ts`, `src/hooks/use-auth-api.ts`
 
@@ -135,6 +135,17 @@ Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), Organizations
 | POST | `/v1/payroll/organizations/{id}` | yes | `UpdateOrganizationBody` | — | `updateOrganization` | `useUpdateOrganizationMutation` |
 
 Integer `organization_id` / path `{id}` come from session `user.organization.id` and are unchanged for overview, payout, high-priority, and team. Queries and the update mutation do not fire when that id is missing. `GET /organizations/{id}` also returns string `org_id`, `address_settings`, and `notification_settings` (`disabled` / `optional` / `required`; blank or unknown maps to `disabled`). The string `org_id` is written onto the session as `organization.orgId` and is the only id used for invite URLs, `GET .../info/{org_id}`, and `POST /auth/register/user`. Settings picks the GET row whose `id` matches, or the first row. Organization Save and Integration Save both POST `name`, optional `logo`, and both settings objects; empty `logo` is omitted. Integration keeps EVM locked (`evm_address` stays the GET value). `period` is the existing `VOLUME_PERIOD` (`day` / `week` / `month`). `timezone` is `browserTimeZone()`. High-priority `category` values are `payroll` / `payFailed` / `paymentRequest`; unknown values are dropped.
+
+### Member overview — `src/api/overview.ts`, `src/types/overview.ts`, `src/hooks/use-employee-overview-api.ts`
+
+| Method | Path | Auth | Query | Data | API | Hook |
+| --- | --- | --- | --- | --- | --- | --- |
+| GET | `/v1/payroll/overview` | yes | `organization_id` | `MemberOverviewStats` | `getMemberOverview` | `useMemberOverviewQuery` |
+| GET | `/v1/payroll/overview/payout` | yes | `organization_id`, `period`, `timezone` | `MemberOverviewPayoutPoint[]` | `getMemberOverviewPayout` | `useMemberOverviewPayoutQuery` |
+
+This is the member dashboard at `/`. It is not the legacy `getPayOverview()` used by disabled Home (same path, no `organization_id`, different payload). Stats pending/error blocks the page skeleton; payout does not. `period` is `day` / `week` / `month`. `timezone` is `browserTimeZone()`. `time` becomes the chart label. Empty series still draw a zero grid.
+
+Open Requests and Recent Payments are payment-request queries, documented below.
 
 ### Transaction history — `src/api/history.ts`, `src/types/history.ts`, `src/hooks/use-history-api.ts`
 
@@ -323,16 +334,25 @@ Both `submit` calls are driven by the persisted retry queues rather than a hook:
 
 ### Payment requests — `src/api/request-payment.ts`, `src/types/request-payment.ts`, `src/hooks/use-request-payment.ts`
 
-| Method | Path | Auth | Body | Data | API | Hook |
+| Method | Path | Auth | Body / Query | Data | API | Hook |
 | --- | --- | --- | --- | --- | --- | --- |
-| POST | `/v1/payroll/request` | yes | `PayCreateRequestParam` | `PayCreateRequestResp` | `createPayRequest` | `useCreatePayRequestMutation` |
+| POST | `/v1/payroll/payment-requests` | yes | `CreatePaymentRequestParam` | `PaymentRequestItem` | `createPaymentRequest` | `useCreatePayRequestMutation` |
+| GET | `/v1/payroll/payment-requests` | yes | `organization_id`, `page`, `pageSize`, `status?` | `PaymentRequestListResp` | `getPaymentRequests` | `usePaymentRequestsQuery` |
+| GET | `/v1/payroll/payment-requests/pending` | yes | `organization_id`, `limit` | `MemberOpenRequest[]` | `getPendingPaymentRequests` | `usePendingPaymentRequestsQuery` |
+| GET | `/v1/payroll/payment-requests/recent` | yes | `organization_id`, `limit` | `MemberRecentPayment[]` | `getRecentPaymentRequests` | `useRecentPaymentRequestsQuery` |
+| GET | `/v1/payroll/payment-requests/default-addresses` | yes | `organization_id` | `PaymentRequestDefaultAddress[]` | `getPaymentRequestDefaultAddresses` | `usePaymentRequestDefaultAddressesQuery` |
 | GET | `/v1/payroll/request/{id}` | caller | — | `PayRequestItem` | `getPayRequest` | `usePayRequestDetailQuery` |
-| GET | `/v1/payroll/request/list` | yes | — | `PayRequestItem[]` | `getRequestPayments` | `useRequestPaymentsQuery` |
 | POST | `/v1/payroll/request/{id}/disable` | yes | — | — | `disablePayRequest` | `useDisablePayRequestMutation` |
 | POST | `/v1/payroll/request/withdraw` | yes | `PayWithdrawParam` | — | `withdrawPayRequest` | `useRequestWithdraw` |
 | GET | `/v1/payroll/request/withdraw/count` | yes | — | `number` | `getRequestWithdrawCount` | `useRequestWithdrawCountQuery` |
 
-`getPayRequest` takes `{ auth }` so an anonymous payer can read a request; the page that needs it (`/p/:id`) is currently disabled. `createPayRequest` throws when the response has no positive `id`.
+`organization_id` comes from session `user.organization.id`. Queries and create do not fire when that id is missing. Empty `description` is omitted from POST. `set_default_address` is always sent. Create throws `ApiError(..., "PAY_REQUEST")` when `batch_id` is missing or ≤0.
+
+Pending Open Requests use `limit` 6 and show `purpose` (fallback `title`). Recent Payments use `limit` 5: Type from `type` (`payout` → Payout, otherwise Income), Purpose from `memo`, amount/token from destination (fallback source), explorer from `destination_tx_hash` (fallback `tx_hash`). My Requests omits `status`, `pageSize` 10. Status `pending` / `created` / `processing` → Pending; `completed` → Complete; `failed` / `expired` → Failed. A receive `destination_tx_hash` / `tx_hash` shows an explorer link on Status.
+
+Default addresses are `{ address, network }[]`. Request Payment prefers a matching default for the selected token chain over the connected wallet. **Save as default** is a form toggle sent as `set_default_address`.
+
+The legacy `/request/{id}` get/disable/withdraw helpers remain for the disabled public payer (`/p/:id`). `getPayRequest` still takes `{ auth }`.
 
 ### Near Intents proxy — `src/api/nearintents.ts`, `src/types/nearintents.ts`
 
@@ -363,6 +383,8 @@ All four pass `envelope: false`. They are called from `src/lib/confidential/` fo
 | `src/api/query-keys.ts` | `queryKeys` factory |
 | `src/api/payable.ts` | Payables list and salaries/expense/bonus pay |
 | `src/api/map.ts` | `asRecord`, `apiText`, `apiNumber` |
+| `src/api/overview.ts` | Member overview stats and payout chart |
+| `src/api/request-payment.ts` | Payment requests create / list / pending / recent / default addresses |
 | `src/api/payroll.ts` | Payroll salaries current / total-payout / recent / next / history |
 | `src/api/expense.ts` | Expense current / total-payout / recent / open / open requests / history / history export / import |
 | `src/api/bonus.ts` | Bonus current / total-payout / recent / open / history / history export / import |

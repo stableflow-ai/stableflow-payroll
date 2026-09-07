@@ -6,6 +6,7 @@ import {
 } from "./payable";
 import {
   PAYABLE_TYPE,
+  findExpensePayable,
   findPayable,
   parsePayableKey,
   payableKeyId,
@@ -87,6 +88,18 @@ describe("mapPayables", () => {
         list: [{ type: "bonus", batch_id: 2, title: "Team A", list: [] }],
       }),
     ).toHaveLength(1);
+  });
+});
+
+describe("findExpensePayable", () => {
+  it("matches expense rows by batch id", () => {
+    const list = mapPayables([
+      { type: "payroll", title: "Sep", period_month: "2026-09", list: [] },
+      { type: "expense", title: "Trip", batch_id: 5, list: [] },
+      { type: "bonus", title: "Team", batch_id: 5, list: [] },
+    ]);
+    expect(findExpensePayable(list, 5)?.title).toBe("Trip");
+    expect(findExpensePayable(list, 9)).toBeNull();
   });
 });
 

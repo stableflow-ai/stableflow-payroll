@@ -2,10 +2,10 @@ import { Link } from "react-router-dom";
 import { Icon2Right } from "@/components/icons/to-right";
 import { Card } from "@/components/ui/card/Card";
 import { formatDate } from "@/utils";
-import type { EmployeeOpenRequest } from "@/hooks/use-employee-overview-api";
+import type { MemberOpenRequest } from "@/types/overview";
 import { OVERVIEW_PENDING_COLOR } from "./config";
 
-export function OpenRequestsCard(props: { requests: EmployeeOpenRequest[] }) {
+export function OpenRequestsCard(props: { requests: MemberOpenRequest[] }) {
   const { requests } = props;
 
   return (

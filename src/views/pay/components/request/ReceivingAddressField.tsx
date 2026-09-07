@@ -9,8 +9,18 @@ export function ReceivingAddressField(props: {
   error: string | null;
   showStatus: boolean;
   placeholder?: string;
+  saveAsDefault: boolean;
+  onSaveAsDefaultChange: (value: boolean) => void;
 }) {
-  const { value, onChange, error, showStatus, placeholder = "Wallet address" } = props;
+  const {
+    value,
+    onChange,
+    error,
+    showStatus,
+    placeholder = "Wallet address",
+    saveAsDefault,
+    onSaveAsDefaultChange,
+  } = props;
   const invalid = showStatus && Boolean(error);
 
   return (
@@ -21,7 +31,14 @@ export function ReceivingAddressField(props: {
         </p>
         <button
           type="button"
-          className="inline-flex h-[30px] items-center rounded-[8px] border border-black/10 px-2.5 font-montserrat text-xs font-medium text-[#606060]"
+          aria-pressed={saveAsDefault}
+          className={cn(
+            "inline-flex h-[30px] items-center rounded-[8px] border px-2.5 font-montserrat text-xs font-medium",
+            saveAsDefault
+              ? "border-black text-black"
+              : "border-black/10 text-[#606060]",
+          )}
+          onClick={() => onSaveAsDefaultChange(!saveAsDefault)}
         >
           Save as default
         </button>

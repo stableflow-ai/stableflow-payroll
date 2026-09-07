@@ -1,12 +1,15 @@
 import { getChainByNetwork, txExplorerUrl } from "@/config/chains";
 import type { PaySingleQuoteParam } from "@/types/payout";
-import type { PayRequestItem } from "@/types/request-payment";
+import type {
+  PaymentRequestDefaultAddress,
+  PaymentRequestItem,
+} from "@/types/request-payment";
 import type { IntentsToken, PayoutSymbol } from "@/stores/intents-tokens";
 import { normalizeSymbol } from "@/stores/intents-tokens";
 import { formatAmount, type WalletChainKind } from "@/utils";
 import type { ChainKind } from "@/wallet";
 import { detectAddressKind } from "./batch-utils";
-import { PAY_REQUEST_STATUS, PAY_REQUEST_STATUS_CLASS } from "./config";
+import { PAY_FORM_PATH, PAY_REQUEST_STATUS, PAY_REQUEST_STATUS_CLASS } from "./config";
 import { detectAddressChainKind } from "./utils";
 
 const USER_REJECTED_PATTERNS = [
@@ -53,9 +56,31 @@ export function parsePaymentRequestId(raw: string | undefined | null): number | 
   return id;
 }
 
-export function buildPaymentRequestUrl(origin: string, id: number): string {
+export function buildPaymentRequestUrl(origin: string, batchId: number): string {
   const base = origin.replace(/\/+$/, "");
-  return `${base}/p/${id}`;
+  return `${base}${PAY_FORM_PATH}?batch_id=${batchId}`;
+}
+
+export function defaultAddressForNetwork(
+  addresses: readonly PaymentRequestDefaultAddress[],
+  network: string | null | undefined,
+): string | null {
+  const target = getChainByNetwork(network ?? "");
+  const keys = new Set(
+    [network, target?.blockchain, target?.chainName]
+      .map((value) => String(value ?? "").trim().toLowerCase())
+      .filter(Boolean),
+  );
+  if (!keys.size) return null;
+  const match = addresses.find((item) => {
+    const chain = getChainByNetwork(item.network);
+    const itemKeys = [item.network, chain?.blockchain, chain?.chainName]
+      .map((value) => String(value ?? "").trim().toLowerCase())
+      .filter(Boolean);
+    return itemKeys.some((key) => keys.has(key));
+  });
+  const address = match?.address.trim() ?? "";
+  return address || null;
 }
 
 export function applyRequestPayoutFields(
@@ -81,52 +106,60 @@ export type ReceivedPaymentView = {
   status: string;
 };
 
-export function toReceivedPaymentView(item: PayRequestItem): ReceivedPaymentView {
+export function toReceivedPaymentView(item: PaymentRequestItem): ReceivedPaymentView {
   const chain = getChainByNetwork(item.network);
-  const token = item.token.toUpperCase();
+  const token = item.symbol.toUpperCase();
   const symbol = normalizeSymbol(token) ?? "USDC";
   const chainKind = chain?.chainKind
-    ?? detectAddressChainKind(item.recipient_address)
+    ?? detectAddressChainKind(item.recipient)
     ?? "evm";
   return {
-    id: item.id,
-    paymentName: item.name,
+    id: item.batchId,
+    paymentName: item.purpose,
     amount: item.amount,
     symbol,
     network: chain?.chainName ?? item.network,
     blockchain: chain?.blockchain ?? item.network,
     chainKind,
-    createdAt: item.created_at,
-    address: item.recipient_address,
+    createdAt: item.createdAt,
+    address: item.recipient,
     paidAddress: item.payer,
-    paidAt: item.paid_at,
-    completedTxHash: item.destination_tx_hash,
+    paidAt: item.paidAt,
+    completedTxHash: item.destinationTxHash,
     status: item.status,
   };
 }
 
+const PENDING_STATUSES = new Set<string>([
+  PAY_REQUEST_STATUS.Pending,
+  PAY_REQUEST_STATUS.Created,
+  PAY_REQUEST_STATUS.Processing,
+  PAY_REQUEST_STATUS.Submitted,
+]);
+
+const FAILED_STATUSES = new Set<string>([
+  PAY_REQUEST_STATUS.Failed,
+  PAY_REQUEST_STATUS.Expired,
+]);
+
 export function receivedPaymentStatusLabel(row: ReceivedPaymentView): string {
   if (row.status === PAY_REQUEST_STATUS.Completed) return "Complete";
-  if (row.status === PAY_REQUEST_STATUS.Pending) return "Pending";
-  if (row.status === PAY_REQUEST_STATUS.Submitted) return "Pending";
-  if (row.status === PAY_REQUEST_STATUS.Failed) return "Failed";
+  if (PENDING_STATUSES.has(row.status)) return "Pending";
+  if (FAILED_STATUSES.has(row.status)) return "Failed";
   return row.status;
 }
 
 export function receivedPaymentStatusClass(status: string): string {
-  if (status === PAY_REQUEST_STATUS.Completed) return PAY_REQUEST_STATUS_CLASS[PAY_REQUEST_STATUS.Completed];
-  if (status === PAY_REQUEST_STATUS.Failed) return PAY_REQUEST_STATUS_CLASS[PAY_REQUEST_STATUS.Failed];
-  if (status === PAY_REQUEST_STATUS.Pending || status === PAY_REQUEST_STATUS.Submitted) {
-    return PAY_REQUEST_STATUS_CLASS[PAY_REQUEST_STATUS.Pending];
+  if (status === PAY_REQUEST_STATUS.Completed) {
+    return PAY_REQUEST_STATUS_CLASS[PAY_REQUEST_STATUS.Completed];
   }
+  if (FAILED_STATUSES.has(status)) return PAY_REQUEST_STATUS_CLASS[PAY_REQUEST_STATUS.Failed];
+  if (PENDING_STATUSES.has(status)) return PAY_REQUEST_STATUS_CLASS[PAY_REQUEST_STATUS.Pending];
   return "text-[#aaa]";
 }
 
 export function requestStatusExplorerUrl(row: ReceivedPaymentView): string | null {
-  if (row.status === PAY_REQUEST_STATUS.Completed) {
-    return txExplorerUrl(row.blockchain, row.completedTxHash);
-  }
-  return null;
+  return txExplorerUrl(row.blockchain, row.completedTxHash);
 }
 
 export function formatCouponAmount(amount: string): { whole: string; fraction?: string } {

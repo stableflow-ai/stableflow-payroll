@@ -1,5 +1,4 @@
 export const MOCK_ENABLED = {
-  employeeOverview: true,
   payroll: true,
 } as const;
 

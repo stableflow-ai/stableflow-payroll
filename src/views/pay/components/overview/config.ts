@@ -3,6 +3,8 @@ import { VOLUME_PERIOD, type VolumePeriod } from "@/types/payout";
 
 export const DEFAULT_OVERVIEW_VOLUME_PERIOD = VOLUME_PERIOD.Monthly;
 export const DEFAULT_ADMIN_OVERVIEW_VOLUME_PERIOD = VOLUME_PERIOD.Daily;
+export const OPEN_REQUESTS_LIMIT = 6;
+export const RECENT_PAYMENTS_LIMIT = 5;
 
 export const OVERVIEW_VOLUME_PERIOD_OPTIONS = [
   { value: VOLUME_PERIOD.Daily, label: "Daily" },
