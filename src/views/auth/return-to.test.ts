@@ -44,29 +44,18 @@ describe("postAuthPath", () => {
     name: "Ada",
     role: AUTH_USER_ROLE.Admin,
   };
-  const employee: AuthUser = {
+  const member: AuthUser = {
     id: 2,
-    email: "emp@example.com",
+    email: "user@example.com",
     name: "Eve",
-    role: AUTH_USER_ROLE.Employee,
+    role: AUTH_USER_ROLE.User,
   };
 
-  it("sends an admin without an organization to create-organization", () => {
-    expect(postAuthPath(admin, "/pay")).toBe("/register/organization");
-    expect(postAuthPath({ ...admin, organization: null }, "/")).toBe("/register/organization");
-    expect(postAuthPath({ ...admin, organization: { name: "  " } }, null)).toBe(
-      "/register/organization",
-    );
-  });
-
-  it("sends an admin with an organization to returnTo or home", () => {
-    const withOrg = { ...admin, organization: { name: "Eureka Labs" } };
-    expect(postAuthPath(withOrg, "/pay")).toBe("/pay");
-    expect(postAuthPath(withOrg, null)).toBe("/");
-  });
-
-  it("does not send employees to create-organization", () => {
-    expect(postAuthPath(employee, "/pay")).toBe("/pay");
-    expect(postAuthPath(employee, null)).toBe("/");
+  it("returns returnTo or home for any signed-in user", () => {
+    expect(postAuthPath(admin, "/pay")).toBe("/pay");
+    expect(postAuthPath({ ...admin, organization: null }, "/")).toBe("/");
+    expect(postAuthPath(admin, null)).toBe("/");
+    expect(postAuthPath(member, "/pay")).toBe("/pay");
+    expect(postAuthPath(member, null)).toBe("/");
   });
 });

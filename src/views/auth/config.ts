@@ -3,7 +3,7 @@ export const AUTH_PANEL_BG = "#F6F6F6";
 
 export const AUTH_FORM_CLASS = "flex w-full max-w-[400px] flex-col";
 
-export const AUTH_ONBOARDING_FORM_CLASS = "flex min-h-[520px] w-full max-w-[540px] flex-col";
+export const AUTH_ONBOARDING_FORM_CLASS = "flex min-h-[520px] w-full max-w-[400px] flex-col";
 
 export const AUTH_LABEL_CLASS = "font-montserrat text-[14px] font-medium text-[#909090]";
 
@@ -25,12 +25,17 @@ export const INVITE_STEP = {
   Profile: 2,
 } as const;
 
+export const REGISTER_STEP = {
+  SignUp: 1,
+  Organization: 2,
+} as const;
+
 export const AUTH_FEATURE_ICON_KEYS = ["lock", "shield", "node"] as const;
 export type AuthFeatureIconKey = (typeof AUTH_FEATURE_ICON_KEYS)[number];
 
 export const NAME_MAX_LENGTH = 50;
 export const ORGANIZATION_NAME_MAX_LENGTH = 50;
-export const LOGO_URL_MAX_LENGTH = 200;
+export const LOGO_URL_MAX_LENGTH = 500;
 export const INVITE_CODE_MAX_LENGTH = 10;
 export const EMAIL_MAX_LENGTH = 100;
 export const CODE_MAX_LENGTH = 20;

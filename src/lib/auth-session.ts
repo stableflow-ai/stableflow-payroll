@@ -24,10 +24,13 @@ function hydrateOrganization(value: unknown): AuthOrganization | null | undefine
   if (value === undefined) return undefined;
   if (value === null) return null;
   if (!value || typeof value !== "object") return undefined;
-  const name = (value as { name?: unknown }).name;
-  if (typeof name !== "string") return undefined;
-  const trimmed = name.trim();
-  return trimmed ? { name: trimmed } : null;
+  const row = value as { id?: unknown; name?: unknown; logo?: unknown };
+  if (typeof row.name !== "string") return undefined;
+  const name = row.name.trim();
+  if (!name) return null;
+  const id = typeof row.id === "number" && Number.isFinite(row.id) ? row.id : 0;
+  const logo = typeof row.logo === "string" ? row.logo.trim() : "";
+  return logo ? { id, name, logo } : { id, name };
 }
 
 function isAuthUserRecord(value: unknown): value is {
@@ -57,7 +60,7 @@ function hydrateUser(user: {
     id: user.id,
     email: user.email,
     name: user.name,
-    role: user.role === AUTH_USER_ROLE.Employee ? AUTH_USER_ROLE.Employee : AUTH_USER_ROLE.Admin,
+    role: user.role === AUTH_USER_ROLE.User ? AUTH_USER_ROLE.User : AUTH_USER_ROLE.Admin,
     organization: hydrateOrganization(user.organization),
   };
 }

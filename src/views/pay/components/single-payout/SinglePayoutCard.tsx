@@ -8,7 +8,7 @@ import { useCreatePayrollPaymentMutation } from "@/hooks/use-single-payout-api";
 import { useContacts, type Contact } from "@/hooks/use-contacts";
 import { useTeamMembersQuery } from "@/hooks/use-team-api";
 import useToast from "@/hooks/use-toast";
-import { isEmployee } from "@/lib/auth-role";
+import { isUser } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
 import { ContactFormDialog } from "../ContactFormDialog";
@@ -36,7 +36,7 @@ export function SinglePayoutCard(props: {
   const { recipientLocked = false, initialRecipient } = props;
   const toast = useToast();
   const user = useAuthStore((state) => state.user);
-  const employee = isEmployee(user);
+  const employee = isUser(user);
   const { contacts, addContact, updateContact, deleteContact, isPending: contactsPending } =
     useContacts({ enabled: employee && !recipientLocked });
   const teamQuery = useTeamMembersQuery(!employee && !recipientLocked);

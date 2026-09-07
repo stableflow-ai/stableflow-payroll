@@ -22,12 +22,10 @@ const FEATURES = [
 export function AuthShell({
   children,
   panelTop,
-  panelHeader,
   contentClassName,
 }: {
   children: ReactNode;
   panelTop?: ReactNode;
-  panelHeader?: ReactNode;
   contentClassName?: string;
 }) {
   return (
@@ -64,8 +62,8 @@ export function AuthShell({
               const Icon = FEATURE_ICONS[feature.icon];
               return (
                 <li key={feature.title} className="flex items-center gap-3">
-                  <span className="grid size-8 shrink-0 place-items-center text-white" aria-hidden>
-                    <Icon className="size-8" />
+                  <span className="grid size-8 shrink-0 place-items-center text-white bg-black/10 rounded-[8px]" aria-hidden>
+                    <Icon className="size-4" />
                   </span>
                   <p className="font-montserrat text-[16px] font-semibold capitalize text-white">
                     {feature.title}
@@ -88,9 +86,6 @@ export function AuthShell({
         className="relative flex flex-1 flex-col items-center justify-start px-4 py-10 sm:px-6 md:justify-center md:py-12"
         style={{ backgroundColor: AUTH_PANEL_BG }}
       >
-        {panelHeader ? (
-          <div className="absolute top-5 right-5 z-20 md:right-7">{panelHeader}</div>
-        ) : null}
         <div className={cn("relative z-10 flex w-full flex-col items-center", contentClassName)}>
           {panelTop ? <div className="mb-8 flex justify-center">{panelTop}</div> : null}
           {children}

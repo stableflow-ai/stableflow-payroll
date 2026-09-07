@@ -71,8 +71,8 @@ export async function registerWithInvite(input: InviteRegisterInput): Promise<Au
       id: Date.now(),
       email: input.email.trim(),
       name: input.name.trim(),
-      role: AUTH_USER_ROLE.Employee,
-      organization: { name: preview.organizationName },
+      role: AUTH_USER_ROLE.User,
+      organization: { id: 0, name: preview.organizationName },
     },
   };
 }

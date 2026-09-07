@@ -1,14 +1,12 @@
 import type { ReactNode } from "react";
 import { Navigate, Outlet, useLocation, useSearchParams } from "react-router-dom";
 import { usePartnerQuery } from "@/hooks/use-partner-api";
-import { hasOrganization, isEmployee } from "@/lib/auth-role";
+import { isUser } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import {
-  CREATE_ORGANIZATION_PATH,
   loginPathWithReturnTo,
   postAuthPath,
   returnToFromSearch,
-  safeReturnTo,
 } from "@/views/auth/return-to";
 import { PAY_ADMIN_ONLY_PATHS, PAY_EMPLOYEE_ONLY_PATHS } from "@/views/pay/config";
 
@@ -22,36 +20,6 @@ export function RequireAuth() {
   }
 
   return <Outlet />;
-}
-
-export function RequireOrganization() {
-  const user = useAuthStore((state) => state.user);
-  const location = useLocation();
-
-  if (user && !isEmployee(user) && !hasOrganization(user)) {
-    const dest = `${location.pathname}${location.search}`;
-    const returnTo = safeReturnTo(dest);
-    const to = returnTo
-      ? `${CREATE_ORGANIZATION_PATH}?returnTo=${encodeURIComponent(returnTo)}`
-      : CREATE_ORGANIZATION_PATH;
-    return <Navigate to={to} replace />;
-  }
-
-  return <Outlet />;
-}
-
-export function RedirectIfHasOrganization({ children }: { children: ReactNode }) {
-  const user = useAuthStore((state) => state.user);
-
-  if (!user) {
-    return <Navigate to="/login" replace />;
-  }
-
-  if (isEmployee(user) || hasOrganization(user)) {
-    return <Navigate to="/" replace />;
-  }
-
-  return children;
 }
 
 export function RequirePartner() {
@@ -92,14 +60,14 @@ export function RedirectEmployeeFromAdminPay() {
   const { pathname } = useLocation();
 
   if (
-    isEmployee(user) &&
+    isUser(user) &&
     PAY_ADMIN_ONLY_PATHS.some((path) => path === pathname)
   ) {
     return <Navigate to="/" replace />;
   }
 
   if (
-    !isEmployee(user) &&
+    !isUser(user) &&
     PAY_EMPLOYEE_ONLY_PATHS.some((path) => path === pathname)
   ) {
     return <Navigate to="/" replace />;

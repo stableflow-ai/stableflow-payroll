@@ -1,7 +1,6 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { LoginView } from "@/views/auth/LoginView";
 import { RegisterView } from "@/views/auth/RegisterView";
-import { CreateOrganizationView } from "@/views/auth/CreateOrganizationView";
 import { InviteRegisterView } from "@/views/auth/InviteRegisterView";
 import { HowItWorksView } from "@/views/how-it-works/HowItWorksView";
 import { HomeView } from "@/views/home/HomeView";
@@ -28,7 +27,7 @@ import { ApiKeysView } from "@/views/partner/ApiKeysView";
 import { PartnerPlaceholderView } from "@/views/partner/PartnerPlaceholderView";
 import { PartnerRegistrationView } from "@/views/partner/PartnerRegistrationView";
 import { ReportsView } from "@/views/partner/ReportsView";
-import { RedirectEmployeeFromAdminPay, RedirectIfAuthed, RedirectIfHasOrganization, RequireAuth, RequireOrganization, RequirePartner } from "./guards";
+import { RedirectEmployeeFromAdminPay, RedirectIfAuthed, RequireAuth, RequirePartner } from "./guards";
 
 export const router = createBrowserRouter([
   {
@@ -45,14 +44,6 @@ export const router = createBrowserRouter([
       <RedirectIfAuthed>
         <RegisterView />
       </RedirectIfAuthed>
-    ),
-  },
-  {
-    path: "/register/organization",
-    element: (
-      <RedirectIfHasOrganization>
-        <CreateOrganizationView />
-      </RedirectIfHasOrganization>
     ),
   },
   {
@@ -86,32 +77,27 @@ export const router = createBrowserRouter([
           //   element: <AnalyticsView />,
           // },
           {
-            element: <RequireOrganization />,
+            element: <RedirectEmployeeFromAdminPay />,
             children: [
               {
-                element: <RedirectEmployeeFromAdminPay />,
+                element: <PayLayout />,
                 children: [
-                  {
-                    element: <PayLayout />,
-                    children: [
-                      { path: "/", element: <OverviewView /> },
-                      { path: "/pay/overview", element: <Navigate to="/" replace /> },
-                      { path: "/pay", element: <SinglePayoutView /> },
-                      { path: "/pay/form", element: <PaymentByFormView /> },
-                      { path: "/pay/result", element: <PayoutResultView /> },
-                      { path: "/pay/payroll", element: <PayrollView /> },
-                      { path: "/pay/batch", element: <BatchPayoutView /> },
-                      { path: "/pay/expense", element: <ExpenseView /> },
-                      { path: "/pay/reimbursement", element: <Navigate to="/pay/expense" replace /> },
-                      { path: "/pay/bonus", element: <BonusView /> },
-                      { path: "/pay/team", element: <TeamView /> },
-                      { path: "/pay/setting", element: <SettingView /> },
-                      { path: "/pay/request", element: <RequestPaymentView /> },
-                      { path: "/pay/requests", element: <RequestsView /> },
-                      { path: "/pay/pending", element: <PendingPayoutsView /> },
-                      { path: "/pay/history", element: <TransactionHistoryView /> },
-                    ],
-                  },
+                  { path: "/", element: <OverviewView /> },
+                  { path: "/pay/overview", element: <Navigate to="/" replace /> },
+                  { path: "/pay", element: <SinglePayoutView /> },
+                  { path: "/pay/form", element: <PaymentByFormView /> },
+                  { path: "/pay/result", element: <PayoutResultView /> },
+                  { path: "/pay/payroll", element: <PayrollView /> },
+                  { path: "/pay/batch", element: <BatchPayoutView /> },
+                  { path: "/pay/expense", element: <ExpenseView /> },
+                  { path: "/pay/reimbursement", element: <Navigate to="/pay/expense" replace /> },
+                  { path: "/pay/bonus", element: <BonusView /> },
+                  { path: "/pay/team", element: <TeamView /> },
+                  { path: "/pay/setting", element: <SettingView /> },
+                  { path: "/pay/request", element: <RequestPaymentView /> },
+                  { path: "/pay/requests", element: <RequestsView /> },
+                  { path: "/pay/pending", element: <PendingPayoutsView /> },
+                  { path: "/pay/history", element: <TransactionHistoryView /> },
                 ],
               },
             ],

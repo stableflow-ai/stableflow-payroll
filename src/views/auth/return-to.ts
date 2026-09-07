@@ -1,5 +1,4 @@
 import type { AuthUser } from "@/types/auth";
-import { hasOrganization, isEmployee } from "@/lib/auth-role";
 
 const LOGIN_PATH = "/login";
 const REGISTER_PATH = "/register";
@@ -58,9 +57,6 @@ export function returnToFromSearch(search: string): string | null {
   return safeReturnTo(params.get("returnTo"));
 }
 
-export function postAuthPath(user: AuthUser | null | undefined, returnTo: string | null): string {
-  if (user && !isEmployee(user) && !hasOrganization(user)) {
-    return CREATE_ORGANIZATION_PATH;
-  }
+export function postAuthPath(_user: AuthUser | null | undefined, returnTo: string | null): string {
   return returnTo ?? "/";
 }

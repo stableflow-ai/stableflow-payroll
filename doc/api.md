@@ -120,7 +120,7 @@ Only Auth, Single Payout (`/payments`), and Batch Payout (`/batches`) are served
 | GET | `/v1/payroll/profile` | yes | — | `AuthUser` | `getProfile` | `useProfileQuery` |
 | POST | `/v1/payroll/profile` | yes | `UpdateProfileBody` | — | `updateProfile` | `useUpdateProfileMutation` |
 
-`AuthUser` includes `role`: `"admin"` | `"employee"`, and optional `organization?: { name: string } | null`. Login, register, and profile are typed as already returning those fields (`http<AuthSession>` / `http<AuthUser>`). Do not remap them until the backend uses a different name. Stored sessions without `role` hydrate as admin. `organization.name` that is missing or blank means the admin still needs `/register/organization`. Create-organization and invite-register endpoints are mocked; they are not in this table.
+`AuthUser` includes `role`: `"admin"` | `"user"`, and optional `organization?: { id: number; name: string; logo?: string } | null`. `login`, `register`, and `getProfile` map that payload with `mapAuthUser` / `mapAuthSession`. Only `"user"` is stored as the member role; any other value, including a missing role, hydrates as admin. Register body includes required `organization.name` and optional `organization.logo`. Invite-register is still mocked and is not in this table.
 
 ### Payments (hosted checkout) — `src/api/payout.ts`, `src/types/payout.ts`, `src/hooks/use-single-payout-api.ts`
 

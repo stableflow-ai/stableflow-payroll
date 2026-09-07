@@ -34,7 +34,9 @@ function isSameUser(left: AuthUser, right: AuthUser): boolean {
     left.email === right.email &&
     left.name === right.name &&
     left.role === right.role &&
-    (left.organization?.name ?? "") === (right.organization?.name ?? "")
+    (left.organization?.id ?? 0) === (right.organization?.id ?? 0) &&
+    (left.organization?.name ?? "") === (right.organization?.name ?? "") &&
+    (left.organization?.logo ?? "") === (right.organization?.logo ?? "")
   );
 }
 

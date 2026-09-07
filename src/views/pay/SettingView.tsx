@@ -14,7 +14,7 @@ import { organizationInviteUrl } from "./components/team/utils";
 export function SettingView() {
   const toast = useToast();
   const user = useAuthStore((state) => state.user);
-  const isAdmin = userRole(user) !== AUTH_USER_ROLE.Employee;
+  const isAdmin = userRole(user) !== AUTH_USER_ROLE.User;
   const { createMutation, updateMutation } = useTeamMemberMutations();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<TeamMember | null>(null);

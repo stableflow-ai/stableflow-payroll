@@ -88,7 +88,7 @@ const EMPLOYEE_REQUEST_NAV: PayNavLeaf = {
 const EMPLOYEE_HIDDEN_NAV_IDS = new Set<string>([PAY_NAV_ID.Operations, PAY_NAV_ID.Team]);
 
 export function payNavItemsForRole(role: AuthUserRole): readonly PayNavItem[] {
-  if (role !== AUTH_USER_ROLE.Employee) return PAY_NAV_ITEMS;
+  if (role !== AUTH_USER_ROLE.User) return PAY_NAV_ITEMS;
 
   const items: PayNavItem[] = [];
   for (const item of PAY_NAV_ITEMS) {

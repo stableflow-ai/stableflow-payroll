@@ -11,7 +11,7 @@ import { Drawer } from "@/components/ui/drawer/Drawer";
 import { DRAWER_SIDE } from "@/components/ui/drawer/config";
 import { useBatchPayoutCommitQueue } from "@/hooks/use-batch-payout-commit-queue";
 import { useQuickPayCommitQueue } from "@/hooks/use-quick-pay-commit-queue";
-import { isEmployee, organizationName, userRole } from "@/lib/auth-role";
+import { isUser, organizationName, userRole } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { PaymentModeTabs } from "@/views/pay/components/PaymentModeTabs";
 import { RequestPaymentTabs } from "@/views/pay/components/request/RequestPaymentTabs";
@@ -37,7 +37,7 @@ export function PayLayout() {
   const setHeaderExtra = useCallback((node: ReactNode) => {
     setHeaderExtraState(node);
   }, []);
-  const showModeTabs = isPayModePath(pathname) && !isEmployee(user);
+  const showModeTabs = isPayModePath(pathname) && !isUser(user);
   const showRequestTabs = isRequestPaymentPath(pathname);
   const closeMenu = () => setMenuOpen(false);
   const orgName = organizationName(user) ?? MOCK_ORGANIZATION_NAME;

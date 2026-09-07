@@ -26,15 +26,6 @@ function delay(ms: number) {
   });
 }
 
-export async function createOrganization(input: CreateOrganizationInput): Promise<CreatedOrganization> {
-  await delay(400);
-  storedOrganization = {
-    name: input.name.trim(),
-    logoUrl: input.logoUrl?.trim() || undefined,
-  };
-  return { ...storedOrganization };
-}
-
 export async function updateOrganization(input: CreateOrganizationInput): Promise<CreatedOrganization> {
   await delay(300);
   storedOrganization = {
