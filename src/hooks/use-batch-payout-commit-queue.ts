@@ -13,7 +13,6 @@ export function useBatchPayoutCommitQueue() {
     processAllPendingBatchPayoutCommits();
     return onBatchPayoutCommitSuccess(() => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.payout.all });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.analytics.all });
     });
   }, [queryClient]);
 }

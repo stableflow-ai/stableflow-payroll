@@ -1,6 +1,7 @@
 import { PAYROLL_IMPORT_DAY_TYPE, PAYROLL_TOTAL_PAYOUT_PERIOD } from "@/types/payroll";
 
-export const PAYROLL_CREATE_PATH = "/pay/batch";
+export const PAYROLL_PATH = "/pay/payroll";
+export const PAYROLL_HISTORY_PATH = "/pay/payroll/history";
 
 export const PAYROLL_DRAWER_MODE = {
   Add: "add",

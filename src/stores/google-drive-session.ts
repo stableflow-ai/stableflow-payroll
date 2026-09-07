@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { createJSONStorage, persist, type StateStorage } from "zustand/middleware";
 import {
   GOOGLE_DRIVE_TOKEN_STORAGE_KEY,
   TOKEN_EXPIRY_SKEW_MS,
@@ -20,51 +21,29 @@ interface GoogleDriveSessionState extends GoogleDriveSession {
   clear: () => void;
 }
 
-function getSessionStorage(): Storage | null {
-  try {
-    return globalThis.sessionStorage;
-  } catch {
-    return null;
-  }
-}
-
-function isGoogleDriveSession(value: unknown): value is GoogleDriveSession {
-  if (!value || typeof value !== "object") return false;
-  const session = value as GoogleDriveSession;
-  return (
-    (session.accessToken === null || typeof session.accessToken === "string")
-    && typeof session.expiresAt === "number"
-    && typeof session.requireAccountPicker === "boolean"
-  );
-}
-
-function emptySession(): GoogleDriveSession {
-  return { accessToken: null, expiresAt: 0, requireAccountPicker: false };
-}
-
-function persist(session: GoogleDriveSession): void {
-  const storage = getSessionStorage();
-  if (!storage) return;
-  try {
-    storage.setItem(GOOGLE_DRIVE_TOKEN_STORAGE_KEY, JSON.stringify(session));
-  } catch {
-    // Ignore quota / private-mode failures; memory still holds the session.
-  }
-}
-
-export function hydrateGoogleDriveSession(): GoogleDriveSession {
-  const storage = getSessionStorage();
-  if (!storage) return emptySession();
-  try {
-    const raw = storage.getItem(GOOGLE_DRIVE_TOKEN_STORAGE_KEY);
-    if (!raw) return emptySession();
-    const parsed: unknown = JSON.parse(raw);
-    if (!isGoogleDriveSession(parsed)) return emptySession();
-    return parsed;
-  } catch {
-    return emptySession();
-  }
-}
+const sessionStateStorage: StateStorage = {
+  getItem: (name) => {
+    try {
+      return globalThis.sessionStorage.getItem(name);
+    } catch {
+      return null;
+    }
+  },
+  setItem: (name, value) => {
+    try {
+      globalThis.sessionStorage.setItem(name, value);
+    } catch {
+      // Ignore quota / private-mode failures; memory still holds the session.
+    }
+  },
+  removeItem: (name) => {
+    try {
+      globalThis.sessionStorage.removeItem(name);
+    } catch {
+      // Ignore quota / private-mode failures.
+    }
+  },
+};
 
 export function isUsableGoogleDriveSession(
   session: Pick<GoogleDriveSession, "accessToken" | "expiresAt">,
@@ -74,38 +53,45 @@ export function isUsableGoogleDriveSession(
   return session.expiresAt - TOKEN_EXPIRY_SKEW_MS > now;
 }
 
-export const useGoogleDriveSessionStore = create<GoogleDriveSessionState>((set) => ({
-  ...hydrateGoogleDriveSession(),
-  upsert: (session) => {
-    const next: GoogleDriveSession = {
-      accessToken: session.accessToken,
-      expiresAt: session.expiresAt,
-      requireAccountPicker: false,
-    };
-    set(next);
-    persist(next);
-  },
-  expire: () => {
-    set((state) => {
-      const next: GoogleDriveSession = {
-        accessToken: null,
-        expiresAt: 0,
-        requireAccountPicker: state.requireAccountPicker,
-      };
-      persist(next);
-      return next;
-    });
-  },
-  clear: () => {
-    const next: GoogleDriveSession = {
+export const useGoogleDriveSessionStore = create<GoogleDriveSessionState>()(
+  persist(
+    (set) => ({
       accessToken: null,
       expiresAt: 0,
-      requireAccountPicker: true,
-    };
-    set(next);
-    persist(next);
-  },
-}));
+      requireAccountPicker: false,
+      upsert: (session) => {
+        set({
+          accessToken: session.accessToken,
+          expiresAt: session.expiresAt,
+          requireAccountPicker: false,
+        });
+      },
+      expire: () => {
+        set((state) => ({
+          accessToken: null,
+          expiresAt: 0,
+          requireAccountPicker: state.requireAccountPicker,
+        }));
+      },
+      clear: () => {
+        set({
+          accessToken: null,
+          expiresAt: 0,
+          requireAccountPicker: true,
+        });
+      },
+    }),
+    {
+      name: GOOGLE_DRIVE_TOKEN_STORAGE_KEY,
+      storage: createJSONStorage(() => sessionStateStorage),
+      partialize: (state) => ({
+        accessToken: state.accessToken,
+        expiresAt: state.expiresAt,
+        requireAccountPicker: state.requireAccountPicker,
+      }),
+    },
+  ),
+);
 
 export function readGoogleDriveToken(now = Date.now()): string | null {
   const session = useGoogleDriveSessionStore.getState();

@@ -10,8 +10,19 @@ import {
 } from "@/components/icons";
 import type { IconProps } from "@/components/icons/types";
 import { AUTH_USER_ROLE, type AuthUserRole } from "@/types/auth";
+import { BONUS_HISTORY_PATH, BONUS_PATH } from "@/views/bonus/config";
+import {
+  EXPENSE_HISTORY_PATH,
+  EXPENSE_PATH,
+  EXPENSE_REQUESTS_PATH,
+} from "@/views/expense/config";
+import { PAYROLL_HISTORY_PATH, PAYROLL_PATH } from "@/views/payroll/config";
 
+export const PAY_PATH = "/pay";
 export const PAY_FORM_PATH = "/pay/form";
+export const TEAM_PATH = "/team";
+export const HISTORY_PATH = "/history";
+export const SETTING_PATH = "/setting";
 
 export const PAY_NAV_ID = {
   Overview: "overview",
@@ -52,23 +63,38 @@ export const PAY_NAV_ITEMS: readonly PayNavItem[] = [
   {
     id: PAY_NAV_ID.Payment,
     label: "Payment",
-    to: "/pay",
+    to: PAY_PATH,
     icon: IconPayment,
-    match: ["/pay", PAY_FORM_PATH],
+    match: [PAY_PATH, PAY_FORM_PATH],
   },
   {
     id: PAY_NAV_ID.Operations,
     label: "Operations",
     icon: IconOperations,
     children: [
-      { id: PAY_NAV_ID.Payroll, label: "Payroll", to: "/pay/payroll", match: ["/pay/payroll", "/pay/batch"] },
-      { id: PAY_NAV_ID.Expense, label: "Expense", to: "/pay/expense" },
-      { id: PAY_NAV_ID.Bonus, label: "Bonus", to: "/pay/bonus" },
+      {
+        id: PAY_NAV_ID.Payroll,
+        label: "Payroll",
+        to: PAYROLL_PATH,
+        match: [PAYROLL_PATH, PAYROLL_HISTORY_PATH],
+      },
+      {
+        id: PAY_NAV_ID.Expense,
+        label: "Expense",
+        to: EXPENSE_PATH,
+        match: [EXPENSE_PATH, EXPENSE_REQUESTS_PATH, EXPENSE_HISTORY_PATH],
+      },
+      {
+        id: PAY_NAV_ID.Bonus,
+        label: "Bonus",
+        to: BONUS_PATH,
+        match: [BONUS_PATH, BONUS_HISTORY_PATH],
+      },
     ],
   },
-  { id: PAY_NAV_ID.Team, label: "Team", to: "/pay/team", icon: IconTeam },
-  { id: PAY_NAV_ID.History, label: "History", to: "/pay/history", icon: IconHistory },
-  { id: PAY_NAV_ID.Setting, label: "Settings", to: "/pay/setting", icon: IconSetting },
+  { id: PAY_NAV_ID.Team, label: "Team", to: TEAM_PATH, icon: IconTeam },
+  { id: PAY_NAV_ID.History, label: "History", to: HISTORY_PATH, icon: IconHistory },
+  { id: PAY_NAV_ID.Setting, label: "Settings", to: SETTING_PATH, icon: IconSetting },
 ];
 
 export const PAY_REQUEST_PATH = "/pay/request";
@@ -91,7 +117,7 @@ export function payNavItemsForRole(role: AuthUserRole): readonly PayNavItem[] {
   for (const item of PAY_NAV_ITEMS) {
     if (isPayNavGroup(item) || EMPLOYEE_HIDDEN_NAV_IDS.has(item.id)) continue;
     if (item.id === PAY_NAV_ID.Payment) {
-      items.push({ ...item, match: ["/pay"] });
+      items.push({ ...item, match: [PAY_PATH] });
       items.push(EMPLOYEE_REQUEST_NAV);
       continue;
     }
@@ -102,18 +128,16 @@ export function payNavItemsForRole(role: AuthUserRole): readonly PayNavItem[] {
 
 export const PAY_ADMIN_ONLY_PATHS = [
   PAY_FORM_PATH,
-  "/pay/batch",
-  "/pay/payroll",
-  "/pay/expense",
-  "/pay/reimbursement",
-  "/pay/bonus",
-  "/pay/team",
+  PAYROLL_PATH,
+  EXPENSE_PATH,
+  BONUS_PATH,
+  TEAM_PATH,
 ] as const;
 
 export const PAY_EMPLOYEE_ONLY_PATHS = [PAY_REQUEST_PATH, PAY_REQUESTS_PATH] as const;
 
 export const PAY_MODE_TABS = [
-  { label: "Single Payment", to: "/pay" },
+  { label: "Single Payment", to: PAY_PATH },
   { label: "Payment by form", to: PAY_FORM_PATH },
 ] as const;
 
@@ -123,7 +147,23 @@ export const PAY_REQUEST_TABS = [
 ] as const;
 
 export function isPayModePath(pathname: string): boolean {
-  return pathname === "/pay" || pathname === PAY_FORM_PATH;
+  return pathname === PAY_PATH || pathname === PAY_FORM_PATH;
+}
+
+export function isPayShellPath(pathname: string): boolean {
+  return (
+    pathname === "/" ||
+    pathname.startsWith("/pay") ||
+    pathname === TEAM_PATH ||
+    pathname === HISTORY_PATH ||
+    pathname === SETTING_PATH
+  );
+}
+
+export function isAdminOnlyPayPath(pathname: string): boolean {
+  return PAY_ADMIN_ONLY_PATHS.some(
+    (path) => pathname === path || pathname.startsWith(`${path}/`),
+  );
 }
 
 export function isRequestPaymentPath(pathname: string): boolean {
@@ -162,7 +202,6 @@ export const PAYOUT_RESULT_STATUS = {
 /** Titles for Pay routes that are not in the sidebar. */
 export const PAY_ROUTE_TITLES: Record<string, string> = {
   [PAYOUT_RESULT_PATH]: "Payment Result",
-  "/pay/pending": "Pending Payouts",
   [PAY_REQUEST_PATH]: "Request Payment",
   [PAY_REQUESTS_PATH]: "Requests",
 };
@@ -214,8 +253,6 @@ export const PAY_REQUEST_MODE = {
   Standard: "standard",
   Private: "private",
 } as const;
-
-export const REQUEST_WITHDRAW_COUNT_POLL_MS = 120_000;
 
 export const IMPORT_MAX_ROWS = 50;
 export const IMPORT_CSV_ACCEPT = ".csv,text/csv";

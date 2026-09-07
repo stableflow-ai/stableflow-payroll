@@ -1,6 +1,10 @@
 import { EXPENSE_IMPORT_LIMITS, EXPENSE_TOTAL_PAYOUT_PERIOD } from "@/types/expense";
 import { PAYABLE_TYPE, type PayableKey } from "@/types/payable";
 
+export const EXPENSE_PATH = "/pay/expense";
+export const EXPENSE_REQUESTS_PATH = "/pay/expense/requests";
+export const EXPENSE_HISTORY_PATH = "/pay/expense/history";
+
 export const EXPENSE_TAB = {
   Open: "open",
   Requests: "requests",

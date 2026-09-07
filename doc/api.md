@@ -40,7 +40,7 @@ export class ApiError extends Error {
 
 `auth` defaults to `true`: `http()` reads the token with `getAuthToken()` and sends `Authorization: Bearer <token>`. With no token it throws `ApiError("Not authenticated", 401, "UNAUTHENTICATED")` before hitting the network.
 
-Pass `auth: false` for endpoints that must work signed out (login, register, reset password). Endpoints that work either way take an option and forward the caller's choice — `singleQuote`, `singleSwap`, `singleSubmit`, and `getPayRequest` do this so `RequestPayView` can call them anonymously. That page's route (`/p/:id`) is currently disabled, but keep the option: it is the only reason those four are not hard-wired to `auth: true`.
+Pass `auth: false` for endpoints that must work signed out (login, register, reset password, invite organization preview).
 
 A 401 on an authenticated request clears the stored session and calls `notifyUnauthorized()`, which `src/stores/auth.ts` has bound to `logout()`.
 
@@ -60,8 +60,7 @@ A 401 on an authenticated request clears the stored session and calls `notifyUna
 export const queryKeys = {
   payout: {
     all: ["payout"] as const,
-    pending: ["payout", "pending"] as const,
-    payments: (params: unknown) => [...queryKeys.payout.all, "payments", params] as const,
+    payrollPayment: (id: string) => [...queryKeys.payout.all, "payroll-payment", id] as const,
   },
 } as const;
 ```
@@ -85,12 +84,12 @@ export interface HttpOptions {
 ### Hook usage
 
 ```ts
-export function usePaymentsQuery(params: PayPaymentsQuery) {
+export function usePayrollPaymentQuery(paymentId: string) {
   const token = useAuthStore((state) => state.token);
   return useQuery({
-    queryKey: queryKeys.payout.payments(params),
-    queryFn: () => getPayments(params),
-    enabled: Boolean(token),
+    queryKey: queryKeys.payout.payrollPayment(paymentId),
+    queryFn: () => getPayrollPayment(paymentId),
+    enabled: Boolean(token) && Boolean(paymentId),
   });
 }
 ```
@@ -104,9 +103,7 @@ navigate(postAuthPath(session.user, returnTo));
 
 ## Endpoints
 
-Paths are prefixed with `PAY_API_PREFIX` (`/v1/payroll`) or `NEARINTENTS_API_PREFIX` (`/v1/nearintents`) from `src/api/config.ts`. "Auth" is the default for that function; `caller` means the caller decides.
-
-Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), Organizations, Team members, Recipients, Payroll salaries / expenses / bonuses, Payables, Transaction History, member Overview, and Payment requests (`/payment-requests*`) are served by the Payroll backend. The Payout table is the pre-Payroll contract kept unchanged under the new prefix; the screens that call those routes are not in scope yet, so they will 404. Do not treat them as a spec.
+Paths are prefixed with `PAY_API_PREFIX` (`/v1/payroll`) or `NEARINTENTS_API_PREFIX` (`/v1/nearintents`) from `src/api/config.ts`. "Auth" is the default for that function; `no` means the call is signed out (login, register, invite preview).
 
 ### Auth — `src/api/auth.ts`, `src/types/auth.ts`, `src/hooks/use-auth-api.ts`
 
@@ -143,7 +140,7 @@ Integer `organization_id` / path `{id}` come from session `user.organization.id`
 | GET | `/v1/payroll/overview` | yes | `organization_id` | `MemberOverviewStats` | `getMemberOverview` | `useMemberOverviewQuery` |
 | GET | `/v1/payroll/overview/payout` | yes | `organization_id`, `period`, `timezone` | `MemberOverviewPayoutPoint[]` | `getMemberOverviewPayout` | `useMemberOverviewPayoutQuery` |
 
-This is the member dashboard at `/`. It is not the legacy `getPayOverview()` used by disabled Home (same path, no `organization_id`, different payload). Stats pending/error blocks the page skeleton; payout does not. `period` is `day` / `week` / `month`. `timezone` is `browserTimeZone()`. `time` becomes the chart label. Empty series still draw a zero grid.
+This is the member dashboard at `/`. Stats pending/error blocks the page skeleton; payout does not. `period` is `day` / `week` / `month`. `timezone` is `browserTimeZone()`. `time` becomes the chart label. Empty series still draw a zero grid.
 
 Open Requests and Recent Payments are payment-request queries, documented below.
 
@@ -181,19 +178,6 @@ Admin (`role` other than `"user"`) calls `/organizations/history`. Members (`rol
 `memo` (≤ 200 characters) is accepted but is not in the Swagger contract. Optional `notification: { email?, slack? }` is sent from Single Payment when Notify Recipient is on; empty keys are omitted. The switch-off path omits `notification` entirely.
 
 The checkout returns to the `success_url` we send (`{origin}/pay/result`) only after a successful payment, with `out_order_no` set to the Payroll `payment_id`. `PayoutResultView` reads it and calls `GET /payments/{payment_id}` once — there is no state left to poll for.
-
-### Batch payout — `src/api/payout.ts`, `src/types/payout.ts`, `src/hooks/use-batch-payout-api.ts`
-
-| Method | Path | Auth | Body | Data | API | Hook |
-| --- | --- | --- | --- | --- | --- | --- |
-| POST | `/v1/payroll/batches` | yes | `PayrollCreateBatchParam` | `PayrollBatch` | `createPayrollBatch` | `useCreatePayrollBatchQuery` |
-| GET | `/v1/payroll/batches/{batch_id}/transaction` | yes | — | `PayrollBatch` | `getPayrollBatchTransaction` | `usePayrollBatchTransactionQuery` |
-
-`POST /batches` creates the batch and answers with the origin quote (`total_source_amount` / `total_source_amount_raw`) plus the origin-chain `transaction` to sign. `BatchPayoutView` posts once when preview opens; the refresh control and an expired/spent quote call `refetch()`. `createPayrollBatch` throws `ApiError(..., "NO_BATCH_TX")` when the response has no broadcastable transaction.
-
-Confirm signs and broadcasts that transaction. There is no submit call after broadcast. `GET .../transaction` is a status lookup; the page does not call it (success resets to the upload step). A consumed `batchId` is stored in `consumed-batches` before broadcast so the same deposit addresses are never paid twice.
-
-`notification.email` / `notification.slack` are omitted: `/pay/batch` does not collect them.
 
 ### Payment by form — `src/api/payable.ts`, `src/types/payable.ts`, `src/hooks/use-payable-api.ts`
 
@@ -300,26 +284,13 @@ Recent payouts have no `page` in the contract, only `limit` (max 100). `useBonus
 
 `POST /bonuses/import` saves a draft open bonus. **Add Bonus** and **Import CSV** both open the Add Bonus drawer first (CSV / Google Sheets is parsed locally, same as payroll); **Save** posts this route. Body is `organization_id`, `title` (≤ 100), and `items` (`name` ≤ 50, `address` ≤ 128, `amount`, `network` ≤ 32, `symbol` ≤ 32, optional `email` ≤ 100 / `purpose` ≤ 100 / `description` ≤ 5000). CSV columns are `recipient,email,amount,token,network,memo`; `memo` maps to `description`. Empty optional fields are omitted. Success returns `{ batch_id, count }` and invalidates the bonus query namespace.
 
-### Payout (legacy wallet path) — `src/api/payout.ts`, `src/types/payout.ts`
+### Batch submit — `src/api/payout.ts`, `src/types/payout.ts`
 
 | Method | Path | Auth | Body / Query | Data | API | Hook |
 | --- | --- | --- | --- | --- | --- | --- |
-| POST | `/v1/payroll/single/quote` | caller | `PaySingleQuoteParam` | `PaySingleQuoteResp` | `singleQuote` | `useSinglePayQuote` |
-| POST | `/v1/payroll/single/swap` | caller | `PaySingleSwapParam` | `PaySingleSwapResp` | `singleSwap` | `useSinglePaySwap` |
-| POST | `/v1/payroll/single/submit` | caller | `PaySingleSubmitParam` | — | `singleSubmit` | via `quick-pay-commit-queue` |
-| POST | `/v1/payroll/batch/quote` | yes | `PayBatchQuoteParam` | `PayBatchQuoteResp` | `batchQuote` | `useBatchPayQuote` |
-| POST | `/v1/payroll/batch/swap` | yes | `PayBatchQuoteParam` | `PayBatchSwapResp` | `batchSwap` | `useBatchPaySwap` |
 | POST | `/v1/payroll/batch/submit` | yes | `PayBatchSubmitParam` | — | `batchSubmit` | via `batch-payout-commit-queue` |
-| GET | `/v1/payroll/payments/pending` | yes | — | `PayPaymentItem[]` | `getPendingPayments` | `usePendingPaymentsQuery` |
-| GET | `/v1/payroll/payments/recent` | yes | — | `PayPaymentItem[]` | `getRecentPayments` | `useRecentPaymentsQuery` |
-| GET | `/v1/payroll/payments` | yes | `PayPaymentsQuery` | `PayPaymentsResp` | `getPayments` | `usePaymentsQuery` |
-| GET | `/v1/payroll/payments/export` | yes | `PayPaymentsExportQuery` | CSV blob | `exportPayments` | `useExportPaymentsMutation` |
-| GET | `/v1/payroll/payments/volume` | yes | `period` | `VolumePoint[]` | `getPaymentVolume` | `usePaymentVolumeQuery` |
-| GET | `/v1/payroll/overview` | yes | — | `PayOverview` | `getPayOverview` | `usePayOverviewQuery` |
 
-`getPayOverview` falls back to the current month of `/v1/payroll/analytics` when the overview route answers 404. The quote hooks refetch every 60 seconds and keep the previous data while refetching, so treat `isPlaceholderData` as "stale quote, block the confirm button".
-
-Both `submit` calls are driven by the persisted retry queues rather than a hook: `enqueueQuickPayCommit` / `enqueueBatchPayoutCommit` store `{ orderId, txHash }`, retry with exponential backoff from 5s, and drop the item once the server accepts it.
+Payment by form signs and broadcasts the payable-pay transaction, then `enqueueBatchPayoutCommit` stores `{ orderId, txHash }`. `useBatchPayoutCommitQueue` (mounted in `PayLayout`) retries `batchSubmit` with exponential backoff from 5s and drops the item once the server accepts it.
 
 ### Recipients — `src/api/recipient.ts`, `src/types/recipient.ts`, `src/hooks/use-recipient-api.ts`
 
@@ -341,18 +312,12 @@ Both `submit` calls are driven by the persisted retry queues rather than a hook:
 | GET | `/v1/payroll/payment-requests/pending` | yes | `organization_id`, `limit` | `MemberOpenRequest[]` | `getPendingPaymentRequests` | `usePendingPaymentRequestsQuery` |
 | GET | `/v1/payroll/payment-requests/recent` | yes | `organization_id`, `limit` | `MemberRecentPayment[]` | `getRecentPaymentRequests` | `useRecentPaymentRequestsQuery` |
 | GET | `/v1/payroll/payment-requests/default-addresses` | yes | `organization_id` | `PaymentRequestDefaultAddress[]` | `getPaymentRequestDefaultAddresses` | `usePaymentRequestDefaultAddressesQuery` |
-| GET | `/v1/payroll/request/{id}` | caller | — | `PayRequestItem` | `getPayRequest` | `usePayRequestDetailQuery` |
-| POST | `/v1/payroll/request/{id}/disable` | yes | — | — | `disablePayRequest` | `useDisablePayRequestMutation` |
-| POST | `/v1/payroll/request/withdraw` | yes | `PayWithdrawParam` | — | `withdrawPayRequest` | `useRequestWithdraw` |
-| GET | `/v1/payroll/request/withdraw/count` | yes | — | `number` | `getRequestWithdrawCount` | `useRequestWithdrawCountQuery` |
 
 `organization_id` comes from session `user.organization.id`. Queries and create do not fire when that id is missing. Empty `description` is omitted from POST. `set_default_address` is always sent. Create throws `ApiError(..., "PAY_REQUEST")` when `batch_id` is missing or ≤0.
 
 Pending Open Requests use `limit` 6 and show `purpose` (fallback `title`). Recent Payments use `limit` 5: Type from `type` (`payout` → Payout, otherwise Income), Purpose from `memo`, amount/token from destination (fallback source), explorer from `destination_tx_hash` (fallback `tx_hash`). My Requests omits `status`, `pageSize` 10. Status `pending` / `created` / `processing` → Pending; `completed` → Complete; `failed` / `expired` → Failed. A receive `destination_tx_hash` / `tx_hash` shows an explorer link on Status.
 
 Default addresses are `{ address, network }[]`. Request Payment prefers a matching default for the selected token chain over the connected wallet. **Save as default** is a form toggle sent as `set_default_address`.
-
-The legacy `/request/{id}` get/disable/withdraw helpers remain for the disabled public payer (`/p/:id`). `getPayRequest` still takes `{ auth }`.
 
 ### Near Intents proxy — `src/api/nearintents.ts`, `src/types/nearintents.ts`
 
@@ -367,10 +332,6 @@ All four pass `envelope: false`. They are called from `src/lib/confidential/` fo
 
 `nearintentsQuote` throws when the upstream answer has no `quote.depositAddress`.
 
-### Out of scope
-
-`src/api/analytics.ts` and `src/api/partner.ts` back the disabled Analytics and Partner areas. They are not documented here. Do not extend them without being asked.
-
 ## Files
 
 | File | Role |
@@ -382,6 +343,7 @@ All four pass `envelope: false`. They are called from `src/lib/confidential/` fo
 | `src/api/config.ts` | `PAY_API_PREFIX`, `NEARINTENTS_API_PREFIX` |
 | `src/api/query-keys.ts` | `queryKeys` factory |
 | `src/api/payable.ts` | Payables list and salaries/expense/bonus pay |
+| `src/api/payout.ts` | Hosted checkout create/get, `batchSubmit`, payroll-batch mapping |
 | `src/api/map.ts` | `asRecord`, `apiText`, `apiNumber` |
 | `src/api/overview.ts` | Member overview stats and payout chart |
 | `src/api/request-payment.ts` | Payment requests create / list / pending / recent / default addresses |

@@ -3,7 +3,6 @@ import { GOOGLE_DRIVE_TOKEN_STORAGE_KEY } from "@/lib/google/config";
 import {
   googleDriveRequiresAccountPicker,
   hasUsableGoogleDriveToken,
-  hydrateGoogleDriveSession,
   readGoogleDriveToken,
   useGoogleDriveSessionStore,
 } from "./google-drive-session";
@@ -40,9 +39,19 @@ function resetStore() {
   });
 }
 
-describe("google-drive-session", () => {
-  let storage: Storage;
+function storedSession() {
+  const raw = JSON.parse(storage.getItem(GOOGLE_DRIVE_TOKEN_STORAGE_KEY) ?? "null") as {
+    state?: {
+      accessToken: string | null;
+      requireAccountPicker: boolean;
+    };
+  } | null;
+  return raw?.state ?? null;
+}
 
+let storage: Storage;
+
+describe("google-drive-session", () => {
   beforeEach(() => {
     storage = createMemoryStorage();
     vi.stubGlobal("sessionStorage", storage);
@@ -54,13 +63,21 @@ describe("google-drive-session", () => {
     vi.unstubAllGlobals();
   });
 
-  it("hydrates a stored unexpired session", () => {
-    storage.setItem(GOOGLE_DRIVE_TOKEN_STORAGE_KEY, JSON.stringify({
-      accessToken: "ya29.token",
-      expiresAt: Date.now() + 120_000,
-      requireAccountPicker: false,
-    }));
-    expect(hydrateGoogleDriveSession().accessToken).toBe("ya29.token");
+  it("hydrates a stored unexpired session", async () => {
+    storage.setItem(
+      GOOGLE_DRIVE_TOKEN_STORAGE_KEY,
+      JSON.stringify({
+        state: {
+          accessToken: "ya29.token",
+          expiresAt: Date.now() + 120_000,
+          requireAccountPicker: false,
+        },
+        version: 0,
+      }),
+    );
+    await useGoogleDriveSessionStore.persist.rehydrate();
+    expect(useGoogleDriveSessionStore.getState().accessToken).toBe("ya29.token");
+    expect(hasUsableGoogleDriveToken()).toBe(true);
   });
 
   it("upserts to memory and sessionStorage", () => {
@@ -70,12 +87,9 @@ describe("google-drive-session", () => {
     });
     expect(hasUsableGoogleDriveToken()).toBe(true);
     expect(readGoogleDriveToken()).toBe("ya29.live");
-    const stored = JSON.parse(storage.getItem(GOOGLE_DRIVE_TOKEN_STORAGE_KEY) ?? "null") as {
-      accessToken: string;
-      requireAccountPicker: boolean;
-    };
-    expect(stored.accessToken).toBe("ya29.live");
-    expect(stored.requireAccountPicker).toBe(false);
+    const stored = storedSession();
+    expect(stored?.accessToken).toBe("ya29.live");
+    expect(stored?.requireAccountPicker).toBe(false);
     expect(googleDriveRequiresAccountPicker()).toBe(false);
   });
 
@@ -99,11 +113,8 @@ describe("google-drive-session", () => {
     expect(hasUsableGoogleDriveToken()).toBe(false);
     expect(readGoogleDriveToken()).toBeNull();
     expect(googleDriveRequiresAccountPicker()).toBe(true);
-    const stored = JSON.parse(storage.getItem(GOOGLE_DRIVE_TOKEN_STORAGE_KEY) ?? "null") as {
-      accessToken: string | null;
-      requireAccountPicker: boolean;
-    };
-    expect(stored.accessToken).toBeNull();
-    expect(stored.requireAccountPicker).toBe(true);
+    const stored = storedSession();
+    expect(stored?.accessToken).toBeNull();
+    expect(stored?.requireAccountPicker).toBe(true);
   });
 });

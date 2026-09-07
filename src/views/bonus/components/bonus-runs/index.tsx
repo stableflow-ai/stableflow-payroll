@@ -1,3 +1,4 @@
+import { NavLink } from "react-router-dom";
 import { IconExportLink } from "@/components/icons/link";
 import { IconLoading } from "@/components/icons/loading";
 import { Button } from "@/components/ui/button/Button";
@@ -6,37 +7,46 @@ import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
 import type { BonusHistoryItem, BonusPendingList, BonusPendingRow } from "@/types/bonus";
 import type { PayableKey } from "@/types/payable";
-import { BONUS_TAB, type BonusTab } from "../../config";
+import {
+  BONUS_HISTORY_PATH,
+  BONUS_PATH,
+  BONUS_TAB,
+  type BonusTab,
+} from "../../config";
 import { CreateBonusEmpty } from "./CreateBonusEmpty";
 import { HistoryPanel } from "./HistoryPanel";
 import { PendingBonusPanel } from "./PendingBonusPanel";
 
-function TabButton(props: {
-  active: boolean;
+function TabLink(props: {
+  to: string;
   children: string;
-  onClick: () => void;
 }) {
-  const { active, children, onClick } = props;
+  const { to, children } = props;
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "relative pb-2.5 font-montserrat text-base text-black",
-        active ? "font-semibold" : "font-normal",
-      )}
+    <NavLink
+      to={to}
+      end
+      className={({ isActive }) =>
+        cn(
+          "relative pb-2.5 font-montserrat text-base text-black",
+          isActive ? "font-semibold" : "font-normal",
+        )
+      }
     >
-      {children}
-      {active ? (
-        <span className="absolute inset-x-3 -bottom-px h-[3px] rounded-full bg-[#06f]" />
-      ) : null}
-    </button>
+      {({ isActive }) => (
+        <>
+          {children}
+          {isActive ? (
+            <span className="absolute inset-x-3 -bottom-px h-[3px] rounded-full bg-[#06f]" />
+          ) : null}
+        </>
+      )}
+    </NavLink>
   );
 }
 
 export function BonusRunsCard(props: {
   tab: BonusTab;
-  onTabChange: (tab: BonusTab) => void;
   pending: BonusPendingList | null;
   pendingLoading?: boolean;
   pendingError?: string | null;
@@ -55,7 +65,6 @@ export function BonusRunsCard(props: {
 }) {
   const {
     tab,
-    onTabChange,
     pending,
     pendingLoading = false,
     pendingError = null,
@@ -83,18 +92,8 @@ export function BonusRunsCard(props: {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-end gap-8">
-          <TabButton
-            active={tab === BONUS_TAB.ToBePaid}
-            onClick={() => onTabChange(BONUS_TAB.ToBePaid)}
-          >
-            Bonuses to be paid
-          </TabButton>
-          <TabButton
-            active={tab === BONUS_TAB.History}
-            onClick={() => onTabChange(BONUS_TAB.History)}
-          >
-            Bonus History
-          </TabButton>
+          <TabLink to={BONUS_PATH}>Bonuses to be paid</TabLink>
+          <TabLink to={BONUS_HISTORY_PATH}>Bonus History</TabLink>
         </div>
         {showExport ? (
           <div className="flex items-center gap-2 pb-1">

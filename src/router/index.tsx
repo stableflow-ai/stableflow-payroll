@@ -3,14 +3,9 @@ import { LoginView } from "@/views/auth/LoginView";
 import { RegisterView } from "@/views/auth/RegisterView";
 import { InviteRegisterView } from "@/views/auth/InviteRegisterView";
 import { HowItWorksView } from "@/views/how-it-works/HowItWorksView";
-import { HomeView } from "@/views/home/HomeView";
-import { AnalyticsView } from "@/views/analytics/AnalyticsView";
-import { BatchPayoutView } from "@/views/pay/BatchPayoutView";
 import { PayrollView } from "@/views/payroll";
 import { ExpenseView } from "@/views/expense";
 import { BonusView } from "@/views/bonus";
-import { PendingPayoutsView } from "@/views/pay/PendingPayoutsView";
-import { RequestPayView } from "@/views/pay/RequestPayView";
 import { RequestPaymentView } from "@/views/pay/RequestPaymentView";
 import { RequestsView } from "@/views/pay/RequestsView";
 import { PayoutResultView } from "@/views/pay/PayoutResultView";
@@ -21,13 +16,8 @@ import { SinglePayoutView } from "@/views/pay/SinglePayoutView";
 import { TransactionHistoryView } from "@/views/pay/TransactionHistoryView";
 import { TeamView } from "@/views/pay/TeamView";
 import { AppLayout } from "@/layouts/AppLayout";
-import { PartnerLayout } from "@/layouts/PartnerLayout";
 import { PayLayout } from "@/layouts/PayLayout";
-import { ApiKeysView } from "@/views/partner/ApiKeysView";
-import { PartnerPlaceholderView } from "@/views/partner/PartnerPlaceholderView";
-import { PartnerRegistrationView } from "@/views/partner/PartnerRegistrationView";
-import { ReportsView } from "@/views/partner/ReportsView";
-import { RedirectEmployeeFromAdminPay, RedirectIfAuthed, RequireAuth, RequirePartner } from "./guards";
+import { RedirectEmployeeFromAdminPay, RedirectIfAuthed, RequireAuth } from "./guards";
 
 export const router = createBrowserRouter([
   {
@@ -61,21 +51,9 @@ export const router = createBrowserRouter([
   {
     element: <AppLayout />,
     children: [
-      // {
-      //   path: "/p/:id",
-      //   element: <RequestPayView />,
-      // },
       {
         element: <RequireAuth />,
         children: [
-          // {
-          //   path: "/",
-          //   element: <HomeView />,
-          // },
-          // {
-          //   path: "/analytics",
-          //   element: <AnalyticsView />,
-          // },
           {
             element: <RedirectEmployeeFromAdminPay />,
             children: [
@@ -83,41 +61,25 @@ export const router = createBrowserRouter([
                 element: <PayLayout />,
                 children: [
                   { path: "/", element: <OverviewView /> },
-                  { path: "/pay/overview", element: <Navigate to="/" replace /> },
                   { path: "/pay", element: <SinglePayoutView /> },
                   { path: "/pay/form", element: <PaymentByFormView /> },
                   { path: "/pay/result", element: <PayoutResultView /> },
                   { path: "/pay/payroll", element: <PayrollView /> },
-                  { path: "/pay/batch", element: <BatchPayoutView /> },
+                  { path: "/pay/payroll/history", element: <PayrollView /> },
                   { path: "/pay/expense", element: <ExpenseView /> },
-                  { path: "/pay/reimbursement", element: <Navigate to="/pay/expense" replace /> },
+                  { path: "/pay/expense/requests", element: <ExpenseView /> },
+                  { path: "/pay/expense/history", element: <ExpenseView /> },
                   { path: "/pay/bonus", element: <BonusView /> },
-                  { path: "/pay/team", element: <TeamView /> },
-                  { path: "/pay/setting", element: <SettingView /> },
+                  { path: "/pay/bonus/history", element: <BonusView /> },
+                  { path: "/team", element: <TeamView /> },
+                  { path: "/setting", element: <SettingView /> },
                   { path: "/pay/request", element: <RequestPaymentView /> },
                   { path: "/pay/requests", element: <RequestsView /> },
-                  { path: "/pay/pending", element: <PendingPayoutsView /> },
-                  { path: "/pay/history", element: <TransactionHistoryView /> },
+                  { path: "/history", element: <TransactionHistoryView /> },
                 ],
               },
             ],
           },
-          // {
-          //   element: <PartnerLayout />,
-          //   children: [
-          //     { path: "/partner", element: <PartnerRegistrationView /> },
-          //     {
-          //       element: <RequirePartner />,
-          //       children: [
-          //         { path: "/partner/api-keys", element: <ApiKeysView /> },
-          //         { path: "/partner/reports", element: <ReportsView /> },
-          //       ],
-          //     },
-          //     { path: "/partner/support", element: <PartnerPlaceholderView /> },
-          //     { path: "/partner/terms", element: <PartnerPlaceholderView /> },
-          //     { path: "/partner/docs", element: <PartnerPlaceholderView /> },
-          //   ],
-          // },
         ],
       },
     ],

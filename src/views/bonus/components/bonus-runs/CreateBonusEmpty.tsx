@@ -22,7 +22,7 @@ import {
   IMPORT_CSV_TEMPLATE_FILENAME,
 } from "../../config";
 import { parseBonusImportRows } from "../../utils";
-import { ImportCsvMenu, type ImportCsvSource } from "./ImportCsvMenu";
+import { ImportCsvMenu, type ImportCsvSource } from "@/views/pay/components/import-csv/ImportCsvMenu";
 
 function downloadTemplate() {
   const blob = new Blob([IMPORT_CSV_TEMPLATE], { type: "text/csv;charset=utf-8" });

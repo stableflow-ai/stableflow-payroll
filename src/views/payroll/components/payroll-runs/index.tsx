@@ -10,37 +10,42 @@ import type {
   PayrollNextRun,
   PayrollRecipientRow
 } from "@/types/payroll";
-import { PAYROLL_TAB, type PayrollTab } from "../../config";
+import { NavLink } from "react-router-dom";
+import { PAYROLL_HISTORY_PATH, PAYROLL_PATH, PAYROLL_TAB, type PayrollTab } from "../../config";
 import { CreatePayrollEmpty } from "./CreatePayrollEmpty";
 import { HistoryPanel } from "./HistoryPanel";
 import { NextPayrollPanel } from "./NextPayrollPanel";
 
-function TabButton(props: {
-  active: boolean;
+function TabLink(props: {
+  to: string;
   children: string;
-  onClick: () => void;
 }) {
-  const { active, children, onClick } = props;
+  const { to, children } = props;
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "relative pb-2.5 font-montserrat text-base text-black",
-        active ? "font-semibold" : "font-normal"
-      )}
+    <NavLink
+      to={to}
+      end
+      className={({ isActive }) =>
+        cn(
+          "relative pb-2.5 font-montserrat text-base text-black",
+          isActive ? "font-semibold" : "font-normal",
+        )
+      }
     >
-      {children}
-      {active ? (
-        <span className="absolute inset-x-3 -bottom-px h-[3px] rounded-full bg-[#06f]" />
-      ) : null}
-    </button>
+      {({ isActive }) => (
+        <>
+          {children}
+          {isActive ? (
+            <span className="absolute inset-x-3 -bottom-px h-[3px] rounded-full bg-[#06f]" />
+          ) : null}
+        </>
+      )}
+    </NavLink>
   );
 }
 
 export function PayrollRunsCard(props: {
   tab: PayrollTab;
-  onTabChange: (tab: PayrollTab) => void;
   nextPayroll: PayrollNextRun | null;
   history: PayrollHistoryRun[];
   netPayById: Record<string, string>;
@@ -61,7 +66,6 @@ export function PayrollRunsCard(props: {
 }) {
   const {
     tab,
-    onTabChange,
     nextPayroll,
     history,
     netPayById,
@@ -92,18 +96,8 @@ export function PayrollRunsCard(props: {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-end gap-8">
-          <TabButton
-            active={tab === PAYROLL_TAB.Next}
-            onClick={() => onTabChange(PAYROLL_TAB.Next)}
-          >
-            Next Payroll
-          </TabButton>
-          <TabButton
-            active={tab === PAYROLL_TAB.History}
-            onClick={() => onTabChange(PAYROLL_TAB.History)}
-          >
-            Payroll History
-          </TabButton>
+          <TabLink to={PAYROLL_PATH}>Next Payroll</TabLink>
+          <TabLink to={PAYROLL_HISTORY_PATH}>Payroll History</TabLink>
         </div>
         {showToolbar ? (
           <div className="flex items-center gap-2 pb-1">

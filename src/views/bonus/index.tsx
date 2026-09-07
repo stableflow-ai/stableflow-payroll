@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import {
   useBonusCurrentStatsQuery,
   useBonusHistoryExportMutation,
@@ -24,11 +24,12 @@ import { mapBonusChartSeries } from "./utils";
 import {
   BONUS_CHART_RANGE,
   BONUS_DRAWER_MODE,
+  BONUS_HISTORY_PATH,
+  BONUS_PATH,
   BONUS_PAYOUT_STATUS,
   BONUS_TAB,
   type BonusChartRange,
   type BonusDrawerMode,
-  type BonusTab,
 } from "./config";
 
 function queryErrorMessage(error: unknown, fallback: string) {
@@ -37,6 +38,8 @@ function queryErrorMessage(error: unknown, fallback: string) {
 
 export function BonusView() {
   const { setHeaderExtra } = useOutletContext<PayLayoutOutletContext>();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
   const toast = useToast();
   const organizationId = useAuthStore(
     (state) => state.user?.organization?.id ?? null,
@@ -47,7 +50,7 @@ export function BonusView() {
   const recent = useBonusRecentPayoutsInfiniteQuery();
   const importMutation = useBonusImportMutation();
   const historyExportMutation = useBonusHistoryExportMutation();
-  const [tab, setTab] = useState<BonusTab>(BONUS_TAB.ToBePaid);
+  const tab = pathname === BONUS_HISTORY_PATH ? BONUS_TAB.History : BONUS_TAB.ToBePaid;
   const [chartRange, setChartRange] = useState<BonusChartRange>(
     BONUS_CHART_RANGE.Month,
   );
@@ -105,7 +108,7 @@ export function BonusView() {
       });
       setImportRows(null);
       setDrawerMode(null);
-      setTab(BONUS_TAB.ToBePaid);
+      navigate(BONUS_PATH);
     } catch (error) {
       toast.fail({
         title: queryErrorMessage(error, "Could not save bonus"),
@@ -170,12 +173,11 @@ export function BonusView() {
             if (!recent.hasNextPage || recent.isFetchingNextPage) return;
             void recent.fetchNextPage();
           }}
-          onOpenHistory={() => setTab(BONUS_TAB.History)}
+          onOpenHistory={() => navigate(BONUS_HISTORY_PATH)}
         />
       </div>
       <BonusRunsCard
         tab={tab}
-        onTabChange={setTab}
         pending={pending}
         pendingLoading={openQuery.isLoading}
         pendingError={

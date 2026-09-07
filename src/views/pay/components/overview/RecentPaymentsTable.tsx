@@ -14,6 +14,7 @@ import { cn } from "@/lib/utils";
 import { EMPLOYEE_PAYMENT_TYPE, type MemberRecentPayment } from "@/types/overview";
 import { PayoutRecipientCell } from "../payout-table/PayoutRecipientCell";
 import { PayoutStatusCell, paymentRowStatus } from "../payout-table/PayoutStatusCell";
+import { HISTORY_PATH } from "../../config";
 import { OVERVIEW_INCOME_COLOR, OVERVIEW_PAYOUT_COLOR, RECENT_PAYMENTS_COLUMNS } from "./config";
 
 function TypeBadge({ type }: { type: MemberRecentPayment["type"] }) {
@@ -45,7 +46,7 @@ export function RecentPaymentsTable(props: { rows: MemberRecentPayment[] }) {
             Recent Payments
           </h2>
           <Link
-            to="/pay/history"
+            to={HISTORY_PATH}
             className="inline-flex shrink-0 items-center gap-1 font-montserrat text-xs text-[#606060]"
           >
             View All

@@ -6,6 +6,7 @@ import { Card } from "@/components/ui/card/Card";
 import { organizationLogo, organizationName } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { OVERVIEW_LINK_CLASS } from "./config";
+import { SETTING_PATH, TEAM_PATH } from "../../config";
 
 export function OrgSummaryCard(props: { ownerEmail: string; teamMemberCount: number }) {
   const { ownerEmail, teamMemberCount } = props;
@@ -60,7 +61,7 @@ export function OrgSummaryCard(props: { ownerEmail: string; teamMemberCount: num
           </p>
           <div className="mt-2.5 flex flex-wrap items-baseline gap-2">
             <p className="font-montserrat text-base font-medium text-black">{teamMemberCount}</p>
-            <Link to="/pay/team" className={OVERVIEW_LINK_CLASS}>
+            <Link to={TEAM_PATH} className={OVERVIEW_LINK_CLASS}>
               View all →
             </Link>
           </div>
@@ -69,7 +70,7 @@ export function OrgSummaryCard(props: { ownerEmail: string; teamMemberCount: num
           <p className="font-montserrat text-base font-medium capitalize text-[#aaa]">
             Organization Settings
           </p>
-          <Link to="/pay/setting" className={`${OVERVIEW_LINK_CLASS} mt-2.5 inline-block`}>
+          <Link to={SETTING_PATH} className={`${OVERVIEW_LINK_CLASS} mt-2.5 inline-block`}>
             Update Settings →
           </Link>
         </section>

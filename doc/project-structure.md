@@ -1,6 +1,6 @@
 # Project Structure
 
-Stableflow Pay is a Vite 8 + React 19 single-page app. Wallet providers for EVM, Near, Solana, and Tron are wired. The authenticated shell is a 220px Pay sidebar plus a content column; the released surface is Auth and `/pay/*`.
+Stableflow Pay is a Vite 8 + React 19 single-page app. Wallet providers for EVM, Near, Solana, and Tron are wired. The authenticated shell is a 220px Pay sidebar plus a content column; the released surface is Auth, `/` (Overview), `/pay/*`, `/team`, `/history`, and `/setting`.
 
 Product areas, routes, and constraints: [product.md](product.md).
 
@@ -37,7 +37,7 @@ Copy `.env.example` to `.env.local`.
 | `VITE_RPC_PROXY_HOST`, `VITE_RPC_SECRET_KEY` | optional | HMAC-signed RPC proxy used by `src/lib/rpc/`. |
 | `VITE_AMOUNT_MAX_DECIMALS` | optional | Fractional digits for amount inputs (not on-chain token decimals). |
 | `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_API_KEY`, `VITE_GOOGLE_APP_ID` | for Sheets import | Google Identity + Picker + Sheets API. |
-| `VITE_VIRIFY_BALANCE` | optional | Set to `"false"` to skip the pre-broadcast balance gate in `BatchPayoutView` and `RequestPayView`. Not in `.env.example`; development escape hatch only. |
+| `VITE_VIRIFY_BALANCE` | optional | Set to `"false"` to skip the pre-broadcast balance gate in Payment by form. Not in `.env.example`; development escape hatch only. |
 
 ## Directory map
 
@@ -52,15 +52,14 @@ src/
   styles.css                   Tailwind entry + fonts + toast overrides
   shadcn-tailwind.css          theme variables and @theme inline
   router/                      route table (index.tsx) and guards (guards.tsx)
-  layouts/                     AppLayout, PayLayout, PartnerLayout
+  layouts/                     AppLayout, PayLayout
     views/                       one folder per area; see product.md
     auth/                      login, register, create organization, invite register, reset password
-    pay/                       single, form, batch, pending, history, team, setting, request (+ disabled public payer)
-    payroll/                   payroll dashboard (mocked until the API exists)
-    expense/                   expense dashboard (current / total-payout / recent / open / requests / history / export)
-    bonus/                     bonus dashboard (current / total-payout / recent / open / history)
+    pay/                       overview, single, form, result, request, requests, history, team, setting
+    payroll/                   payroll dashboard (Next Payroll / Payroll History routes)
+    expense/                   expense dashboard (open / requests / history routes)
+    bonus/                     bonus dashboard (to be paid / history routes)
     how-it-works/              public marketing page
-    home/, analytics/, partner/  routes currently disabled
   components/
     ui/                        public primitives (see doc/components/README.md)
     ui/overlay/                internal overlay plumbing, do not import from features
@@ -108,11 +107,10 @@ src/
 | `intents-tokens.ts` | `persist` | 1Click token list, `PAYOUT_SYMBOLS`, `ensureFresh`, `findByChainAndSymbol` |
 | `token-balances.ts` | no | Balance cache and fetch status per owner + asset |
 | `quick-pay-prefs.ts` | `persist` | Remembered single-payout preferences |
-| `quick-pay-commit-queue.ts` | `persist` | Retry queue for `POST /v1/payroll/single/submit` |
 | `batch-payout-commit-queue.ts` | `persist` | Retry queue for `POST /v1/payroll/batch/submit` |
 | `consumed-batches.ts` | `persist` | Spent payroll `batchId`s so the same deposit addresses are never broadcast twice |
 | `nearintents-user-session.ts` | no | Near Intents session for confidential receive / withdraw |
-| `google-drive-session.ts` | no | Google OAuth token for the Sheets importer |
+| `google-drive-session.ts` | `persist` (sessionStorage) | Google OAuth token for the Sheets importer |
 
 ## Import paths
 

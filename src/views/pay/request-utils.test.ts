@@ -1,9 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
-  applyRequestPayoutFields,
   buildPaymentRequestUrl,
   defaultAddressForNetwork,
-  formatCouponAmount,
   parsePaymentRequestId,
   truncateMiddle,
   receivedPaymentStatusLabel,
@@ -45,22 +43,6 @@ describe("payment request id", () => {
     expect(parsePaymentRequestId("0")).toBeNull();
     expect(parsePaymentRequestId("-1")).toBeNull();
     expect(parsePaymentRequestId("id=42")).toBeNull();
-  });
-});
-
-describe("applyRequestPayoutFields", () => {
-  it("only adds request_id", () => {
-    const body = {
-      amount: "10",
-      destinationAddress: "0x1",
-      destinationNetwork: "arb",
-      destinationToken: "USDC",
-      network: "eth",
-      refundTo: "0x2",
-      slippageTolerance: 5,
-      token: "USDC",
-    };
-    expect(applyRequestPayoutFields(body, 9)).toEqual({ ...body, request_id: 9 });
   });
 });
 
@@ -141,13 +123,6 @@ describe("defaultAddressForNetwork", () => {
     expect(defaultAddressForNetwork(addresses, "arbitrum")).toBe("0xabc");
     expect(defaultAddressForNetwork(addresses, "near")).toBe("near.near");
     expect(defaultAddressForNetwork(addresses, "eth")).toBeNull();
-  });
-});
-
-describe("formatCouponAmount", () => {
-  it("splits whole and fraction without padding", () => {
-    expect(formatCouponAmount("500")).toEqual({ whole: "500", fraction: undefined });
-    expect(formatCouponAmount("12.5")).toEqual({ whole: "12", fraction: "5" });
   });
 });
 

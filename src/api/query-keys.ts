@@ -14,23 +14,10 @@ export const queryKeys = {
   },
   payout: {
     all: ["payout"] as const,
-    pending: ["payout", "pending"] as const,
-    overview: ["payout", "overview"] as const,
-    volume: (period: string) => [...queryKeys.payout.all, "volume", period] as const,
-    recent: ["payout", "recent"] as const,
-    payments: (params: unknown) => [...queryKeys.payout.all, "payments", params] as const,
-    singleQuote: (body: unknown) => [...queryKeys.payout.all, "single-quote", body] as const,
     payrollPayment: (id: string) => [...queryKeys.payout.all, "payroll-payment", id] as const,
-    batchQuote: (body: unknown) => [...queryKeys.payout.all, "batch-quote", body] as const,
-    payrollBatch: (body: unknown) => [...queryKeys.payout.all, "payroll-batch", body] as const,
-    payrollBatchTransaction: (id: string) => [...queryKeys.payout.all, "payroll-batch-tx", id] as const,
   },
   recipient: {
     all: ["recipient"] as const,
-  },
-  analytics: {
-    all: ["analytics"] as const,
-    month: (month: string) => [...queryKeys.analytics.all, "month", month] as const,
   },
   request: {
     all: ["request"] as const,
@@ -41,21 +28,12 @@ export const queryKeys = {
       [...queryKeys.request.all, "recent", orgId, limit] as const,
     defaultAddresses: (orgId: number) =>
       [...queryKeys.request.all, "default-addresses", orgId] as const,
-    withdrawCount: ["request", "withdraw-count"] as const,
-    detail: (id: number) => [...queryKeys.request.all, "detail", id] as const,
   },
   memberOverview: {
     all: ["member-overview"] as const,
     stats: (orgId: number) => [...queryKeys.memberOverview.all, "stats", orgId] as const,
     payout: (orgId: number, period: string, timezone: string) =>
       [...queryKeys.memberOverview.all, "payout", orgId, period, timezone] as const,
-  },
-  partner: {
-    all: ["partner"] as const,
-    me: ["partner", "me"] as const,
-    keys: ["partner", "keys"] as const,
-    analytics: (params: unknown) => [...queryKeys.partner.all, "analytics", params] as const,
-    payments: (params: unknown) => [...queryKeys.partner.all, "payments", params] as const,
   },
   payroll: {
     all: ["payroll"] as const,

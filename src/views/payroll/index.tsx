@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useOutletContext } from "react-router-dom";
+import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import {
   usePayrollCurrentStatsQuery,
   usePayrollHistoryExportMutation,
@@ -18,11 +18,11 @@ import { PaymentByFormDialog } from "@/views/pay/components/payment-form/Payment
 import {
   PAYROLL_CHART_RANGE,
   PAYROLL_DRAWER_MODE,
+  PAYROLL_HISTORY_PATH,
   PAYROLL_PAYOUT_STATUS,
   PAYROLL_TAB,
   type PayrollChartRange,
   type PayrollDrawerMode,
-  type PayrollTab
 } from "./config";
 import { PayrollFormDrawer } from "./components/payroll-form-drawer";
 import { PayrollHistoryDetailDrawer } from "./components/history-detail-drawer";
@@ -46,6 +46,8 @@ function queryErrorMessage(error: unknown, fallback: string) {
 
 export function PayrollView() {
   const { setHeaderExtra } = useOutletContext<PayLayoutOutletContext>();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
   const toast = useToast();
   const organizationId = useAuthStore((state) => state.user?.organization?.id ?? null);
   const nextQuery = usePayrollNextQuery();
@@ -54,7 +56,7 @@ export function PayrollView() {
   const importMutation = usePayrollImportMutation();
   const updateMutation = usePayrollUpdateMutation();
   const historyExportMutation = usePayrollHistoryExportMutation();
-  const [tab, setTab] = useState<PayrollTab>(PAYROLL_TAB.Next);
+  const tab = pathname === PAYROLL_HISTORY_PATH ? PAYROLL_TAB.History : PAYROLL_TAB.Next;
   const [chartRange, setChartRange] = useState<PayrollChartRange>(
     PAYROLL_CHART_RANGE.Month
   );
@@ -212,12 +214,11 @@ export function PayrollView() {
             if (!recent.hasNextPage || recent.isFetchingNextPage) return;
             void recent.fetchNextPage();
           }}
-          onOpenHistory={() => setTab(PAYROLL_TAB.History)}
+          onOpenHistory={() => navigate(PAYROLL_HISTORY_PATH)}
         />
       </div>
       <PayrollRunsCard
         tab={tab}
-        onTabChange={setTab}
         nextPayroll={nextPayroll}
         history={historyItems}
         netPayById={resolvedNetPay}

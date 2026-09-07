@@ -1,12 +1,11 @@
 import { getChainByNetwork, txExplorerUrl } from "@/config/chains";
-import type { PaySingleQuoteParam } from "@/types/payout";
 import type {
   PaymentRequestDefaultAddress,
   PaymentRequestItem,
 } from "@/types/request-payment";
 import type { IntentsToken, PayoutSymbol } from "@/stores/intents-tokens";
 import { normalizeSymbol } from "@/stores/intents-tokens";
-import { formatAmount, type WalletChainKind } from "@/utils";
+import { type WalletChainKind } from "@/utils";
 import type { ChainKind } from "@/wallet";
 import { detectAddressKind } from "./batch-utils";
 import { PAY_FORM_PATH, PAY_REQUEST_STATUS, PAY_REQUEST_STATUS_CLASS } from "./config";
@@ -83,13 +82,6 @@ export function defaultAddressForNetwork(
   return address || null;
 }
 
-export function applyRequestPayoutFields(
-  body: PaySingleQuoteParam,
-  requestId: number,
-): PaySingleQuoteParam {
-  return { ...body, request_id: requestId };
-}
-
 export type ReceivedPaymentView = {
   id: number;
   paymentName: string;
@@ -160,12 +152,6 @@ export function receivedPaymentStatusClass(status: string): string {
 
 export function requestStatusExplorerUrl(row: ReceivedPaymentView): string | null {
   return txExplorerUrl(row.blockchain, row.completedTxHash);
-}
-
-export function formatCouponAmount(amount: string): { whole: string; fraction?: string } {
-  const formatted = formatAmount(amount, { prefix: "", maxDecimals: 6, padDecimals: false });
-  const [whole, fraction] = formatted.split(".");
-  return { whole, fraction };
 }
 
 export function truncateMiddle(text: string, prefix = 5, suffix = 6): string {

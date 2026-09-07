@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { NavLink } from "react-router-dom";
 import { IconLoading } from "@/components/icons/loading";
 import { IconPlus } from "@/components/icons/plus";
 import { Button } from "@/components/ui/button/Button";
@@ -7,44 +8,54 @@ import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
 import type { ExpenseDraftRow, ExpenseOpenList } from "@/types/expense";
 import type { PayableKey } from "@/types/payable";
-import { EXPENSE_TAB, type ExpenseTab } from "../../config";
+import {
+  EXPENSE_HISTORY_PATH,
+  EXPENSE_PATH,
+  EXPENSE_REQUESTS_PATH,
+  EXPENSE_TAB,
+  type ExpenseTab,
+} from "../../config";
 import { ExpenseImportCsvButton } from "./ExpenseImportCsvButton";
 import { HistoryPanel } from "./HistoryPanel";
 import { OpenPanel } from "./OpenPanel";
 import { RequestsPanel } from "./RequestsPanel";
 
-function TabButton(props: {
-  active: boolean;
+function TabLink(props: {
+  to: string;
   children: ReactNode;
   count?: number;
-  onClick: () => void;
 }) {
-  const { active, children, count = 0, onClick } = props;
+  const { to, children, count = 0 } = props;
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "relative inline-flex items-center gap-1.5 pb-2.5 font-montserrat text-base text-black",
-        active ? "font-semibold" : "font-normal",
-      )}
+    <NavLink
+      to={to}
+      end
+      className={({ isActive }) =>
+        cn(
+          "relative inline-flex items-center gap-1.5 pb-2.5 font-montserrat text-base text-black",
+          isActive ? "font-semibold" : "font-normal",
+        )
+      }
     >
-      {children}
-      {count > 0 ? (
-        <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-[8px] bg-[#06f] px-0.5 font-montserrat text-[12px] font-medium leading-none text-white">
-          {count}
-        </span>
-      ) : null}
-      {active ? (
-        <span className="absolute inset-x-3 -bottom-px h-[3px] rounded-full bg-[#06f]" />
-      ) : null}
-    </button>
+      {({ isActive }) => (
+        <>
+          {children}
+          {count > 0 ? (
+            <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-[8px] bg-[#06f] px-0.5 font-montserrat text-[12px] font-medium leading-none text-white">
+              {count}
+            </span>
+          ) : null}
+          {isActive ? (
+            <span className="absolute inset-x-3 -bottom-px h-[3px] rounded-full bg-[#06f]" />
+          ) : null}
+        </>
+      )}
+    </NavLink>
   );
 }
 
 export function ExpenseRunsCard(props: {
   tab: ExpenseTab;
-  onTabChange: (tab: ExpenseTab) => void;
   open: ExpenseOpenList;
   openLoading?: boolean;
   openError?: string | null;
@@ -56,7 +67,6 @@ export function ExpenseRunsCard(props: {
 }) {
   const {
     tab,
-    onTabChange,
     open,
     openLoading = false,
     openError = null,
@@ -80,25 +90,11 @@ export function ExpenseRunsCard(props: {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-end gap-8">
-          <TabButton
-            active={isOpenTab}
-            onClick={() => onTabChange(EXPENSE_TAB.Open)}
-          >
-            Open expense
-          </TabButton>
-          <TabButton
-            active={isRequestsTab}
-            count={requestCount}
-            onClick={() => onTabChange(EXPENSE_TAB.Requests)}
-          >
+          <TabLink to={EXPENSE_PATH}>Open expense</TabLink>
+          <TabLink to={EXPENSE_REQUESTS_PATH} count={requestCount}>
             Request Payments
-          </TabButton>
-          <TabButton
-            active={isHistoryTab}
-            onClick={() => onTabChange(EXPENSE_TAB.History)}
-          >
-            Expense History
-          </TabButton>
+          </TabLink>
+          <TabLink to={EXPENSE_HISTORY_PATH}>Expense History</TabLink>
         </div>
         {showToolbar ? (
           <div className="flex items-center gap-2 pb-1">

@@ -15,7 +15,7 @@ import type { ExpenseDraftRow } from "@/types/expense";
 import { SelectSheetDialog } from "@/views/pay/components/batch/SelectSheetDialog";
 import { EXPENSE_FORM_MAX_ROWS, IMPORT_CSV_ACCEPT } from "../../config";
 import { parseExpenseImportRows } from "../../utils";
-import { ImportCsvMenu, type ImportCsvSource } from "./ImportCsvMenu";
+import { ImportCsvMenu, type ImportCsvSource } from "@/views/pay/components/import-csv/ImportCsvMenu";
 
 export function ExpenseImportCsvButton(props: {
   onImported: (rows: ExpenseDraftRow[]) => void;

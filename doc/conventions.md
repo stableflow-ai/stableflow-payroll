@@ -75,7 +75,7 @@ One pattern only. Do not mix `public/` SVGs, a separate `svgs/` folder, and inli
 
 - Cross-page client state lives in Zustand stores under `src/stores/`. See the store table in [project-structure.md](project-structure.md).
 - The JWT session (`token` + `user`) is the one exception to "stores own their own persistence": it is read and written by `src/lib/auth-session.ts` under the key `stableflow-pay.session`, and `useAuthStore` hydrates from it on first import. Go through `getStoredSession` / `setStoredSession` / `clearStoredSession` / `getAuthToken`; never touch that key directly.
-- Every other store that must survive a reload uses Zustand `persist` (`quick-pay-commit-queue`, `batch-payout-commit-queue`, `intents-tokens`, `quick-pay-prefs`).
+- Every other store that must survive a reload uses Zustand `persist` (`batch-payout-commit-queue`, `intents-tokens`, `quick-pay-prefs`, `google-drive-session`).
 - Do not read or write `localStorage` / `sessionStorage` from features, pages, or hooks, and do not add another storage wrapper.
 - Server lists, details, and quotes stay in TanStack Query. Do not copy them into Zustand.
 - Page-local UI (dialog open, input value, wizard step) uses component `useState`. Do not lift it into a store.

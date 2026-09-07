@@ -1,4 +1,5 @@
 import { useMemo, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   useExpenseCurrentStatsQuery,
   useExpenseImportMutation,
@@ -20,10 +21,12 @@ import { TotalExpenseChart } from "./components/total-expense";
 import { mapExpenseChartSeries } from "./utils";
 import {
   EXPENSE_CHART_RANGE,
+  EXPENSE_HISTORY_PATH,
+  EXPENSE_PATH,
   EXPENSE_PAYOUT_STATUS,
+  EXPENSE_REQUESTS_PATH,
   EXPENSE_TAB,
   type ExpenseChartRange,
-  type ExpenseTab
 } from "./config";
 
 function queryErrorMessage(error: unknown, fallback: string) {
@@ -32,6 +35,8 @@ function queryErrorMessage(error: unknown, fallback: string) {
 
 export function ExpenseView() {
   const toast = useToast();
+  const { pathname } = useLocation();
+  const navigate = useNavigate();
   const organizationId = useAuthStore(
     (state) => state.user?.organization?.id ?? null
   );
@@ -40,7 +45,12 @@ export function ExpenseView() {
   const openRequestsCount = useExpenseOpenRequestsCountQuery();
   const recent = useExpenseRecentPayoutsInfiniteQuery();
   const importMutation = useExpenseImportMutation();
-  const [tab, setTab] = useState<ExpenseTab>(EXPENSE_TAB.Open);
+  const tab =
+    pathname === EXPENSE_REQUESTS_PATH
+      ? EXPENSE_TAB.Requests
+      : pathname === EXPENSE_HISTORY_PATH
+        ? EXPENSE_TAB.History
+        : EXPENSE_TAB.Open;
   const [chartRange, setChartRange] = useState<ExpenseChartRange>(
     EXPENSE_CHART_RANGE.Month
   );
@@ -88,7 +98,7 @@ export function ExpenseView() {
       });
       setImportRows(null);
       setDrawerOpen(false);
-      setTab(EXPENSE_TAB.Open);
+      navigate(EXPENSE_PATH);
     } catch (error) {
       toast.fail({
         title: queryErrorMessage(error, "Could not save expense")
@@ -144,12 +154,11 @@ export function ExpenseView() {
             if (!recent.hasNextPage || recent.isFetchingNextPage) return;
             void recent.fetchNextPage();
           }}
-          onOpenHistory={() => setTab(EXPENSE_TAB.History)}
+          onOpenHistory={() => navigate(EXPENSE_HISTORY_PATH)}
         />
       </div>
       <ExpenseRunsCard
         tab={tab}
-        onTabChange={setTab}
         open={openQuery.data ?? { total: "0", count: 0, batches: [] }}
         openLoading={openQuery.isLoading}
         openError={

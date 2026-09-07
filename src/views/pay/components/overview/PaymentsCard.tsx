@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { formatAmount } from "@/utils";
 import type { VolumePeriod } from "@/types/payout";
 import type { OrganizationPayoutPoint } from "@/types/organization";
+import { HISTORY_PATH } from "../../config";
 import {
   ADMIN_CHART_PLOT_RIGHT_MARGIN,
   ADMIN_CHART_Y_AXIS_WIDTH,
@@ -156,7 +157,7 @@ export function PaymentsCard(props: {
             <p className="font-montserrat text-[26px] font-medium text-black">
               {paymentCount}
             </p>
-            <Link to="/pay/history" className={OVERVIEW_LINK_CLASS}>
+            <Link to={HISTORY_PATH} className={OVERVIEW_LINK_CLASS}>
               View all →
             </Link>
           </div>
