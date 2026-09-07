@@ -27,8 +27,64 @@ export interface PayBatchSwapTransaction {
 }
 
 export interface PayBatchSubmitParam {
-  orderId: string;
+  quote_id: string;
+  tx_hash: string;
+}
+
+export interface PayrollPayoutSubmitResult {
+  executionId: number;
+}
+
+export const PAYROLL_EXECUTION_ITEM_STATUS = {
+  Completed: "completed",
+  Failed: "failed",
+  Expired: "expired",
+} as const;
+
+export type PayrollExecutionItemStatus =
+  (typeof PAYROLL_EXECUTION_ITEM_STATUS)[keyof typeof PAYROLL_EXECUTION_ITEM_STATUS];
+
+export interface PayrollExecutionItem {
+  id: number;
+  executionId: number;
+  sourceItemId: number;
+  name: string;
+  purpose: string;
+  description: string;
+  amount: string;
+  payer: string;
+  sourceAmount: string;
+  sourceVolume: string;
+  sourceSymbol: string;
+  sourceNetwork: string;
   txHash: string;
+  recipient: string;
+  destinationAssetId: string;
+  destinationAmount: string;
+  destinationVolume: string;
+  destinationSymbol: string;
+  destinationNetwork: string;
+  destinationTxHash: string;
+  status: string;
+  submittedAt: string;
+  paidAt: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PayrollExecution {
+  executionId: number;
+  type: string;
+  title: string;
+  total: number;
+  processed: number;
+  created: number;
+  processing: number;
+  completed: number;
+  failed: number;
+  expired: number;
+  finished: boolean;
+  list: PayrollExecutionItem[];
 }
 
 export const VOLUME_PERIOD = {
@@ -115,6 +171,7 @@ export interface PayrollBatchPayment extends PayrollPayment {
 }
 
 export interface PayrollBatch {
+  quoteId: string;
   batchId: string;
   deadline: string;
   payer: string;

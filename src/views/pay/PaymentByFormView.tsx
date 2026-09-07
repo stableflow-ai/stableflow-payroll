@@ -9,7 +9,7 @@ import { parsePaymentRequestId } from "./request-utils";
 
 export function PaymentByFormView() {
   const toast = useToast();
-  const [params] = useSearchParams();
+  const [params, setParams] = useSearchParams();
   const batchId = parsePaymentRequestId(params.get("batch_id"));
   const formsQuery = usePayablesQuery();
   const missingToastRef = useRef(false);
@@ -25,9 +25,16 @@ export function PaymentByFormView() {
     toast.fail({ title: "Payment form not found" });
   }, [batchId, formsQuery.isSuccess, payable, toast]);
 
+  function handleSettled() {
+    if (!params.has("batch_id")) return;
+    const next = new URLSearchParams(params);
+    next.delete("batch_id");
+    setParams(next, { replace: true });
+  }
+
   return (
     <Card className="mx-auto w-full max-w-[600px] px-[30px] py-[30px]">
-      <PaymentByFormCard payable={payable} />
+      <PaymentByFormCard payable={payable} onSettled={handleSettled} />
     </Card>
   );
 }

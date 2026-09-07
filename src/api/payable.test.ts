@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
+import { ApiError } from "@/lib/api-error";
 import {
   mapPayable,
+  mapPayablePayResponse,
   mapPayables,
   payablePayBody,
 } from "./payable";
@@ -332,6 +334,38 @@ describe("payablePayBody", () => {
         adjustments: [],
       }).adjustments,
     ).toBeUndefined();
+  });
+});
+
+describe("mapPayablePayResponse", () => {
+  const batch = {
+    batch_id: "b1",
+    deadline: "2026-09-08T00:00:00Z",
+    payer: "0xpayer",
+    source_network: "eth",
+    source_symbol: "USDC",
+    total_source_amount: "10",
+    total_source_amount_raw: "10000000",
+    transaction: {
+      callData: "0xabc",
+      batch_contract: "0xcontract",
+    },
+  };
+
+  it("reads quote_id beside batch", () => {
+    const mapped = mapPayablePayResponse({ quote_id: "q-1", batch });
+    expect(mapped.quoteId).toBe("q-1");
+    expect(mapped.batchId).toBe("b1");
+    expect(mapped.transaction.callData).toBe("0xabc");
+  });
+
+  it("throws when quote_id is missing", () => {
+    expect(() => mapPayablePayResponse({ batch })).toThrow(ApiError);
+    try {
+      mapPayablePayResponse({ batch });
+    } catch (error) {
+      expect(error).toMatchObject({ code: "NO_QUOTE_ID" });
+    }
   });
 });
 

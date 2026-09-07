@@ -15,6 +15,7 @@ export const queryKeys = {
   payout: {
     all: ["payout"] as const,
     payrollPayment: (id: string) => [...queryKeys.payout.all, "payroll-payment", id] as const,
+    execution: (id: number) => [...queryKeys.payout.all, "execution", id] as const,
   },
   recipient: {
     all: ["recipient"] as const,

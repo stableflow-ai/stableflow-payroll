@@ -106,18 +106,22 @@ export async function getPayables(
   );
 }
 
-function mapPayablePayResponse(raw: unknown): PayrollBatch {
+export function mapPayablePayResponse(raw: unknown): PayrollBatch {
   const row = asRecord(raw) ?? {};
+  const quoteId = apiText(row.quote_id ?? row.quoteId);
+  if (!quoteId) {
+    throw new ApiError("Quote id is missing from the response", 502, "NO_QUOTE_ID");
+  }
   const batch = mapPayrollBatch(row.batch ?? raw);
   if (!isPayrollBatchBroadcastable(batch)) {
     throw new ApiError("Batch transaction is missing from the response", 502, "NO_BATCH_TX");
   }
-  return batch;
+  return { ...batch, quoteId };
 }
 
 export async function payPayrollSalaries(body: PayrollPayParam): Promise<PayrollBatch> {
   return mapPayablePayResponse(
-    await http<unknown>(`${PAY_API_PREFIX}/salaries/pay`, { method: "POST", body }),
+    await http<unknown>(`${PAY_API_PREFIX}/salaries/pay/quote`, { method: "POST", body }),
   );
 }
 
@@ -126,10 +130,13 @@ export async function payExpenseBatch(
   body: PayablePayBaseParam,
 ): Promise<PayrollBatch> {
   return mapPayablePayResponse(
-    await http<unknown>(`${PAY_API_PREFIX}/expenses/${encodeURIComponent(String(batchId))}/pay`, {
-      method: "POST",
-      body,
-    }),
+    await http<unknown>(
+      `${PAY_API_PREFIX}/expenses/${encodeURIComponent(String(batchId))}/pay/quote`,
+      {
+        method: "POST",
+        body,
+      },
+    ),
   );
 }
 
@@ -138,10 +145,13 @@ export async function payBonusBatch(
   body: PayablePayBaseParam,
 ): Promise<PayrollBatch> {
   return mapPayablePayResponse(
-    await http<unknown>(`${PAY_API_PREFIX}/bonuses/${encodeURIComponent(String(batchId))}/pay`, {
-      method: "POST",
-      body,
-    }),
+    await http<unknown>(
+      `${PAY_API_PREFIX}/bonuses/${encodeURIComponent(String(batchId))}/pay/quote`,
+      {
+        method: "POST",
+        body,
+      },
+    ),
   );
 }
 

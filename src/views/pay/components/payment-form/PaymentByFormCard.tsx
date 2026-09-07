@@ -10,6 +10,7 @@ import { usePaymentWallet } from "@/hooks/use-payment-wallet";
 import { useTokenBalancesStore } from "@/stores/token-balances";
 import { useIntentsTokensStore } from "@/stores/intents-tokens";
 import { useAuthStore } from "@/stores/auth";
+import { enqueueBatchPayoutCommit } from "@/stores/batch-payout-commit-queue";
 import {
   isBatchConsumed,
   markBatchConsumed,
@@ -203,16 +204,21 @@ export function PaymentByFormCard(props: {
       }
       setPhase("sending");
       markBatchConsumed(batch.batchId);
-      await broadcastBatchPayout({
+      const txHash = await broadcastBatchPayout({
         token: originToken,
         transaction: tx,
         amountIn,
         payer,
       });
+      enqueueBatchPayoutCommit({
+        quoteId: batch.quoteId,
+        txHash,
+        title: detail?.title ?? "",
+        type: detail?.type ?? "",
+      });
     },
     onSuccess: () => {
       setPhase("done");
-      toast.success({ title: "Payment submitted" });
       void queryClient.removeQueries({ queryKey: [...queryKeys.payable.all, "pay"] });
       if (!formLocked) setPickedId("");
       setDetailsOpen(false);

@@ -9,6 +9,7 @@ export interface ToastParams {
   title: ReactNode;
   text?: ReactNode;
   duration?: number | false;
+  onClose?: () => void;
 }
 
 export type ToastHandle = {
@@ -36,12 +37,13 @@ export default function useToast() {
 
 function showToast(type: ToastType, params: ToastParams): ToastHandle {
   let current: ToastParams = { ...params };
-  const { duration = 3000, title, text } = params;
+  const { duration = 3000, title, text, onClose } = params;
 
   const id = toast(<Toast type={type} title={title} text={text} />, {
     position: TOAST_POSITION,
     className: TOAST_CLASSNAME,
     autoClose: duration,
+    onClose,
   });
 
   return {

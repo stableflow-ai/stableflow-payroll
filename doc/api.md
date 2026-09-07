@@ -184,13 +184,13 @@ The checkout returns to the `success_url` we send (`{origin}/pay/result`) only a
 | Method | Path | Auth | Body / Query | Data | API | Hook |
 | --- | --- | --- | --- | --- | --- | --- |
 | GET | `/v1/payroll/payables` | yes | `organization_id`, `timezone` | `Payable[]` | `getPayables` | `usePayablesQuery` |
-| POST | `/v1/payroll/salaries/pay` | yes | `PayrollPayParam` | `PayrollBatch` | `payPayrollSalaries` | `usePayablePayQuery` |
-| POST | `/v1/payroll/expenses/{batch_id}/pay` | yes | `PayablePayBaseParam` | `PayrollBatch` | `payExpenseBatch` | `usePayablePayQuery` |
-| POST | `/v1/payroll/bonuses/{batch_id}/pay` | yes | `PayablePayBaseParam` | `PayrollBatch` | `payBonusBatch` | `usePayablePayQuery` |
+| POST | `/v1/payroll/salaries/pay/quote` | yes | `PayrollPayParam` | `PayrollBatch` | `payPayrollSalaries` | `usePayablePayQuery` |
+| POST | `/v1/payroll/expenses/{batch_id}/pay/quote` | yes | `PayablePayBaseParam` | `PayrollBatch` | `payExpenseBatch` | `usePayablePayQuery` |
+| POST | `/v1/payroll/bonuses/{batch_id}/pay/quote` | yes | `PayablePayBaseParam` | `PayrollBatch` | `payBonusBatch` | `usePayablePayQuery` |
 
 `organization_id` is session `user.organization.id`. `timezone` is `browserTimeZone()`. Rows whose `type` is not `payroll` / `expense` / `bonus` are dropped. Payroll keys use `period_month`; expense and bonus keys use `batch_id`. `list[].email` is mapped when present.
 
-The three pay routes return `{ batch, execution_id }`. The mapper reads `batch` through `mapPayrollBatch` and throws `ApiError(..., "NO_BATCH_TX")` when the transaction cannot be broadcast. `PaymentByFormCard` posts pay as the quote (`usePayablePayQuery`, `staleTime: Infinity`); Send uses `markBatchConsumed` then `broadcastBatchPayout`. Expired or consumed quotes refetch pay. Optional `notification` is `"all"` when every item is selected, otherwise a comma-separated list of `item_id`s (`"1,5"`). `adjustments` is `{ item_id, net_pay }[]` only for rows whose saved net pay differs from list `net_pay` (or `amount` when `net_pay` is missing) and is omitted when nothing changed. Both fields are part of the quote query key. `payablePayBody` copies a non-empty `notification` string and `adjustments` array onto all three pay bodies.
+The three quote routes return `{ quote_id, batch }` (`quote_id` is a sibling of `batch`). The mapper reads `quote_id` and `batch` through `mapPayrollBatch` and throws `ApiError(..., "NO_QUOTE_ID")` or `ApiError(..., "NO_BATCH_TX")` when either is missing. `PaymentByFormCard` posts quote as `usePayablePayQuery` (`staleTime: 0`, `gcTime: 0`, no placeholder); Send uses `markBatchConsumed` then `broadcastBatchPayout`, then `enqueueBatchPayoutCommit({ quoteId, txHash })`. Expired or consumed quotes refetch quote. Optional `notification` is `"all"` when every item is selected, otherwise a comma-separated list of `item_id`s (`"1,5"`). `adjustments` is `{ item_id, net_pay }[]` only for rows whose saved net pay differs from list `net_pay` (or `amount` when `net_pay` is missing) and is omitted when nothing changed. Both fields are part of the quote query key. `payablePayBody` copies a non-empty `notification` string and `adjustments` array onto all three quote bodies.
 
 ### Payroll salaries — `src/api/payroll.ts`, `src/types/payroll.ts`, `src/hooks/use-payroll-api.ts`
 
@@ -284,13 +284,14 @@ Recent payouts have no `page` in the contract, only `limit` (max 100). `useBonus
 
 `POST /bonuses/import` saves a draft open bonus. **Add Bonus** and **Import CSV** both open the Add Bonus drawer first (CSV / Google Sheets is parsed locally, same as payroll); **Save** posts this route. Body is `organization_id`, `title` (≤ 100), and `items` (`name` ≤ 50, `address` ≤ 128, `amount`, `network` ≤ 32, `symbol` ≤ 32, optional `email` ≤ 100 / `purpose` ≤ 100 / `description` ≤ 5000). CSV columns are `recipient,email,amount,token,network,memo`; `memo` maps to `description`. Empty optional fields are omitted. Success returns `{ batch_id, count }` and invalidates the bonus query namespace.
 
-### Batch submit — `src/api/payout.ts`, `src/types/payout.ts`
+### Payout submit and executions — `src/api/payout.ts`, `src/types/payout.ts`
 
 | Method | Path | Auth | Body / Query | Data | API | Hook |
 | --- | --- | --- | --- | --- | --- | --- |
-| POST | `/v1/payroll/batch/submit` | yes | `PayBatchSubmitParam` | — | `batchSubmit` | via `batch-payout-commit-queue` |
+| POST | `/v1/payroll/payouts/submit` | yes | `PayBatchSubmitParam` (`quote_id`, `tx_hash`) | `PayrollPayoutSubmitResult` | `batchSubmit` | via `batch-payout-commit-queue` |
+| GET | `/v1/payroll/executions/{execution_id}` | yes | `organization_id` | `PayrollExecution` | `getPayrollExecution` | `usePayoutExecutionPoll` |
 
-Payment by form signs and broadcasts the payable-pay transaction, then `enqueueBatchPayoutCommit` stores `{ orderId, txHash }`. `useBatchPayoutCommitQueue` (mounted in `PayLayout`) retries `batchSubmit` with exponential backoff from 5s and drops the item once the server accepts it.
+Payment by form signs and broadcasts the payable quote, then `enqueueBatchPayoutCommit` stores `{ quoteId, txHash, title, type }`. `useBatchPayoutCommitQueue` (mounted in `PayLayout`) retries `POST /payouts/submit` with exponential backoff from 5s and drops the item once the server accepts it. Submit returns `execution_id`. The layout then polls `GET /executions/{execution_id}` every 5s without blocking the pay form. Only the latest execution is polled. Progress is an `info` toast (`{processed} / {total}` plus View). Newly terminal list items toast `completed` / `failed` / `expired`. View goes to the matching history list and stops polling. `finished: true` keeps the progress toast 3s then closes it.
 
 ### Recipients — `src/api/recipient.ts`, `src/types/recipient.ts`, `src/hooks/use-recipient-api.ts`
 
@@ -342,8 +343,8 @@ All four pass `envelope: false`. They are called from `src/lib/confidential/` fo
 | `src/lib/query-client.ts` | `queryClient` (30s `staleTime`, 1 retry, no refetch on focus) |
 | `src/api/config.ts` | `PAY_API_PREFIX`, `NEARINTENTS_API_PREFIX` |
 | `src/api/query-keys.ts` | `queryKeys` factory |
-| `src/api/payable.ts` | Payables list and salaries/expense/bonus pay |
-| `src/api/payout.ts` | Hosted checkout create/get, `batchSubmit`, payroll-batch mapping |
+| `src/api/payable.ts` | Payables list and salaries/expense/bonus quote |
+| `src/api/payout.ts` | Hosted checkout create/get, payout submit, executions, payroll-batch mapping |
 | `src/api/map.ts` | `asRecord`, `apiText`, `apiNumber` |
 | `src/api/overview.ts` | Member overview stats and payout chart |
 | `src/api/request-payment.ts` | Payment requests create / list / pending / recent / default addresses |

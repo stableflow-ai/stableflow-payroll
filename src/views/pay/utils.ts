@@ -150,7 +150,7 @@ export function formatQuoteErrorMessage(error: unknown, decimals = 6): string {
     }
   }
   if (/No liquidity available/i.test(message)) return "No liquidity available";
-  if (message.length > 80 || /Cross-chain quote failed/i.test(message)) return "Quote failed";
+  if (/Cross-chain quote failed/i.test(message)) return "Quote failed";
   return message;
 }
 

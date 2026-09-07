@@ -27,6 +27,7 @@ The public card has no business copy, actions, or progress fields. Callers pass 
 | `title` | `ReactNode` | required | First line |
 | `text` | `ReactNode` | — | Optional second line. Omit it for a title-only toast |
 | `duration` | `number \| false` | `3000` | Milliseconds, or `false` to keep it open until dismissed |
+| `onClose` | `() => void` | — | Runs when this toast is dismissed (X, `dismiss()`, or auto-close) |
 
 Each method returns a `ToastHandle`:
 

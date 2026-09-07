@@ -1,4 +1,4 @@
-import { keepPreviousData, useQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { getPayables, payPayable } from "@/api/payable";
 import { queryKeys } from "@/api/query-keys";
 import { organizationId } from "@/lib/auth-role";
@@ -19,7 +19,7 @@ export function usePayablesQuery() {
 }
 
 /**
- * `POST .../salaries/pay` or `.../{batch_id}/pay` — quote + on-chain data.
+ * `POST .../salaries/pay/quote` or `.../{batch_id}/pay/quote` — quote + on-chain data.
  * `notification` and `adjustments` are part of the key so a change re-quotes.
  */
 export function usePayablePayQuery(body: PayablePayRequest | null) {
@@ -27,8 +27,8 @@ export function usePayablePayQuery(body: PayablePayRequest | null) {
     queryKey: queryKeys.payable.pay(body),
     queryFn: () => payPayable(body!),
     enabled: Boolean(body),
-    placeholderData: keepPreviousData,
-    staleTime: Infinity,
+    staleTime: 0,
+    gcTime: 0,
     retry: 0,
   });
 }
