@@ -76,8 +76,8 @@ function BonusItemBlock(props: {
         isGroup && expanded && "border border-[#d9d9d9]",
       )}
     >
-      <TableRow className="min-h-14 border-0 bg-transparent px-4 py-3">
-        <TableCell className="font-medium text-black">{item.title}</TableCell>
+      <TableRow className="min-h-14 border-0 bg-transparent py-3">
+        <TableCell className="font-medium text-black first:pl-4">{item.title}</TableCell>
         <TableCell>
           {isGroup ? (
             <button
@@ -106,7 +106,7 @@ function BonusItemBlock(props: {
             <PayoutRecipientCell address={sole.address} prefix={5} suffix={5} />
           ) : null}
         </TableCell>
-        <TableCell>
+        <TableCell className="last:pr-4">
           <ActionCell item={item} onPayNow={onPayNow} />
         </TableCell>
       </TableRow>
@@ -116,11 +116,11 @@ function BonusItemBlock(props: {
             <TableRow
               key={member.id}
               className={cn(
-                "min-h-12 border-0 bg-transparent px-4 py-2.5",
+                "min-h-12 border-0 bg-transparent py-2.5",
                 index < item.members.length - 1 && "border-b border-black/10",
               )}
             >
-              <TableCell />
+              <TableCell className="first:pl-4" />
               <TableCell className="font-medium text-black">{member.name}</TableCell>
               <TableCell className="font-medium text-black">
                 {formatBonusTokenAmount(member.amount, member.token)}
@@ -128,7 +128,7 @@ function BonusItemBlock(props: {
               <TableCell>
                 <PayoutRecipientCell address={member.address} prefix={5} suffix={5} />
               </TableCell>
-              <TableCell />
+              <TableCell className="last:pr-4" />
             </TableRow>
           ))}
         </div>
@@ -148,11 +148,11 @@ export function PendingBonusTable(props: {
       className="border-0 bg-transparent p-0 shadow-none"
     >
       <TableHeader className="border-b-0 bg-transparent">
-        <TableHead>Bonus Title</TableHead>
+        <TableHead className="first:pl-4">Bonus Title</TableHead>
         <TableHead>Member</TableHead>
         <TableHead>Bonus</TableHead>
         <TableHead>Address</TableHead>
-        <TableHead>Action</TableHead>
+        <TableHead className="last:pr-4">Action</TableHead>
       </TableHeader>
       <TableBody className="mt-1 flex flex-col gap-4">
         {items.map((item) => (

@@ -69,20 +69,20 @@ export function NextPayrollPanel(props: {
       </div>
       <Table columns={NEXT_PAYROLL_TABLE_COLUMNS} className="border-0 bg-transparent p-0 shadow-none">
         <TableHeader className="border-b-0 bg-transparent">
-          <TableHead>Name</TableHead>
+          <TableHead className="first:pl-4">Name</TableHead>
           <TableHead>Address</TableHead>
           <TableHead>Email</TableHead>
           <TableHead>Payout Preference</TableHead>
           <TableHead>Amount</TableHead>
-          <TableHead className="capitalize">Net Pay</TableHead>
+          <TableHead className="capitalize last:pr-4">Net Pay</TableHead>
         </TableHeader>
         <TableBody className="flex flex-col gap-3.5">
           {run.rows.map((row) => (
             <TableRow
               key={row.id}
-              className="h-14 rounded-[12px] border-0 bg-[#f6f6f6] px-4"
+              className="h-14 rounded-[12px] border-0 bg-[#f6f6f6]"
             >
-              <TableCell>{row.name}</TableCell>
+              <TableCell className="first:pl-4">{row.name}</TableCell>
               <TableCell>
                 <PayoutRecipientCell address={row.address} prefix={5} suffix={5} />
               </TableCell>
@@ -93,7 +93,7 @@ export function NextPayrollPanel(props: {
                 {row.token} · {chainDisplayName(row.network)}
               </TableCell>
               <TableCell>{formatAmount(row.amount, { prefix: "", showDust: true })}</TableCell>
-              <TableCell>
+              <TableCell className="last:pr-4">
                 <InputNumber
                   value={netPayById[row.id] ?? row.netPay}
                   decimals={6}

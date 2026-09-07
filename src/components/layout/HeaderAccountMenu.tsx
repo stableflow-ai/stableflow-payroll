@@ -105,7 +105,7 @@ export function HeaderAccountMenu(props: {
         />
         {isSidebar ? (
           <>
-            <span className="min-w-0 flex-1 truncate text-left font-montserrat text-sm font-medium text-black max-w-[100px]">
+            <span className="min-w-0 flex-1 truncate text-left font-montserrat text-sm font-medium text-black">
               {triggerLabel === HEADER_ACCOUNT_TRIGGER_LABEL.Name
                 ? (user?.name || user?.email)
                 : user?.email}

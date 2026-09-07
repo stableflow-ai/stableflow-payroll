@@ -1,5 +1,4 @@
 import { useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
 import { IconAlertCircle } from "@/components/icons/alert";
 import { IconArrowDown } from "@/components/icons/arrow-down";
 import { IconLoading } from "@/components/icons/loading";
@@ -14,7 +13,6 @@ import { cn } from "@/lib/utils";
 import type { PayrollRecentPayout } from "@/types/payroll";
 import { formatAddress, formatAmount } from "@/utils";
 import {
-  PAYROLL_HISTORY_PATH,
   PAYROLL_PAYOUT_STATUS,
   PAYROLL_STATUS_FAILED_CLASS,
   PAYROLL_STATUS_PAID_CLASS,
@@ -51,6 +49,7 @@ export function RecentPayoutsCard(props: {
   hasMore?: boolean;
   error?: string | null;
   onLoadMore?: () => void;
+  onOpenHistory: () => void;
 }) {
   const {
     items,
@@ -60,6 +59,7 @@ export function RecentPayoutsCard(props: {
     hasMore = false,
     error = null,
     onLoadMore,
+    onOpenHistory,
   } = props;
   const listRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLLIElement>(null);
@@ -111,9 +111,10 @@ export function RecentPayoutsCard(props: {
           <ul className="flex flex-col">
             {items.map((item) => (
               <li key={item.id} className="border-b border-black/10 last:border-b-0">
-                <Link
-                  to={PAYROLL_HISTORY_PATH}
-                  className="flex items-center gap-3 py-3.5"
+                <button
+                  type="button"
+                  onClick={onOpenHistory}
+                  className="flex w-full items-center gap-3 py-3.5 text-left"
                 >
                   <StatusMark status={item.status} />
                   <span className="min-w-0 flex-1">
@@ -134,7 +135,7 @@ export function RecentPayoutsCard(props: {
                     {statusLabel(item.status)}
                   </span>
                   <IconArrowDown className="-rotate-90 text-black" />
-                </Link>
+                </button>
               </li>
             ))}
             {hasMore ? <li ref={sentinelRef} className="h-4 shrink-0" aria-hidden /> : null}

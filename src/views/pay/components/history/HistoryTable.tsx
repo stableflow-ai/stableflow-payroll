@@ -9,11 +9,13 @@ import {
   TableRow,
 } from "@/components/ui/table/Table";
 import { txExplorerUrl } from "@/config/chains";
+import { cn } from "@/lib/utils";
 import { formatAmount, formatDate } from "@/utils";
-import type { HistoryItem } from "@/hooks/use-history-api";
+import type { HistoryItem } from "@/types/history";
 import { HistoryAddressCell } from "./HistoryAddressCell";
 import { HistoryAssetCell } from "./HistoryAssetCell";
 import { HISTORY_TABLE_COLUMNS } from "./config";
+import { historyStatusClass, historyStatusLabel } from "./utils";
 
 export function HistoryTable(props: {
   rows: HistoryItem[];
@@ -34,6 +36,7 @@ export function HistoryTable(props: {
         <TableHead>From</TableHead>
         <TableHead>To</TableHead>
         <TableHead>Time</TableHead>
+        <TableHead>Status</TableHead>
       </TableHeader>
       {rows.length === 0 ? (
         <p className="py-8 text-center font-montserrat text-sm font-medium text-[#aaa]">{empty}</p>
@@ -78,6 +81,11 @@ export function HistoryTable(props: {
                 )}
               </TableCell>
               <TableCell>{formatDate(row.submittedAt) || "-"}</TableCell>
+              <TableCell>
+                <span className={cn("font-montserrat text-sm font-medium", historyStatusClass(row.status))}>
+                  {historyStatusLabel(row.status)}
+                </span>
+              </TableCell>
             </TableRow>
           ))}
         </TableBody>

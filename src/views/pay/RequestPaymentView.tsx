@@ -92,7 +92,7 @@ export function RequestPaymentView() {
     }
     const name = purpose.trim();
     if (!name) {
-      toast.fail({ title: "Enter a purpose" });
+      toast.fail({ title: "Enter a request reason" });
       return;
     }
     const error = receivingAddressError(addressInput, destKind);
@@ -125,7 +125,7 @@ export function RequestPaymentView() {
         <h2 className="font-montserrat text-xl font-medium text-black">Request Payment</h2>
         <Card className="mt-6 w-full max-w-[600px] px-[30px] py-8">
           <div className="flex items-center gap-1">
-            <p className="font-montserrat text-sm font-medium text-[#606060]">Purpose</p>
+            <p className="font-montserrat text-sm font-medium text-[#606060]">Request for</p>
             <Tooltip content="Short name the payer sees on the request.">
               <IconQuestion className="size-3.5 shrink-0 text-[#606060]" />
             </Tooltip>

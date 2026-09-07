@@ -170,6 +170,7 @@ export function BonusView() {
             if (!recent.hasNextPage || recent.isFetchingNextPage) return;
             void recent.fetchNextPage();
           }}
+          onOpenHistory={() => setTab(BONUS_TAB.History)}
         />
       </div>
       <BonusRunsCard

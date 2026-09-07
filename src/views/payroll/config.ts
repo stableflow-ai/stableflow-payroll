@@ -2,7 +2,6 @@ import { PAYABLE_TYPE, type PayableKey } from "@/types/payable";
 import { PAYROLL_IMPORT_DAY_TYPE, PAYROLL_TOTAL_PAYOUT_PERIOD } from "@/types/payroll";
 
 export const PAYROLL_CREATE_PATH = "/pay/batch";
-export const PAYROLL_HISTORY_PATH = "/pay/history";
 export const PAYROLL_PAY_NOW_PAYABLE: PayableKey = {
   type: PAYABLE_TYPE.Payroll,
   periodMonth: "2026-09",

@@ -41,7 +41,7 @@ function RowAction(props: {
     return (
       <Button
         loading
-        className="h-9 min-w-[97px] rounded-[10px] px-4 text-sm"
+        className="h-9 min-w-[97px] whitespace-nowrap rounded-[10px] px-4 text-sm"
       >
         Paying
       </Button>
@@ -50,7 +50,7 @@ function RowAction(props: {
 
   return (
     <Button
-      className="h-9 min-w-[113px] rounded-[10px] px-4 text-sm"
+      className="h-9 min-w-[130px] whitespace-nowrap rounded-[10px] px-4 text-sm"
       onClick={onPayNow}
     >
       <IconUp className="size-3.5 shrink-0" />
@@ -70,22 +70,22 @@ export function OpenTable(props: {
       className="border-0 bg-transparent p-0 shadow-none"
     >
       <TableHeader className="border-b-0 bg-transparent">
-        <TableHead>Name</TableHead>
+        <TableHead className="first:pl-4">Name</TableHead>
         <TableHead>Purpose</TableHead>
         <TableHead>Receipt</TableHead>
         <TableHead>Expense</TableHead>
         <TableHead>Address</TableHead>
         <TableHead>Payout Preference</TableHead>
         <TableHead>Amount</TableHead>
-        <TableHead />
+        <TableHead className="last:pr-4" />
       </TableHeader>
       <TableBody className="flex flex-col gap-4">
         {rows.map((row) => (
           <TableRow
             key={row.id}
-            className="h-14 rounded-[12px] border-0 bg-[#f6f6f6] px-4 [&>*]:py-0"
+            className="h-14 rounded-[12px] border-0 bg-[#f6f6f6] [&>*]:py-0"
           >
-            <TableCell>{row.name}</TableCell>
+            <TableCell className="first:pl-4">{row.name}</TableCell>
             <TableCell>{row.purpose}</TableCell>
             <TableCell>
               <ReceiptCell name={row.receiptName} />
@@ -98,7 +98,7 @@ export function OpenTable(props: {
               {row.token} · {chainDisplayName(row.network)}
             </TableCell>
             <TableCell>{formatAmount(row.amount, { prefix: "" })}</TableCell>
-            <TableCell className="justify-end">
+            <TableCell className="justify-end last:pr-4">
               <RowAction
                 action={row.action}
                 onPayNow={() => onPayNow(EXPENSE_PAY_NOW_PAYABLE)}

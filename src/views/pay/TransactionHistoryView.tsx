@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { IconExportLink } from "@/components/icons/link";
 import { DateRangePicker } from "@/components/date-range-picker/DateRangePicker";
 import { DATE_RANGE_PRESET } from "@/components/date-range-picker/config";
@@ -11,13 +11,16 @@ import { SearchInput } from "@/components/ui/search-input/SearchInput";
 import { FIXED_CHAINS } from "@/config/chains";
 import { useExportHistoryMutation, useHistoryQuery } from "@/hooks/use-history-api";
 import useToast from "@/hooks/use-toast";
+import { organizationId } from "@/lib/auth-role";
 import { PAYOUT_SYMBOLS } from "@/stores/intents-tokens";
+import { useAuthStore } from "@/stores/auth";
+import type { HistoryExportQuery, HistoryQuery, HistoryStatus } from "@/types/history";
+import { HISTORY_STATUS } from "@/types/history";
 import { HistoryTable } from "./components/history/HistoryTable";
 import {
-  HISTORY_AMOUNT_FILTER,
-  HISTORY_AMOUNT_OPTIONS,
   HISTORY_FILTER_ALL,
   HISTORY_PAGE_SIZE,
+  HISTORY_SEARCH_DEBOUNCE_MS,
   HISTORY_STATUS_FILTER,
   HISTORY_STATUS_OPTIONS,
 } from "./components/history/config";
@@ -33,50 +36,74 @@ const TOKEN_OPTIONS = [
   ...PAYOUT_SYMBOLS.map((symbol) => ({ value: symbol, label: symbol })),
 ];
 
+const HISTORY_STATUSES = new Set<string>(Object.values(HISTORY_STATUS));
+
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), delayMs);
+    return () => window.clearTimeout(timer);
+  }, [delayMs, value]);
+  return debounced;
+}
+
+function historyStatusFilter(value: string): HistoryStatus | undefined {
+  const next = historyOptionalFilter(value);
+  if (!next || !HISTORY_STATUSES.has(next)) return undefined;
+  return next as HistoryStatus;
+}
+
 export function TransactionHistoryView() {
   const toast = useToast();
+  const user = useAuthStore((state) => state.user);
+  const orgId = organizationId(user);
   const [search, setSearch] = useState("");
   const [status, setStatus] = useState<string>(HISTORY_STATUS_FILTER.All);
   const [sourceNetwork, setSourceNetwork] = useState<string>(HISTORY_FILTER_ALL);
   const [sourceToken, setSourceToken] = useState<string>(HISTORY_FILTER_ALL);
   const [destNetwork, setDestNetwork] = useState<string>(HISTORY_FILTER_ALL);
   const [destToken, setDestToken] = useState<string>(HISTORY_FILTER_ALL);
-  const [amountFilter, setAmountFilter] = useState<string>(HISTORY_AMOUNT_FILTER.All);
   const [range, setRange] = useState(() => lastNDaysRange(DATE_RANGE_PRESET.Days30));
   const [page, setPage] = useState(1);
   const times = rangeToUnixSeconds(range);
+  const debouncedSearch = useDebouncedValue(search, HISTORY_SEARCH_DEBOUNCE_MS);
   const exportMutation = useExportHistoryMutation();
 
-  const filters = useMemo(
-    () => ({
-      q: search.trim() || undefined,
-      status: historyOptionalFilter(status),
+  const filters = useMemo((): HistoryExportQuery | null => {
+    if (orgId == null) return null;
+    return {
+      organizationId: orgId,
+      q: debouncedSearch.trim() || undefined,
+      status: historyStatusFilter(status),
       sourceNetwork: historyOptionalFilter(sourceNetwork),
       sourceToken: historyOptionalFilter(sourceToken),
       destNetwork: historyOptionalFilter(destNetwork),
       destToken: historyOptionalFilter(destToken),
-      amountFilter: historyOptionalFilter(amountFilter),
-      start_time: times.start_time,
-      end_time: times.end_time,
-    }),
-    [
-      amountFilter,
-      destNetwork,
-      destToken,
-      search,
-      sourceNetwork,
-      sourceToken,
-      status,
-      times.end_time,
-      times.start_time,
-    ],
-  );
+      startTime: times.start_time,
+      endTime: times.end_time,
+    };
+  }, [
+    debouncedSearch,
+    destNetwork,
+    destToken,
+    orgId,
+    sourceNetwork,
+    sourceToken,
+    status,
+    times.end_time,
+    times.start_time,
+  ]);
 
-  const query = useHistoryQuery({
-    page,
-    pageSize: HISTORY_PAGE_SIZE,
-    ...filters,
-  });
+  const listParams = useMemo((): HistoryQuery | null => {
+    if (!filters) return null;
+    return {
+      ...filters,
+      page,
+      pageSize: HISTORY_PAGE_SIZE,
+    };
+  }, [filters, page]);
+
+  const query = useHistoryQuery(listParams);
 
   const totalPage = Math.max(1, query.data?.totalPage ?? 1);
   const safePage = Math.min(page, totalPage);
@@ -85,6 +112,7 @@ export function TransactionHistoryView() {
   const resetPage = () => setPage(1);
 
   function handleExport() {
+    if (!filters) return;
     void exportMutation.mutateAsync(filters).catch((error) => {
       toast.fail({
         title: error instanceof Error ? error.message : "Failed to export transactions",
@@ -119,6 +147,7 @@ export function TransactionHistoryView() {
             size={BUTTON_SIZE.Sm}
             className="h-9 w-full shrink-0 whitespace-nowrap rounded-[10px] border-black/10 px-3 text-black sm:w-auto"
             loading={exportMutation.isPending}
+            disabled={!filters}
             onClick={handleExport}
           >
             Export CSV
@@ -133,9 +162,9 @@ export function TransactionHistoryView() {
       ) : (
         <HistoryTable
           rows={rows}
-          empty={query.isPending ? "Loading transactions…" : "No transactions"}
+          empty={query.isLoading ? "Loading transactions…" : "No transactions"}
           toolbar={
-            <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
               <Dropdown
                 label="Source Network"
                 value={sourceNetwork}
@@ -177,17 +206,6 @@ export function TransactionHistoryView() {
                   resetPage();
                 }}
                 options={TOKEN_OPTIONS}
-                className="min-w-0 w-full"
-                triggerClassName="w-full"
-              />
-              <Dropdown
-                label="Amount"
-                value={amountFilter}
-                onChange={(value) => {
-                  setAmountFilter(value);
-                  resetPage();
-                }}
-                options={[...HISTORY_AMOUNT_OPTIONS]}
                 className="min-w-0 w-full"
                 triggerClassName="w-full"
               />

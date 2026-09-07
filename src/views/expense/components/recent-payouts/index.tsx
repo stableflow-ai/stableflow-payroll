@@ -68,6 +68,7 @@ export function RecentPayoutsCard(props: {
   hasMore?: boolean;
   error?: string | null;
   onLoadMore?: () => void;
+  onOpenHistory: () => void;
 }) {
   const {
     items,
@@ -77,6 +78,7 @@ export function RecentPayoutsCard(props: {
     hasMore = false,
     error = null,
     onLoadMore,
+    onOpenHistory,
   } = props;
   const listRef = useRef<HTMLDivElement>(null);
   const sentinelRef = useRef<HTMLLIElement>(null);
@@ -129,29 +131,32 @@ export function RecentPayoutsCard(props: {
         <div ref={listRef} className="mt-4 min-h-0 flex-1 overflow-y-auto">
           <ul className="flex flex-col">
             {items.map((item) => (
-              <li
-                key={item.id}
-                className="flex items-center gap-2.5 border-b border-black/10 py-3.5 last:border-b-0"
-              >
-                <StatusMark status={item.status} />
-                <span className="min-w-0 flex-1">
-                  <span className="block font-montserrat text-sm font-medium text-black">
-                    {formatAmount(item.amount, { prefix: "", showDust: true })} {item.token}{" "}
-                    · {chainDisplayName(item.network)}
-                  </span>
-                  <span className="mt-0.5 block font-montserrat text-[10px] text-[#606060]">
-                    To {formatAddress(item.recipient)}
-                  </span>
-                </span>
-                <span
-                  className={cn(
-                    "shrink-0 font-montserrat text-xs font-medium",
-                    statusClass(item.status),
-                  )}
+              <li key={item.id} className="border-b border-black/10 last:border-b-0">
+                <button
+                  type="button"
+                  onClick={onOpenHistory}
+                  className="flex w-full items-center gap-2.5 py-3.5 text-left"
                 >
-                  {statusLabel(item.status)}
-                </span>
-                <IconArrowDown className="-rotate-90 text-black" />
+                  <StatusMark status={item.status} />
+                  <span className="min-w-0 flex-1">
+                    <span className="block font-montserrat text-sm font-medium text-black">
+                      {formatAmount(item.amount, { prefix: "", showDust: true })} {item.token}{" "}
+                      · {chainDisplayName(item.network)}
+                    </span>
+                    <span className="mt-0.5 block font-montserrat text-[10px] text-[#606060]">
+                      To {formatAddress(item.recipient)}
+                    </span>
+                  </span>
+                  <span
+                    className={cn(
+                      "shrink-0 font-montserrat text-xs font-medium",
+                      statusClass(item.status),
+                    )}
+                  >
+                    {statusLabel(item.status)}
+                  </span>
+                  <IconArrowDown className="-rotate-90 text-black" />
+                </button>
               </li>
             ))}
             {hasMore ? <li ref={sentinelRef} className="h-4 shrink-0" aria-hidden /> : null}

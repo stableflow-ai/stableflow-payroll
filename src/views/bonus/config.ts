@@ -1,8 +1,6 @@
 import { BONUS_IMPORT_LIMITS, BONUS_TOTAL_PAYOUT_PERIOD } from "@/types/bonus";
 import { PAYABLE_TYPE, type PayableKey } from "@/types/payable";
 
-export const BONUS_HISTORY_PATH = "/pay/history";
-
 export const BONUS_DRAWER_MODE = {
   Add: "add",
   Edit: "edit",

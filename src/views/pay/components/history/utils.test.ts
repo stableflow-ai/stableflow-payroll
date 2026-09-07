@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { HISTORY_AMOUNT_FILTER } from "./config";
-import { historyMatchesAmount, historyOptionalFilter } from "./utils";
+import {
+  HISTORY_STATUS_FAILED_CLASS,
+  HISTORY_STATUS_OTHER_CLASS,
+  HISTORY_STATUS_SUCCESS_CLASS,
+} from "./config";
+import { historyOptionalFilter, historyStatusClass, historyStatusLabel } from "./utils";
 
 describe("historyOptionalFilter", () => {
   it("drops the All sentinel", () => {
@@ -9,14 +13,20 @@ describe("historyOptionalFilter", () => {
   });
 });
 
-describe("historyMatchesAmount", () => {
-  it("splits amounts into the v3 report buckets", () => {
-    expect(historyMatchesAmount("999", HISTORY_AMOUNT_FILTER.Under1k)).toBe(true);
-    expect(historyMatchesAmount("1000", HISTORY_AMOUNT_FILTER.Under1k)).toBe(false);
-    expect(historyMatchesAmount("1000", HISTORY_AMOUNT_FILTER.From1kTo10k)).toBe(true);
-    expect(historyMatchesAmount("9999", HISTORY_AMOUNT_FILTER.From1kTo10k)).toBe(true);
-    expect(historyMatchesAmount("10000", HISTORY_AMOUNT_FILTER.From1kTo10k)).toBe(false);
-    expect(historyMatchesAmount("11000", HISTORY_AMOUNT_FILTER.Over10k)).toBe(true);
-    expect(historyMatchesAmount("11000", HISTORY_AMOUNT_FILTER.All)).toBe(true);
+describe("historyStatusClass", () => {
+  it("colors completed green, failed/expired red, and the rest black", () => {
+    expect(historyStatusClass("completed")).toBe(HISTORY_STATUS_SUCCESS_CLASS);
+    expect(historyStatusClass("success")).toBe(HISTORY_STATUS_SUCCESS_CLASS);
+    expect(historyStatusClass("failed")).toBe(HISTORY_STATUS_FAILED_CLASS);
+    expect(historyStatusClass("expired")).toBe(HISTORY_STATUS_FAILED_CLASS);
+    expect(historyStatusClass("created")).toBe(HISTORY_STATUS_OTHER_CLASS);
+    expect(historyStatusClass("processing")).toBe(HISTORY_STATUS_OTHER_CLASS);
+  });
+});
+
+describe("historyStatusLabel", () => {
+  it("uses the filter labels", () => {
+    expect(historyStatusLabel("completed")).toBe("Completed");
+    expect(historyStatusLabel("")).toBe("-");
   });
 });
