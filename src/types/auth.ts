@@ -9,6 +9,7 @@ export interface AuthOrganization {
   id: number;
   name: string;
   logo?: string;
+  orgId?: string;
 }
 
 export interface AuthUser {
@@ -16,7 +17,23 @@ export interface AuthUser {
   email: string;
   name: string;
   role: AuthUserRole;
+  telegram?: string;
+  slack?: string;
   organization?: AuthOrganization | null;
+}
+
+export interface RegisterUserBody {
+  orgId: string;
+  email: string;
+  password: string;
+  name: string;
+  position?: string;
+  evmAddress?: string;
+  solanaAddress?: string;
+  nearAddress?: string;
+  tronAddress?: string;
+  telegram?: string;
+  slack?: string;
 }
 
 export interface LoginBody {

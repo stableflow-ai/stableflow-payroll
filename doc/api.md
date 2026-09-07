@@ -114,15 +114,16 @@ Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), Organizations
 | --- | --- | --- | --- | --- | --- | --- |
 | POST | `/v1/payroll/auth/login` | no | `LoginBody` | `AuthSession` | `login` | `useLoginMutation` |
 | POST | `/v1/payroll/auth/register` | no | `RegisterBody` | `AuthSession` | `register` | `useRegisterMutation` |
+| POST | `/v1/payroll/auth/register/user` | no | `RegisterUserBody` | `AuthSession` | `registerUser` | `useInviteRegisterMutation` |
 | POST | `/v1/payroll/change-password` | yes | `ChangePasswordBody` | — | `changePassword` | `useChangePasswordMutation` |
 | POST | `/v1/payroll/reset-password/code` | no | `ResetPasswordCodeBody` | — | `sendResetPasswordCode` | `useSendResetPasswordCodeMutation` |
 | POST | `/v1/payroll/reset-password` | no | `ResetPasswordBody` | — | `resetPassword` | `useResetPasswordMutation` |
 | GET | `/v1/payroll/profile` | yes | — | `AuthUser` | `getProfile` | `useProfileQuery` |
 | POST | `/v1/payroll/profile` | yes | `UpdateProfileBody` | — | `updateProfile` | `useUpdateProfileMutation` |
 
-`AuthUser` includes `role`: `"admin"` | `"user"`, and optional `organization?: { id: number; name: string; logo?: string } | null`. `login`, `register`, and `getProfile` map that payload with `mapAuthUser` / `mapAuthSession`. Only `"user"` is stored as the member role; any other value, including a missing role, hydrates as admin. Register body includes required `organization.name` and optional `organization.logo`. Invite-register is still mocked and is not in this table.
+`AuthUser` includes `role`: `"admin"` | `"user"`, optional `telegram` / `slack`, and optional `organization?: { id: number; name: string; logo?: string; orgId?: string } | null`. `login`, `register`, `registerUser`, and `getProfile` map that payload with `mapAuthUser` / `mapAuthSession`. Only `"user"` is stored as the member role; any other value, including a missing role, hydrates as admin. Register body includes required `organization.name` and optional `organization.logo`. Empty telegram / slack handles are omitted from the mapped user. Invite-register (`POST /auth/register/user`, `src/hooks/use-invite-api.ts`) sends string `org_id` and omits empty optional wallet / handle fields. Profile POST still sends only `name`.
 
-### Organizations — `src/api/organization.ts`, `src/types/organization.ts`, `src/hooks/use-admin-overview-api.ts`, `src/hooks/use-organization-api.ts`
+### Organizations — `src/api/organization.ts`, `src/types/organization.ts`, `src/hooks/use-admin-overview-api.ts`, `src/hooks/use-organization-api.ts`, `src/hooks/use-settings-api.ts`, `src/hooks/use-invite-api.ts`
 
 | Method | Path | Auth | Body / Query | Data | API | Hook |
 | --- | --- | --- | --- | --- | --- | --- |
@@ -130,9 +131,10 @@ Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), Organizations
 | GET | `/v1/payroll/organizations/payout` | yes | `organization_id`, `period`, `timezone` | `OrganizationPayoutPoint[]` | `getOrganizationPayout` | `useOrganizationPayoutQuery` |
 | GET | `/v1/payroll/organizations/high-priority` | yes | `organization_id`, `timezone` | `OrganizationHighPriorityItem[]` | `getOrganizationHighPriority` | `useOrganizationHighPriorityQuery` |
 | GET | `/v1/payroll/organizations/{id}` | yes | path `id` | `OrganizationItem[]` | `getOrganization` | `useOrganizationQuery` |
+| GET | `/v1/payroll/organizations/info/{org_id}` | no | path `org_id` (string) | `OrganizationPublicInfo` | `getOrganizationInfo` | `useInvitePreviewQuery` |
 | POST | `/v1/payroll/organizations/{id}` | yes | `UpdateOrganizationBody` | — | `updateOrganization` | `useUpdateOrganizationMutation` |
 
-`organization_id` / path `{id}` come from session `user.organization.id`. Queries and the update mutation do not fire when that id is missing. `period` is the existing `VOLUME_PERIOD` (`day` / `week` / `month`). `timezone` is `browserTimeZone()`. High-priority `category` values are `payroll` / `payFailed` / `paymentRequest`; unknown values are dropped. Settings picks the GET row whose `id` matches, or the first row. Empty `logo` is omitted from the POST body.
+Integer `organization_id` / path `{id}` come from session `user.organization.id` and are unchanged for overview, payout, high-priority, and team. Queries and the update mutation do not fire when that id is missing. `GET /organizations/{id}` also returns string `org_id`, `address_settings`, and `notification_settings` (`disabled` / `optional` / `required`; blank or unknown maps to `disabled`). The string `org_id` is written onto the session as `organization.orgId` and is the only id used for invite URLs, `GET .../info/{org_id}`, and `POST /auth/register/user`. Settings picks the GET row whose `id` matches, or the first row. Organization Save and Integration Save both POST `name`, optional `logo`, and both settings objects; empty `logo` is omitted. Integration keeps EVM locked (`evm_address` stays the GET value). `period` is the existing `VOLUME_PERIOD` (`day` / `week` / `month`). `timezone` is `browserTimeZone()`. High-priority `category` values are `payroll` / `payFailed` / `paymentRequest`; unknown values are dropped.
 
 ### Team members — `src/api/team.ts`, `src/types/team.ts`, `src/hooks/use-team-api.ts`
 

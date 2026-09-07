@@ -2,11 +2,12 @@ import { type FormEvent, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { Icon2Right } from "@/components/icons/to-right";
 import { Button } from "@/components/ui/button/Button";
+import { integrationSettingsFromOrganization } from "@/api/organization";
+import { useInvitePreviewQuery, useInviteRegisterMutation } from "@/hooks/use-invite-api";
 import {
   defaultIntegrationSettings,
   INTEGRATION_FIELD,
 } from "@/hooks/use-settings-api";
-import { useInvitePreviewQuery, useInviteRegisterMutation } from "@/hooks/use-invite-api";
 import useToast from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { CHANNEL_HANDLE_MAX_LENGTH } from "@/views/pay/components/setting/config";
@@ -57,7 +58,7 @@ export function InviteRegisterView() {
   const [slack, setSlack] = useState("");
 
   const preview = previewQuery.data;
-  const settings = preview?.integration ?? defaultIntegrationSettings();
+  const settings = preview ? integrationSettingsFromOrganization(preview) : defaultIntegrationSettings();
 
   const submitSignUp = (event: FormEvent) => {
     event.preventDefault();
@@ -96,18 +97,24 @@ export function InviteRegisterView() {
         email: memberEmail,
         password,
         position: position.trim() || undefined,
+        evmAddress: isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Evm)
+          ? evm.trim() || undefined
+          : undefined,
+        solanaAddress: isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Solana)
+          ? solana.trim() || undefined
+          : undefined,
+        nearAddress: isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Near)
+          ? near.trim() || undefined
+          : undefined,
+        tronAddress: isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Tron)
+          ? tron.trim() || undefined
+          : undefined,
         telegram: isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Telegram)
-          ? telegram.trim()
+          ? telegram.trim() || undefined
           : undefined,
         slack: isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Slack)
-          ? slack.trim()
+          ? slack.trim() || undefined
           : undefined,
-        wallets: {
-          evm: evm.trim(),
-          solana: isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Solana) ? solana.trim() : "",
-          near: isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Near) ? near.trim() : "",
-          tron: isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Tron) ? tron.trim() : "",
-        },
       });
       navigate("/", { replace: true });
     } catch (cause) {
@@ -117,19 +124,55 @@ export function InviteRegisterView() {
     }
   };
 
-  if (step === INVITE_STEP.Profile && preview) {
+  if (previewQuery.isPending) {
+    return (
+      <AuthShell>
+        <p className="text-center font-montserrat text-sm text-[#909090]">Loading invite…</p>
+      </AuthShell>
+    );
+  }
+
+  if (previewQuery.isError || !preview) {
+    return (
+      <AuthShell>
+        <p className="text-center font-montserrat text-sm text-danger">
+          {previewQuery.error instanceof Error
+            ? previewQuery.error.message
+            : "Unable to load this invite"}
+        </p>
+        <p className={`mt-6 block ${AUTH_LINK_CLASS}`}>
+          Already have an account.{" "}
+          <Link to="/login" className={`inline-flex items-center ${AUTH_LINK_ACCENT_CLASS}`}>
+            Login
+            <Icon2Right className="ml-1" />
+          </Link>
+        </p>
+      </AuthShell>
+    );
+  }
+
+  if (step === INVITE_STEP.Profile) {
     return (
       <AuthShell>
         <form onSubmit={(event) => void submitProfile(event)} className={AUTH_ONBOARDING_FORM_CLASS}>
-          <p className="font-montserrat text-xs font-medium text-[#909090]">
-            {preview.organizationName}
+          <button
+            type="button"
+            onClick={() => setStep(INVITE_STEP.SignUp)}
+            className="self-start font-montserrat text-sm font-medium text-[#3f8afb] hover:text-[#3f8afb]/90"
+          >
+            Back
+          </button>
+          <p className="mt-6 font-montserrat text-xs font-medium text-[#909090]">
+            {preview.name}
           </p>
           <div className="mt-2 flex items-center gap-2">
-            <img
-              src={preview.inviterAvatar}
-              alt=""
-              className="size-5 shrink-0 rounded-full object-cover"
-            />
+            {preview.logo ? (
+              <img
+                src={preview.logo}
+                alt=""
+                className="size-5 shrink-0 rounded-full object-cover"
+              />
+            ) : null}
             <span className="font-montserrat text-sm font-normal text-black">{email.trim()}</span>
           </div>
           <h1 className="mt-8 font-montserrat text-xl font-semibold text-black">Profile Setting</h1>
@@ -154,13 +197,16 @@ export function InviteRegisterView() {
             maxLength={CONTACT_NAME_MAX_LENGTH}
             placeholder="E.g. PM, Engineer..."
           />
-          <InviteField
-            id="profile-evm"
-            label="EVM Wallet Address"
-            value={evm}
-            onChange={setEvm}
-            error={walletFieldError(evm, "evm")}
-          />
+          {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Evm) ? (
+            <InviteField
+              id="profile-evm"
+              label="EVM Wallet Address"
+              optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Evm)}
+              value={evm}
+              onChange={setEvm}
+              error={walletFieldError(evm, "evm")}
+            />
+          ) : null}
           {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Solana) ? (
             <InviteField
               id="profile-solana"
@@ -230,67 +276,52 @@ export function InviteRegisterView() {
   return (
     <AuthShell>
       <form onSubmit={submitSignUp} className={AUTH_FORM_CLASS}>
-        {previewQuery.isPending ? (
-          <p className="text-center font-montserrat text-sm text-[#909090]">Loading invite…</p>
-        ) : previewQuery.isError ? (
-          <p className="text-center font-montserrat text-sm text-danger">
-            {previewQuery.error instanceof Error
-              ? previewQuery.error.message
-              : "Unable to load this invite"}
-          </p>
-        ) : preview ? (
-          <>
-            <div className="flex flex-col items-center">
-              <div className="flex items-center gap-2">
-                <img
-                  src={preview.inviterAvatar}
-                  alt=""
-                  className="size-5 shrink-0 rounded-full object-cover"
-                />
-                <span className="font-montserrat text-sm font-medium text-black">
-                  {preview.inviterEmail}
-                </span>
-              </div>
-              <h1 className="mt-3 text-center font-montserrat text-xl font-semibold text-black">
-                Invites you to join {preview.organizationName}
-              </h1>
-            </div>
+        <div className="flex flex-col items-center">
+          {preview.logo ? (
+            <img
+              src={preview.logo}
+              alt=""
+              className="size-8 shrink-0 rounded-full object-cover"
+            />
+          ) : null}
+          <h1 className={cn("text-center font-montserrat text-xl font-semibold text-black", preview.logo && "mt-3")}>
+            Invites you to join {preview.name}
+          </h1>
+        </div>
 
-            <AuthField
-              id="email"
-              label="Email"
-              type="email"
-              value={email}
-              onChange={setEmail}
-              placeholder="you@company.com"
-              autoFocus
-              autoComplete="email"
-              maxLength={EMAIL_MAX_LENGTH}
-            />
-            <AuthPasswordField
-              id="password"
-              label="Password"
-              value={password}
-              onChange={setPassword}
-              placeholder="At least 8 characters"
-              autoComplete="new-password"
-              maxLength={PASSWORD_MAX_LENGTH}
-            />
-            <AuthPasswordField
-              id="confirm-password"
-              label="Confirm New Password"
-              value={confirmPassword}
-              onChange={setConfirmPassword}
-              placeholder="Keep the same with the new password"
-              autoComplete="new-password"
-              maxLength={PASSWORD_MAX_LENGTH}
-            />
+        <AuthField
+          id="email"
+          label="Email"
+          type="email"
+          value={email}
+          onChange={setEmail}
+          placeholder="you@company.com"
+          autoFocus
+          autoComplete="email"
+          maxLength={EMAIL_MAX_LENGTH}
+        />
+        <AuthPasswordField
+          id="password"
+          label="Password"
+          value={password}
+          onChange={setPassword}
+          placeholder="At least 8 characters"
+          autoComplete="new-password"
+          maxLength={PASSWORD_MAX_LENGTH}
+        />
+        <AuthPasswordField
+          id="confirm-password"
+          label="Confirm New Password"
+          value={confirmPassword}
+          onChange={setConfirmPassword}
+          placeholder="Keep the same with the new password"
+          autoComplete="new-password"
+          maxLength={PASSWORD_MAX_LENGTH}
+        />
 
-            <Button type="submit" size="lg" className="mt-6 w-full">
-              Sign up
-            </Button>
-          </>
-        ) : null}
+        <Button type="submit" size="lg" className="mt-6 w-full">
+          Sign up
+        </Button>
 
         <p className={`block ${AUTH_LINK_CLASS}`}>
           Already have an account.{" "}

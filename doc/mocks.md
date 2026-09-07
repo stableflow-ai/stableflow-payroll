@@ -13,7 +13,7 @@ A mock is temporary scaffolding. It ships with a `TODO(api)` marker and is delet
 | `src/mocks/config.ts` | `MOCK_ENABLED` switchboard and the derived `MockDomain` type |
 | `src/mocks/<domain>.ts` | Fixtures and the reader function for one domain |
 
-`MOCK_ENABLED` currently mocks `paymentForms`, `employeeOverview`, `payroll`, `expense`, `bonus`, `invite`, `history`, and `settings`. Every other page reads the real API.
+`MOCK_ENABLED` currently mocks `paymentForms`, `employeeOverview`, `payroll`, `expense`, `bonus`, and `history`. Every other page reads the real API.
 
 ## How a page reads mock data
 
@@ -56,9 +56,7 @@ Never import a fixture into a view. Go through the same hook the real API will u
 | `payroll` | `src/mocks/payroll.ts` | `usePayrollOverviewQuery` | Payroll dashboard (`/pay/payroll`) until the overview contract exists. `getPayrollOverviewMock("empty" \| "filled")` — the page header **Sample data** switch toggles empty vs filled Next Payroll, Recent Payouts, and Payroll History (Figma `2604:16561` / `2604:16798`). |
 | `expense` | `src/mocks/expense.ts` | `useExpenseOverviewQuery` | Expense dashboard (`/pay/expense`) until the overview contract exists. |
 | `bonus` | `src/mocks/bonus.ts` | `useBonusOverviewQuery` | Bonus dashboard (`/pay/bonus`) until the overview contract exists. `getBonusOverviewMock("empty" \| "filled")` — Sample data toggles empty vs filled pending bonuses (Figma `2672:7309`: individual + expandable group rows with Pay Now / Paying), Recent Payouts, and Bonus History. |
-| `invite` | `src/mocks/invite.ts` | `useInvitePreviewQuery` / `useInviteRegisterMutation` | Member invite landing at `/invite/:orgId`. Preview returns inviter email, avatar, organization name, and the current Integration settings. Register (after Profile Setting) creates a mocked `user` session bound to that organization. |
 | `history` | `src/mocks/history.ts` | `useHistoryQuery` / `useExportHistoryMutation` | Transaction History at `/pay/history`. Client-side search, Time, Source/Dest network+token, Amount buckets, and Status (`success` / `failed`). Export CSV uses the same filtered set. |
-| `settings` | `src/mocks/settings.ts` | `useIntegrationSettingsQuery` / `useUpdateIntegrationMutation` | Settings → Integration. In-memory Email / Telegram / Slack / EVM / SOLANA / NEAR / Tron channel switches and Required / Optional. EVM stays required. Changes apply immediately and drive Add Member plus Invite Profile Setting. |
 
 ## Constraints
 

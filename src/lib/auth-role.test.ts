@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AUTH_USER_ROLE, type AuthUser } from "@/types/auth";
-import { hasOrganization, isUser, organizationId, organizationLogo, organizationName, userRole } from "./auth-role";
+import { hasOrganization, isUser, organizationId, organizationLogo, organizationName, organizationPublicId, userRole } from "./auth-role";
 
 function user(role: AuthUser["role"], organization?: AuthUser["organization"]): AuthUser {
   return {
@@ -56,5 +56,19 @@ describe("hasOrganization", () => {
         }),
       ),
     ).toBe("https://cdn.example/logo.png");
+  });
+
+  it("returns the public org id when present", () => {
+    expect(organizationPublicId(user(AUTH_USER_ROLE.Admin))).toBeNull();
+    expect(organizationPublicId(user(AUTH_USER_ROLE.Admin, { id: 1, name: "Eureka Labs" }))).toBeNull();
+    expect(
+      organizationPublicId(
+        user(AUTH_USER_ROLE.Admin, {
+          id: 1,
+          name: "Eureka Labs",
+          orgId: " org_abc ",
+        }),
+      ),
+    ).toBe("org_abc");
   });
 });

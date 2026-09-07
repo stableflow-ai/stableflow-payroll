@@ -83,7 +83,9 @@ export function TeamMemberFormDialog(props: {
         ? email.trim()
         : (member?.email ?? ""),
       wallets: {
-        evm: evm.trim(),
+        evm: isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Evm)
+          ? evm.trim()
+          : (member?.wallets.evm ?? ""),
         solana: isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Solana)
           ? solana.trim()
           : (member?.wallets.solana ?? ""),
@@ -116,12 +118,15 @@ export function TeamMemberFormDialog(props: {
           onChange={(event) => setPosition(event.target.value)}
         />
       </Field>
-      <WalletField
-        label="EVM Wallet Address"
-        value={evm}
-        error={open && !evm.trim() ? null : evmError}
-        onChange={setEvm}
-      />
+      {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Evm) ? (
+        <WalletField
+          label="EVM Wallet Address"
+          optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Evm)}
+          value={evm}
+          error={open && !evm.trim() ? null : evmError}
+          onChange={setEvm}
+        />
+      ) : null}
       {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Solana) ? (
         <WalletField
           label="Solana Wallet Address"

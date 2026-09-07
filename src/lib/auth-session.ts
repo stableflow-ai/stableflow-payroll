@@ -20,17 +20,29 @@ function getStorage(): Storage | null {
   }
 }
 
+function optionalTrimmed(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed || undefined;
+}
+
 function hydrateOrganization(value: unknown): AuthOrganization | null | undefined {
   if (value === undefined) return undefined;
   if (value === null) return null;
   if (!value || typeof value !== "object") return undefined;
-  const row = value as { id?: unknown; name?: unknown; logo?: unknown };
+  const row = value as { id?: unknown; name?: unknown; logo?: unknown; orgId?: unknown };
   if (typeof row.name !== "string") return undefined;
   const name = row.name.trim();
   if (!name) return null;
   const id = typeof row.id === "number" && Number.isFinite(row.id) ? row.id : 0;
   const logo = typeof row.logo === "string" ? row.logo.trim() : "";
-  return logo ? { id, name, logo } : { id, name };
+  const orgId = optionalTrimmed(row.orgId);
+  return {
+    id,
+    name,
+    ...(logo ? { logo } : {}),
+    ...(orgId ? { orgId } : {}),
+  };
 }
 
 function isAuthUserRecord(value: unknown): value is {
@@ -54,13 +66,19 @@ function hydrateUser(user: {
   email: string;
   name: string;
   role?: unknown;
+  telegram?: unknown;
+  slack?: unknown;
   organization?: unknown;
 }): AuthUser {
+  const telegram = optionalTrimmed(user.telegram);
+  const slack = optionalTrimmed(user.slack);
   return {
     id: user.id,
     email: user.email,
     name: user.name,
     role: user.role === AUTH_USER_ROLE.User ? AUTH_USER_ROLE.User : AUTH_USER_ROLE.Admin,
+    ...(telegram ? { telegram } : {}),
+    ...(slack ? { slack } : {}),
     organization: hydrateOrganization(user.organization),
   };
 }

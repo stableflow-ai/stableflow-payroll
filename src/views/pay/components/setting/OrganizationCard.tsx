@@ -37,10 +37,17 @@ export function OrganizationCard(props: {
       return;
     }
     const logo = logoUrl.trim();
+    const saved = orgQuery.data;
+    if (!saved) {
+      toast.fail({ title: "Organization is missing" });
+      return;
+    }
     try {
       await updateMutation.mutateAsync({
         name: name.trim(),
         ...(logo ? { logo } : {}),
+        addressSettings: saved.addressSettings,
+        notificationSettings: saved.notificationSettings,
       });
       toast.success({ title: "Organization saved" });
     } catch (cause) {

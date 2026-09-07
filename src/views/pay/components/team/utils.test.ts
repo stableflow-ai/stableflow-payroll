@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { defaultIntegrationSettings, FIELD_REQUIREMENT } from "@/hooks/use-settings-api";
+import { defaultIntegrationSettings, FIELD_REQUIREMENT } from "@/types/organization";
 import {
   emailFieldError,
   memberDisplayWallet,
-  organizationInviteId,
   organizationInviteUrl,
   teamMemberFormCanSave,
   walletFieldError,
@@ -81,11 +80,12 @@ describe("team form validation", () => {
     expect(emailFieldError("hannah@gmail.com")).toBeNull();
   });
 
-  it("builds an invite URL from the organization name", () => {
-    expect(organizationInviteId("Eureka Labs")).toBe("eureka-labs");
-    expect(organizationInviteId("")).toBe("default");
-    expect(organizationInviteUrl("https://pay.example", "Eureka Labs")).toBe(
-      "https://pay.example/invite/eureka-labs",
+  it("builds an invite URL from the public org id", () => {
+    expect(
+      organizationInviteUrl("https://pay.example", "org_vmBhQayVVLhXThQmeWy7qWbtkCm9IN0A"),
+    ).toBe("https://pay.example/invite/org_vmBhQayVVLhXThQmeWy7qWbtkCm9IN0A");
+    expect(organizationInviteUrl("https://pay.example", "org/a b")).toBe(
+      "https://pay.example/invite/org%2Fa%20b",
     );
   });
 });

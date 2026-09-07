@@ -33,24 +33,33 @@ function isSameUser(left: AuthUser, right: AuthUser): boolean {
     left.email === right.email &&
     left.name === right.name &&
     left.role === right.role &&
+    (left.telegram ?? "") === (right.telegram ?? "") &&
+    (left.slack ?? "") === (right.slack ?? "") &&
     (left.organization?.id ?? 0) === (right.organization?.id ?? 0) &&
     (left.organization?.name ?? "") === (right.organization?.name ?? "") &&
-    (left.organization?.logo ?? "") === (right.organization?.logo ?? "")
+    (left.organization?.logo ?? "") === (right.organization?.logo ?? "") &&
+    (left.organization?.orgId ?? "") === (right.organization?.orgId ?? "")
   );
 }
 
 function mergeProfileUser(profile: AuthUser, local: AuthUser | null): AuthUser {
   const profileOrg = profile.organization;
   const localOrg = local?.organization;
-  if (
-    profileOrg &&
-    localOrg?.logo &&
-    !profileOrg.logo &&
-    profileOrg.id === localOrg.id
-  ) {
-    return { ...profile, organization: { ...profileOrg, logo: localOrg.logo } };
+  if (!profileOrg || !localOrg || profileOrg.id !== localOrg.id) return profile;
+  const logo = profileOrg.logo || localOrg.logo;
+  const orgId = profileOrg.orgId || localOrg.orgId;
+  if (!logo && !orgId) return profile;
+  if ((profileOrg.logo ?? "") === (logo ?? "") && (profileOrg.orgId ?? "") === (orgId ?? "")) {
+    return profile;
   }
-  return profile;
+  return {
+    ...profile,
+    organization: {
+      ...profileOrg,
+      ...(logo ? { logo } : {}),
+      ...(orgId ? { orgId } : {}),
+    },
+  };
 }
 
 export function useLoginMutation() {

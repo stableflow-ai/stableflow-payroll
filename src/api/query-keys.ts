@@ -53,6 +53,7 @@ export const queryKeys = {
       [...queryKeys.organization.all, "payout", id, period, timezone] as const,
     highPriority: (id: number, timezone: string) =>
       [...queryKeys.organization.all, "high-priority", id, timezone] as const,
+    info: (orgId: string) => [...queryKeys.organization.all, "info", orgId] as const,
   },
   team: {
     all: ["team"] as const,

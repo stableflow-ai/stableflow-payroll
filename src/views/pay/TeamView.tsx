@@ -10,10 +10,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/Table";
+import { useOrganizationQuery } from "@/hooks/use-organization-api";
 import { useTeamMemberMutations, useTeamMembersQuery, type TeamMember } from "@/hooks/use-team-api";
 import useToast from "@/hooks/use-toast";
-import { organizationName } from "@/lib/auth-role";
-import { useAuthStore } from "@/stores/auth";
 import { TeamActionButtons } from "./components/setting/TeamActionButtons";
 import { SinglePayoutDialog } from "./components/single-payout/SinglePayoutDialog";
 import { RemoveMemberDialog } from "./components/team/RemoveMemberDialog";
@@ -35,7 +34,8 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
 
 export function TeamView() {
   const toast = useToast();
-  const user = useAuthStore((state) => state.user);
+  const orgQuery = useOrganizationQuery();
+  const inviteOrgId = orgQuery.data?.orgId.trim() ?? "";
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
@@ -76,7 +76,13 @@ export function TeamView() {
         />
         <TeamActionButtons
           onAddMember={openAdd}
-          onInvite={() => setInviteOpen(true)}
+          onInvite={() => {
+            if (!inviteOrgId) {
+              toast.fail({ title: "Invite link is unavailable" });
+              return;
+            }
+            setInviteOpen(true);
+          }}
         />
       </div>
 
@@ -168,7 +174,7 @@ export function TeamView() {
 
       <TeamInviteDialog
         open={inviteOpen}
-        url={organizationInviteUrl(window.location.origin, organizationName(user))}
+        url={inviteOrgId ? organizationInviteUrl(window.location.origin, inviteOrgId) : ""}
         onClose={() => setInviteOpen(false)}
       />
 

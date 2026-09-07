@@ -4,7 +4,7 @@ import {
   INTEGRATION_FIELD,
   type IntegrationFieldKey,
   type IntegrationSettings,
-} from "@/hooks/use-settings-api";
+} from "@/types/organization";
 import { isValidEmail } from "../../utils";
 import type { TeamMemberWallets } from "@/types/team";
 import { CONTACT_NAME_MAX_LENGTH } from "../../config";
@@ -178,15 +178,6 @@ export function teamMemberFormCanSave(
   return memberProfileError(input, settings) == null;
 }
 
-export function organizationInviteId(name: string | null | undefined): string {
-  const slug = (name ?? "")
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-  return slug || "default";
-}
-
-export function organizationInviteUrl(origin: string, name: string | null | undefined): string {
-  return `${origin}/invite/${organizationInviteId(name)}`;
+export function organizationInviteUrl(origin: string, orgId: string): string {
+  return `${origin}/invite/${encodeURIComponent(orgId)}`;
 }

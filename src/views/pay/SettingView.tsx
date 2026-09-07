@@ -1,7 +1,8 @@
 import { useState } from "react";
+import { useOrganizationQuery } from "@/hooks/use-organization-api";
 import { useTeamMemberMutations, type TeamMember } from "@/hooks/use-team-api";
 import useToast from "@/hooks/use-toast";
-import { organizationName, userRole } from "@/lib/auth-role";
+import { userRole } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { AUTH_USER_ROLE } from "@/types/auth";
 import { IntegrationCard } from "./components/setting/IntegrationCard";
@@ -15,10 +16,20 @@ export function SettingView() {
   const toast = useToast();
   const user = useAuthStore((state) => state.user);
   const isAdmin = userRole(user) !== AUTH_USER_ROLE.User;
+  const orgQuery = useOrganizationQuery();
+  const inviteOrgId = orgQuery.data?.orgId.trim() ?? "";
   const { createMutation, updateMutation } = useTeamMemberMutations();
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<TeamMember | null>(null);
   const [inviteOpen, setInviteOpen] = useState(false);
+
+  function openInvite() {
+    if (!inviteOrgId) {
+      toast.fail({ title: "Invite link is unavailable" });
+      return;
+    }
+    setInviteOpen(true);
+  }
 
   return (
     <div className="mx-auto flex w-full max-w-[1212px] flex-col gap-5">
@@ -30,7 +41,7 @@ export function SettingView() {
               setEditing(null);
               setFormOpen(true);
             }}
-            onInvite={() => setInviteOpen(true)}
+            onInvite={openInvite}
           />
           <IntegrationCard />
           <TeamMemberFormDialog
@@ -59,7 +70,7 @@ export function SettingView() {
           />
           <TeamInviteDialog
             open={inviteOpen}
-            url={organizationInviteUrl(window.location.origin, organizationName(user))}
+            url={inviteOrgId ? organizationInviteUrl(window.location.origin, inviteOrgId) : ""}
             onClose={() => setInviteOpen(false)}
           />
         </>

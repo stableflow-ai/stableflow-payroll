@@ -23,6 +23,11 @@ export function organizationId(user: AuthUser | null | undefined): number | null
   return typeof id === "number" && Number.isFinite(id) ? id : null;
 }
 
+export function organizationPublicId(user: AuthUser | null | undefined): string | null {
+  const orgId = user?.organization?.orgId?.trim();
+  return orgId || null;
+}
+
 export function hasOrganization(user: AuthUser | null | undefined): boolean {
   return Boolean(organizationName(user));
 }
