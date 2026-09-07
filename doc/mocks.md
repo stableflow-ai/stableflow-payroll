@@ -13,7 +13,7 @@ A mock is temporary scaffolding. It ships with a `TODO(api)` marker and is delet
 | `src/mocks/config.ts` | `MOCK_ENABLED` switchboard and the derived `MockDomain` type |
 | `src/mocks/<domain>.ts` | Fixtures and the reader function for one domain |
 
-`MOCK_ENABLED` currently mocks `paymentForms`, `team`, `employeeOverview`, `payroll`, `expense`, `bonus`, `invite`, `history`, and `settings`. Every other page reads the real API.
+`MOCK_ENABLED` currently mocks `paymentForms`, `employeeOverview`, `payroll`, `expense`, `bonus`, `invite`, `history`, and `settings`. Every other page reads the real API.
 
 ## How a page reads mock data
 
@@ -52,7 +52,6 @@ Never import a fixture into a view. Go through the same hook the real API will u
 | Domain | Mock file | Reader hook | Notes |
 | --- | --- | --- | --- |
 | `paymentForms` | `src/mocks/payment-forms.ts` | `usePaymentFormsQuery` / `usePaymentFormQuery` | Saved batch forms for Payment by form. Detail includes `recipients` (name, email, net pay) and optional `nextPayDate` for the Details drawer. `payments` is derived from `recipients` and still feeds `POST /v1/payroll/batches`. |
-| `team` | `src/mocks/team.ts` | `useTeamMembersQuery` / `useTeamMemberMutations` | Team members for `/pay/team` and Settings Add Member. In-memory create / update / remove until reload. Invite is a generated `{origin}/invite/{orgId}` link, not a send-email mock. |
 | `employeeOverview` | `src/mocks/employee-overview.ts` | `useEmployeeOverviewQuery` | Employee dashboard at `/`. Stats, Payment Volume series, open requests, recent payments. Daily / Weekly volume arrays are empty so the chart still draws a zero grid. |
 | `payroll` | `src/mocks/payroll.ts` | `usePayrollOverviewQuery` | Payroll dashboard (`/pay/payroll`) until the overview contract exists. `getPayrollOverviewMock("empty" \| "filled")` — the page header **Sample data** switch toggles empty vs filled Next Payroll, Recent Payouts, and Payroll History (Figma `2604:16561` / `2604:16798`). |
 | `expense` | `src/mocks/expense.ts` | `useExpenseOverviewQuery` | Expense dashboard (`/pay/expense`) until the overview contract exists. |

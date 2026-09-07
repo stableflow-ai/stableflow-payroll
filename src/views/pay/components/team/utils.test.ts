@@ -1,14 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { TEAM_SCHEDULE } from "@/hooks/use-team-api";
 import { defaultIntegrationSettings, FIELD_REQUIREMENT } from "@/hooks/use-settings-api";
 import {
   emailFieldError,
   memberDisplayWallet,
-  memberMatchesSearch,
   organizationInviteId,
   organizationInviteUrl,
   teamMemberFormCanSave,
   walletFieldError,
+  walletForChainKind,
 } from "./utils";
 
 const VALID_EVM = "0x557be3f47a45499385f60cd64e2ff455e42a3311";
@@ -54,7 +53,7 @@ describe("team form validation", () => {
     expect(teamMemberFormCanSave(profile(), settings)).toBe(true);
   });
 
-  it("picks EVM then Solana then NEAR then Tron for the table wallet", () => {
+  it("picks EVM then NEAR then Solana then Tron for the table wallet", () => {
     expect(
       memberDisplayWallet({
         wallets: { evm: VALID_EVM, solana: VALID_SOL, near: "alice.near", tron: "Ttron" },
@@ -64,27 +63,21 @@ describe("team form validation", () => {
       memberDisplayWallet({
         wallets: { evm: "", solana: VALID_SOL, near: "alice.near", tron: "Ttron" },
       }),
-    ).toBe(VALID_SOL);
+    ).toBe("alice.near");
     expect(
       memberDisplayWallet({ wallets: { evm: "", solana: "", near: "", tron: "Ttron" } }),
     ).toBe("Ttron");
     expect(memberDisplayWallet({ wallets: EMPTY_WALLETS })).toBeNull();
   });
 
-  it("filters members by name, email, or wallet", () => {
-    const row = {
-      id: "member-1",
-      name: "Hannah Petty",
-      position: "BD",
-      schedule: TEAM_SCHEDULE.Monthly,
-      email: "hannah@gmail.com",
-      telegram: "",
-      slack: "",
-      wallets: { evm: VALID_EVM, solana: "", near: "", tron: "" },
-    };
-    expect(memberMatchesSearch(row, "hannah")).toBe(true);
-    expect(memberMatchesSearch(row, VALID_EVM.slice(0, 8))).toBe(true);
-    expect(memberMatchesSearch(row, "zoey")).toBe(false);
+  it("returns the wallet for a selected chain", () => {
+    expect(
+      walletForChainKind(
+        { evm: VALID_EVM, solana: VALID_SOL, near: "alice.near", tron: "" },
+        "solana",
+      ),
+    ).toBe(VALID_SOL);
+    expect(walletForChainKind(EMPTY_WALLETS, "evm")).toBe("");
     expect(emailFieldError("hannah@gmail.com")).toBeNull();
   });
 

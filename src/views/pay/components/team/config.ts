@@ -1,7 +1,10 @@
 export const TEAM_PAGE_SIZE = 10;
+export const TEAM_SEARCH_DEBOUNCE_MS = 300;
 
 export const TEAM_TABLE_COLUMNS =
-  "minmax(160px,1.2fr) minmax(120px,0.85fr) minmax(100px,0.7fr) minmax(160px,1.1fr) minmax(140px,0.9fr) 40px";
+  "minmax(160px,1.2fr) minmax(120px,0.85fr) minmax(160px,1.1fr) minmax(140px,0.9fr) 40px";
+
+export const TEAM_WALLET_CHAIN_ORDER = ["evm", "near", "solana", "tron"] as const;
 
 export const TEAM_INVITE_TYPE = "Employee";
 

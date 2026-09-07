@@ -54,4 +54,9 @@ export const queryKeys = {
     highPriority: (id: number, timezone: string) =>
       [...queryKeys.organization.all, "high-priority", id, timezone] as const,
   },
+  team: {
+    all: ["team"] as const,
+    members: (params: unknown) => [...queryKeys.team.all, "members", params] as const,
+    book: (orgId: number) => [...queryKeys.team.all, "book", orgId] as const,
+  },
 } as const;

@@ -1,15 +1,15 @@
 import type { Contact } from "@/hooks/use-contacts";
-import type { TeamMember } from "@/hooks/use-team-api";
+import type { TeamMember, TeamMemberWallets } from "@/types/team";
 import { sameAddress } from "@/utils";
 import { detectAddressChainKind } from "../../utils";
-import { memberDisplayWallet } from "../team/utils";
+import { memberDisplayWallet, walletForChainKind } from "../team/utils";
 
 export function teamMemberToContact(member: TeamMember): Contact | null {
   const wallet = memberDisplayWallet(member);
   if (!wallet) return null;
   const email = member.email.trim();
   return {
-    id: member.id,
+    id: String(member.id),
     name: member.name,
     wallet,
     email: email || null,
@@ -40,6 +40,23 @@ function memberWallets(member: TeamMember): string[] {
   ]
     .map((value) => value.trim())
     .filter(Boolean);
+}
+
+export function matchPayNowMember(
+  address: string,
+  name: string,
+  wallets: TeamMemberWallets,
+): Contact | null {
+  const kind = detectAddressChainKind(address);
+  if (!kind) return null;
+  const wallet = walletForChainKind(wallets, kind);
+  if (!wallet || !sameAddress(wallet, address, kind)) return null;
+  return {
+    id: "pay-now",
+    name,
+    wallet,
+    email: null,
+  };
 }
 
 export function matchTeamMember(

@@ -53,8 +53,8 @@ export function TeamMemberFormDialog(props: {
     setNear(member?.wallets.near ?? "");
     setTron(member?.wallets.tron ?? "");
     setEmail(member?.email ?? "");
-    setTelegram(member?.telegram ?? "");
-    setSlack(member?.slack ?? "");
+    setTelegram("");
+    setSlack("");
   }, [open, member]);
 
   const wallets = { evm, solana, near, tron };
@@ -82,12 +82,6 @@ export function TeamMemberFormDialog(props: {
       email: isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Email)
         ? email.trim()
         : (member?.email ?? ""),
-      telegram: isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Telegram)
-        ? telegram.trim()
-        : (member?.telegram ?? ""),
-      slack: isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Slack)
-        ? slack.trim()
-        : (member?.slack ?? ""),
       wallets: {
         evm: evm.trim(),
         solana: isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Solana)

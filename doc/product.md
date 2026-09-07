@@ -86,21 +86,21 @@ Reusable Pay Now overlays. Mount them from the page; do not wrap them in another
 
 **Which dialog**
 
-- Single payment with a locked recipient → `SinglePayoutDialog` (same folder as `SinglePayoutCard`).
+- Single payment with a prefilled recipient → `SinglePayoutDialog` (same folder as `SinglePayoutCard`).
 - Batch / Payment by form with a locked Form → `PaymentByFormDialog` (same folder as `PaymentByFormCard`).
 
 **`SinglePayoutDialog`**
 
 Import: `@/views/pay/components/single-payout/SinglePayoutDialog`.
 
-Props: `open`, `onClose`, `recipient: { name: string; address: string } | null`.
+Props: `open`, `onClose`, `recipient: { name: string; wallets } | null`.
 
-Renders `SinglePayoutCard` with `recipientLocked` when `recipient.address` is set. The caller must supply a wallet. Current caller: `/pay/team` (maps `memberDisplayWallet` into `recipient`).
+Renders `SinglePayoutCard` whenever `recipient` is set (wallets may all be empty). The address field is editable. Current caller: `/pay/team`. Initial address prefers evm → near → solana → tron. Changing the recipient token fills that chain's wallet, or leaves the address empty so the payer can paste one.
 
 ```tsx
 <SinglePayoutDialog
   open={Boolean(paying)}
-  recipient={paying}
+  recipient={paying ? { name: paying.name, wallets: paying.wallets } : null}
   onClose={() => setPaying(null)}
 />
 ```
@@ -129,7 +129,7 @@ Title **Overview**. `OverviewView` reads `AuthUser.role`. Admin loads `GET /v1/p
 
 Title **Payment**. For **admin**, a centred `PaymentModeTabs` control switches Single Payment (`/pay`) and Payment by form (`/pay/form`). Employees do not see the tabs. One card: recipient (search / paste address, address book), amount plus recipient token, and purpose. Changing the address to another chain clears the selected token; a default USDT → USDC → first-available token for that chain is then picked by `defaultDestToken`. The empty submit label is **Starts from adding recipient**; once the form can send it becomes **Send Payment**. There is no Notify Recipient control.
 
-The form lives in `SinglePayoutCard` so `SinglePayoutDialog` can mount the same card with a locked recipient. The address book (`RecipientsDialog`) depends on role: **admin** lists Team members with a wallet (`useTeamMembersQuery`, display wallet EVM → Solana → NEAR → Tron) and is select-only (no Add / Edit / Delete; Team is managed on `/pay/team`). Pasting any of a member's wallets still matches the name chip. **Employee** keeps a personal book: create, edit, and delete through `useContacts` → `/v1/payroll/recipient*`. A locked recipient (Team Pay Now) does not open the book.
+The form lives in `SinglePayoutCard` so `SinglePayoutDialog` can mount the same card with a prefilled recipient. The address book (`RecipientsDialog`) depends on role: **admin** lists Team members with a wallet (`useTeamMembersInfiniteQuery`, scroll to load more, display wallet evm → near → solana → tron) and is select-only (no Add / Edit / Delete; Team is managed on `/pay/team`). Pasting any of a member's wallets still matches the name chip. **Employee** keeps a personal book: create, edit, and delete through `useContacts` → `/v1/payroll/recipients`.
 
 **Send Payment** posts to `/v1/payroll/payments` (`useCreatePayrollPaymentMutation`) with the amount, the recipient, the destination `network` / `symbol` from `payoutNetworkToken`, the optional purpose (`memo` on the API), and `success_url` = `{origin}/pay/result`. The backend creates a hosted checkout session and answers with `pay_url`; the browser is sent there with `window.location.assign`. Payment itself happens on the hosted checkout, so this screen never touches a wallet.
 
@@ -201,15 +201,15 @@ The form is Purpose (required, `name` on the API; help tooltip explains it is th
 
 ### `/pay/team` — Team
 
-Search, paginated member table (Name, Position, Schedule, Email, Wallet), Add Member, and Invite. List CRUD is mock data (`team` in [mocks.md](mocks.md)) until that contract exists. Schedule is display-only; Add/Edit does not set it, so a new member shows `-`. Wallet prefers EVM, then Solana, then NEAR, then Tron.
+Search, paginated member table (Name, Position, Email, Wallet), Add Member, and Invite. List CRUD uses `/v1/payroll/team/members`. Search `q` is debounced 300ms (name, email, position, evm address). Page size is 10. Wallet prefers evm, then near, then Solana, then Tron.
 
 Add Member (white dashed border + plus) and Invite (black + link icon) share `TeamActionButtons` with Settings → Organization.
 
-**Add / Edit** is a dialog driven by Settings Integration: Name and EVM are always shown (EVM required). Position is optional. Email / Telegram / Slack / SOLANA / NEAR / Tron render only when that channel is on; Required channels must be filled. Name and Position ≤ 50. A filled wallet must match that chain (`validateAddress`, including Tron). Save stays disabled while a required field is empty or a filled field is invalid.
+**Add / Edit** is a dialog driven by Settings Integration: Name and EVM are always shown (EVM required). Position is optional. Email / Telegram / Slack / SOLANA / NEAR / Tron render only when that channel is on; Required channels must be filled. Name and Position ≤ 50. A filled wallet must match that chain (`validateAddress`, including Tron). Save stays disabled while a required field is empty or a filled field is invalid. Telegram and Slack are validated in the form but are not sent to the API.
 
 **Invite** immediately shows `{origin}/invite/{orgId}` (`orgId` is the organization-name slug, or `default`) with Copy. It does not add a row.
 
-Row menu: Edit, Pay Now, Remove. Remove asks for confirmation. **Pay Now** opens `SinglePayoutDialog` with the member as a locked recipient (`name` + wallet from `memberDisplayWallet`), then the same hosted-checkout Send Payment path as `/pay`. Members without a wallet cannot Pay Now.
+Row menu: Edit, Pay Now, Remove. Remove asks for confirmation. **Pay Now** always opens `SinglePayoutDialog` with the member's name and wallets. The address field is editable. The first filled wallet is prefilled (evm → near → solana → tron); changing the recipient token switches to that chain's wallet, or leaves the field empty so the payer can type or paste one.
 
 ### `/pay/setting` — Settings
 

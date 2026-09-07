@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { RecipientAvatar } from "@/components/recipient-avatar/RecipientAvatar";
 import { Pagination } from "@/components/ui/pagination/Pagination";
 import { SearchInput } from "@/components/ui/search-input/SearchInput";
@@ -21,16 +21,21 @@ import { TeamInviteDialog } from "./components/team/TeamInviteDialog";
 import { TeamMemberFormDialog } from "./components/team/TeamMemberFormDialog";
 import { TeamMemberMenu } from "./components/team/TeamMemberMenu";
 import { TeamWalletCell } from "./components/team/TeamWalletCell";
-import { TEAM_PAGE_SIZE, TEAM_TABLE_COLUMNS } from "./components/team/config";
-import { dash, memberDisplayWallet, memberMatchesSearch, organizationInviteUrl } from "./components/team/utils";
+import { TEAM_PAGE_SIZE, TEAM_SEARCH_DEBOUNCE_MS, TEAM_TABLE_COLUMNS } from "./components/team/config";
+import { dash, memberDisplayWallet, organizationInviteUrl } from "./components/team/utils";
+
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), delayMs);
+    return () => window.clearTimeout(timer);
+  }, [delayMs, value]);
+  return debounced;
+}
 
 export function TeamView() {
   const toast = useToast();
   const user = useAuthStore((state) => state.user);
-  const query = useTeamMembersQuery();
-  const { createMutation, updateMutation, removeMutation } = useTeamMemberMutations();
-  const members = query.data ?? [];
-
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
@@ -38,14 +43,15 @@ export function TeamView() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [paying, setPaying] = useState<TeamMember | null>(null);
   const [removing, setRemoving] = useState<TeamMember | null>(null);
-
-  const filtered = useMemo(
-    () => members.filter((row) => memberMatchesSearch(row, search)),
-    [members, search],
-  );
-  const totalPage = Math.max(1, Math.ceil(filtered.length / TEAM_PAGE_SIZE));
-  const safePage = Math.min(page, totalPage);
-  const pageRows = filtered.slice((safePage - 1) * TEAM_PAGE_SIZE, safePage * TEAM_PAGE_SIZE);
+  const debouncedSearch = useDebouncedValue(search, TEAM_SEARCH_DEBOUNCE_MS);
+  const query = useTeamMembersQuery({
+    page,
+    pageSize: TEAM_PAGE_SIZE,
+    q: debouncedSearch,
+  });
+  const { createMutation, updateMutation, removeMutation } = useTeamMemberMutations();
+  const members = query.data?.list ?? [];
+  const totalPage = Math.max(1, query.data?.totalPage ?? 1);
 
   function openAdd() {
     setEditing(null);
@@ -83,18 +89,17 @@ export function TeamView() {
           <TableHeader>
             <TableHead>Name</TableHead>
             <TableHead>Position</TableHead>
-            <TableHead>Schedule</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Wallet</TableHead>
             <TableHead />
           </TableHeader>
           <TableBody>
-            {pageRows.length === 0 ? (
+            {members.length === 0 ? (
               <p className="py-8 text-center font-montserrat text-sm text-[#909090]">
                 {query.isPending ? "Loading team…" : "No members"}
               </p>
             ) : (
-              pageRows.map((row) => {
+              members.map((row) => {
                 const wallet = memberDisplayWallet(row);
                 return (
                   <TableRow key={row.id}>
@@ -102,7 +107,7 @@ export function TeamView() {
                       <span className="inline-flex min-w-0 items-center gap-2.5">
                         <RecipientAvatar
                           name={row.name}
-                          address={wallet ?? row.id}
+                          address={wallet ?? String(row.id)}
                           className="size-8 text-[11px]"
                         />
                         <span className="truncate">{row.name}</span>
@@ -111,7 +116,6 @@ export function TeamView() {
                     <TableCell>
                       <span className="truncate">{dash(row.position)}</span>
                     </TableCell>
-                    <TableCell>{dash(row.schedule)}</TableCell>
                     <TableCell>
                       <span className="truncate">{dash(row.email)}</span>
                     </TableCell>
@@ -120,15 +124,8 @@ export function TeamView() {
                     </TableCell>
                     <TableCell className="justify-end">
                       <TeamMemberMenu
-                        payDisabled={!wallet}
                         onEdit={() => openEdit(row)}
-                        onPayNow={() => {
-                          if (!wallet) {
-                            toast.fail({ title: "Add a wallet first" });
-                            return;
-                          }
-                          setPaying(row);
-                        }}
+                        onPayNow={() => setPaying(row)}
                         onRemove={() => setRemoving(row)}
                       />
                     </TableCell>
@@ -141,7 +138,7 @@ export function TeamView() {
       )}
 
       <div className="mt-4 flex justify-center sm:justify-end">
-        <Pagination page={safePage} totalPage={totalPage} onPageChange={setPage} />
+        <Pagination page={page} totalPage={totalPage} onPageChange={setPage} />
       </div>
 
       <TeamMemberFormDialog
@@ -177,11 +174,7 @@ export function TeamView() {
 
       <SinglePayoutDialog
         open={Boolean(paying)}
-        recipient={
-          paying
-            ? { name: paying.name, address: memberDisplayWallet(paying) ?? "" }
-            : null
-        }
+        recipient={paying ? { name: paying.name, wallets: paying.wallets } : null}
         onClose={() => setPaying(null)}
       />
 

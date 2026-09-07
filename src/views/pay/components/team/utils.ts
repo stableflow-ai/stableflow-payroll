@@ -6,16 +6,23 @@ import {
   type IntegrationSettings,
 } from "@/hooks/use-settings-api";
 import { isValidEmail } from "../../utils";
-import type { TeamMember, TeamMemberWallets } from "@/hooks/use-team-api";
+import type { TeamMemberWallets } from "@/types/team";
 import { CONTACT_NAME_MAX_LENGTH } from "../../config";
 import { CHANNEL_HANDLE_MAX_LENGTH } from "../setting/config";
+import { TEAM_WALLET_CHAIN_ORDER } from "./config";
 
-export function memberDisplayWallet(member: Pick<TeamMember, "wallets">): string | null {
-  const { evm, solana, near, tron } = member.wallets;
-  if (evm.trim()) return evm.trim();
-  if (solana.trim()) return solana.trim();
-  if (near.trim()) return near.trim();
-  if (tron.trim()) return tron.trim();
+export function walletForChainKind(
+  wallets: TeamMemberWallets,
+  kind: WalletChainKind,
+): string {
+  return wallets[kind]?.trim() ?? "";
+}
+
+export function memberDisplayWallet(member: { wallets: TeamMemberWallets }): string | null {
+  for (const kind of TEAM_WALLET_CHAIN_ORDER) {
+    const value = member.wallets[kind]?.trim();
+    if (value) return value;
+  }
   return null;
 }
 
@@ -169,25 +176,6 @@ export function teamMemberFormCanSave(
   settings: IntegrationSettings,
 ): boolean {
   return memberProfileError(input, settings) == null;
-}
-
-export function memberMatchesSearch(member: TeamMember, query: string): boolean {
-  const q = query.trim().toLowerCase();
-  if (!q) return true;
-  const hay = [
-    member.name,
-    member.email,
-    member.telegram,
-    member.slack,
-    member.position,
-    member.wallets.evm,
-    member.wallets.solana,
-    member.wallets.near,
-    member.wallets.tron,
-  ]
-    .join(" ")
-    .toLowerCase();
-  return hay.includes(q);
 }
 
 export function organizationInviteId(name: string | null | undefined): string {

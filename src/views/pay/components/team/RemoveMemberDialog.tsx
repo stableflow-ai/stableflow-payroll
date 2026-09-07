@@ -20,12 +20,12 @@ export function RemoveMemberDialog(props: {
       <div className="mt-6 flex items-center justify-between gap-3">
         <Button
           size="sm"
-          className="border-transparent bg-danger text-white hover:opacity-90"
+          className="border-transparent bg-danger text-white hover:opacity-90 flex-1"
           onClick={onConfirm}
         >
           Remove
         </Button>
-        <Button size="sm" variant="normal" onClick={onClose}>
+        <Button className="flex-1" size="sm" variant="normal" onClick={onClose}>
           Cancel
         </Button>
       </div>
