@@ -21,7 +21,7 @@ function queryErrorMessage(error: unknown, fallback: string) {
 export function RequestsPanel(props: { onPayNow: (payable: PayableKey) => void }) {
   const { onPayNow } = props;
   const requestsQuery = useExpenseOpenRequestsQuery();
-  const list = requestsQuery.data ?? { total: "0", count: 0, rows: [] };
+  const list = requestsQuery.data ?? { total: "0", count: 0, batches: [] };
   const total = formatSplitUsd(list.total);
 
   if (requestsQuery.isLoading) {
@@ -40,7 +40,7 @@ export function RequestsPanel(props: { onPayNow: (payable: PayableKey) => void }
     );
   }
 
-  if (list.rows.length === 0) {
+  if (list.batches.length === 0) {
     return (
       <div className="flex min-h-[280px] items-center justify-center">
         <p className="font-montserrat text-sm text-[#aaa]">No payment requests</p>
@@ -72,7 +72,10 @@ export function RequestsPanel(props: { onPayNow: (payable: PayableKey) => void }
         </div>
       </div>
       <div className="mt-5 border-t border-black/10 pt-5">
-        <RequestsTable rows={list.rows} onPayNow={onPayNow} />
+        <RequestsTable
+          rows={list.batches.flatMap((batch) => batch.members)}
+          onPayNow={onPayNow}
+        />
       </div>
     </div>
   );

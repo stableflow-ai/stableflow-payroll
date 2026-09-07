@@ -46,7 +46,7 @@ const TOKEN = {
 } as unknown as Parameters<typeof buildPayablePayRequest>[0]["originToken"];
 
 describe("buildPayablePayRequest", () => {
-  it("sends every item as adjustments and applies net pay overrides", () => {
+  it("omits adjustments until a net pay override differs from the list", () => {
     expect(
       buildPayablePayRequest({
         payable: PAYABLE,
@@ -57,10 +57,19 @@ describe("buildPayablePayRequest", () => {
         notifyEnabled: false,
         selectedItemIds: [],
       })?.adjustments,
-    ).toEqual([
-      { item_id: 2, net_pay: "1" },
-      { item_id: 5, net_pay: "1" },
-    ]);
+    ).toBeUndefined();
+    expect(
+      buildPayablePayRequest({
+        payable: PAYABLE,
+        originToken: TOKEN,
+        payer: "0xpayer",
+        organizationId: 8,
+        timezone: "UTC",
+        notifyEnabled: false,
+        selectedItemIds: [],
+        netPayById: { 2: "1", 5: "" },
+      })?.adjustments,
+    ).toBeUndefined();
     expect(
       buildPayablePayRequest({
         payable: PAYABLE,
@@ -72,13 +81,10 @@ describe("buildPayablePayRequest", () => {
         selectedItemIds: [],
         netPayById: { 2: "1.25" },
       })?.adjustments,
-    ).toEqual([
-      { item_id: 2, net_pay: "1.25" },
-      { item_id: 5, net_pay: "1" },
-    ]);
+    ).toEqual([{ item_id: 2, net_pay: "1.25" }]);
   });
 
-  it("adds notification ids only when notify is on", () => {
+  it("adds notification only when notify is on", () => {
     expect(
       buildPayablePayRequest({
         payable: PAYABLE,
@@ -115,7 +121,18 @@ describe("buildPayablePayRequest", () => {
         notifyEnabled: true,
         selectedItemIds: [5, 2],
       })?.notification,
-    ).toEqual([2, 5]);
+    ).toBe("all");
+    expect(
+      buildPayablePayRequest({
+        payable: PAYABLE,
+        originToken: TOKEN,
+        payer: "0xpayer",
+        organizationId: 8,
+        timezone: "UTC",
+        notifyEnabled: true,
+        selectedItemIds: [5],
+      })?.notification,
+    ).toBe("5");
   });
 });
 
@@ -123,5 +140,18 @@ describe("sumPayableNetPay", () => {
   it("sums overrides when present and payable net pay otherwise", () => {
     expect(sumPayableNetPay(PAYABLE, {})).toBe("2");
     expect(sumPayableNetPay(PAYABLE, { 2: "1.25" })).toBe("2.25");
+  });
+
+  it("falls back to amount when list net pay is empty", () => {
+    const expense: Payable = {
+      ...PAYABLE,
+      key: { type: PAYABLE_TYPE.Expense, batchId: 8 },
+      type: PAYABLE_TYPE.Expense,
+      items: [
+        { ...PAYABLE.items[0]!, id: 8, amount: "0.0123", netPay: "" },
+        { ...PAYABLE.items[1]!, id: 9, amount: "0.011", netPay: "" },
+      ],
+    };
+    expect(sumPayableNetPay(expense, {})).toBe("0.0233");
   });
 });

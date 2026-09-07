@@ -74,7 +74,7 @@ export function ExpenseRunsCard(props: {
   const showToolbar =
     !tabLoading &&
     !tabError &&
-    ((isOpenTab && open.rows.length > 0) || isHistoryTab);
+    ((isOpenTab && open.batches.length > 0) || isHistoryTab);
 
   return (
     <div>

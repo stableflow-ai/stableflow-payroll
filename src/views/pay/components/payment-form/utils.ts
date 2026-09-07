@@ -2,7 +2,7 @@ import {
   PAYABLE_TYPE,
   effectiveNetPay,
   payableAdjustments,
-  payableNotificationIds,
+  payableNotification,
   type Payable,
   type PayablePayRequest,
 } from "@/types/payable";
@@ -51,7 +51,9 @@ export function buildPayablePayRequest(input: {
   } = input;
   if (!payable || !originToken || !payer || organizationId == null) return null;
   if (!isBatchOriginToken(originToken)) return null;
-  const notification = notifyEnabled ? payableNotificationIds(selectedItemIds) : undefined;
+  const notification = notifyEnabled
+    ? payableNotification(selectedItemIds, payableItemIds(payable))
+    : undefined;
   const adjustments = payableAdjustments(payable.items, netPayById);
   const base = {
     organization_id: organizationId,

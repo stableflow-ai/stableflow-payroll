@@ -1,3 +1,5 @@
+import { Big } from "@/utils";
+
 export const PAYABLE_TYPE = {
   Payroll: "payroll",
   Expense: "expense",
@@ -45,7 +47,7 @@ export interface PayablePayBaseParam {
   payer: string;
   source_network: string;
   source_symbol: string;
-  notification?: number[];
+  notification?: string;
   adjustments?: PayablePayAdjustment[];
 }
 
@@ -97,10 +99,34 @@ export function findExpensePayable(
   ) ?? null;
 }
 
-/** Omits `notification` when nothing is selected. */
-export function payableNotificationIds(ids: readonly number[]): number[] | undefined {
-  const unique = [...new Set(ids.filter((id) => Number.isFinite(id)))].sort((a, b) => a - b);
-  return unique.length ? unique : undefined;
+export const PAYABLE_NOTIFICATION_ALL = "all";
+
+/** `"all"` when every item is selected; otherwise comma-separated ids. Omits when none. */
+export function payableNotification(
+  selectedIds: readonly number[],
+  itemIds: readonly number[],
+): string | undefined {
+  const items = [...new Set(itemIds.filter((id) => Number.isFinite(id)))];
+  const selected = [
+    ...new Set(selectedIds.filter((id) => Number.isFinite(id) && items.includes(id))),
+  ].sort((a, b) => a - b);
+  if (!selected.length) return undefined;
+  if (items.length > 0 && selected.length === items.length) return PAYABLE_NOTIFICATION_ALL;
+  return selected.join(",");
+}
+
+function sameDecimalAmount(left: string, right: string): boolean {
+  try {
+    return new Big(left).eq(right);
+  } catch {
+    return left === right;
+  }
+}
+
+/** `netPay` when the list sent one; otherwise `amount`. */
+export function payableItemNetPay(item: PayableItem): string {
+  const netPay = item.netPay.trim();
+  return netPay || item.amount;
 }
 
 export function effectiveNetPay(
@@ -108,17 +134,21 @@ export function effectiveNetPay(
   overrides: Record<number, string>,
 ): string {
   const override = overrides[item.id];
-  return override !== undefined ? override : item.netPay;
+  if (override !== undefined && override.trim() !== "") return override;
+  return payableItemNetPay(item);
 }
 
-/** One `{ item_id, net_pay }` per row. Omits the field when the form has no items. */
+/** Only rows whose saved net pay differs from the list baseline. */
 export function payableAdjustments(
   items: readonly PayableItem[],
   overrides: Record<number, string>,
 ): PayablePayAdjustment[] | undefined {
-  if (!items.length) return undefined;
-  return items.map((item) => ({
-    item_id: item.id,
-    net_pay: effectiveNetPay(item, overrides),
-  }));
+  const adjustments: PayablePayAdjustment[] = [];
+  for (const item of items) {
+    const override = overrides[item.id];
+    if (override === undefined || override.trim() === "") continue;
+    if (sameDecimalAmount(override, payableItemNetPay(item))) continue;
+    adjustments.push({ item_id: item.id, net_pay: override });
+  }
+  return adjustments.length ? adjustments : undefined;
 }

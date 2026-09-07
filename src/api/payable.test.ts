@@ -6,11 +6,14 @@ import {
 } from "./payable";
 import {
   PAYABLE_TYPE,
+  effectiveNetPay,
   findExpensePayable,
   findPayable,
   parsePayableKey,
+  payableAdjustments,
   payableKeyId,
-  payableNotificationIds,
+  PAYABLE_NOTIFICATION_ALL,
+  payableNotification,
 } from "@/types/payable";
 import { payrollPaymentNotification } from "@/types/payout";
 
@@ -82,6 +85,55 @@ describe("mapPayables", () => {
     );
   });
 
+  it("maps live payroll and expense payloads", () => {
+    const list = mapPayables([
+      {
+        type: "payroll",
+        period_month: "2026-09-01T00:00:00+08:00",
+        payment_date: "2026-09-01T00:00:00+08:00",
+        title: "September Payroll",
+        total_payout: "0.03499737",
+        total_count: 3,
+        list: [
+          {
+            id: 1,
+            name: "Emily",
+            amount: "0.011",
+            net_pay: "0.011",
+            symbol: "USDT",
+            network: "arb",
+          },
+        ],
+      },
+      {
+        type: "expense",
+        batch_id: 8,
+        title: "Jimmy Self 1's payment request",
+        total_payout: "0.01229921",
+        total_count: 1,
+        list: [
+          {
+            id: 8,
+            name: "Jimmy Self 1",
+            amount: "0.0123",
+            volume: "0.01229921",
+            symbol: "USDT",
+            network: "arb",
+          },
+        ],
+      },
+    ]);
+    expect(list[0]?.key).toEqual({
+      type: PAYABLE_TYPE.Payroll,
+      periodMonth: "2026-09-01T00:00:00+08:00",
+    });
+    expect(list[0]?.items[0]?.netPay).toBe("0.011");
+    expect(list[0]?.items[0]?.amount).toBe("0.011");
+    expect(list[1]?.key).toEqual({ type: PAYABLE_TYPE.Expense, batchId: 8 });
+    expect(list[1]?.items[0]?.netPay).toBe("");
+    expect(list[1]?.items[0]?.amount).toBe("0.0123");
+  });
+
   it("reads a wrapped list", () => {
     expect(
       mapPayables({
@@ -116,6 +168,64 @@ describe("mapPayable", () => {
     expect(payable?.totalPayout).toBe("8000");
     expect(payable?.items[0]?.netPay).toBe("8000");
     expect(payable?.key).toEqual({ type: PAYABLE_TYPE.Bonus, batchId: 7 });
+  });
+});
+
+describe("effectiveNetPay", () => {
+  it("uses list net pay, then amount, then a non-empty override", () => {
+    const withNet = {
+      id: 1,
+      name: "Emily",
+      email: "",
+      address: "0x1",
+      network: "arb",
+      symbol: "USDT",
+      amount: "0.011",
+      netPay: "0.011",
+      purpose: "",
+      status: "pending",
+    };
+    const withoutNet = { ...withNet, id: 8, amount: "0.0123", netPay: "" };
+    expect(effectiveNetPay(withNet, {})).toBe("0.011");
+    expect(effectiveNetPay(withoutNet, {})).toBe("0.0123");
+    expect(effectiveNetPay(withoutNet, { 8: "0.01" })).toBe("0.01");
+  });
+});
+
+describe("payableAdjustments", () => {
+  it("omits unchanged and empty net pay rows", () => {
+    const items = [
+      {
+        id: 1,
+        name: "Emily",
+        email: "",
+        address: "0x1",
+        network: "arb",
+        symbol: "USDT",
+        amount: "0.011",
+        netPay: "0.011",
+        purpose: "",
+        status: "pending",
+      },
+      {
+        id: 8,
+        name: "Jimmy",
+        email: "",
+        address: "0x2",
+        network: "arb",
+        symbol: "USDT",
+        amount: "0.0123",
+        netPay: "",
+        purpose: "",
+        status: "pending",
+      },
+    ];
+    expect(payableAdjustments(items, {})).toBeUndefined();
+    expect(payableAdjustments(items, { 8: "" })).toBeUndefined();
+    expect(payableAdjustments(items, { 1: "0.0110" })).toBeUndefined();
+    expect(payableAdjustments(items, { 1: "0.01" })).toEqual([
+      { item_id: 1, net_pay: "0.01" },
+    ]);
   });
 });
 
@@ -156,9 +266,9 @@ describe("payablePayBody", () => {
     });
   });
 
-  it("adds notification only when ids are selected", () => {
-    const ids = payableNotificationIds([3, 1, 3]);
-    expect(ids).toEqual([1, 3]);
+  it("adds notification as all or comma-separated ids", () => {
+    expect(payableNotification([3, 1, 3], [1, 2, 3])).toBe("1,3");
+    expect(payableNotification([2, 1], [1, 2])).toBe(PAYABLE_NOTIFICATION_ALL);
     expect(
       payablePayBody({
         type: PAYABLE_TYPE.Bonus,
@@ -167,10 +277,10 @@ describe("payablePayBody", () => {
         payer: "near.payer",
         source_network: "near",
         source_symbol: "USDT",
-        notification: ids,
+        notification: "1,3",
       }).notification,
-    ).toEqual([1, 3]);
-    expect(payableNotificationIds([])).toBeUndefined();
+    ).toBe("1,3");
+    expect(payableNotification([], [1, 2])).toBeUndefined();
     expect(
       payablePayBody({
         type: PAYABLE_TYPE.Bonus,

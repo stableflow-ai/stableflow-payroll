@@ -150,7 +150,7 @@ export function ExpenseView() {
       <ExpenseRunsCard
         tab={tab}
         onTabChange={setTab}
-        open={openQuery.data ?? { total: "0", count: 0, rows: [] }}
+        open={openQuery.data ?? { total: "0", count: 0, batches: [] }}
         openLoading={openQuery.isLoading}
         openError={
           openQuery.isError

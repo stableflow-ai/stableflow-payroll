@@ -13,12 +13,11 @@ import {
 import useToast from "@/hooks/use-toast";
 import type { PayLayoutOutletContext } from "@/layouts/PayLayout";
 import { useAuthStore } from "@/stores/auth";
-import type { PayableKey } from "@/types/payable";
+import { PAYABLE_TYPE, type PayableKey } from "@/types/payable";
 import { PaymentByFormDialog } from "@/views/pay/components/payment-form/PaymentByFormDialog";
 import {
   PAYROLL_CHART_RANGE,
   PAYROLL_DRAWER_MODE,
-  PAYROLL_PAY_NOW_PAYABLE,
   PAYROLL_PAYOUT_STATUS,
   PAYROLL_TAB,
   type PayrollChartRange,
@@ -247,7 +246,14 @@ export function PayrollView() {
           void historyQuery.fetchNextPage();
         }}
         onViewHistoryDetails={setHistoryDetailRun}
-        onPayNow={() => setPayingPayable(PAYROLL_PAY_NOW_PAYABLE)}
+        onPayNow={() => {
+          const payDate = nextPayroll?.payDate.trim() ?? "";
+          if (!payDate) {
+            toast.fail({ title: "Next pay date is missing" });
+            return;
+          }
+          setPayingPayable({ type: PAYABLE_TYPE.Payroll, periodMonth: payDate });
+        }}
       />
       <PaymentByFormDialog
         open={Boolean(payingPayable)}

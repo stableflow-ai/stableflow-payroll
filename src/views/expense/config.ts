@@ -43,10 +43,9 @@ export const EXPENSE_ROW_ACTION = {
 export type ExpenseRowAction =
   (typeof EXPENSE_ROW_ACTION)[keyof typeof EXPENSE_ROW_ACTION];
 
-export const EXPENSE_PAY_NOW_PAYABLE: PayableKey = {
-  type: PAYABLE_TYPE.Expense,
-  batchId: 1,
-};
+export function expensePayNowPayable(batchId: number): PayableKey {
+  return { type: PAYABLE_TYPE.Expense, batchId };
+}
 
 export const EXPENSE_CHART_LINE_COLOR = "#6284F5";
 export const EXPENSE_CHART_Y_MAX = 6_000;
@@ -60,7 +59,7 @@ export const EXPENSE_HISTORY_PAID_CLASS = "text-[#769400]";
 export const EXPENSE_HISTORY_FAILED_CLASS = "text-[#FF5353]";
 
 export const OPEN_EXPENSE_TABLE_COLUMNS =
-  "minmax(88px,0.7fr) minmax(128px,1fr) minmax(180px,1.6fr) minmax(100px,0.8fr) minmax(120px,1fr) minmax(128px,1.1fr) minmax(72px,0.6fr) minmax(120px,0.9fr)";
+  "minmax(160px,1.4fr) minmax(88px,0.8fr) minmax(140px,1.1fr) minmax(140px,1.2fr) minmax(80px,0.7fr) minmax(120px,0.9fr)";
 
 export const REQUEST_PAYMENTS_TABLE_COLUMNS =
   "minmax(88px,0.7fr) minmax(128px,1fr) minmax(180px,1.6fr) minmax(120px,1fr) minmax(128px,1.1fr) minmax(72px,0.6fr) minmax(120px,0.9fr)";

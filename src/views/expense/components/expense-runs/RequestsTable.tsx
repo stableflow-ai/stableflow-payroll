@@ -17,8 +17,8 @@ import type { ExpenseOpenRow } from "@/types/expense";
 import type { PayableKey } from "@/types/payable";
 import {
   REQUEST_PAYMENTS_TABLE_COLUMNS,
-  EXPENSE_PAY_NOW_PAYABLE,
   EXPENSE_ROW_ACTION,
+  expensePayNowPayable,
 } from "../../config";
 
 function DescriptionCell({ value }: { value: string }) {
@@ -42,9 +42,10 @@ function DescriptionCell({ value }: { value: string }) {
 
 function RowAction(props: {
   action: ExpenseOpenRow["action"];
-  onPayNow: () => void;
+  batchId: number;
+  onPayNow: (payable: PayableKey) => void;
 }) {
-  const { action, onPayNow } = props;
+  const { action, batchId, onPayNow } = props;
   if (action === EXPENSE_ROW_ACTION.Paying) {
     return (
       <Button
@@ -56,10 +57,16 @@ function RowAction(props: {
     );
   }
 
+  const payable = batchId > 0 ? expensePayNowPayable(batchId) : null;
+
   return (
     <Button
       className="h-9 min-w-[130px] whitespace-nowrap rounded-[10px] px-4 text-sm"
-      onClick={onPayNow}
+      disabled={!payable}
+      onClick={() => {
+        if (!payable) return;
+        onPayNow(payable);
+      }}
     >
       <IconUp className="size-3.5 shrink-0" />
       Pay Now
@@ -113,7 +120,8 @@ export function RequestsTable(props: {
             <TableCell className="justify-end last:pr-4">
               <RowAction
                 action={row.action}
-                onPayNow={() => onPayNow(EXPENSE_PAY_NOW_PAYABLE)}
+                batchId={row.batchId}
+                onPayNow={onPayNow}
               />
             </TableCell>
           </TableRow>

@@ -6,7 +6,7 @@ Format: one `## YYYY-MM-DD` heading per day, one `- **ComponentName:** what chan
 
 ## 2026-09-07
 
-- **Dropdown:** Empty `options` renders `empty` in the panel (`"No options"` by default) instead of a blank list.
+- **Dropdown:** Optional `loading` shows a spinner on the trigger and a loading row in the panel. The panel still opens while loading. Empty `options` renders `empty` in the panel (`"No options"` by default) instead of a blank list.
 
 ## 2026-09-03
 

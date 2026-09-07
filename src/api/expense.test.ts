@@ -87,6 +87,7 @@ describe("mapExpenseOpenRow", () => {
       }),
     ).toEqual({
       id: "3",
+      batchId: 0,
       name: "Andrew",
       purpose: "Conference Travel",
       receiptName: "Invoice of conference.pdf",
@@ -101,7 +102,7 @@ describe("mapExpenseOpenRow", () => {
 });
 
 describe("mapExpenseOpenList", () => {
-  it("flattens batch lists and reads totals", () => {
+  it("keeps batches grouped and reads totals", () => {
     expect(
       mapExpenseOpenList({
         total_payout: "1253.02",
@@ -109,6 +110,9 @@ describe("mapExpenseOpenList", () => {
         batches: [
           {
             batch_id: 1,
+            title: "September tea",
+            volume: "1253.02",
+            count: 2,
             list: [
               { id: 1, name: "A", amount: "800", volume: "800" },
               { id: 2, name: "B", amount: "453.02", volume: "453.02" },
@@ -119,7 +123,19 @@ describe("mapExpenseOpenList", () => {
     ).toMatchObject({
       total: "1253.02",
       count: 2,
-      rows: [{ id: "1-1", name: "A" }, { id: "1-2", name: "B" }],
+      batches: [
+        {
+          batchId: 1,
+          title: "September tea",
+          volume: "1253.02",
+          count: 2,
+          action: "pay_now",
+          members: [
+            { id: "1-1", batchId: 1, name: "A" },
+            { id: "1-2", batchId: 1, name: "B" },
+          ],
+        },
+      ],
     });
   });
 });

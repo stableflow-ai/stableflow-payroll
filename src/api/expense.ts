@@ -11,6 +11,7 @@ import {
   type ExpenseHistoryRow,
   type ExpenseImportParam,
   type ExpenseImportResp,
+  type ExpenseOpenBatch,
   type ExpenseOpenList,
   type ExpenseOpenQuery,
   type ExpenseOpenRequestsCount,
@@ -92,12 +93,13 @@ export function mapExpenseRecentPayout(raw: unknown): ExpenseRecentPayout {
   };
 }
 
-export function mapExpenseOpenRow(raw: unknown, index = 0, batchId?: number): ExpenseOpenRow {
+export function mapExpenseOpenRow(raw: unknown, index = 0, batchId = 0): ExpenseOpenRow {
   const row = asRecord(raw) ?? {};
   const id = apiNumber(row.id) ?? index + 1;
   const amount = apiText(row.amount) || "0";
   return {
-    id: batchId != null ? `${batchId}-${id}` : String(id),
+    id: batchId > 0 ? `${batchId}-${id}` : String(id),
+    batchId,
     name: apiText(row.name),
     purpose: apiText(row.purpose),
     receiptName: apiText(row.description),
@@ -112,20 +114,29 @@ export function mapExpenseOpenRow(raw: unknown, index = 0, batchId?: number): Ex
 
 export function mapExpenseOpenList(raw: unknown): ExpenseOpenList {
   const row = asRecord(raw) ?? {};
-  const batches = Array.isArray(row.batches) ? row.batches : [];
-  const rows: ExpenseOpenRow[] = [];
-  for (const batch of batches) {
+  const rawBatches = Array.isArray(row.batches) ? row.batches : [];
+  const batches: ExpenseOpenBatch[] = [];
+  for (const batch of rawBatches) {
     const batchRow = asRecord(batch) ?? {};
     const list = Array.isArray(batchRow.list) ? batchRow.list : [];
-    const batchId = apiNumber(batchRow.batch_id ?? batchRow.batchId);
-    for (const [index, item] of list.entries()) {
-      rows.push(mapExpenseOpenRow(item, index, batchId ?? undefined));
-    }
+    const batchId = apiNumber(batchRow.batch_id ?? batchRow.batchId) ?? 0;
+    const members = list.map((item, index) => mapExpenseOpenRow(item, index, batchId));
+    if (members.length === 0) continue;
+    const paying = members.some((member) => member.action === "paying");
+    batches.push({
+      batchId,
+      title: apiText(batchRow.title),
+      volume: apiText(batchRow.volume) || apiText(batchRow.total_payout ?? batchRow.totalPayout) || "0",
+      count: apiNumber(batchRow.count) ?? members.length,
+      action: paying ? "paying" : "pay_now",
+      members,
+    });
   }
+  const memberCount = batches.reduce((sum, batch) => sum + batch.members.length, 0);
   return {
     total: apiText(row.total_payout ?? row.totalPayout) || "0",
-    count: apiNumber(row.total_count ?? row.totalCount) ?? rows.length,
-    rows,
+    count: apiNumber(row.total_count ?? row.totalCount) ?? memberCount,
+    batches,
   };
 }
 

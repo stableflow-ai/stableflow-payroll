@@ -2,12 +2,14 @@ import type { ReactNode } from "react";
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { IconArrowDown } from "@/components/icons/arrow-down";
+import { IconLoading } from "@/components/icons/loading";
 import { cn } from "@/lib/utils";
 import {
   FLOATING_ALIGN,
   FLOATING_SIDE,
   useFloatingPosition,
 } from "@/components/ui/overlay/use-floating-position";
+import { DROPDOWN_LOADING } from "./config";
 
 export type DropdownOption = {
   value: string;
@@ -23,6 +25,7 @@ export type DropdownProps = {
   label?: ReactNode;
   placeholder?: string;
   disabled?: boolean;
+  loading?: boolean;
   className?: string;
   triggerClassName?: string;
   panelClassName?: string;
@@ -39,6 +42,7 @@ export function Dropdown(props: DropdownProps) {
     label,
     placeholder = "Select",
     disabled = false,
+    loading = false,
     className,
     triggerClassName,
     panelClassName,
@@ -125,12 +129,15 @@ export function Dropdown(props: DropdownProps) {
         {label ? <span className="min-w-0 shrink truncate text-[#aaa]">{label}</span> : null}
         <span
           className={cn(
-            "min-w-0 truncate",
-            label && "flex-1 text-right",
+            "flex min-w-0 items-center gap-2 truncate",
+            label && "flex-1 justify-end text-right",
             !selectedOption && "text-[#606060]",
           )}
         >
-          {selectedOption?.label ?? placeholder}
+          {loading ? (
+            <IconLoading className="size-3.25 shrink-0 animate-spin text-[#909090]" />
+          ) : null}
+          <span className="min-w-0 truncate">{selectedOption?.label ?? placeholder}</span>
         </span>
         <IconArrowDown
           className={cn(
@@ -150,7 +157,15 @@ export function Dropdown(props: DropdownProps) {
                 panelClassName,
               )}
             >
-              {options.length === 0 ? (
+              {loading ? (
+                <p
+                  role="status"
+                  className="flex items-center justify-center gap-2 px-3 py-4 font-montserrat text-sm font-medium text-[#aaa]"
+                >
+                  <IconLoading className="size-3.25 shrink-0 animate-spin" />
+                  {DROPDOWN_LOADING}
+                </p>
+              ) : options.length === 0 ? (
                 <p
                   role="status"
                   className="px-3 py-4 text-center font-montserrat text-sm font-medium text-[#aaa]"

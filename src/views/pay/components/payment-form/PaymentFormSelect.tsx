@@ -30,13 +30,15 @@ export function PaymentFormSelect(props: {
   value: string;
   onChange: (id: string) => void;
   disabled?: boolean;
+  loading?: boolean;
 }) {
-  const { forms, value, onChange, disabled = false } = props;
+  const { forms, value, onChange, disabled = false, loading = false } = props;
   return (
     <Dropdown
       value={value || undefined}
       onChange={onChange}
       disabled={disabled}
+      loading={loading}
       placeholder="Select"
       empty="No forms"
       className="w-full"

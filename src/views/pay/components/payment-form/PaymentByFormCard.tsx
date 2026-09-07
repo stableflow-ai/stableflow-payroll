@@ -27,7 +27,7 @@ import {
   payableKeyId,
   type PayableKey,
 } from "@/types/payable";
-import { QUOTE_EXPIRED_MESSAGE, SPENT_BATCH_MESSAGE } from "../../config";
+import { AMOUNT_MAX_DECIMALS, QUOTE_EXPIRED_MESSAGE, SPENT_BATCH_MESSAGE } from "../../config";
 import { isBatchOriginToken, isPayrollBatchExpired } from "../../batch-utils";
 import { formatQuoteErrorMessage } from "../../utils";
 import { YouPaySection } from "../YouPaySection";
@@ -91,6 +91,7 @@ export function PaymentByFormCard(props: {
   const selectedKey = parsePayableKey(selectedId);
   const formsQuery = usePayablesQuery();
   const forms = formsQuery.data ?? [];
+  const formsLoading = formsQuery.isPending;
   const detail = selectedKey ? findPayable(forms, selectedKey) : null;
   const lockedForms = formLocked ? (detail ? [detail] : []) : forms;
 
@@ -158,7 +159,7 @@ export function PaymentByFormCard(props: {
     ? `${formatAmount(batch!.totalSourceAmount, { prefix: "", maxDecimals: 6 })} ${originToken.symbol}`
     : "-";
   const totalValuedLabel = detail
-    ? formatAmount(sumPayableNetPay(detail, netPayById), { maxDecimals: 6 })
+    ? formatAmount(sumPayableNetPay(detail, netPayById), { maxDecimals: AMOUNT_MAX_DECIMALS })
     : "$0";
   const emailCount = detail?.items.length ?? 0;
 
@@ -287,6 +288,7 @@ export function PaymentByFormCard(props: {
               setPickedId(id);
             }}
             disabled={formLocked}
+            loading={formsLoading}
           />
         </div>
       </div>

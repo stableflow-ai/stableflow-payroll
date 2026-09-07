@@ -15,7 +15,7 @@ export const PAYMENT_FORM_CATEGORY_UI: Record<
     Icon: IconPayroll,
   },
   [PAYABLE_TYPE.Expense]: {
-    label: "Reimbursement",
+    label: "Expenses",
     className: "border-[#29ccb6] bg-[rgba(41,204,182,0.2)] text-[#29ccb6]",
     Icon: IconReimbursement,
   },

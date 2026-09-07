@@ -154,7 +154,7 @@ export function payablePayBody(request: PayablePayRequest): Record<string, unkno
     source_network,
     source_symbol,
   };
-  if (notification?.length) body.notification = notification;
+  if (notification) body.notification = notification;
   if (adjustments?.length) body.adjustments = adjustments;
   if (request.type === PAYABLE_TYPE.Payroll) {
     body.period_month = request.period_month;

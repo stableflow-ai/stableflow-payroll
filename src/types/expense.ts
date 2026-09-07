@@ -58,6 +58,7 @@ export type ExpenseRowAction = "paying" | "pay_now";
 
 export interface ExpenseOpenRow {
   id: string;
+  batchId: number;
   name: string;
   purpose: string;
   receiptName: string;
@@ -69,10 +70,19 @@ export interface ExpenseOpenRow {
   action: ExpenseRowAction;
 }
 
+export interface ExpenseOpenBatch {
+  batchId: number;
+  title: string;
+  volume: string;
+  count: number;
+  action: ExpenseRowAction;
+  members: ExpenseOpenRow[];
+}
+
 export interface ExpenseOpenList {
   total: string;
   count: number;
-  rows: ExpenseOpenRow[];
+  batches: ExpenseOpenBatch[];
 }
 
 export interface ExpenseOpenQuery {

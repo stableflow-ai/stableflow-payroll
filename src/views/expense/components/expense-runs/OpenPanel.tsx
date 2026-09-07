@@ -24,7 +24,7 @@ export function OpenPanel(props: {
   const { list, onPayNow, onAddExpense, onImported, busy = false } = props;
   const total = formatSplitUsd(list.total);
 
-  if (list.rows.length === 0) {
+  if (list.batches.length === 0) {
     return (
       <CreateExpenseEmpty
         onAddExpense={onAddExpense}
@@ -58,7 +58,7 @@ export function OpenPanel(props: {
         </div>
       </div>
       <div className="mt-5 border-t border-black/10 pt-5">
-        <OpenTable rows={list.rows} onPayNow={onPayNow} />
+        <OpenTable batches={list.batches} onPayNow={onPayNow} />
       </div>
     </div>
   );

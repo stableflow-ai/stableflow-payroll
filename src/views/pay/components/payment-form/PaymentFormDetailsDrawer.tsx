@@ -7,8 +7,14 @@ import { chainDisplayName } from "@/config/chains";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import useToast from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
-import { formatAmount } from "@/utils";
-import { effectiveNetPay, payableKeyId, type Payable } from "@/types/payable";
+import { formatAmount, formatDate, DATE_FORMAT } from "@/utils";
+import {
+  PAYABLE_TYPE,
+  effectiveNetPay,
+  payableAdjustments,
+  payableKeyId,
+  type Payable,
+} from "@/types/payable";
 import { AMOUNT_MAX_DECIMALS } from "../../config";
 import { parsePositiveDecimal } from "../../utils";
 import { PayoutRecipientCell } from "../payout-table/PayoutRecipientCell";
@@ -60,14 +66,19 @@ export function PaymentFormDetailsDrawer(props: {
       setEditing(true);
       return;
     }
-    const next: Record<number, string> = {};
+    const parsedById: Record<number, string> = {};
     for (const item of detail.items) {
       const parsed = parsePositiveDecimal(draft[item.id] ?? "", AMOUNT_MAX_DECIMALS);
       if (!parsed) {
         toast.fail({ title: "Enter a valid net pay" });
         return;
       }
-      next[item.id] = parsed;
+      parsedById[item.id] = parsed;
+    }
+    const adjustments = payableAdjustments(detail.items, parsedById) ?? [];
+    const next: Record<number, string> = {};
+    for (const row of adjustments) {
+      next[row.item_id] = row.net_pay;
     }
     onSaveNetPay(next);
     setEditing(false);
@@ -129,12 +140,21 @@ function PaymentFormDetailsBody(props: {
 }) {
   const { detail, netPayById, editing, draft, onDraftChange } = props;
   const recipientCount = String(detail.items.length);
-  const nextPayDate = detail.paymentDate || "-";
-  const totalValued = formatAmount(sumPayableNetPay(detail, netPayById), { maxDecimals: 6 });
+  const isPayroll = detail.type === PAYABLE_TYPE.Payroll;
+  const nextPayDate = formatDate(detail.paymentDate, DATE_FORMAT.MonthDayYear) || detail.paymentDate || "-";
+  const totalValued = formatAmount(sumPayableNetPay(detail, netPayById), {
+    prefix: "",
+    maxDecimals: AMOUNT_MAX_DECIMALS,
+  });
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-6">
-      <div className="grid grid-cols-3 gap-4 rounded-[12px] border border-white bg-[#fdfdfd] px-8 py-4 shadow-[0_0_20px_0_rgba(0,0,0,0.06)]">
+      <div
+        className={cn(
+          "grid gap-4 rounded-[12px] border border-white bg-[#fdfdfd] px-8 py-4 shadow-[0_0_20px_0_rgba(0,0,0,0.06)]",
+          isPayroll ? "grid-cols-3" : "grid-cols-2",
+        )}
+      >
         <SummaryCell
           label={PAYMENT_FORM_DETAILS_SUMMARY.totalValue}
           value={totalValued}
@@ -143,10 +163,12 @@ function PaymentFormDetailsBody(props: {
           label={PAYMENT_FORM_DETAILS_SUMMARY.recipients}
           value={recipientCount}
         />
-        <SummaryCell
-          label={PAYMENT_FORM_DETAILS_SUMMARY.nextPayDate}
-          value={nextPayDate}
-        />
+        {isPayroll ? (
+          <SummaryCell
+            label={PAYMENT_FORM_DETAILS_SUMMARY.nextPayDate}
+            value={nextPayDate}
+          />
+        ) : null}
       </div>
 
       <div className="min-h-0 flex-1 overflow-auto">
@@ -183,7 +205,7 @@ function PaymentFormDetailsBody(props: {
                   {row.symbol} · {chainDisplayName(row.network)}
                 </p>
                 <p className="font-montserrat text-sm font-medium text-black">
-                  {formatAmount(row.amount, { prefix: "", maxDecimals: 0 })}
+                  {formatAmount(row.amount, { prefix: "", maxDecimals: AMOUNT_MAX_DECIMALS })}
                 </p>
                 {editing ? (
                   <InputNumber
@@ -194,7 +216,7 @@ function PaymentFormDetailsBody(props: {
                   />
                 ) : (
                   <p className="font-montserrat text-sm font-medium text-black">
-                    {formatAmount(netPay, { prefix: "", maxDecimals: 6 })}
+                    {formatAmount(netPay, { prefix: "", maxDecimals: AMOUNT_MAX_DECIMALS })}
                   </p>
                 )}
               </div>
