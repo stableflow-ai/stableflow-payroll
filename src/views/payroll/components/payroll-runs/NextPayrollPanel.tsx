@@ -92,10 +92,11 @@ export function NextPayrollPanel(props: {
               <TableCell>
                 {row.token} · {chainDisplayName(row.network)}
               </TableCell>
-              <TableCell>{formatAmount(row.amount, { prefix: "" })}</TableCell>
+              <TableCell>{formatAmount(row.amount, { prefix: "", showDust: true })}</TableCell>
               <TableCell>
                 <InputNumber
-                  value={formatAmount(netPayById[row.id] ?? row.netPay, { prefix: "" })}
+                  value={netPayById[row.id] ?? row.netPay}
+                  decimals={6}
                   onNumberChange={(value) => onNetPayChange(row.id, value)}
                   className="h-9 w-[99px] rounded-[6px] border border-[#e3e3e3] bg-white px-3 font-montserrat text-sm font-medium text-black outline-none"
                 />

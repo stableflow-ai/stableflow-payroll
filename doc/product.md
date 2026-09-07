@@ -93,14 +93,14 @@ Reusable Pay Now overlays. Mount them from the page; do not wrap them in another
 
 Import: `@/views/pay/components/single-payout/SinglePayoutDialog`.
 
-Props: `open`, `onClose`, `recipient: { name: string; wallets } | null`.
+Props: `open`, `onClose`, `recipient: { name: string; wallets; email?: string | null } | null`.
 
-Renders `SinglePayoutCard` whenever `recipient` is set (wallets may all be empty). The address field is editable. Current caller: `/pay/team`. Initial address prefers evm → near → solana → tron. Changing the recipient token fills that chain's wallet, or leaves the address empty so the payer can paste one.
+Renders `SinglePayoutCard` whenever `recipient` is set (wallets may all be empty). The address field is editable. Current caller: `/pay/team`. Initial address prefers evm → near → solana → tron. Changing the recipient token fills that chain's wallet, or leaves the address empty so the payer can paste one. `email` prefills Notify Recipient.
 
 ```tsx
 <SinglePayoutDialog
   open={Boolean(paying)}
-  recipient={paying ? { name: paying.name, wallets: paying.wallets } : null}
+  recipient={paying ? { name: paying.name, wallets: paying.wallets, email: paying.email } : null}
   onClose={() => setPaying(null)}
 />
 ```
@@ -109,15 +109,17 @@ Renders `SinglePayoutCard` whenever `recipient` is set (wallets may all be empty
 
 Import: `@/views/pay/components/payment-form/PaymentByFormDialog`.
 
-Props: `open`, `onClose`, `formId: string | null`.
+Props: `open`, `onClose`, `payable: PayableKey | null`.
 
-Renders `PaymentByFormCard` with `formId` + `formLocked` (Form dropdown disabled; details still load by id). Closes on successful send (`onSettled`). Current callers: `/pay/payroll`, `/pay/expense`, `/pay/bonus`.
+`PayableKey` is `{ type: "payroll"; periodMonth: string }` or `{ type: "expense" | "bonus"; batchId: number }`. Payroll quotes with `POST /v1/payroll/salaries/pay` (`period_month` + browser timezone). Expense and bonus quote with `POST /v1/payroll/expenses/{batch_id}/pay` and `/bonuses/{batch_id}/pay`. Do not send `POST /v1/payroll/batches` from this dialog.
+
+Renders `PaymentByFormCard` with `payable` + `formLocked` (Form dropdown disabled; the matching row still comes from `GET /v1/payroll/payables`). Closes on successful send (`onSettled`). Current callers: `/pay/payroll`, `/pay/expense`, `/pay/bonus` (placeholder keys until those dashboards are wired).
 
 ```tsx
 <PaymentByFormDialog
-  open={Boolean(payingFormId)}
-  formId={payingFormId}
-  onClose={() => setPayingFormId(null)}
+  open={Boolean(payingPayable)}
+  payable={payingPayable}
+  onClose={() => setPayingPayable(null)}
 />
 ```
 
@@ -127,21 +129,21 @@ Title **Overview**. `OverviewView` reads `AuthUser.role`. Admin loads `GET /v1/p
 
 ### `/pay` — Single Payment
 
-Title **Payment**. For **admin**, a centred `PaymentModeTabs` control switches Single Payment (`/pay`) and Payment by form (`/pay/form`). Employees do not see the tabs. One card: recipient (search / paste address, address book), amount plus recipient token, and purpose. Changing the address to another chain clears the selected token; a default USDT → USDC → first-available token for that chain is then picked by `defaultDestToken`. The empty submit label is **Starts from adding recipient**; once the form can send it becomes **Send Payment**. There is no Notify Recipient control.
+Title **Payment**. For **admin**, a centred `PaymentModeTabs` control switches Single Payment (`/pay`) and Payment by form (`/pay/form`). Employees do not see the tabs. One card: recipient (search / paste address, address book), amount plus recipient token, and purpose. Changing the address to another chain clears the selected token; a default USDT → USDC → first-available token for that chain is then picked by `defaultDestToken`. The empty submit label is **Starts from adding recipient**; once the form can send it becomes **Send Payment**.
 
 The form lives in `SinglePayoutCard` so `SinglePayoutDialog` can mount the same card with a prefilled recipient. The address book (`RecipientsDialog`) depends on role: **admin** lists Team members with a wallet (`useTeamMembersInfiniteQuery`, scroll to load more, display wallet evm → near → solana → tron) and is select-only (no Add / Edit / Delete; Team is managed on `/pay/team`). Pasting any of a member's wallets still matches the name chip. **Employee** keeps a personal book: create, edit, and delete through `useContacts` → `/v1/payroll/recipients`.
 
-**Send Payment** posts to `/v1/payroll/payments` (`useCreatePayrollPaymentMutation`) with the amount, the recipient, the destination `network` / `symbol` from `payoutNetworkToken`, the optional purpose (`memo` on the API), and `success_url` = `{origin}/pay/result`. The backend creates a hosted checkout session and answers with `pay_url`; the browser is sent there with `window.location.assign`. Payment itself happens on the hosted checkout, so this screen never touches a wallet.
-
-There is no notify-recipient field: the endpoint has no `notifyEmail` parameter.
+**Notify Recipient** sits above Send Payment: a Switch plus label, off by default. Turning it on shows an editable email, prefilled from the matched Team member or contact (Team Pay Now also passes `TeamMember.email`). Changing the recipient address refills the email. Send posts to `/v1/payroll/payments` (`useCreatePayrollPaymentMutation`) with the amount, the recipient, the destination `network` / `symbol` from `payoutNetworkToken`, the optional purpose (`memo` on the API), `success_url` = `{origin}/pay/result`, and when the switch is on a valid email, `notification: { email }`. Empty `slack` is omitted. An empty or invalid email while the switch is on blocks the request. The backend creates a hosted checkout session and answers with `pay_url`; the browser is sent there with `window.location.assign`. Payment itself happens on the hosted checkout, so this screen never touches a wallet.
 
 ### `/pay/form` — Payment by form
 
-Title **Payment**. Same `PaymentModeTabs` as Single Payment. The page wraps `PaymentByFormCard` in a 600px card. `PaymentByFormDialog` mounts the same card with `formId` + `formLocked` (Form dropdown disabled; details still load by id).
+Title **Payment**. Same `PaymentModeTabs` as Single Payment. The page wraps `PaymentByFormCard` in a 600px card. `PaymentByFormDialog` mounts the same card with `payable` + `formLocked` (Form dropdown disabled; the row is looked up from payables).
 
-The Form dropdown lists saved batch payouts (Payroll / Reimbursement / Bonus, name, USD total). List and detail are mock data (`paymentForms` in [mocks.md](mocks.md)) until that contract exists. Picking a row loads its payment rows, then the payer chooses the You Pay wallet, chain, and token (`YouPaySection` with `BATCH_BLOCKCHAINS`). That posts `POST /v1/payroll/batches` (`useCreatePayrollBatchQuery`) and fills You Pay / Est. Cost from `totalSourceAmount`. **Send Payment** signs and broadcasts like Payroll (`broadcastBatchPayout`). Empty CTA is **Select Category**.
+The Form dropdown lists `GET /v1/payroll/payables` (`organization_id` from session, `timezone` from `browserTimeZone()`). Types are `payroll` / `expense` / `bonus` (expense still shows as Reimbursement). Unknown types are dropped. An empty list still opens and shows **No forms**. Picking a row loads its `list` items, then the payer chooses the You Pay wallet, chain, and token (`YouPaySection` with `BATCH_BLOCKCHAINS`). That posts the matching pay endpoint (`usePayablePayQuery`) and fills You Pay / Est. Cost from `totalSourceAmount`. **Send Payment** signs and broadcasts like `/pay/batch` (`broadcastBatchPayout` + `consumed-batches`). An expired or already-consumed `batchId` toasts and POSTs pay again for a new quote. Empty CTA is **Select Category**. Every pay body includes `adjustments: [{ item_id, net_pay }]` for each item (saved Net Pay override, otherwise the payable `netPay`). `adjustments` is part of the quote query key so a Save re-quotes.
 
-There is no Notify Recipients control. After a form is selected, Total Valued shows a Details control that opens a drawer (right side from `768px` up, bottom sheet below). The drawer lists Total Value, recipient count, optional next pay-date, and each recipient (name, email, address, payout preference, amount, net pay). Edit in the header is visible and does nothing yet.
+**Notify Recipient** sits above Send Payment. Off by default. On, the right side shows `{n} Email` (`n` = item count). Clicking it opens a Notify Recipients drawer (right side from `768px` up, bottom sheet below): a master Switch, recipient name + email rows, and a checkbox per `item_id`. Rows start selected. Turning the card switch off, the drawer Switch off, or unchecking every row closes the drawer and turns Notify off. Selected ids go on the pay body as `notification: number[]` and are part of the quote query key. `/pay/batch` CSV does not collect Notify.
+
+After a form is selected, Total Valued shows a Details control that opens a drawer (right side from `768px` up, bottom sheet below). The drawer lists Total Value, recipient count, optional next pay-date, and each recipient (name, email, address, payout preference, amount, net pay). Total Valued on the card and in the drawer is the sum of effective net pays. Header **Edit** / **Save** (`size=sm`, `h-[30px] w-[84px]`): Edit turns only Net Pay into `InputNumber` (`AMOUNT_MAX_DECIMALS` = 6). Amount and the other columns stay read-only. Save runs `parsePositiveDecimal` on every row; empty or ≤0 toasts and stays in edit. A successful Save writes local overrides and exits edit. Closing the drawer or changing form drops an unsaved draft; saved overrides clear when the selected form changes. No separate Edit dialog.
 
 ### `/pay/result` — Payment Result
 
@@ -155,19 +157,19 @@ The pre-checkout quote / swap / broadcast path (`useSinglePayQuote`, `useSingleP
 
 Files: `src/views/payroll/`. API: [api.md](api.md) salaries endpoints.
 
-Dashboard for the Operations → Payroll nav item. Stats (`GET /v1/payroll/salaries/current`), a six-month total-payroll chart (`GET /v1/payroll/salaries/total-payout`), recent payouts with scroll-to-load (`GET /v1/payroll/salaries/recent`), Next Payroll (`GET /v1/payroll/salaries/next`), and Payroll History (`GET /v1/payroll/salaries/history`, paginated). Next Payroll rows show email after address. **View Details** on a history card opens a right-side drawer (Figma `2766:18971`) with `GET /v1/payroll/salaries/history/{execution_id}`. Each live block has its own loading state. An empty or failed next-payroll request shows the create-payroll CTA (Download Template, Import CSV, Add Payroll). **Add Payroll** / **Add a new Payroll** and **Edit** open a right-side drawer (`Add Payroll` / `Edit Payroll`) instead of `/pay/batch`. Set Pay Date offers First day of month, Last day of month, and Day of month. Day of month opens a 1–31 picker; choosing 1 or 31 still saves as `first_day` / `last_day`. **Import CSV** (Choose file or Google Docs) parses on this page and opens the Add Payroll drawer with the rows; **Save** posts `POST /v1/payroll/salaries/import` and stays on `/pay/payroll`. Edit drawer **Save** posts `POST /v1/payroll/salaries/update` (existing row ids, new rows without id, removed ids in `delete_ids`) and stays on `/pay/payroll`. Payroll History **Export CSV** calls `GET /v1/payroll/salaries/history/export` (`organization_id`, `timezone`) and is hidden on Next Payroll. **Pay Now** opens `PaymentByFormDialog` with `PAYROLL_PAY_NOW_FORM_ID` (`form-september-payroll`).
+Dashboard for the Operations → Payroll nav item. Stats (`GET /v1/payroll/salaries/current`), a six-month total-payroll chart (`GET /v1/payroll/salaries/total-payout`), recent payouts with scroll-to-load (`GET /v1/payroll/salaries/recent`), Next Payroll (`GET /v1/payroll/salaries/next`), and Payroll History (`GET /v1/payroll/salaries/history`, paginated). Next Payroll rows show email after address. **View Details** on a history card opens a right-side drawer (Figma `2766:18971`) with `GET /v1/payroll/salaries/history/{execution_id}`. Each live block has its own loading state. An empty or failed next-payroll request shows the create-payroll CTA (Download Template, Import CSV, Add Payroll). **Add Payroll** / **Add a new Payroll** and **Edit** open a right-side drawer (`Add Payroll` / `Edit Payroll`) instead of `/pay/batch`. Set Pay Date offers First day of month, Last day of month, and Day of month. Day of month opens a 1–31 picker; choosing 1 or 31 still saves as `first_day` / `last_day`. **Import CSV** (Choose file or Google Docs) parses on this page and opens the Add Payroll drawer with the rows; **Save** posts `POST /v1/payroll/salaries/import` and stays on `/pay/payroll`. Edit drawer **Save** posts `POST /v1/payroll/salaries/update` (existing row ids, new rows without id, removed ids in `delete_ids`) and stays on `/pay/payroll`. Payroll History **Export CSV** calls `GET /v1/payroll/salaries/history/export` (`organization_id`, `timezone`) and is hidden on Next Payroll. **Pay Now** opens `PaymentByFormDialog` with placeholder `{ type: "payroll", periodMonth: "2026-09" }`.
 
 ### `/pay/expense` — Expense
 
 Files: `src/views/expense/`. API: [api.md](api.md) expenses endpoints.
 
-Dashboard for the Operations → Expense nav item. Stats (`GET /v1/payroll/expenses/current`), a six-month total-expense chart (`GET /v1/payroll/expenses/total-payout`), recent payouts with scroll-to-load (`GET /v1/payroll/expenses/recent`), and Open expense (`GET /v1/payroll/expenses/open`) / Request Payments (`GET /v1/payroll/expenses/open/requests`, badge from `GET /v1/payroll/expenses/open/requests/count`) / Expense History (`GET /v1/payroll/expenses/history`, paginated) tabs. Each live block has its own loading state. An empty open-expense list shows the create-expense CTA (Download Template, Import CSV, Add Expense) and hides the tab toolbar. Request Payments hides the toolbar; an empty list shows "No payment requests". When Open expense has rows, or on Expense History, the tab toolbar shows **Import CSV** and **Add Expense**. **Import CSV** (Choose file or Google Docs) parses locally and opens the **Add Expense** drawer with the rows; **Add Expense** opens the same drawer empty. **Save** posts `POST /v1/payroll/expenses/import` (`title` plus items), then returns to the Open expense tab. History search and the date range are sent as `search` / `start_time` / `end_time`. **Export CSV** downloads the loaded history rows (there is no export route). **Pay Now** on an open or request row (not Paying) opens `PaymentByFormDialog` with `EXPENSE_PAY_NOW_FORM_ID` (`form-open-reimbursement`).
+Dashboard for the Operations → Expense nav item. Stats (`GET /v1/payroll/expenses/current`), a six-month total-expense chart (`GET /v1/payroll/expenses/total-payout`), recent payouts with scroll-to-load (`GET /v1/payroll/expenses/recent`), and Open expense (`GET /v1/payroll/expenses/open`) / Request Payments (`GET /v1/payroll/expenses/open/requests`, badge from `GET /v1/payroll/expenses/open/requests/count`) / Expense History (`GET /v1/payroll/expenses/history`, paginated) tabs. Each live block has its own loading state. An empty open-expense list shows the create-expense CTA (Download Template, Import CSV, Add Expense) and hides the tab toolbar. Request Payments hides the toolbar; an empty list shows "No payment requests". When Open expense has rows, or on Expense History, the tab toolbar shows **Import CSV** and **Add Expense**. **Import CSV** (Choose file or Google Docs) parses locally and opens the **Add Expense** drawer with the rows; **Add Expense** opens the same drawer empty. **Save** posts `POST /v1/payroll/expenses/import` (`title` plus items), then returns to the Open expense tab. History search and the date range are sent as `search` / `start_time` / `end_time`. **Export CSV** downloads the loaded history rows (there is no export route). **Pay Now** on an open or request row (not Paying) opens `PaymentByFormDialog` with placeholder `{ type: "expense", batchId: 1 }`.
 
 ### `/pay/bonus` — Bonus
 
 Files: `src/views/bonus/`. Mock: `src/mocks/bonus.ts`.
 
-Dashboard for the Operations → Bonus nav item. Stats (Total Bonus with token label, Members), a six-month total-bonus chart, recent payouts, and Bonuses to be paid / Bonus History tabs. Data is mocked until the backend contract exists. A header **Sample data** switch toggles the empty create-bonus CTA vs filled pending bonuses (individual + expandable group rows with Pay Now / Paying) and Bonus History (Figma `2672:7309`). **Add Bonus** opens a right-side drawer. Import CSV still goes to `/pay/batch`. **Pay Now** opens `PaymentByFormDialog` with `BONUS_PAY_NOW_FORM_ID` (`bonus-team-a` → `form-2026-bonus-team-a`, `bonus-team-b` → `form-2026-bonus-team-b`). Paying rows stay disabled.
+Dashboard for the Operations → Bonus nav item. Stats (Total Bonus with token label, Members), a six-month total-bonus chart, recent payouts, and Bonuses to be paid / Bonus History tabs. Data is mocked until the backend contract exists. A header **Sample data** switch toggles the empty create-bonus CTA vs filled pending bonuses (individual + expandable group rows with Pay Now / Paying) and Bonus History (Figma `2672:7309`). **Add Bonus** opens a right-side drawer. Import CSV still goes to `/pay/batch`. **Pay Now** opens `PaymentByFormDialog` with placeholder `{ type: "bonus", batchId }` (`bonus-team-a` → `1`, `bonus-team-b` → `2`). Paying rows stay disabled.
 
 ### `/pay/batch` — Create Payroll (Batch Payout)
 

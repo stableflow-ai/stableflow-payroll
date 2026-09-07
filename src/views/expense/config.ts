@@ -1,4 +1,5 @@
 import { EXPENSE_IMPORT_LIMITS } from "@/types/expense";
+import { PAYABLE_TYPE, type PayableKey } from "@/types/payable";
 
 export const EXPENSE_TAB = {
   Open: "open",
@@ -46,7 +47,10 @@ export const EXPENSE_ROW_ACTION = {
 export type ExpenseRowAction =
   (typeof EXPENSE_ROW_ACTION)[keyof typeof EXPENSE_ROW_ACTION];
 
-export const EXPENSE_PAY_NOW_FORM_ID = "form-open-reimbursement";
+export const EXPENSE_PAY_NOW_PAYABLE: PayableKey = {
+  type: PAYABLE_TYPE.Expense,
+  batchId: 1,
+};
 
 export const EXPENSE_CHART_LINE_COLOR = "#6284F5";
 export const EXPENSE_CHART_Y_MAX = 6_000;

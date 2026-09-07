@@ -1,5 +1,6 @@
 import { IconLoading } from "@/components/icons/loading";
 import { useExpenseOpenRequestsQuery } from "@/hooks/use-expense-api";
+import type { PayableKey } from "@/types/payable";
 import { formatAmount } from "@/utils";
 import { RequestsTable } from "./RequestsTable";
 
@@ -17,7 +18,7 @@ function queryErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
-export function RequestsPanel(props: { onPayNow: (formId: string) => void }) {
+export function RequestsPanel(props: { onPayNow: (payable: PayableKey) => void }) {
   const { onPayNow } = props;
   const requestsQuery = useExpenseOpenRequestsQuery();
   const list = requestsQuery.data ?? { total: "0", count: 0, rows: [] };

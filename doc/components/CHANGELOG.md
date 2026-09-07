@@ -4,6 +4,10 @@ Newest first. Add an entry whenever you add or change a component under `src/com
 
 Format: one `## YYYY-MM-DD` heading per day, one `- **ComponentName:** what changed` bullet per component.
 
+## 2026-09-07
+
+- **Dropdown:** Empty `options` renders `empty` in the panel (`"No options"` by default) instead of a blank list.
+
 ## 2026-09-03
 
 - **Drawer:** Mask fades in first, then the panel slides from its edge (`right` → left, `bottom` → up, and the reverse on close). Overlay stays mounted through the exit so the slide can finish. `panelClassName` sizes the positioned shell; right/left default width is on the shell, the Card is `w-full`.

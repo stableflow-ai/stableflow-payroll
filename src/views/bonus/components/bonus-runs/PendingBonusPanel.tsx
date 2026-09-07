@@ -1,6 +1,7 @@
 import { IconPlus } from "@/components/icons/plus";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_VARIANT } from "@/components/ui/button/config";
+import type { PayableKey } from "@/types/payable";
 import type { BonusPendingList } from "@/mocks/bonus";
 import { formatBonusTokenAmount } from "../../utils";
 import { PendingBonusTable } from "./PendingBonusTable";
@@ -8,7 +9,7 @@ import { PendingBonusTable } from "./PendingBonusTable";
 export function PendingBonusPanel(props: {
   list: BonusPendingList;
   onAddBonus: () => void;
-  onPayNow: (formId: string) => void;
+  onPayNow: (payable: PayableKey) => void;
 }) {
   const { list, onAddBonus, onPayNow } = props;
 

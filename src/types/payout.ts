@@ -153,6 +153,11 @@ export interface PayPaymentsResp {
  * session on our behalf, so the field names are the backend's snake_case.
  * `memo` is not in the Swagger contract yet; it is capped at 200 characters.
  */
+export interface PayrollPaymentNotification {
+  email?: string;
+  slack?: string;
+}
+
 export interface PayrollCreatePaymentParam {
   amount: string;
   /** 1Click blockchain code, e.g. `eth` / `base` / `near`. */
@@ -161,6 +166,21 @@ export interface PayrollCreatePaymentParam {
   symbol: string;
   memo?: string;
   success_url?: string;
+  notification?: PayrollPaymentNotification;
+}
+
+/** Builds `POST /payments` `notification`. Empty email/slack keys are omitted. */
+export function payrollPaymentNotification(input: {
+  email?: string;
+  slack?: string;
+}): PayrollPaymentNotification | undefined {
+  const email = input.email?.trim() ?? "";
+  const slack = input.slack?.trim() ?? "";
+  if (!email && !slack) return undefined;
+  return {
+    ...(email ? { email } : {}),
+    ...(slack ? { slack } : {}),
+  };
 }
 
 export interface PayrollPayment {

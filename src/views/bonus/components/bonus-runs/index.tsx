@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
+import type { PayableKey } from "@/types/payable";
 import type { BonusHistoryItem, BonusPendingList } from "@/mocks/bonus";
 import { BONUS_TAB, type BonusTab } from "../../config";
 import { CreateBonusEmpty } from "./CreateBonusEmpty";
@@ -35,7 +36,7 @@ export function BonusRunsCard(props: {
   pending: BonusPendingList | null;
   history: BonusHistoryItem[];
   onAddBonus: () => void;
-  onPayNow: (formId: string) => void;
+  onPayNow: (payable: PayableKey) => void;
 }) {
   const { tab, onTabChange, pending, history, onAddBonus, onPayNow } = props;
 

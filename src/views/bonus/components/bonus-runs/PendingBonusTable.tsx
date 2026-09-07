@@ -13,10 +13,11 @@ import {
   TableRow,
 } from "@/components/ui/table/Table";
 import { cn } from "@/lib/utils";
+import type { PayableKey } from "@/types/payable";
 import type { BonusPendingItem } from "@/mocks/bonus";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";
 import {
-  BONUS_PAY_NOW_FORM_ID,
+  BONUS_PAY_NOW_PAYABLE,
   BONUS_ROW_ACTION,
   PENDING_BONUS_TABLE_COLUMNS,
 } from "../../config";
@@ -24,7 +25,7 @@ import { formatBonusTokenAmount } from "../../utils";
 
 function ActionCell(props: {
   item: BonusPendingItem;
-  onPayNow: (formId: string) => void;
+  onPayNow: (payable: PayableKey) => void;
 }) {
   const { item, onPayNow } = props;
 
@@ -41,15 +42,14 @@ function ActionCell(props: {
     );
   }
 
-  const formId =
-    BONUS_PAY_NOW_FORM_ID[item.id as keyof typeof BONUS_PAY_NOW_FORM_ID];
+  const payable = BONUS_PAY_NOW_PAYABLE[item.id];
 
   return (
     <Button
       className="h-9 min-w-[113px] rounded-[10px] px-3 text-sm"
       onClick={() => {
-        if (!formId) return;
-        onPayNow(formId);
+        if (!payable) return;
+        onPayNow(payable);
       }}
     >
       <IconUp className="size-3.5 shrink-0" />
@@ -60,7 +60,7 @@ function ActionCell(props: {
 
 function BonusItemBlock(props: {
   item: BonusPendingItem;
-  onPayNow: (formId: string) => void;
+  onPayNow: (payable: PayableKey) => void;
 }) {
   const { item, onPayNow } = props;
   const isGroup = item.members.length > 1;
@@ -139,7 +139,7 @@ function BonusItemBlock(props: {
 
 export function PendingBonusTable(props: {
   items: BonusPendingItem[];
-  onPayNow: (formId: string) => void;
+  onPayNow: (payable: PayableKey) => void;
 }) {
   const { items, onPayNow } = props;
   return (

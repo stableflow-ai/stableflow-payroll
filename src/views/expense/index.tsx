@@ -10,6 +10,7 @@ import {
 import useToast from "@/hooks/use-toast";
 import { useAuthStore } from "@/stores/auth";
 import type { ExpenseDraftRow, ExpenseImportItem } from "@/types/expense";
+import type { PayableKey } from "@/types/payable";
 import { PaymentByFormDialog } from "@/views/pay/components/payment-form/PaymentByFormDialog";
 import { RecentPayoutsCard } from "./components/recent-payouts";
 import { ExpenseRunsCard } from "./components/expense-runs";
@@ -47,7 +48,7 @@ export function ExpenseView() {
   const totalPayout = useExpenseTotalPayoutQuery(
     EXPENSE_CHART_RANGE_PERIOD[chartRange]
   );
-  const [payingFormId, setPayingFormId] = useState<string | null>(null);
+  const [payingPayable, setPayingPayable] = useState<PayableKey | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerSeed, setDrawerSeed] = useState(0);
   const [importRows, setImportRows] = useState<ExpenseDraftRow[] | null>(null);
@@ -159,15 +160,15 @@ export function ExpenseView() {
             : null
         }
         requestCount={openRequestsCount.data?.count ?? 0}
-        onPayNow={(formId) => setPayingFormId(formId)}
+        onPayNow={(payable) => setPayingPayable(payable)}
         onAddExpense={() => openAddDrawer()}
         onImported={openAddDrawer}
         importBusy={importMutation.isPending}
       />
       <PaymentByFormDialog
-        open={Boolean(payingFormId)}
-        formId={payingFormId}
-        onClose={() => setPayingFormId(null)}
+        open={Boolean(payingPayable)}
+        payable={payingPayable}
+        onClose={() => setPayingPayable(null)}
       />
       <ExpenseFormDrawer
         key={`${drawerOpen ? "open" : "closed"}-${drawerSeed}`}

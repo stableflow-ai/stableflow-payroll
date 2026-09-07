@@ -180,7 +180,7 @@ export function TeamView() {
 
       <SinglePayoutDialog
         open={Boolean(paying)}
-        recipient={paying ? { name: paying.name, wallets: paying.wallets } : null}
+        recipient={paying ? { name: paying.name, wallets: paying.wallets, email: paying.email } : null}
         onClose={() => setPaying(null)}
       />
 

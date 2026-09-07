@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
-import type { PaymentFormCategory } from "@/hooks/use-payment-forms-api";
+import type { PayableType } from "@/types/payable";
 import { PAYMENT_FORM_CATEGORY_UI } from "./config";
 
 export function PaymentFormCategoryTag(props: {
-  category: PaymentFormCategory;
+  category: PayableType;
   className?: string;
 }) {
   const ui = PAYMENT_FORM_CATEGORY_UI[props.category];

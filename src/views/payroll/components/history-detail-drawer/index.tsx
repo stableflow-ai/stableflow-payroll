@@ -278,7 +278,7 @@ function HistoryDetailStatus({ row }: { row: PayrollHistoryDetailRow }) {
             <p className="font-montserrat text-sm font-medium text-[#606060]">
               {PAYROLL_HISTORY_DETAIL_FAILED_COPY}
             </p>
-            <Button className="h-9 w-[123px] rounded-[10px] text-sm">
+            <Button className="h-9 w-[140px] whitespace-nowrap rounded-[10px] text-sm">
               <IconUp className="size-3.5 shrink-0" />
               Pay Again
             </Button>
@@ -287,7 +287,7 @@ function HistoryDetailStatus({ row }: { row: PayrollHistoryDetailRow }) {
       >
         <span
           className={cn(
-            "inline-flex h-[26px] items-center gap-1 rounded-[15px] border border-[rgba(255,83,83,0.5)] bg-white px-2",
+            "cursor-pointer inline-flex h-[26px] items-center gap-1 rounded-[15px] border border-[rgba(255,83,83,0.5)] bg-white px-2",
             PAYROLL_HISTORY_DETAIL_FAILED_CLASS
           )}
         >

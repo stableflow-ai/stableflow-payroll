@@ -1,14 +1,19 @@
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button/Button";
-import { BUTTON_SIZE } from "@/components/ui/button/config";
 import { Drawer } from "@/components/ui/drawer/Drawer";
 import { DRAWER_SIDE } from "@/components/ui/drawer/config";
+import { InputNumber } from "@/components/ui/input-number/InputNumber";
 import { chainDisplayName } from "@/config/chains";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import type { PaymentFormDetail } from "@/hooks/use-payment-forms-api";
+import useToast from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/utils";
+import { effectiveNetPay, payableKeyId, type Payable } from "@/types/payable";
+import { AMOUNT_MAX_DECIMALS } from "../../config";
+import { parsePositiveDecimal } from "../../utils";
 import { PayoutRecipientCell } from "../payout-table/PayoutRecipientCell";
 import { PaymentFormCategoryTag } from "./PaymentFormCategoryTag";
+import { sumPayableNetPay } from "./utils";
 import {
   PAYMENT_FORM_DETAILS_CATEGORY_MUTED_CLASS,
   PAYMENT_FORM_DETAILS_COLUMNS,
@@ -22,57 +27,117 @@ const DETAILS_GRID =
 export function PaymentFormDetailsDrawer(props: {
   open: boolean;
   onClose: () => void;
-  detail: PaymentFormDetail | null;
+  detail: Payable | null;
+  netPayById: Record<number, string>;
+  onSaveNetPay: (next: Record<number, string>) => void;
 }) {
-  const { open, onClose, detail } = props;
+  const { open, onClose, detail, netPayById, onSaveNetPay } = props;
   const isDesktop = useMediaQuery(PAYMENT_FORM_DETAILS_DESKTOP_QUERY);
+  const toast = useToast();
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState<Record<number, string>>({});
+  const detailKey = detail ? payableKeyId(detail.key) : "";
+
+  useEffect(() => {
+    setEditing(false);
+    setDraft({});
+  }, [open, detailKey]);
+
+  function handleClose() {
+    setEditing(false);
+    setDraft({});
+    onClose();
+  }
+
+  function handleHeaderAction() {
+    if (!detail) return;
+    if (!editing) {
+      const next: Record<number, string> = {};
+      for (const item of detail.items) {
+        next[item.id] = effectiveNetPay(item, netPayById);
+      }
+      setDraft(next);
+      setEditing(true);
+      return;
+    }
+    const next: Record<number, string> = {};
+    for (const item of detail.items) {
+      const parsed = parsePositiveDecimal(draft[item.id] ?? "", AMOUNT_MAX_DECIMALS);
+      if (!parsed) {
+        toast.fail({ title: "Enter a valid net pay" });
+        return;
+      }
+      next[item.id] = parsed;
+    }
+    onSaveNetPay(next);
+    setEditing(false);
+    setDraft({});
+  }
 
   return (
     <Drawer
       open={open}
-      onClose={onClose}
+      onClose={handleClose}
       side={isDesktop ? DRAWER_SIDE.Right : DRAWER_SIDE.Bottom}
       title={
         detail ? (
           <>
             <PaymentFormCategoryTag
-              category={detail.category}
+              category={detail.type}
               className={PAYMENT_FORM_DETAILS_CATEGORY_MUTED_CLASS}
             />
-            <span className="min-w-0 truncate">{detail.name}</span>
+            <span className="min-w-0 truncate">{detail.title}</span>
           </>
         ) : null
       }
       titleClassName="flex min-w-0 flex-1 items-center gap-2"
       headerAction={
-        <div className="ml-auto">
-          <Button
-            size={BUTTON_SIZE.Sm}
-            className="h-[30px] w-[84px] rounded-[8px] px-0 text-sm font-semibold"
-          >
-            Edit
-          </Button>
-        </div>
+        detail ? (
+          <div className="ml-auto">
+            <Button
+              size="sm"
+              className="h-[30px] w-[84px] rounded-[8px] text-sm"
+              onClick={handleHeaderAction}
+            >
+              {editing ? "Save" : "Edit"}
+            </Button>
+          </div>
+        ) : null
       }
       panelClassName={isDesktop ? "w-[min(100%,820px)]" : undefined}
       cardClassName={cn("gap-6 p-10", !isDesktop && "w-full max-h-[90vh] rounded-b-none")}
     >
-      {detail ? <PaymentFormDetailsBody detail={detail} /> : null}
+      {detail ? (
+        <PaymentFormDetailsBody
+          detail={detail}
+          netPayById={netPayById}
+          editing={editing}
+          draft={draft}
+          onDraftChange={(id, value) => setDraft((prev) => ({ ...prev, [id]: value }))}
+        />
+      ) : null}
     </Drawer>
   );
 }
 
-function PaymentFormDetailsBody(props: { detail: PaymentFormDetail }) {
-  const { detail } = props;
-  const recipientCount = String(detail.recipients.length);
-  const nextPayDate = detail.nextPayDate || "-";
+function PaymentFormDetailsBody(props: {
+  detail: Payable;
+  netPayById: Record<number, string>;
+  editing: boolean;
+  draft: Record<number, string>;
+  onDraftChange: (id: number, value: string) => void;
+}) {
+  const { detail, netPayById, editing, draft, onDraftChange } = props;
+  const recipientCount = String(detail.items.length);
+  const nextPayDate = detail.paymentDate || "-";
+  const totalValued = formatAmount(sumPayableNetPay(detail, netPayById), { maxDecimals: 6 });
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-6">
       <div className="grid grid-cols-3 gap-4 rounded-[12px] border border-white bg-[#fdfdfd] px-8 py-4 shadow-[0_0_20px_0_rgba(0,0,0,0.06)]">
         <SummaryCell
           label={PAYMENT_FORM_DETAILS_SUMMARY.totalValue}
-          value={formatAmount(detail.totalValued, { maxDecimals: 0 })}
+          value={totalValued}
         />
         <SummaryCell
           label={PAYMENT_FORM_DETAILS_SUMMARY.recipients}
@@ -96,47 +161,45 @@ function PaymentFormDetailsBody(props: { detail: PaymentFormDetail }) {
           ))}
         </div>
         <div className="flex flex-col gap-2.5">
-          {detail.recipients.map((row, index) => (
-            <div
-              key={`${row.address}-${row.amount}-${index}`}
-              className={cn(DETAILS_GRID, "h-14 rounded-[12px] bg-[#f6f6f6] px-4")}
-            >
-              <div className="min-w-0">
-                <p className="truncate font-montserrat text-sm font-medium text-black">
-                  {row.name}
-                </p>
-                <p className="truncate font-montserrat text-xs font-medium text-[#aaa]">
-                  {row.email}
-                </p>
-              </div>
-              <div className="min-w-0 font-montserrat text-sm font-medium text-black">
-                <PayoutRecipientCell address={row.address} />
-              </div>
-              <p className="truncate font-montserrat text-sm font-medium text-black">
-                {row.symbol} · {chainDisplayName(row.network)}
-              </p>
-              <p className="font-montserrat text-sm font-medium text-black">
-                {formatAmount(row.amount, { prefix: "", maxDecimals: 0 })}
-              </p>
-              <div className="min-w-0">
-                <p className="font-montserrat text-sm font-medium text-black">
-                  {formatAmount(row.netPay, { prefix: "", maxDecimals: 0 })}
-                </p>
-                {row.adjustment ? (
-                  <p
-                    className={cn(
-                      "font-montserrat text-xs font-medium",
-                      row.adjustment.startsWith("-")
-                        ? "text-[#ff5353]"
-                        : "text-[#94ba00]",
-                    )}
-                  >
-                    {row.adjustment}
+          {detail.items.map((row) => {
+            const netPay = effectiveNetPay(row, netPayById);
+            return (
+              <div
+                key={row.id}
+                className={cn(DETAILS_GRID, "h-14 rounded-[12px] bg-[#f6f6f6] px-4")}
+              >
+                <div className="min-w-0">
+                  <p className="truncate font-montserrat text-sm font-medium text-black">
+                    {row.name}
                   </p>
-                ) : null}
+                  <p className="truncate font-montserrat text-xs font-medium text-[#aaa]">
+                    {row.email}
+                  </p>
+                </div>
+                <div className="min-w-0 font-montserrat text-sm font-medium text-black">
+                  <PayoutRecipientCell address={row.address} />
+                </div>
+                <p className="truncate font-montserrat text-sm font-medium text-black">
+                  {row.symbol} · {chainDisplayName(row.network)}
+                </p>
+                <p className="font-montserrat text-sm font-medium text-black">
+                  {formatAmount(row.amount, { prefix: "", maxDecimals: 0 })}
+                </p>
+                {editing ? (
+                  <InputNumber
+                    value={draft[row.id] ?? ""}
+                    decimals={AMOUNT_MAX_DECIMALS}
+                    onNumberChange={(value) => onDraftChange(row.id, value)}
+                    className="h-9 min-w-0 w-full rounded-[6px] border border-[#e3e3e3] bg-white px-2 font-montserrat text-sm font-medium text-black outline-none"
+                  />
+                ) : (
+                  <p className="font-montserrat text-sm font-medium text-black">
+                    {formatAmount(netPay, { prefix: "", maxDecimals: 6 })}
+                  </p>
+                )}
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
     </div>

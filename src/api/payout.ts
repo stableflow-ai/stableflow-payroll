@@ -289,6 +289,10 @@ function hasBroadcastableBatchTx(tx: PayBatchSwapTransaction): boolean {
   return false;
 }
 
+export function isPayrollBatchBroadcastable(batch: PayrollBatch): boolean {
+  return hasBroadcastableBatchTx(batch.transaction);
+}
+
 export function mapPayrollBatchPayment(raw: unknown): PayrollBatchPayment {
   const row = asRecord(raw) ?? {};
   return {
@@ -327,7 +331,7 @@ export async function createPayrollBatch(body: PayrollCreateBatchParam): Promise
   const batch = mapPayrollBatch(
     await http<unknown>(`${PAY_API_PREFIX}/batches`, { method: "POST", body }),
   );
-  if (!hasBroadcastableBatchTx(batch.transaction)) {
+  if (!isPayrollBatchBroadcastable(batch)) {
     throw new ApiError("Batch transaction is missing from the response", 502, "NO_BATCH_TX");
   }
   return batch;

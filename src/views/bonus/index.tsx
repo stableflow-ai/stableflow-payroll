@@ -5,6 +5,7 @@ import { IconLoading } from "@/components/icons/loading";
 import { Switch } from "@/components/ui/switch/Switch";
 import type { PayLayoutOutletContext } from "@/layouts/PayLayout";
 import { PaymentByFormDialog } from "@/views/pay/components/payment-form/PaymentByFormDialog";
+import type { PayableKey } from "@/types/payable";
 import type { BonusPendingList } from "@/mocks/bonus";
 import { BonusFormDrawer } from "./components/bonus-form-drawer";
 import { BonusRunsCard } from "./components/bonus-runs";
@@ -34,7 +35,7 @@ export function BonusView() {
   );
   const [drawerMode, setDrawerMode] = useState<BonusDrawerMode | null>(null);
   const [pendingOverride, setPendingOverride] = useState<BonusPendingList | null>(null);
-  const [payingFormId, setPayingFormId] = useState<string | null>(null);
+  const [payingPayable, setPayingPayable] = useState<PayableKey | null>(null);
 
   useEffect(() => {
     setHeaderExtra(
@@ -48,7 +49,7 @@ export function BonusView() {
             );
             setPendingOverride(null);
             setDrawerMode(null);
-            setPayingFormId(null);
+            setPayingPayable(null);
           }}
           aria-label="Sample data"
         />
@@ -106,12 +107,12 @@ export function BonusView() {
         pending={pending}
         history={data.history}
         onAddBonus={() => setDrawerMode(BONUS_DRAWER_MODE.Add)}
-        onPayNow={(formId) => setPayingFormId(formId)}
+        onPayNow={(payable) => setPayingPayable(payable)}
       />
       <PaymentByFormDialog
-        open={Boolean(payingFormId)}
-        formId={payingFormId}
-        onClose={() => setPayingFormId(null)}
+        open={Boolean(payingPayable)}
+        payable={payingPayable}
+        onClose={() => setPayingPayable(null)}
       />
       <BonusFormDrawer
         key={drawerMode ?? "closed"}

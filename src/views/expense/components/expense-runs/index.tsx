@@ -6,6 +6,7 @@ import { BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
 import type { ExpenseDraftRow, ExpenseOpenList } from "@/types/expense";
+import type { PayableKey } from "@/types/payable";
 import { EXPENSE_TAB, type ExpenseTab } from "../../config";
 import { ExpenseImportCsvButton } from "./ExpenseImportCsvButton";
 import { HistoryPanel } from "./HistoryPanel";
@@ -48,7 +49,7 @@ export function ExpenseRunsCard(props: {
   openLoading?: boolean;
   openError?: string | null;
   requestCount?: number;
-  onPayNow: (formId: string) => void;
+  onPayNow: (payable: PayableKey) => void;
   onAddExpense: () => void;
   onImported: (rows: ExpenseDraftRow[]) => void;
   importBusy?: boolean;

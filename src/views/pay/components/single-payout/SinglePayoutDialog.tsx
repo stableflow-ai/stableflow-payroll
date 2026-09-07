@@ -6,6 +6,7 @@ import { SinglePayoutCard } from "./SinglePayoutCard";
 export type SinglePayoutRecipient = {
   name: string;
   wallets: TeamMemberWallets;
+  email?: string | null;
 };
 
 export function SinglePayoutDialog(props: {
@@ -28,6 +29,7 @@ export function SinglePayoutDialog(props: {
           initialRecipient={{
             name: recipient.name,
             address: memberDisplayWallet(recipient) ?? "",
+            email: recipient.email,
           }}
           memberWallets={recipient.wallets}
         />
