@@ -41,9 +41,21 @@ function isSameUser(left: AuthUser, right: AuthUser): boolean {
 }
 
 function mergeProfileUser(profile: AuthUser, local: AuthUser | null): AuthUser {
-  if (profile.organization !== undefined) return profile;
-  if (MOCK_ENABLED.organization && local?.organization) {
-    return { ...profile, organization: local.organization };
+  if (profile.organization === undefined) {
+    if (MOCK_ENABLED.organization && local?.organization) {
+      return { ...profile, organization: local.organization };
+    }
+    return profile;
+  }
+  const profileOrg = profile.organization;
+  const localOrg = local?.organization;
+  if (
+    profileOrg &&
+    localOrg?.logo &&
+    !profileOrg.logo &&
+    profileOrg.id === localOrg.id
+  ) {
+    return { ...profile, organization: { ...profileOrg, logo: localOrg.logo } };
   }
   return profile;
 }

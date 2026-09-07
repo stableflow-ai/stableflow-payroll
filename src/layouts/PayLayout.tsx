@@ -17,7 +17,6 @@ import { PaymentModeTabs } from "@/views/pay/components/PaymentModeTabs";
 import { RequestPaymentTabs } from "@/views/pay/components/request/RequestPaymentTabs";
 import { PayNav, PaySidebar } from "@/views/pay/components/PaySidebar";
 import {
-  MOCK_ORGANIZATION_NAME,
   isPayModePath,
   isRequestPaymentPath,
   payTitleForPath,
@@ -40,7 +39,7 @@ export function PayLayout() {
   const showModeTabs = isPayModePath(pathname) && !isUser(user);
   const showRequestTabs = isRequestPaymentPath(pathname);
   const closeMenu = () => setMenuOpen(false);
-  const orgName = organizationName(user) ?? MOCK_ORGANIZATION_NAME;
+  const orgName = organizationName(user) ?? "";
 
   return (
     <div className="flex flex-col lg:min-h-svh lg:flex-row">

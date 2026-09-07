@@ -7,7 +7,6 @@ import { organizationName, userRole } from "@/lib/auth-role";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import {
-  MOCK_ORGANIZATION_NAME,
   isPayNavGroup,
   isPayNavLeafActive,
   payNavItemsForRole,
@@ -108,7 +107,7 @@ export function PayNav(props: { onNavigate?: () => void; className?: string }) {
 
 export function PaySidebar() {
   const user = useAuthStore((state) => state.user);
-  const orgName = organizationName(user) ?? MOCK_ORGANIZATION_NAME;
+  const orgName = organizationName(user) ?? "";
 
   return (
     <aside className="hidden shrink-0 flex-col lg:sticky lg:top-0 lg:flex lg:h-svh lg:w-[220px] lg:overflow-y-auto lg:border-r lg:border-black/10">

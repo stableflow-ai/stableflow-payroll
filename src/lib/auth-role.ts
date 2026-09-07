@@ -13,6 +13,11 @@ export function organizationName(user: AuthUser | null | undefined): string | nu
   return name || null;
 }
 
+export function organizationLogo(user: AuthUser | null | undefined): string | null {
+  const logo = user?.organization?.logo?.trim();
+  return logo || null;
+}
+
 export function hasOrganization(user: AuthUser | null | undefined): boolean {
   return Boolean(organizationName(user));
 }
