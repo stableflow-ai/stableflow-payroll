@@ -8,6 +8,7 @@ import { useAuthStore } from "@/stores/auth";
 import { formatAmount } from "@/utils";
 import type { VolumePeriod } from "@/types/payout";
 import { OpenRequestsCard } from "./OpenRequestsCard";
+import { EmployeeOverviewSkeleton } from "./OverviewSkeleton";
 import { PaymentVolumeCard } from "./PaymentVolumeCard";
 import { RecentPaymentsTable } from "./RecentPaymentsTable";
 import { DEFAULT_OVERVIEW_VOLUME_PERIOD } from "./config";
@@ -76,7 +77,7 @@ export function EmployeeOverviewView() {
   const query = useEmployeeOverviewQuery();
 
   if (query.isPending) {
-    return <p className="font-montserrat text-sm text-[#909090]">Loading…</p>;
+    return <EmployeeOverviewSkeleton />;
   }
 
   if (query.isError) {

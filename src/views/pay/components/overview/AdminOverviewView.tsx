@@ -9,6 +9,7 @@ import { useAuthStore } from "@/stores/auth";
 import type { VolumePeriod } from "@/types/payout";
 import { HighPriorityCard } from "./HighPriorityCard";
 import { OrgSummaryCard } from "./OrgSummaryCard";
+import { AdminOverviewSkeleton } from "./OverviewSkeleton";
 import { PaymentsCard } from "./PaymentsCard";
 import { CHART_METRIC, DEFAULT_ADMIN_OVERVIEW_VOLUME_PERIOD, type ChartMetric } from "./config";
 import { adminChartPoints, highPriorityDisplayItems } from "./utils";
@@ -37,7 +38,7 @@ export function AdminOverviewView() {
   }
 
   if (overviewQuery.isPending) {
-    return <p className="font-montserrat text-sm text-[#909090]">Loading…</p>;
+    return <AdminOverviewSkeleton />;
   }
 
   if (overviewQuery.isError) {
