@@ -24,7 +24,6 @@ import {
 } from "@/api/auth";
 import { queryKeys } from "@/api/query-keys";
 import { ApiError } from "@/lib/api-error";
-import { MOCK_ENABLED } from "@/mocks/config";
 import { useAuthStore } from "@/stores/auth";
 import type { AuthUser } from "@/types/auth";
 
@@ -41,12 +40,6 @@ function isSameUser(left: AuthUser, right: AuthUser): boolean {
 }
 
 function mergeProfileUser(profile: AuthUser, local: AuthUser | null): AuthUser {
-  if (profile.organization === undefined) {
-    if (MOCK_ENABLED.organization && local?.organization) {
-      return { ...profile, organization: local.organization };
-    }
-    return profile;
-  }
   const profileOrg = profile.organization;
   const localOrg = local?.organization;
   if (

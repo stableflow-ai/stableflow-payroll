@@ -1,3 +1,4 @@
+import { ORGANIZATION_HIGH_PRIORITY_CATEGORY } from "@/types/organization";
 import { VOLUME_PERIOD, type VolumePeriod } from "@/types/payout";
 
 export const DEFAULT_OVERVIEW_VOLUME_PERIOD = VOLUME_PERIOD.Monthly;
@@ -41,6 +42,12 @@ export const OVERVIEW_VOLUME_BUCKETS = {
   [VOLUME_PERIOD.Daily]: 7,
   [VOLUME_PERIOD.Weekly]: 6,
   [VOLUME_PERIOD.Monthly]: 6,
+} as const;
+
+export const HIGH_PRIORITY_PATH = {
+  [ORGANIZATION_HIGH_PRIORITY_CATEGORY.Payroll]: "/pay/payroll",
+  [ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest]: "/pay/expense",
+  [ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed]: "/pay/history",
 } as const;
 
 export const RECENT_PAYMENTS_COLUMNS =

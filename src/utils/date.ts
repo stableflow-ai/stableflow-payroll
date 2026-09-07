@@ -70,3 +70,12 @@ export function formatTimeAgo(value: Date | string | number, now: Date = new Dat
 function plural(count: number, one: string, many: string) {
   return `${count} ${count === 1 ? one : many}`;
 }
+
+export function browserTimeZone(): string {
+  try {
+    const zone = Intl.DateTimeFormat().resolvedOptions().timeZone?.trim();
+    return zone || "UTC";
+  } catch {
+    return "UTC";
+  }
+}

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { AUTH_USER_ROLE, type AuthUser } from "@/types/auth";
-import { hasOrganization, isUser, organizationLogo, organizationName, userRole } from "./auth-role";
+import { hasOrganization, isUser, organizationId, organizationLogo, organizationName, userRole } from "./auth-role";
 
 function user(role: AuthUser["role"], organization?: AuthUser["organization"]): AuthUser {
   return {
@@ -36,6 +36,12 @@ describe("hasOrganization", () => {
     expect(organizationName(user(AUTH_USER_ROLE.Admin, { id: 1, name: " Eureka Labs " }))).toBe(
       "Eureka Labs",
     );
+  });
+
+  it("returns a finite id including zero", () => {
+    expect(organizationId(user(AUTH_USER_ROLE.Admin))).toBeNull();
+    expect(organizationId(user(AUTH_USER_ROLE.Admin, { id: 0, name: "Eureka Labs" }))).toBe(0);
+    expect(organizationId(user(AUTH_USER_ROLE.Admin, { id: 9, name: "Eureka Labs" }))).toBe(9);
   });
 
   it("returns a trimmed logo URL when present", () => {

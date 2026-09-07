@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DATE_FORMAT, formatDate, formatTimeAgo } from "./date";
+import { DATE_FORMAT, browserTimeZone, formatDate, formatTimeAgo } from "./date";
 
 describe("formatDate", () => {
   const iso = "2026-08-01T03:56:00.000Z";
@@ -39,5 +39,11 @@ describe("formatTimeAgo", () => {
     expect(formatTimeAgo("2026-08-07T12:00:00.000Z", now)).toBe("2 weeks");
     expect(formatTimeAgo("2026-06-21T12:00:00.000Z", now)).toBe("2 months");
     expect(formatTimeAgo("2024-08-21T12:00:00.000Z", now)).toBe("2 years");
+  });
+});
+
+describe("browserTimeZone", () => {
+  it("returns a non-empty IANA timezone", () => {
+    expect(browserTimeZone().length).toBeGreaterThan(0);
   });
 });

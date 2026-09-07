@@ -18,6 +18,11 @@ export function organizationLogo(user: AuthUser | null | undefined): string | nu
   return logo || null;
 }
 
+export function organizationId(user: AuthUser | null | undefined): number | null {
+  const id = user?.organization?.id;
+  return typeof id === "number" && Number.isFinite(id) ? id : null;
+}
+
 export function hasOrganization(user: AuthUser | null | undefined): boolean {
   return Boolean(organizationName(user));
 }

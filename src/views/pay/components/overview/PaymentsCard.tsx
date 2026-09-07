@@ -15,7 +15,7 @@ import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/utils";
 import type { VolumePeriod } from "@/types/payout";
-import type { AdminOverviewChartPoint } from "@/hooks/use-admin-overview-api";
+import type { OrganizationPayoutPoint } from "@/types/organization";
 import {
   ADMIN_CHART_PLOT_RIGHT_MARGIN,
   ADMIN_CHART_Y_AXIS_WIDTH,
@@ -56,7 +56,7 @@ function ChartXTick(props: {
 
 function PaymentsTooltip(props: {
   active?: boolean;
-  payload?: ReadonlyArray<{ payload?: AdminOverviewChartPoint }>;
+  payload?: ReadonlyArray<{ payload?: OrganizationPayoutPoint }>;
 }) {
   const point = props.payload?.[0]?.payload;
   if (!props.active || !point) return null;
@@ -95,7 +95,7 @@ export function PaymentsCard(props: {
   onRangeChange: (range: VolumePeriod) => void;
   metric: ChartMetric;
   onMetricChange: (metric: ChartMetric) => void;
-  points: AdminOverviewChartPoint[];
+  points: OrganizationPayoutPoint[];
 }) {
   const {
     totalPayment,

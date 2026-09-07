@@ -1,32 +1,59 @@
-/**
- * TODO(api): mock data until the admin overview contract exists.
- * Replace with:
- *   1. types in src/types/<domain>.ts
- *   2. a function in src/api/<domain>.ts
- *   3. a key in src/api/query-keys.ts
- *   4. queryFn -> the real api function
- *   5. delete src/mocks/admin-overview.ts and its MOCK_ENABLED entry
- */
 import { useQuery } from "@tanstack/react-query";
-import { MOCK_ENABLED } from "@/mocks/config";
-import { getAdminOverview } from "@/mocks/admin-overview";
+import {
+  getOrganizationHighPriority,
+  getOrganizationOverview,
+  getOrganizationPayout,
+} from "@/api/organization";
+import { queryKeys } from "@/api/query-keys";
+import { organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
+import type { VolumePeriod } from "@/types/payout";
+import { browserTimeZone } from "@/utils";
 
-export type {
-  AdminHighPriorityItem,
-  AdminHighPriorityKind,
-  AdminOverview,
-  AdminOverviewChartPoint,
-} from "@/mocks/admin-overview";
-export { ADMIN_HIGH_PRIORITY_KIND } from "@/mocks/admin-overview";
-
-const ADMIN_OVERVIEW_KEY = ["admin-overview"] as const;
-
-export function useAdminOverviewQuery() {
+function useOrganizationScope() {
   const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
+  const orgId = organizationId(user);
+  return {
+    orgId,
+    enabled: Boolean(token) && orgId !== null,
+  };
+}
+
+export function useOrganizationOverviewQuery() {
+  const { orgId, enabled } = useOrganizationScope();
   return useQuery({
-    queryKey: ADMIN_OVERVIEW_KEY,
-    queryFn: () => getAdminOverview(),
-    enabled: Boolean(token) && MOCK_ENABLED.adminOverview,
+    queryKey: queryKeys.organization.overview(orgId ?? -1),
+    queryFn: () => getOrganizationOverview(orgId!),
+    enabled,
+  });
+}
+
+export function useOrganizationPayoutQuery(period: VolumePeriod) {
+  const { orgId, enabled } = useOrganizationScope();
+  const timezone = browserTimeZone();
+  return useQuery({
+    queryKey: queryKeys.organization.payout(orgId ?? -1, period, timezone),
+    queryFn: () =>
+      getOrganizationPayout({
+        organizationId: orgId!,
+        period,
+        timezone,
+      }),
+    enabled,
+  });
+}
+
+export function useOrganizationHighPriorityQuery() {
+  const { orgId, enabled } = useOrganizationScope();
+  const timezone = browserTimeZone();
+  return useQuery({
+    queryKey: queryKeys.organization.highPriority(orgId ?? -1, timezone),
+    queryFn: () =>
+      getOrganizationHighPriority({
+        organizationId: orgId!,
+        timezone,
+      }),
+    enabled,
   });
 }

@@ -1,12 +1,14 @@
 import { describe, expect, it } from "vitest";
+import { ORGANIZATION_HIGH_PRIORITY_CATEGORY } from "@/types/organization";
 import { VOLUME_PERIOD } from "@/types/payout";
-import { CHART_METRIC } from "./config";
+import { CHART_METRIC, HIGH_PRIORITY_PATH } from "./config";
 import {
   adminChartPoints,
   emptyAdminChartBuckets,
   emptyVolumeBuckets,
   formatAdminChartAxis,
   greetingName,
+  highPriorityDisplayItems,
   volumeChartPoints,
 } from "./utils";
 
@@ -41,6 +43,40 @@ describe("adminChartPoints", () => {
     expect(empty).toHaveLength(7);
     expect(empty.every((point) => point.volume === 0 && point.transaction === 0)).toBe(true);
     expect(adminChartPoints(VOLUME_PERIOD.Daily, [], now)).toEqual(empty);
+  });
+});
+
+describe("highPriorityDisplayItems", () => {
+  it("maps category copy and routes", () => {
+    expect(
+      highPriorityDisplayItems([
+        { category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.Payroll, count: 3, month: "September" },
+        { category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest, count: 2, month: "August" },
+        { category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed, count: 4, month: "July" },
+      ]),
+    ).toEqual([
+      {
+        id: "hp-payroll-0",
+        kind: ORGANIZATION_HIGH_PRIORITY_CATEGORY.Payroll,
+        title: "September payroll",
+        subtitle: "3 items",
+        to: HIGH_PRIORITY_PATH[ORGANIZATION_HIGH_PRIORITY_CATEGORY.Payroll],
+      },
+      {
+        id: "hp-paymentRequest-1",
+        kind: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest,
+        title: "2 Payment Requests",
+        subtitle: "August",
+        to: HIGH_PRIORITY_PATH[ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest],
+      },
+      {
+        id: "hp-payFailed-2",
+        kind: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed,
+        title: "Transaction Failed",
+        subtitle: "July · 4 failed",
+        to: HIGH_PRIORITY_PATH[ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed],
+      },
+    ]);
   });
 });
 

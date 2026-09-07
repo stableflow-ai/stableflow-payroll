@@ -2,9 +2,9 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_SIZE } from "@/components/ui/button/config";
 import { Card } from "@/components/ui/card/Card";
-import { readStoredOrganization, useUpdateOrganizationMutation } from "@/hooks/use-organization-api";
+import { useOrganizationQuery, useUpdateOrganizationMutation } from "@/hooks/use-organization-api";
 import useToast from "@/hooks/use-toast";
-import { organizationName } from "@/lib/auth-role";
+import { organizationLogo, organizationName } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { createOrganizationFormError, LOGO_URL_MAX_LENGTH, ORGANIZATION_NAME_MAX_LENGTH } from "@/views/auth/config";
 import { TeamActionButtons } from "./TeamActionButtons";
@@ -19,14 +19,16 @@ export function OrganizationCard(props: {
   const { onAddMember, onInvite } = props;
   const toast = useToast();
   const user = useAuthStore((state) => state.user);
+  const orgQuery = useOrganizationQuery();
   const updateMutation = useUpdateOrganizationMutation();
-  const stored = readStoredOrganization();
-  const [name, setName] = useState(organizationName(user) ?? stored?.name ?? "");
-  const [logoUrl, setLogoUrl] = useState(stored?.logoUrl ?? "");
+  const [name, setName] = useState(organizationName(user) ?? "");
+  const [logoUrl, setLogoUrl] = useState(organizationLogo(user) ?? "");
 
   useEffect(() => {
-    setName(organizationName(user) ?? stored?.name ?? "");
-  }, [stored?.name, user]);
+    if (!orgQuery.data) return;
+    setName(orgQuery.data.name);
+    setLogoUrl(orgQuery.data.logo ?? "");
+  }, [orgQuery.data]);
 
   async function handleSave() {
     const error = createOrganizationFormError(name, logoUrl);
@@ -34,10 +36,11 @@ export function OrganizationCard(props: {
       toast.fail({ title: error });
       return;
     }
+    const logo = logoUrl.trim();
     try {
       await updateMutation.mutateAsync({
         name: name.trim(),
-        logoUrl: logoUrl.trim() || undefined,
+        ...(logo ? { logo } : {}),
       });
       toast.success({ title: "Organization saved" });
     } catch (cause) {

@@ -1,7 +1,11 @@
 import { format, subDays, subMonths, subWeeks } from "date-fns";
 import { formatAmount } from "@/utils";
+import {
+  ORGANIZATION_HIGH_PRIORITY_CATEGORY,
+  type OrganizationHighPriorityItem,
+  type OrganizationPayoutPoint,
+} from "@/types/organization";
 import { VOLUME_PERIOD, type VolumePeriod } from "@/types/payout";
-import type { AdminOverviewChartPoint } from "@/hooks/use-admin-overview-api";
 import type { EmployeeOverviewVolumePoint } from "@/hooks/use-employee-overview-api";
 import {
   ADMIN_CHART_PLOT_RIGHT_MARGIN,
@@ -9,6 +13,7 @@ import {
   ADMIN_CHART_X_TICK_GAP_PX,
   ADMIN_CHART_Y_AXIS_WIDTH,
   CHART_METRIC,
+  HIGH_PRIORITY_PATH,
   OVERVIEW_VOLUME_BUCKETS,
   type ChartMetric,
 } from "./config";
@@ -56,10 +61,52 @@ export function formatVolumeAxis(value: number): string {
   return `$${value}`;
 }
 
+export type AdminHighPriorityItem = {
+  id: string;
+  kind: OrganizationHighPriorityItem["category"];
+  title: string;
+  subtitle: string;
+  to: string;
+};
+
+export function highPriorityDisplayItems(
+  items: OrganizationHighPriorityItem[],
+): AdminHighPriorityItem[] {
+  return items.map((item, index) => {
+    const month = item.month;
+    const count = item.count;
+    if (item.category === ORGANIZATION_HIGH_PRIORITY_CATEGORY.Payroll) {
+      return {
+        id: `hp-${item.category}-${index}`,
+        kind: item.category,
+        title: `${month} payroll`,
+        subtitle: `${count} items`,
+        to: HIGH_PRIORITY_PATH[item.category],
+      };
+    }
+    if (item.category === ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest) {
+      return {
+        id: `hp-${item.category}-${index}`,
+        kind: item.category,
+        title: `${count} Payment Requests`,
+        subtitle: month,
+        to: HIGH_PRIORITY_PATH[item.category],
+      };
+    }
+    return {
+      id: `hp-${item.category}-${index}`,
+      kind: item.category,
+      title: "Transaction Failed",
+      subtitle: `${month} · ${count} failed`,
+      to: HIGH_PRIORITY_PATH[item.category],
+    };
+  });
+}
+
 export function emptyAdminChartBuckets(
   period: VolumePeriod,
   now: Date = new Date(),
-): AdminOverviewChartPoint[] {
+): OrganizationPayoutPoint[] {
   const count = OVERVIEW_VOLUME_BUCKETS[period];
   return Array.from({ length: count }, (_, index) => {
     const offset = count - 1 - index;
@@ -76,9 +123,9 @@ export function emptyAdminChartBuckets(
 
 export function adminChartPoints(
   period: VolumePeriod,
-  series: AdminOverviewChartPoint[] | undefined,
+  series: OrganizationPayoutPoint[] | undefined,
   now: Date = new Date(),
-): AdminOverviewChartPoint[] {
+): OrganizationPayoutPoint[] {
   if (series && series.length > 0) return series;
   return emptyAdminChartBuckets(period, now);
 }

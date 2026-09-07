@@ -64,6 +64,8 @@ Wrappers over `date-fns` that return `""` for an invalid input instead of throwi
 
 `formatTimeAgo(value, now?)` returns a compact relative string that steps through seconds, minutes, hours, days, weeks, months, and years (`45 s`, `3 mins`, `2 hours`, `1 day`, `5 weeks`).
 
+`browserTimeZone()` returns `Intl.DateTimeFormat().resolvedOptions().timeZone`, or `"UTC"` when that value is missing.
+
 ## Related helpers outside `@/utils`
 
 These are shared but live elsewhere on purpose. Update this list when that changes.

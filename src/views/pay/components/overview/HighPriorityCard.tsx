@@ -7,20 +7,18 @@ import { IconRequest } from "@/components/icons/request";
 import { Icon2Right } from "@/components/icons/to-right";
 import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
-import {
-  ADMIN_HIGH_PRIORITY_KIND,
-  type AdminHighPriorityItem,
-} from "@/hooks/use-admin-overview-api";
+import { ORGANIZATION_HIGH_PRIORITY_CATEGORY } from "@/types/organization";
+import type { AdminHighPriorityItem } from "./utils";
 
 function kindIcon(kind: AdminHighPriorityItem["kind"]): ReactNode {
-  if (kind === ADMIN_HIGH_PRIORITY_KIND.Payroll) {
+  if (kind === ORGANIZATION_HIGH_PRIORITY_CATEGORY.Payroll) {
     return (
       <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#6284F5] text-white">
         <IconCalendar className="size-4" />
       </span>
     );
   }
-  if (kind === ADMIN_HIGH_PRIORITY_KIND.PaymentRequest) {
+  if (kind === ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest) {
     return (
       <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#84A20F]/20 text-[#84A20F]">
         <IconRequest className="size-4" />
@@ -43,13 +41,13 @@ export function HighPriorityCard(props: { items: AdminHighPriorityItem[] }) {
         <h2 className="font-montserrat text-base font-medium capitalize text-black">
           High Priority
         </h2>
-        <Link
+        {/* <Link
           to="/pay/payroll"
           className="inline-flex shrink-0 items-center gap-1 font-montserrat text-xs text-[#606060]"
         >
           View All
           <Icon2Right className="h-2 w-[11.5px]" />
-        </Link>
+        </Link> */}
       </div>
       <div className="mt-5 flex flex-col">
         {items.length === 0 ? (
