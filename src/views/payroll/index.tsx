@@ -17,7 +17,6 @@ import type { PayableKey } from "@/types/payable";
 import { PaymentByFormDialog } from "@/views/pay/components/payment-form/PaymentByFormDialog";
 import {
   PAYROLL_CHART_RANGE,
-  PAYROLL_CHART_RANGE_PERIOD,
   PAYROLL_DRAWER_MODE,
   PAYROLL_PAY_NOW_PAYABLE,
   PAYROLL_PAYOUT_STATUS,
@@ -58,11 +57,9 @@ export function PayrollView() {
   const historyExportMutation = usePayrollHistoryExportMutation();
   const [tab, setTab] = useState<PayrollTab>(PAYROLL_TAB.Next);
   const [chartRange, setChartRange] = useState<PayrollChartRange>(
-    PAYROLL_CHART_RANGE.Months6
+    PAYROLL_CHART_RANGE.Month
   );
-  const totalPayout = usePayrollTotalPayoutQuery(
-    PAYROLL_CHART_RANGE_PERIOD[chartRange]
-  );
+  const totalPayout = usePayrollTotalPayoutQuery(chartRange);
   const recent = usePayrollRecentPayoutsInfiniteQuery();
   const [netPayById, setNetPayById] = useState<Record<string, string>>({});
   const [drawerMode, setDrawerMode] = useState<PayrollDrawerMode | null>(null);
@@ -90,8 +87,8 @@ export function PayrollView() {
 
   const resolvedNetPay = { ...initialNetPay, ...netPayById };
   const chartSeries = useMemo(
-    () => mapPayrollChartSeries(totalPayout.data ?? []),
-    [totalPayout.data]
+    () => mapPayrollChartSeries(totalPayout.data ?? [], chartRange),
+    [chartRange, totalPayout.data]
   );
   const recentItems = useMemo(
     () => recent.data?.pages.flat() ?? [],

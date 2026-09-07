@@ -10,21 +10,23 @@ import { DRAWER_SIDE } from "@/components/ui/drawer/config";
 import { InputNumber } from "@/components/ui/input-number/InputNumber";
 import { cn } from "@/lib/utils";
 import { useIntentsTokensStore } from "@/stores/intents-tokens";
+import { BONUS_IMPORT_LIMITS, type BonusImportItem, type BonusPendingRow } from "@/types/bonus";
 import { amountError } from "@/views/pay/batch-utils";
 import { BatchTokenTrigger } from "@/views/pay/components/batch/BatchTokenTrigger";
-import type { BonusPendingList } from "@/mocks/bonus";
 import {
   BONUS_DRAWER_TITLE,
   BONUS_FORM_AMOUNT_MAX_DECIMALS,
   BONUS_FORM_COLUMNS,
   BONUS_FORM_MAX_ROWS,
+  BONUS_FORM_TITLE_MAX,
   type BonusDrawerMode,
 } from "../../config";
 import {
   bonusEmailError,
   createEmptyBonusFormRow,
-  formRowsToPendingList,
-  isBonusFormValid,
+  formRowFromPending,
+  formRowsToImportPayload,
+  isBonusFormRowValid,
   patchBonusFormRow,
   refillBonusFormTokens,
   type BonusFormRow,
@@ -33,13 +35,16 @@ import {
 export function BonusFormDrawer(props: {
   open: boolean;
   mode: BonusDrawerMode;
+  initialRows?: BonusPendingRow[];
+  saving?: boolean;
   onClose: () => void;
-  onSave: (list: BonusPendingList) => void;
+  onSave: (payload: { title: string; items: BonusImportItem[] }) => void | Promise<void>;
 }) {
-  const { open, mode, onClose, onSave } = props;
+  const { open, mode, initialRows, saving = false, onClose, onSave } = props;
   const tokens = useIntentsTokensStore((state) => state.tokens);
   const findByChainAndSymbol = useIntentsTokensStore((state) => state.findByChainAndSymbol);
   const [title, setTitle] = useState("");
+  const [titleInvalid, setTitleInvalid] = useState(false);
   const [rows, setRows] = useState<BonusFormRow[]>(() => [createEmptyBonusFormRow()]);
   const [destRowId, setDestRowId] = useState<string | null>(null);
 
@@ -49,7 +54,12 @@ export function BonusFormDrawer(props: {
       return;
     }
     setTitle("");
-    setRows([createEmptyBonusFormRow()]);
+    setTitleInvalid(false);
+    setRows(
+      initialRows && initialRows.length > 0
+        ? initialRows.map((row) => formRowFromPending(row, findByChainAndSymbol))
+        : [createEmptyBonusFormRow()],
+    );
   }, [open]);
 
   useEffect(() => {
@@ -58,7 +68,7 @@ export function BonusFormDrawer(props: {
   }, [open, tokens, findByChainAndSymbol]);
 
   const destRow = rows.find((row) => row.id === destRowId) ?? null;
-  const canSave = isBonusFormValid(rows, title);
+  const rowsValid = rows.length > 0 && rows.every(isBonusFormRowValid);
 
   function patchRow(rowId: string, patch: Parameters<typeof patchBonusFormRow>[1]) {
     setRows((current) =>
@@ -88,9 +98,18 @@ export function BonusFormDrawer(props: {
             </p>
             <input
               value={title}
-              onChange={(event) => setTitle(event.target.value)}
+              maxLength={BONUS_FORM_TITLE_MAX}
+              onChange={(event) => {
+                setTitle(event.target.value);
+                if (titleInvalid) setTitleInvalid(false);
+              }}
               placeholder="Title"
-              className="col-span-5 h-9 min-w-0 w-full rounded-[6px] border border-[#e3e3e3] bg-white px-3 font-montserrat text-sm font-medium text-black outline-none placeholder:text-black/30"
+              className={cn(
+                "col-span-5 h-9 min-w-0 w-full rounded-[6px] border bg-white px-3 font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
+                titleInvalid
+                  ? "border-[#FF5656] text-[#FF5656]"
+                  : "border-[#e3e3e3] text-black",
+              )}
             />
           </div>
 
@@ -122,7 +141,7 @@ export function BonusFormDrawer(props: {
             </div>
             <button
               type="button"
-              disabled={rows.length >= BONUS_FORM_MAX_ROWS}
+              disabled={rows.length >= BONUS_FORM_MAX_ROWS || saving}
               onClick={() => {
                 setRows((current) =>
                   current.length >= BONUS_FORM_MAX_ROWS
@@ -142,16 +161,21 @@ export function BonusFormDrawer(props: {
           <Button
             variant={BUTTON_VARIANT.Normal}
             className="h-10 w-[152px] rounded-[10px] border-[#e3e3e3] text-base text-[#606060]"
+            disabled={saving}
             onClick={onClose}
           >
             Back
           </Button>
           <Button
             className="h-10 w-[160px] rounded-[10px] text-base"
-            disabled={!canSave}
+            disabled={!rowsValid || saving}
             onClick={() => {
-              // TODO(api): persist the bonus draft when the contract exists.
-              onSave(formRowsToPendingList(rows, title));
+              if (!rowsValid || saving) return;
+              if (!title.trim()) {
+                setTitleInvalid(true);
+                return;
+              }
+              void onSave(formRowsToImportPayload(rows, title));
             }}
           >
             Save
@@ -196,6 +220,7 @@ function BonusFormRowFields(props: {
         value={row.name}
         onChange={(event) => onPatch({ name: event.target.value })}
         placeholder="Name"
+        maxLength={BONUS_IMPORT_LIMITS.name}
         className="h-9 min-w-0 rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-2.5 font-montserrat text-sm font-medium text-black outline-none placeholder:text-black/30"
       />
       <span
@@ -208,6 +233,7 @@ function BonusFormRowFields(props: {
           value={row.address}
           onChange={(event) => onPatch({ address: event.target.value })}
           placeholder="Wallet address"
+          maxLength={BONUS_IMPORT_LIMITS.address}
           className={cn(
             "min-w-0 flex-1 bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
             addressInvalid ? "text-[#FF5656]" : "text-black",
@@ -224,6 +250,7 @@ function BonusFormRowFields(props: {
         value={row.email}
         onChange={(event) => onPatch({ email: event.target.value })}
         placeholder="Email"
+        maxLength={BONUS_IMPORT_LIMITS.email}
         className={cn(
           "h-9 min-w-0 rounded-[6px] border bg-[#f6f6f6] px-2.5 font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
           emailInvalid ? "border-[#FF5656] text-[#FF5656]" : "border-[#e3e3e3] text-black",

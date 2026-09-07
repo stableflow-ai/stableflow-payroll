@@ -74,6 +74,16 @@ export const queryKeys = {
     history: (organizationId: number, params: unknown) =>
       [...queryKeys.expense.all, "history", organizationId, params] as const,
   },
+  bonus: {
+    all: ["bonus"] as const,
+    current: (organizationId: number, timezone: string) =>
+      [...queryKeys.bonus.all, "current", organizationId, timezone] as const,
+    totalPayout: (organizationId: number, period: string, timezone: string) =>
+      [...queryKeys.bonus.all, "total-payout", organizationId, period, timezone] as const,
+    recent: (organizationId: number) => [...queryKeys.bonus.all, "recent", organizationId] as const,
+    open: (organizationId: number) => [...queryKeys.bonus.all, "open", organizationId] as const,
+    history: (organizationId: number) => [...queryKeys.bonus.all, "history", organizationId] as const,
+  },
   organization: {
     all: ["organization"] as const,
     detail: (id: number) => [...queryKeys.organization.all, "detail", id] as const,

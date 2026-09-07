@@ -5,10 +5,11 @@ import type {
   PayrollChartPoint,
   PayrollImportDayType,
   PayrollImportItem,
+  PayrollTotalPayoutPeriod,
   PayrollTotalPayoutPoint,
   PayrollUpdateItem,
 } from "@/types/payroll";
-import { PAYROLL_IMPORT_DAY_TYPE } from "@/types/payroll";
+import { PAYROLL_IMPORT_DAY_TYPE, PAYROLL_TOTAL_PAYOUT_PERIOD } from "@/types/payroll";
 import { DATE_FORMAT, formatAddress, formatDate, type WalletChainKind } from "@/utils";
 import { Big } from "@/utils";
 import {
@@ -443,13 +444,18 @@ function chartPointValue(volume: string): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-export function mapPayrollChartSeries(points: PayrollTotalPayoutPoint[]): {
+export function mapPayrollChartSeries(
+  points: PayrollTotalPayoutPoint[],
+  period: PayrollTotalPayoutPeriod = PAYROLL_TOTAL_PAYOUT_PERIOD.Month,
+): {
   points: PayrollChartPoint[];
   periodLabel: string;
   currentValue: string;
 } {
+  const axisFormat =
+    period === PAYROLL_TOTAL_PAYOUT_PERIOD.Month ? DATE_FORMAT.Month : DATE_FORMAT.MonthDay;
   const mapped: PayrollChartPoint[] = points.map((point) => ({
-    label: formatDate(point.time, DATE_FORMAT.Month) || point.time,
+    label: formatDate(point.time, axisFormat) || point.time,
     value: chartPointValue(point.volume),
   }));
 
@@ -467,11 +473,17 @@ export function mapPayrollChartSeries(points: PayrollTotalPayoutPoint[]): {
   );
   const active = highlightIndex >= 0 ? points[highlightIndex] : null;
   const activeDate = active?.time ? new Date(active.time) : null;
+  const periodLabel =
+    activeDate && isValid(activeDate)
+      ? format(
+          activeDate,
+          period === PAYROLL_TOTAL_PAYOUT_PERIOD.Month ? "MMMM, yyyy" : "MMMM d, yyyy",
+        )
+      : "";
 
   return {
     points: chartPoints,
-    periodLabel:
-      activeDate && isValid(activeDate) ? format(activeDate, "MMMM, yyyy") : "",
+    periodLabel,
     currentValue: active?.volume ?? "0",
   };
 }

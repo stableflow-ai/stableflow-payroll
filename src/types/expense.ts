@@ -108,6 +108,13 @@ export interface ExpenseHistoryQuery {
   endTime?: number;
 }
 
+export interface ExpenseHistoryExportQuery {
+  organizationId: number;
+  search?: string;
+  startTime?: number;
+  endTime?: number;
+}
+
 export interface ExpenseHistoryResp {
   total: number;
   totalPage: number;

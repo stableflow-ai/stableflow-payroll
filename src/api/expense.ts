@@ -1,10 +1,11 @@
 import { PAY_API_PREFIX } from "@/api/config";
 import { apiNumber, apiText, asRecord } from "@/api/map";
-import { http } from "@/lib/http";
+import { http, httpBlob } from "@/lib/http";
 import {
   EXPENSE_IMPORT_LIMITS,
   type ExpenseCurrentStats,
   type ExpenseCurrentStatsQuery,
+  type ExpenseHistoryExportQuery,
   type ExpenseHistoryQuery,
   type ExpenseHistoryResp,
   type ExpenseHistoryRow,
@@ -263,6 +264,20 @@ export async function getExpenseHistory(params: ExpenseHistoryQuery): Promise<Ex
     },
   });
   return mapExpenseHistoryResp(data);
+}
+
+const EXPENSE_HISTORY_EXPORT_FILENAME = "expense-history.csv";
+
+export function exportExpenseHistory(params: ExpenseHistoryExportQuery) {
+  return httpBlob(`${PAY_API_PREFIX}/expenses/history/export`, {
+    query: {
+      organization_id: params.organizationId,
+      search: params.search,
+      start_time: params.startTime,
+      end_time: params.endTime,
+    },
+    fallbackFilename: EXPENSE_HISTORY_EXPORT_FILENAME,
+  });
 }
 
 export function mapExpenseImportResp(raw: unknown): ExpenseImportResp {

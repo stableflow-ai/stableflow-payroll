@@ -57,8 +57,8 @@ src/
     auth/                      login, register, create organization, invite register, reset password
     pay/                       single, form, batch, pending, history, team, setting, request (+ disabled public payer)
     payroll/                   payroll dashboard (mocked until the API exists)
-    expense/                   expense dashboard (current / total-payout / recent / open / requests / history)
-    bonus/                     bonus dashboard (mocked until the API exists)
+    expense/                   expense dashboard (current / total-payout / recent / open / requests / history / export)
+    bonus/                     bonus dashboard (current / total-payout / recent / open / history)
     how-it-works/              public marketing page
     home/, analytics/, partner/  routes currently disabled
   components/

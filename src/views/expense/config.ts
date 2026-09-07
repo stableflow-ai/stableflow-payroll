@@ -1,4 +1,4 @@
-import { EXPENSE_IMPORT_LIMITS } from "@/types/expense";
+import { EXPENSE_IMPORT_LIMITS, EXPENSE_TOTAL_PAYOUT_PERIOD } from "@/types/expense";
 import { PAYABLE_TYPE, type PayableKey } from "@/types/payable";
 
 export const EXPENSE_TAB = {
@@ -10,20 +10,16 @@ export const EXPENSE_TAB = {
 export type ExpenseTab =
   (typeof EXPENSE_TAB)[keyof typeof EXPENSE_TAB];
 
-export const EXPENSE_CHART_RANGE = {
-  Months6: "6m",
-} as const;
+export const EXPENSE_CHART_RANGE = EXPENSE_TOTAL_PAYOUT_PERIOD;
 
 export type ExpenseChartRange =
   (typeof EXPENSE_CHART_RANGE)[keyof typeof EXPENSE_CHART_RANGE];
 
 export const EXPENSE_CHART_RANGE_OPTIONS = [
-  { value: EXPENSE_CHART_RANGE.Months6, label: "Last 6 months" },
+  { value: EXPENSE_CHART_RANGE.Day, label: "Daily" },
+  { value: EXPENSE_CHART_RANGE.Week, label: "Weekly" },
+  { value: EXPENSE_CHART_RANGE.Month, label: "Monthly" },
 ] as const;
-
-export const EXPENSE_CHART_RANGE_PERIOD = {
-  [EXPENSE_CHART_RANGE.Months6]: "month",
-} as const;
 
 export const EXPENSE_RECENT_PAGE_SIZE = 10;
 export const EXPENSE_RECENT_LIMIT_MAX = 100;
@@ -71,8 +67,6 @@ export const REQUEST_PAYMENTS_TABLE_COLUMNS =
 
 export const HISTORY_EXPENSE_TABLE_COLUMNS =
   "minmax(88px,0.7fr) minmax(128px,1fr) minmax(180px,1.6fr) minmax(100px,0.8fr) minmax(120px,1fr) minmax(128px,1.1fr) minmax(72px,0.6fr) minmax(100px,0.85fr)";
-
-export const HISTORY_EXPORT_FILENAME = "expense-history.csv";
 
 export const EXPENSE_DRAWER_TITLE = "Add Expense";
 export const EXPENSE_FORM_MAX_ROWS = 50;

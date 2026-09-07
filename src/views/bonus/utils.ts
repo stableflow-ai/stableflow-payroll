@@ -1,7 +1,8 @@
+import { format, isValid } from "date-fns";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import { normalizeSymbol } from "@/stores/intents-tokens";
 import type { WalletChainKind } from "@/utils";
-import { Big } from "@/utils";
+import { DATE_FORMAT, formatAddress, formatDate } from "@/utils";
 import {
   amountError,
   detectAddressKind,
@@ -10,17 +11,70 @@ import {
 } from "@/views/pay/batch-utils";
 import { isValidEmail } from "@/views/pay/utils";
 import type {
-  BonusPendingItem,
-  BonusPendingList,
+  BonusChartPoint,
+  BonusImportItem,
   BonusPendingRow,
-} from "@/mocks/bonus";
-import { BONUS_ROW_ACTION } from "./config";
+  BonusTotalPayoutPeriod,
+  BonusTotalPayoutPoint,
+} from "@/types/bonus";
+import { BONUS_IMPORT_LIMITS, BONUS_TOTAL_PAYOUT_PERIOD } from "@/types/bonus";
+import { BONUS_FORM_MAX_ROWS } from "./config";
+
+function chartPointValue(volume: string): number {
+  const parsed = Number(volume);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
+export function mapBonusChartSeries(
+  points: BonusTotalPayoutPoint[],
+  period: BonusTotalPayoutPeriod = BONUS_TOTAL_PAYOUT_PERIOD.Month,
+): {
+  points: BonusChartPoint[];
+  periodLabel: string;
+  currentValue: string;
+} {
+  const axisFormat =
+    period === BONUS_TOTAL_PAYOUT_PERIOD.Month ? DATE_FORMAT.Month : DATE_FORMAT.MonthDay;
+  const mapped: BonusChartPoint[] = points.map((point) => ({
+    label: formatDate(point.time, axisFormat) || point.time,
+    value: chartPointValue(point.volume),
+  }));
+
+  let highlightIndex = -1;
+  for (let index = mapped.length - 1; index >= 0; index -= 1) {
+    if (mapped[index].value > 0) {
+      highlightIndex = index;
+      break;
+    }
+  }
+  if (highlightIndex < 0 && mapped.length > 0) highlightIndex = mapped.length - 1;
+
+  const chartPoints = mapped.map((point, index) =>
+    index === highlightIndex ? { ...point, highlighted: true } : point,
+  );
+  const active = highlightIndex >= 0 ? points[highlightIndex] : null;
+  const activeDate = active?.time ? new Date(active.time) : null;
+  const periodLabel =
+    activeDate && isValid(activeDate)
+      ? format(
+          activeDate,
+          period === BONUS_TOTAL_PAYOUT_PERIOD.Month ? "MMMM, yyyy" : "MMMM d, yyyy",
+        )
+      : "";
+
+  return {
+    points: chartPoints,
+    periodLabel,
+    currentValue: active?.volume ?? "0",
+  };
+}
 
 export type BonusFormRow = {
   id: string;
   name: string;
   address: string;
   email: string;
+  memo: string;
   chainKind: WalletChainKind | null;
   addressError: string | null;
   amount: string;
@@ -52,6 +106,7 @@ export function createEmptyBonusFormRow(): BonusFormRow {
     name: "",
     address: "",
     email: "",
+    memo: "",
     chainKind: detected.chainKind,
     addressError: detected.error,
     amount: "",
@@ -77,6 +132,7 @@ export function formRowFromPending(
     name: row.name,
     address: row.address,
     email: row.email,
+    memo: row.memo ?? "",
     chainKind: detected.chainKind,
     addressError: detected.error,
     amount: row.amount,
@@ -84,27 +140,6 @@ export function formRowFromPending(
     rawToken: row.token,
     rawNetwork: row.network,
   };
-}
-
-export function pendingItemsToFormRows(
-  items: BonusPendingItem[],
-  findByChainAndSymbol: FindTokenByChainAndSymbol,
-): BonusFormRow[] {
-  const rows: BonusPendingRow[] = [];
-  for (const item of items) {
-    for (const member of item.members) {
-      rows.push({
-        id: member.id,
-        name: member.name,
-        address: member.address,
-        email: member.email,
-        token: member.token,
-        network: "near",
-        amount: member.amount,
-      });
-    }
-  }
-  return rows.map((row) => formRowFromPending(row, findByChainAndSymbol));
 }
 
 export function patchBonusFormRow(
@@ -179,48 +214,128 @@ export function isBonusFormValid(rows: BonusFormRow[], title: string): boolean {
   return Boolean(title.trim()) && rows.length > 0 && rows.every(isBonusFormRowValid);
 }
 
-export function sumBonusFormAmounts(rows: BonusFormRow[]): string {
-  return rows.reduce((sum, row) => {
-    const trimmed = row.amount.trim();
-    if (!trimmed || amountError(trimmed)) return sum;
-    try {
-      return new Big(sum).plus(trimmed).toFixed();
-    } catch {
-      return sum;
-    }
-  }, "0");
+export function fallbackBonusImportName(name: string, email: string, address: string): string {
+  const trimmedName = name.trim().slice(0, BONUS_IMPORT_LIMITS.name);
+  if (trimmedName) return trimmedName;
+  const local = email.trim().split("@")[0]?.trim() ?? "";
+  if (local) return local.slice(0, BONUS_IMPORT_LIMITS.name);
+  const shortened = formatAddress(address, 6, 4).trim();
+  return (shortened || address.trim()).slice(0, BONUS_IMPORT_LIMITS.name);
 }
 
-export function formRowsToPendingList(
+type BonusImportField = "name" | "address" | "email" | "amount" | "token" | "network" | "memo";
+
+const BONUS_IMPORT_HEADER_ALIASES: Record<BonusImportField, string[]> = {
+  name: ["name", "recipientname", "employeename"],
+  address: ["recipient", "address", "wallet", "to", "destination"],
+  email: ["email", "mail", "e-mail"],
+  amount: ["amount", "value"],
+  token: ["token", "symbol", "asset"],
+  network: ["network", "chain", "blockchain"],
+  memo: ["memo", "note", "comment", "remark", "description"],
+};
+
+const BONUS_IMPORT_POSITIONAL: Partial<Record<BonusImportField, number>> = {
+  address: 0,
+  email: 1,
+  amount: 2,
+  token: 3,
+  network: 4,
+  memo: 5,
+};
+
+function normalizeImportHeader(cell: string): string {
+  return cell.trim().toLowerCase().replace(/[\s_-]+/g, "");
+}
+
+function detectBonusImportHeaderMap(
+  row: string[],
+): Partial<Record<BonusImportField, number>> | null {
+  const map: Partial<Record<BonusImportField, number>> = {};
+  row.forEach((cell, index) => {
+    const normalized = normalizeImportHeader(cell);
+    (Object.keys(BONUS_IMPORT_HEADER_ALIASES) as BonusImportField[]).forEach((field) => {
+      if (map[field] != null) return;
+      const match = BONUS_IMPORT_HEADER_ALIASES[field].some(
+        (alias) => alias.replace(/[\s_-]+/g, "") === normalized,
+      );
+      if (match) map[field] = index;
+    });
+  });
+  return Object.keys(map).length >= 2 ? map : null;
+}
+
+function importCellAt(row: string[], index: number | undefined): string {
+  if (index == null) return "";
+  return String(row[index] ?? "").trim();
+}
+
+function isEmptyBonusImportRaw(raw: Record<BonusImportField, string>): boolean {
+  return !raw.name && !raw.address && !raw.email && !raw.amount && !raw.token && !raw.network && !raw.memo;
+}
+
+export function parseBonusImportRows(
+  values: string[][],
+  maxRows = BONUS_FORM_MAX_ROWS,
+): { rows: BonusPendingRow[]; truncated: boolean } {
+  if (!values.length) return { rows: [], truncated: false };
+  const headerMap = detectBonusImportHeaderMap(values[0] ?? []);
+  const dataRows = headerMap ? values.slice(1) : values;
+  const indexOf = (field: BonusImportField) =>
+    headerMap?.[field] ?? (headerMap ? undefined : BONUS_IMPORT_POSITIONAL[field]);
+
+  const parsed: BonusPendingRow[] = [];
+  for (const row of dataRows) {
+    const raw = {
+      name: importCellAt(row, indexOf("name")),
+      address: importCellAt(row, indexOf("address")),
+      email: importCellAt(row, indexOf("email")),
+      amount: importCellAt(row, indexOf("amount")),
+      token: importCellAt(row, indexOf("token")),
+      network: importCellAt(row, indexOf("network")),
+      memo: importCellAt(row, indexOf("memo")),
+    };
+    if (isEmptyBonusImportRaw(raw)) continue;
+    parsed.push({
+      id: crypto.randomUUID(),
+      name: fallbackBonusImportName(raw.name, raw.email, raw.address),
+      address: raw.address,
+      email: raw.email,
+      token: raw.token,
+      network: raw.network,
+      amount: raw.amount,
+      memo: raw.memo || undefined,
+    });
+  }
+  return {
+    rows: parsed.slice(0, maxRows),
+    truncated: parsed.length > maxRows,
+  };
+}
+
+export function formRowsToImportPayload(
   rows: BonusFormRow[],
   title: string,
-): BonusPendingList {
-  const members = rows.map((row) => {
-    const symbol = row.token?.symbol ?? normalizeSymbol(row.rawToken) ?? row.rawToken;
-    return {
-      id: row.id,
-      name: row.name.trim(),
-      address: row.address.trim(),
-      email: row.email.trim(),
-      amount: row.amount.trim(),
-      token: symbol,
-    };
-  });
-  const token = members[0]?.token ?? "";
-  const totalAmount = sumBonusFormAmounts(rows);
+): { title: string; items: BonusImportItem[] } {
   return {
-    totalAmount,
-    token,
-    entryCount: 1,
-    items: [
-      {
-        id: crypto.randomUUID(),
-        title: title.trim(),
-        amount: totalAmount,
-        token,
-        action: BONUS_ROW_ACTION.PayNow,
-        members,
-      },
-    ],
+    title: title.trim().slice(0, BONUS_IMPORT_LIMITS.title),
+    items: rows.map((row) => {
+      const symbol = row.token?.symbol ?? normalizeSymbol(row.rawToken) ?? row.rawToken;
+      const item: BonusImportItem = {
+        name: row.name.trim().slice(0, BONUS_IMPORT_LIMITS.name),
+        address: row.address.trim().slice(0, BONUS_IMPORT_LIMITS.address),
+        amount: row.amount.trim(),
+        network: (row.token?.blockchain ?? row.rawNetwork).slice(
+          0,
+          BONUS_IMPORT_LIMITS.network,
+        ),
+        symbol: symbol.slice(0, BONUS_IMPORT_LIMITS.symbol),
+      };
+      const email = row.email.trim().slice(0, BONUS_IMPORT_LIMITS.email);
+      if (email) item.email = email;
+      const description = row.memo.trim().slice(0, BONUS_IMPORT_LIMITS.description);
+      if (description) item.description = description;
+      return item;
+    }),
   };
 }

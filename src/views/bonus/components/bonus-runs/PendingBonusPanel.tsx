@@ -1,9 +1,9 @@
 import { IconPlus } from "@/components/icons/plus";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_VARIANT } from "@/components/ui/button/config";
+import type { BonusPendingList } from "@/types/bonus";
 import type { PayableKey } from "@/types/payable";
-import type { BonusPendingList } from "@/mocks/bonus";
-import { formatBonusTokenAmount } from "../../utils";
+import { formatAmount } from "@/utils";
 import { PendingBonusTable } from "./PendingBonusTable";
 
 export function PendingBonusPanel(props: {
@@ -22,7 +22,7 @@ export function PendingBonusPanel(props: {
               Bonuses to be paid
             </p>
             <p className="mt-1.5 font-montserrat text-[20px] font-semibold capitalize text-black">
-              {formatBonusTokenAmount(list.totalAmount, list.token)}
+              {formatAmount(list.totalAmount)}
             </p>
           </div>
           <div>

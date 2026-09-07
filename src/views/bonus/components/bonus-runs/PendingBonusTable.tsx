@@ -13,13 +13,14 @@ import {
   TableRow,
 } from "@/components/ui/table/Table";
 import { cn } from "@/lib/utils";
+import type { BonusPendingItem } from "@/types/bonus";
 import type { PayableKey } from "@/types/payable";
-import type { BonusPendingItem } from "@/mocks/bonus";
+import { formatAmount } from "@/utils";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";
 import {
-  BONUS_PAY_NOW_PAYABLE,
   BONUS_ROW_ACTION,
   PENDING_BONUS_TABLE_COLUMNS,
+  bonusPayNowPayable,
 } from "../../config";
 import { formatBonusTokenAmount } from "../../utils";
 
@@ -42,11 +43,12 @@ function ActionCell(props: {
     );
   }
 
-  const payable = BONUS_PAY_NOW_PAYABLE[item.id];
+  const payable = item.batchId > 0 ? bonusPayNowPayable(item.batchId) : null;
 
   return (
     <Button
       className="h-9 min-w-[113px] rounded-[10px] px-3 text-sm"
+      disabled={!payable}
       onClick={() => {
         if (!payable) return;
         onPayNow(payable);
@@ -64,9 +66,7 @@ function BonusItemBlock(props: {
 }) {
   const { item, onPayNow } = props;
   const isGroup = item.members.length > 1;
-  const [expanded, setExpanded] = useState(() =>
-    isGroup && /team b/i.test(item.title),
-  );
+  const [expanded, setExpanded] = useState(false);
   const sole = item.members[0];
 
   return (
@@ -99,7 +99,7 @@ function BonusItemBlock(props: {
           )}
         </TableCell>
         <TableCell className="font-medium text-black">
-          {formatBonusTokenAmount(item.amount, item.token)}
+          {formatAmount(item.amount)}
         </TableCell>
         <TableCell>
           {!isGroup && sole?.address ? (

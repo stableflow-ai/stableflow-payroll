@@ -1,5 +1,5 @@
 import { PAYABLE_TYPE, type PayableKey } from "@/types/payable";
-import { PAYROLL_IMPORT_DAY_TYPE } from "@/types/payroll";
+import { PAYROLL_IMPORT_DAY_TYPE, PAYROLL_TOTAL_PAYOUT_PERIOD } from "@/types/payroll";
 
 export const PAYROLL_CREATE_PATH = "/pay/batch";
 export const PAYROLL_HISTORY_PATH = "/pay/history";
@@ -79,20 +79,16 @@ export const PAYROLL_MOCK_VARIANT = {
 export type PayrollMockVariant =
   (typeof PAYROLL_MOCK_VARIANT)[keyof typeof PAYROLL_MOCK_VARIANT];
 
-export const PAYROLL_CHART_RANGE = {
-  Months6: "6m",
-} as const;
+export const PAYROLL_CHART_RANGE = PAYROLL_TOTAL_PAYOUT_PERIOD;
 
 export type PayrollChartRange =
   (typeof PAYROLL_CHART_RANGE)[keyof typeof PAYROLL_CHART_RANGE];
 
 export const PAYROLL_CHART_RANGE_OPTIONS = [
-  { value: PAYROLL_CHART_RANGE.Months6, label: "Last 6 months" },
+  { value: PAYROLL_CHART_RANGE.Day, label: "Daily" },
+  { value: PAYROLL_CHART_RANGE.Week, label: "Weekly" },
+  { value: PAYROLL_CHART_RANGE.Month, label: "Monthly" },
 ] as const;
-
-export const PAYROLL_CHART_RANGE_PERIOD = {
-  [PAYROLL_CHART_RANGE.Months6]: "month",
-} as const;
 
 export const PAYROLL_RECENT_PAGE_SIZE = 10;
 export const PAYROLL_RECENT_LIMIT_MAX = 100;

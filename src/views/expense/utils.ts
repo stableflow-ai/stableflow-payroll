@@ -3,9 +3,11 @@ import type { IntentsToken } from "@/stores/intents-tokens";
 import { normalizeSymbol } from "@/stores/intents-tokens";
 import {
   EXPENSE_IMPORT_LIMITS,
+  EXPENSE_TOTAL_PAYOUT_PERIOD,
   type ExpenseChartPoint,
   type ExpenseDraftRow,
   type ExpenseImportItem,
+  type ExpenseTotalPayoutPeriod,
   type ExpenseTotalPayoutPoint,
 } from "@/types/expense";
 import { DATE_FORMAT, formatAddress, formatDate, type WalletChainKind } from "@/utils";
@@ -23,13 +25,18 @@ function chartPointValue(volume: string): number {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-export function mapExpenseChartSeries(points: ExpenseTotalPayoutPoint[]): {
+export function mapExpenseChartSeries(
+  points: ExpenseTotalPayoutPoint[],
+  period: ExpenseTotalPayoutPeriod = EXPENSE_TOTAL_PAYOUT_PERIOD.Month,
+): {
   points: ExpenseChartPoint[];
   periodLabel: string;
   currentValue: string;
 } {
+  const axisFormat =
+    period === EXPENSE_TOTAL_PAYOUT_PERIOD.Month ? DATE_FORMAT.Month : DATE_FORMAT.MonthDay;
   const mapped: ExpenseChartPoint[] = points.map((point) => ({
-    label: formatDate(point.time, DATE_FORMAT.Month) || point.time,
+    label: formatDate(point.time, axisFormat) || point.time,
     value: chartPointValue(point.volume),
   }));
 
@@ -47,11 +54,17 @@ export function mapExpenseChartSeries(points: ExpenseTotalPayoutPoint[]): {
   );
   const active = highlightIndex >= 0 ? points[highlightIndex] : null;
   const activeDate = active?.time ? new Date(active.time) : null;
+  const periodLabel =
+    activeDate && isValid(activeDate)
+      ? format(
+          activeDate,
+          period === EXPENSE_TOTAL_PAYOUT_PERIOD.Month ? "MMMM, yyyy" : "MMMM d, yyyy",
+        )
+      : "";
 
   return {
     points: chartPoints,
-    periodLabel:
-      activeDate && isValid(activeDate) ? format(activeDate, "MMMM, yyyy") : "",
+    periodLabel,
     currentValue: active?.volume ?? "0",
   };
 }

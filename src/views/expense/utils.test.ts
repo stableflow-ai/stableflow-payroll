@@ -1,17 +1,30 @@
 import { describe, expect, it } from "vitest";
+import { EXPENSE_TOTAL_PAYOUT_PERIOD } from "@/types/expense";
 import { mapExpenseChartSeries, parseExpenseImportRows } from "./utils";
 
 describe("mapExpenseChartSeries", () => {
   it("labels months and highlights the last non-zero point", () => {
-    const series = mapExpenseChartSeries([
-      { time: "2026-06-15T00:00:00Z", volume: "4300" },
-      { time: "2026-07-15T00:00:00Z", volume: "0" },
-      { time: "2026-08-15T00:00:00Z", volume: "3100" },
-    ]);
+    const series = mapExpenseChartSeries(
+      [
+        { time: "2026-06-15T00:00:00Z", volume: "4300" },
+        { time: "2026-07-15T00:00:00Z", volume: "0" },
+        { time: "2026-08-15T00:00:00Z", volume: "3100" },
+      ],
+      EXPENSE_TOTAL_PAYOUT_PERIOD.Month,
+    );
     expect(series.currentValue).toBe("3100");
     expect(series.periodLabel).toBe("August, 2026");
     expect(series.points.map((point) => point.label)).toEqual(["Jun", "Jul", "Aug"]);
     expect(series.points[2]?.highlighted).toBe(true);
+  });
+
+  it("labels day and week points with month and day", () => {
+    const series = mapExpenseChartSeries(
+      [{ time: "2026-08-07T12:00:00Z", volume: "200" }],
+      EXPENSE_TOTAL_PAYOUT_PERIOD.Day,
+    );
+    expect(series.periodLabel).toBe("August 7, 2026");
+    expect(series.points[0]?.label).toBe("Aug 7");
   });
 
   it("falls back to zero when there are no points", () => {

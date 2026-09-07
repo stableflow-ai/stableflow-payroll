@@ -1,7 +1,31 @@
-import { formatAmount } from "@/utils";
-import type { BonusHistoryItem } from "@/mocks/bonus";
+import { useEffect, useRef } from "react";
+import { IconLoading } from "@/components/icons/loading";
+import type { BonusHistoryItem } from "@/types/bonus";
+import { DATE_FORMAT, formatAmount, formatDate } from "@/utils";
 
-export function HistoryPanel({ items }: { items: BonusHistoryItem[] }) {
+export function HistoryPanel(props: {
+  items: BonusHistoryItem[];
+  loadingMore?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+}) {
+  const { items, loadingMore = false, hasMore = false, onLoadMore } = props;
+  const sentinelRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!hasMore || loadingMore || !onLoadMore) return;
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) onLoadMore();
+      },
+      { rootMargin: "160px", threshold: 0.1 },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, loadingMore, onLoadMore, items.length]);
+
   if (items.length === 0) {
     return (
       <div className="flex min-h-[280px] items-center justify-center">
@@ -42,12 +66,18 @@ export function HistoryPanel({ items }: { items: BonusHistoryItem[] }) {
                 Execution Time
               </p>
               <p className="mt-2 font-montserrat text-sm font-medium text-black">
-                {item.executedAt}
+                {formatDate(item.executedAt, DATE_FORMAT.DateTime) || item.executedAt}
               </p>
             </div>
           </div>
         </article>
       ))}
+      {hasMore ? <div ref={sentinelRef} className="h-4 shrink-0" aria-hidden /> : null}
+      {loadingMore ? (
+        <div className="flex items-center justify-center py-2">
+          <IconLoading className="size-4 animate-spin text-[#909090]" />
+        </div>
+      ) : null}
     </div>
   );
 }

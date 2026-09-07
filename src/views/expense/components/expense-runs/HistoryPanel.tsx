@@ -7,10 +7,12 @@ import { IconLoading } from "@/components/icons/loading";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_VARIANT } from "@/components/ui/button/config";
 import { SearchInput } from "@/components/ui/search-input/SearchInput";
-import { useExpenseHistoryInfiniteQuery } from "@/hooks/use-expense-api";
-import type { ExpenseHistoryRow } from "@/types/expense";
-import { stampDownloadFilename } from "@/views/pay/utils";
-import { EXPENSE_SEARCH_DEBOUNCE_MS, HISTORY_EXPORT_FILENAME } from "../../config";
+import {
+  useExpenseHistoryExportMutation,
+  useExpenseHistoryInfiniteQuery,
+} from "@/hooks/use-expense-api";
+import useToast from "@/hooks/use-toast";
+import { EXPENSE_SEARCH_DEBOUNCE_MS } from "../../config";
 import { HistoryTable } from "./HistoryTable";
 
 function useDebouncedValue<T>(value: T, delayMs: number): T {
@@ -22,33 +24,12 @@ function useDebouncedValue<T>(value: T, delayMs: number): T {
   return debounced;
 }
 
-function exportHistoryCsv(rows: ExpenseHistoryRow[]) {
-  const header = "name,purpose,description,expense,address,token,network,amount,status";
-  const body = rows.map((row) =>
-    [
-      row.name,
-      row.purpose,
-      row.receiptName ?? row.description ?? "",
-      row.expense,
-      row.address,
-      row.token,
-      row.network,
-      row.amount,
-      row.status,
-    ].join(","),
-  );
-  const blob = new Blob([[header, ...body].join("\n")], {
-    type: "text/csv;charset=utf-8",
-  });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = stampDownloadFilename(HISTORY_EXPORT_FILENAME);
-  link.click();
-  URL.revokeObjectURL(url);
+function queryErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback;
 }
 
 export function HistoryPanel() {
+  const toast = useToast();
   const [search, setSearch] = useState("");
   const [range, setRange] = useState(() => lastNDaysRange(DATE_RANGE_PRESET.Days30));
   const debouncedSearch = useDebouncedValue(search, EXPENSE_SEARCH_DEBOUNCE_MS);
@@ -58,6 +39,7 @@ export function HistoryPanel() {
     startTime: unixRange.start_time,
     endTime: unixRange.end_time,
   });
+  const exportMutation = useExpenseHistoryExportMutation();
   const items = useMemo(
     () => historyQuery.data?.pages.flatMap((page) => page.list) ?? [],
     [historyQuery.data],
@@ -66,6 +48,7 @@ export function HistoryPanel() {
   const hasMore = Boolean(historyQuery.hasNextPage);
   const loadingMore = historyQuery.isFetchingNextPage;
   const fetchNextPage = historyQuery.fetchNextPage;
+  const exporting = exportMutation.isPending;
 
   useEffect(() => {
     if (!hasMore || loadingMore) return;
@@ -81,6 +64,20 @@ export function HistoryPanel() {
     return () => observer.disconnect();
   }, [fetchNextPage, hasMore, loadingMore, items.length]);
 
+  async function handleExport() {
+    try {
+      await exportMutation.mutateAsync({
+        search: debouncedSearch.trim() || undefined,
+        startTime: unixRange.start_time,
+        endTime: unixRange.end_time,
+      });
+    } catch (error) {
+      toast.fail({
+        title: queryErrorMessage(error, "Could not export expense history"),
+      });
+    }
+  }
+
   return (
     <div className="flex flex-col">
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center">
@@ -94,10 +91,13 @@ export function HistoryPanel() {
         <DateRangePicker value={range} onChange={setRange} className="w-full sm:w-[179px]" />
         <Button
           variant={BUTTON_VARIANT.Normal}
+          loading={exporting}
           className="h-9 w-full rounded-[10px] border-black/10 px-4 text-sm text-black sm:ml-auto sm:w-auto sm:min-w-[126px]"
-          onClick={() => exportHistoryCsv(items)}
+          onClick={() => {
+            void handleExport();
+          }}
         >
-          <IconExportLink className="size-3.5 shrink-0" />
+          {exporting ? null : <IconExportLink className="size-3.5 shrink-0" />}
           Export CSV
         </Button>
       </div>

@@ -1,11 +1,16 @@
+import { IconLoading } from "@/components/icons/loading";
 import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
-import { BONUS_CHANGE_UP_CLASS } from "../../config";
-import { formatBonusTokenAmount } from "../../utils";
+import { formatAmount } from "@/utils";
+import {
+  BONUS_CHANGE_DOWN_CLASS,
+  BONUS_CHANGE_UP_CLASS,
+} from "../../config";
 
 export type StatsCardProps = {
+  loading?: boolean;
+  error?: string | null;
   totalBonus: string;
-  totalBonusToken: string;
   totalChangePercent: number | null;
   members: number;
   membersChangePercent: number | null;
@@ -13,8 +18,13 @@ export type StatsCardProps = {
 
 function formatChange(value: number | null) {
   if (value == null) return "-%";
-  const sign = value >= 0 ? "+" : "";
+  const sign = value > 0 ? "+" : "";
   return `${sign}${value}%`;
+}
+
+function changeTone(value: number | null): "muted" | "up" | "down" {
+  if (value == null || value === 0) return "muted";
+  return value > 0 ? "up" : "down";
 }
 
 function StatColumn(props: {
@@ -22,7 +32,7 @@ function StatColumn(props: {
   value: string;
   hint: string;
   hintValue: string;
-  hintTone?: "muted" | "up";
+  hintTone?: "muted" | "up" | "down";
 }) {
   const { label, value, hint, hintValue, hintTone = "muted" } = props;
   return (
@@ -37,7 +47,9 @@ function StatColumn(props: {
         <span
           className={cn(
             "font-medium",
-            hintTone === "up" ? BONUS_CHANGE_UP_CLASS : "text-[#aaa]",
+            hintTone === "up" && BONUS_CHANGE_UP_CLASS,
+            hintTone === "down" && BONUS_CHANGE_DOWN_CLASS,
+            hintTone === "muted" && "text-[#aaa]",
           )}
         >
           {hintValue}
@@ -50,8 +62,9 @@ function StatColumn(props: {
 
 export function StatsCard(props: StatsCardProps) {
   const {
+    loading = false,
+    error = null,
     totalBonus,
-    totalBonusToken,
     totalChangePercent,
     members,
     membersChangePercent,
@@ -59,20 +72,30 @@ export function StatsCard(props: StatsCardProps) {
 
   return (
     <Card className="grid grid-cols-1 gap-6 py-[22px] sm:grid-cols-2 sm:gap-8">
-      <StatColumn
-        label="Total Bonus"
-        value={formatBonusTokenAmount(totalBonus, totalBonusToken)}
-        hint="from last month"
-        hintValue={formatChange(totalChangePercent)}
-        hintTone={totalChangePercent == null ? "muted" : "up"}
-      />
-      <StatColumn
-        label="Members"
-        value={String(members)}
-        hint="from last month"
-        hintValue={formatChange(membersChangePercent)}
-        hintTone={membersChangePercent == null ? "muted" : "up"}
-      />
+      {loading ? (
+        <div className="flex min-h-[88px] items-center justify-center sm:col-span-2">
+          <IconLoading className="size-5 animate-spin text-[#909090]" />
+        </div>
+      ) : error ? (
+        <p className="font-montserrat text-sm text-danger sm:col-span-2">{error}</p>
+      ) : (
+        <>
+          <StatColumn
+            label="Total Bonus"
+            value={formatAmount(totalBonus)}
+            hint="from last month"
+            hintValue={formatChange(totalChangePercent)}
+            hintTone={changeTone(totalChangePercent)}
+          />
+          <StatColumn
+            label="Members"
+            value={String(members)}
+            hint="from last month"
+            hintValue={formatChange(membersChangePercent)}
+            hintTone={changeTone(membersChangePercent)}
+          />
+        </>
+      )}
     </Card>
   );
 }

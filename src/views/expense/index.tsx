@@ -20,7 +20,6 @@ import { TotalExpenseChart } from "./components/total-expense";
 import { mapExpenseChartSeries } from "./utils";
 import {
   EXPENSE_CHART_RANGE,
-  EXPENSE_CHART_RANGE_PERIOD,
   EXPENSE_PAYOUT_STATUS,
   EXPENSE_TAB,
   type ExpenseChartRange,
@@ -43,19 +42,17 @@ export function ExpenseView() {
   const importMutation = useExpenseImportMutation();
   const [tab, setTab] = useState<ExpenseTab>(EXPENSE_TAB.Open);
   const [chartRange, setChartRange] = useState<ExpenseChartRange>(
-    EXPENSE_CHART_RANGE.Months6
+    EXPENSE_CHART_RANGE.Month
   );
-  const totalPayout = useExpenseTotalPayoutQuery(
-    EXPENSE_CHART_RANGE_PERIOD[chartRange]
-  );
+  const totalPayout = useExpenseTotalPayoutQuery(chartRange);
   const [payingPayable, setPayingPayable] = useState<PayableKey | null>(null);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerSeed, setDrawerSeed] = useState(0);
   const [importRows, setImportRows] = useState<ExpenseDraftRow[] | null>(null);
 
   const chartSeries = useMemo(
-    () => mapExpenseChartSeries(totalPayout.data ?? []),
-    [totalPayout.data]
+    () => mapExpenseChartSeries(totalPayout.data ?? [], chartRange),
+    [chartRange, totalPayout.data]
   );
   const recentItems = useMemo(
     () => recent.data?.pages.flat() ?? [],

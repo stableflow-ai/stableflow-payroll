@@ -8,11 +8,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { IconLoading } from "@/components/icons/loading";
 import { Card } from "@/components/ui/card/Card";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { cn } from "@/lib/utils";
+import type { BonusChartPoint } from "@/types/bonus";
 import { formatAmount } from "@/utils";
-import type { BonusChartPoint } from "@/mocks/bonus";
 import {
   BONUS_CHART_HIGHLIGHT_COLOR,
   BONUS_CHART_LINE_COLOR,
@@ -24,7 +25,7 @@ import {
 function formatYTick(value: number) {
   if (value === 0) return "$0";
   if (Math.abs(value) >= 1000) return `$${value / 1000}K`;
-  return formatAmount(value, { prefix: "" });
+  return formatAmount(value);
 }
 
 function ChartTooltip({
@@ -54,9 +55,19 @@ export function TotalBonusChart(props: {
   periodLabel: string;
   currentValue: string;
   points: BonusChartPoint[];
+  loading?: boolean;
+  error?: string | null;
 }) {
-  const { range, onRangeChange, periodLabel, currentValue, points } = props;
-  const isEmpty = points.every((point) => point.value === 0);
+  const {
+    range,
+    onRangeChange,
+    periodLabel,
+    currentValue,
+    points,
+    loading = false,
+    error = null,
+  } = props;
+  const isEmpty = !loading && points.every((point) => point.value === 0);
   const yMax = Math.max(BONUS_CHART_Y_MAX, ...points.map((point) => point.value));
   const highlightedLabel = points.find((point) => point.highlighted)?.label;
 
@@ -74,7 +85,7 @@ export function TotalBonusChart(props: {
                 isEmpty && "opacity-30",
               )}
             >
-              {currentValue}
+              {formatAmount(currentValue)}
             </span>
             <span className="font-montserrat text-xs font-normal text-[#aaa]">
               {periodLabel}
@@ -89,84 +100,94 @@ export function TotalBonusChart(props: {
         />
       </div>
       <div className="mt-4 h-[320px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={points} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-            <CartesianGrid stroke="#e3e3e3" />
-            <defs>
-              <linearGradient id="bonusChartHighlight" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor={BONUS_CHART_HIGHLIGHT_COLOR} stopOpacity={0.2} />
-                <stop offset="100%" stopColor={BONUS_CHART_HIGHLIGHT_COLOR} stopOpacity={0} />
-              </linearGradient>
-            </defs>
-            <XAxis
-              dataKey="label"
-              axisLine={false}
-              tickLine={false}
-              tick={(tickProps) => {
-                const { x, y, payload } = tickProps;
-                const active = payload?.value === highlightedLabel;
-                return (
-                  <text
-                    x={x}
-                    y={y}
-                    dy={12}
-                    textAnchor="middle"
-                    fill={active ? "#606060" : "#aaa"}
-                    fontSize={12}
-                    fontFamily="Montserrat"
-                  >
-                    {payload?.value}
-                  </text>
-                );
-              }}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              domain={[0, yMax]}
-              ticks={[0, yMax / 3, (yMax * 2) / 3, yMax]}
-              tickFormatter={formatYTick}
-              tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
-              width={48}
-            />
-            {highlightedLabel ? (
-              <ReferenceArea
-                x1={highlightedLabel}
-                x2={highlightedLabel}
-                fill="url(#bonusChartHighlight)"
-                ifOverflow="extendDomain"
+        {loading ? (
+          <div className="flex h-full items-center justify-center">
+            <IconLoading className="size-5 animate-spin text-[#909090]" />
+          </div>
+        ) : error ? (
+          <div className="flex h-full items-center justify-center">
+            <p className="font-montserrat text-sm text-danger">{error}</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={points} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+              <CartesianGrid stroke="#e3e3e3" />
+              <defs>
+                <linearGradient id="bonusChartHighlight" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={BONUS_CHART_HIGHLIGHT_COLOR} stopOpacity={0.2} />
+                  <stop offset="100%" stopColor={BONUS_CHART_HIGHLIGHT_COLOR} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <XAxis
+                dataKey="label"
+                axisLine={false}
+                tickLine={false}
+                tick={(tickProps) => {
+                  const { x, y, payload } = tickProps;
+                  const active = payload?.value === highlightedLabel;
+                  return (
+                    <text
+                      x={x}
+                      y={y}
+                      dy={12}
+                      textAnchor="middle"
+                      fill={active ? "#606060" : "#aaa"}
+                      fontSize={12}
+                      fontFamily="Montserrat"
+                    >
+                      {payload?.value}
+                    </text>
+                  );
+                }}
               />
-            ) : null}
-            <Tooltip
-              content={(tooltipProps) => (
-                <ChartTooltip
-                  active={tooltipProps.active}
-                  payload={tooltipProps.payload}
-                  label={tooltipProps.label}
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                domain={[0, yMax]}
+                ticks={[0, yMax / 3, (yMax * 2) / 3, yMax]}
+                tickFormatter={formatYTick}
+                tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
+                width={48}
+              />
+              {highlightedLabel ? (
+                <ReferenceArea
+                  x1={highlightedLabel}
+                  x2={highlightedLabel}
+                  fill="url(#bonusChartHighlight)"
+                  ifOverflow="extendDomain"
                 />
-              )}
-              cursor={{ stroke: BONUS_CHART_LINE_COLOR, strokeWidth: 1, strokeDasharray: "4 4" }}
-            />
-            <Line
-              type="linear"
-              dataKey="value"
-              stroke={BONUS_CHART_LINE_COLOR}
-              strokeWidth={2}
-              dot={{
-                r: 6,
-                fill: BONUS_CHART_LINE_COLOR,
-                stroke: "#fff",
-                strokeWidth: 2,
-              }}
-              activeDot={{
-                r: 6,
-                fill: BONUS_CHART_LINE_COLOR,
-                stroke: "#fff",
-                strokeWidth: 2,
-              }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+              ) : null}
+              <Tooltip
+                content={(tooltipProps) => (
+                  <ChartTooltip
+                    active={tooltipProps.active}
+                    payload={tooltipProps.payload}
+                    label={tooltipProps.label}
+                  />
+                )}
+                cursor={{ stroke: BONUS_CHART_LINE_COLOR, strokeWidth: 1, strokeDasharray: "4 4" }}
+              />
+              <Line
+                type="linear"
+                dataKey="value"
+                stroke={BONUS_CHART_LINE_COLOR}
+                strokeWidth={2}
+                dot={{
+                  r: 6,
+                  fill: BONUS_CHART_LINE_COLOR,
+                  stroke: "#fff",
+                  strokeWidth: 2,
+                }}
+                activeDot={{
+                  r: 6,
+                  fill: BONUS_CHART_LINE_COLOR,
+                  stroke: "#fff",
+                  strokeWidth: 2,
+                }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </Card>
   );

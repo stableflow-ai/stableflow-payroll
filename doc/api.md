@@ -106,7 +106,7 @@ navigate(postAuthPath(session.user, returnTo));
 
 Paths are prefixed with `PAY_API_PREFIX` (`/v1/payroll`) or `NEARINTENTS_API_PREFIX` (`/v1/nearintents`) from `src/api/config.ts`. "Auth" is the default for that function; `caller` means the caller decides.
 
-Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), Organizations, Team members, Recipients, and the Payroll salaries / expenses dashboard endpoints are served by the Payroll backend. The Payout and Payment-request tables are the pre-Payroll contract kept unchanged under the new prefix; the screens that call them are not in scope yet, so those routes will 404. Do not treat them as a spec.
+Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), Organizations, Team members, Recipients, and the Payroll salaries / expenses / bonuses dashboard endpoints are served by the Payroll backend. The Payout and Payment-request tables are the pre-Payroll contract kept unchanged under the new prefix; the screens that call them are not in scope yet, so those routes will 404. Do not treat them as a spec.
 
 ### Auth — `src/api/auth.ts`, `src/types/auth.ts`, `src/hooks/use-auth-api.ts`
 
@@ -186,16 +186,6 @@ Confirm signs and broadcasts that transaction. There is no submit call after bro
 
 The three pay routes return `{ batch, execution_id }`. The mapper reads `batch` through `mapPayrollBatch` and throws `ApiError(..., "NO_BATCH_TX")` when the transaction cannot be broadcast. `PaymentByFormCard` posts pay as the quote (`usePayablePayQuery`, `staleTime: Infinity`); Send uses `markBatchConsumed` then `broadcastBatchPayout`. Expired or consumed quotes refetch pay. Optional `notification` is an array of selected `item_id`s. `adjustments` is `{ item_id, net_pay }[]` for every item (override after Details Save, otherwise payable `netPay`) and is omitted only when the form has no items. Both fields are part of the quote query key. `payablePayBody` copies a non-empty `adjustments` array onto all three pay bodies.
 
-### Operations survey (not wired)
-
-These dashboards stay on mocks. The routes below are for the later Payroll / Expense / Bonus integrations — do not add hooks for them in this pass.
-
-**Salaries** (`/v1/payroll/salaries`): `/current`, `/next`, `/history`, `/history/{execution_id}`, `/recent`, `/total-payout`, `/import`, `/update`, `/pay`. Payroll pay identity is `period_month` + `timezone`.
-
-**Expenses** (`/v1/payroll/expenses`): `/current`, `/open`, `/open/requests`, `/open/requests/count`, `/history`, `/recent`, `/total-payout`, `/import`, `/{batch_id}/pay`.
-
-**Bonuses** (`/v1/payroll/bonuses`): same shape as expenses except there is no `/open/requests` (or `/open/requests/count`).
-
 ### Payroll salaries — `src/api/payroll.ts`, `src/types/payroll.ts`, `src/hooks/use-payroll-api.ts`
 
 | Method | Path | Auth | Query | Data | API | Hook |
@@ -212,7 +202,7 @@ These dashboards stay on mocks. The routes below are for the later Payroll / Exp
 
 `organization_id` comes from `AuthUser.organization.id`. `timezone` is the browser IANA zone. Queries stay disabled until both the token and organization id are present.
 
-`period` is `day` \| `week` \| `month`. The Payroll chart currently only exposes Last 6 months and sends `month`.
+`period` is `day` \| `week` \| `month`. The Payroll chart dropdown is Daily / Weekly / Monthly and sends those values as `period`.
 
 Recent payouts have no `page` in the contract, only `limit` (max 100). `usePayrollRecentPayoutsInfiniteQuery` requests `limit = page * 10` and keeps the new slice. `failedCount` is counted from loaded rows with status `failed`.
 
@@ -239,11 +229,12 @@ Recent payouts have no `page` in the contract, only `limit` (max 100). `usePayro
 | GET | `/v1/payroll/expenses/open/requests/count` | yes | `organization_id` | `ExpenseOpenRequestsCount` | `getExpenseOpenRequestsCount` | `useExpenseOpenRequestsCountQuery` |
 | GET | `/v1/payroll/expenses/open/requests` | yes | `organization_id` | `ExpenseOpenList` | `getExpenseOpenRequests` | `useExpenseOpenRequestsQuery` |
 | GET | `/v1/payroll/expenses/history` | yes | `organization_id`, `page`, `pageSize`, `search?`, `start_time?`, `end_time?` | `ExpenseHistoryResp` | `getExpenseHistory` | `useExpenseHistoryInfiniteQuery` |
+| GET | `/v1/payroll/expenses/history/export` | yes | `organization_id`, `search?`, `start_time?`, `end_time?` | CSV file | `exportExpenseHistory` | `useExpenseHistoryExportMutation` |
 | POST | `/v1/payroll/expenses/import` | yes | body: `organization_id`, `title`, `items` | `ExpenseImportResp` | `importExpenses` | `useExpenseImportMutation` |
 
 `organization_id` comes from `AuthUser.organization.id`. `timezone` is the browser IANA zone. Queries stay disabled until both the token and organization id are present.
 
-`period` is `day` \| `week` \| `month`. The Expense chart currently only exposes Last 6 months and sends `month`.
+`period` is `day` \| `week` \| `month`. The Expense chart dropdown is Daily / Weekly / Monthly and sends those values as `period`.
 
 Current stats map `total_reimbursement` → Total expense, `processed_expenses` → Number of expensed, and `total_expenses` → Number of expenses. Change strings such as `+10%` become numbers; blank / `-` map to `null`.
 
@@ -253,9 +244,39 @@ Recent payouts have no `page` in the contract, only `limit` (max 100). `useExpen
 
 `GET /expenses/open/requests/count` is `{ count }` and drives the Request Payments tab badge (hidden when `count` is 0). `GET /expenses/open/requests` uses the same batch list shape as Open expense. The Request Payments table maps `purpose` → Request for, `description` → Description (a filename looks like a receipt; empty cells are `-`), and `amount` / `symbol` / `network` → Amount / Payout Preference. **Pay Now** uses the same `EXPENSE_PAY_NOW_PAYABLE` as Open expense. This tab does not show Import CSV / Add Expense.
 
-`GET /expenses/history` is paginated (`page` / `pageSize`, max 100) and accepts `search` (name, address, or amount) plus `start_time` / `end_time` as Unix seconds. `useExpenseHistoryInfiniteQuery` loads the next page on scroll and sends the History tab search and last-30-days (or custom) range. A description that looks like a file name is shown as a receipt; otherwise it is plain text. There is no history export route; **Export CSV** downloads the loaded rows.
+`GET /expenses/history` is paginated (`page` / `pageSize`, max 100) and accepts `search` (name, address, or amount) plus `start_time` / `end_time` as Unix seconds. `useExpenseHistoryInfiniteQuery` loads the next page on scroll and sends the History tab search and last-30-days (or custom) range. A description that looks like a file name is shown as a receipt; otherwise it is plain text.
+
+`GET /expenses/history/export` downloads the expense history CSV. The Expense History tab **Export CSV** button calls it with the same `organization_id`, `search`, `start_time`, and `end_time` as the list (no `page` / `pageSize`). Filename comes from `Content-Disposition`, falling back to `expense-history.csv`.
 
 `POST /expenses/import` saves a draft open expense. **Add Expense** and **Import CSV** both open the Add Expense drawer first (CSV / Google Sheets is parsed locally, same as payroll); **Save** posts this route. Body is `organization_id`, `title` (≤ 100), and `items` (`name` ≤ 50, `address` ≤ 128, `amount`, `network` ≤ 32, `symbol` ≤ 32, optional `email` ≤ 100 / `purpose` ≤ 100 / `description` ≤ 5000). Empty optional fields are omitted. Success returns `{ batch_id, count }` and invalidates the expense query namespace.
+
+### Bonuses — `src/api/bonus.ts`, `src/types/bonus.ts`, `src/hooks/use-bonus-api.ts`
+
+| Method | Path | Auth | Query | Data | API | Hook |
+| --- | --- | --- | --- | --- | --- | --- |
+| GET | `/v1/payroll/bonuses/current` | yes | `organization_id`, `timezone` | `BonusCurrentStats` | `getBonusCurrentStats` | `useBonusCurrentStatsQuery` |
+| GET | `/v1/payroll/bonuses/total-payout` | yes | `organization_id`, `period`, `timezone` | `BonusTotalPayoutPoint[]` | `getBonusTotalPayout` | `useBonusTotalPayoutQuery` |
+| GET | `/v1/payroll/bonuses/recent` | yes | `organization_id`, `limit` | `BonusRecentPayout[]` | `getBonusRecentPayouts` | `useBonusRecentPayoutsInfiniteQuery` |
+| GET | `/v1/payroll/bonuses/open` | yes | `organization_id` | `BonusPendingList` | `getBonusOpen` | `useBonusOpenQuery` |
+| GET | `/v1/payroll/bonuses/history` | yes | `organization_id`, `page`, `pageSize`, `start_time?`, `end_time?` | `BonusHistoryResp` | `getBonusHistory` | `useBonusHistoryInfiniteQuery` |
+| GET | `/v1/payroll/bonuses/history/export` | yes | `organization_id`, `start_time?`, `end_time?` | CSV file | `exportBonusHistory` | `useBonusHistoryExportMutation` |
+| POST | `/v1/payroll/bonuses/import` | yes | body: `organization_id`, `title`, `items` | `BonusImportResp` | `importBonuses` | `useBonusImportMutation` |
+
+`organization_id` comes from `AuthUser.organization.id`. `timezone` is the browser IANA zone. Queries stay disabled until both the token and organization id are present. There is no `/open/requests` (or `/open/requests/count`).
+
+`period` is `day` \| `week` \| `month`. The Bonus chart dropdown is Daily / Weekly / Monthly and sends those values as `period`.
+
+Current stats map `total_bonus` → Total Bonus and `members` → Members. Change strings such as `+10%` become numbers; blank / `-` map to `null`.
+
+Recent payouts have no `page` in the contract, only `limit` (max 100). `useBonusRecentPayoutsInfiniteQuery` requests `limit = page * 10` and keeps the new slice. `failedCount` is counted from loaded rows with status `failed`. `completed` maps to `paid`.
+
+`GET /bonuses/open` returns `total_payout`, `total_count`, and `batches` (`title`, `volume`, `list` of operation items). The Bonuses to be paid table keeps each batch as a grouped row: one member shows the name and address, more than one expands. `volume` is the USD total; member `amount` / `symbol` are the payout. `status` `paying` / `processing` / `submitted` on any member shows Paying for that batch; anything else is Pay Now with that batch's `batch_id`. An empty batch list is the create-bonus empty state.
+
+`GET /bonuses/history` is paginated (`page` / `pageSize`, max 100) and accepts `start_time` / `end_time` as Unix seconds. The Bonus History tab does not send those filters yet. `useBonusHistoryInfiniteQuery` loads the next page on scroll. Each execution item maps `name` (or `purpose`) → title, `destination_volume` → total payout, and `paid_at` → execution time.
+
+`GET /bonuses/history/export` downloads the bonus history CSV. The Bonus History tab **Export CSV** button calls it with `organization_id` (and `start_time` / `end_time` when those filters are added). Filename comes from `Content-Disposition`, falling back to `bonus-history.csv`.
+
+`POST /bonuses/import` saves a draft open bonus. **Add Bonus** and **Import CSV** both open the Add Bonus drawer first (CSV / Google Sheets is parsed locally, same as payroll); **Save** posts this route. Body is `organization_id`, `title` (≤ 100), and `items` (`name` ≤ 50, `address` ≤ 128, `amount`, `network` ≤ 32, `symbol` ≤ 32, optional `email` ≤ 100 / `purpose` ≤ 100 / `description` ≤ 5000). CSV columns are `recipient,email,amount,token,network,memo`; `memo` maps to `description`. Empty optional fields are omitted. Success returns `{ batch_id, count }` and invalidates the bonus query namespace.
 
 ### Payout (legacy wallet path) — `src/api/payout.ts`, `src/types/payout.ts`
 
@@ -332,4 +353,5 @@ All four pass `envelope: false`. They are called from `src/lib/confidential/` fo
 | `src/api/payable.ts` | Payables list and salaries/expense/bonus pay |
 | `src/api/map.ts` | `asRecord`, `apiText`, `apiNumber` |
 | `src/api/payroll.ts` | Payroll salaries current / total-payout / recent / next / history |
-| `src/api/expense.ts` | Expense current / total-payout / recent / open / open requests / history / import |
+| `src/api/expense.ts` | Expense current / total-payout / recent / open / open requests / history / history export / import |
+| `src/api/bonus.ts` | Bonus current / total-payout / recent / open / history / history export / import |

@@ -1,5 +1,6 @@
 import { keepPreviousData, useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  exportExpenseHistory,
   getExpenseCurrentStats,
   getExpenseHistory,
   getExpenseOpen,
@@ -12,13 +13,26 @@ import {
 import { queryKeys } from "@/api/query-keys";
 import { organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
-import type { ExpenseHistoryQuery, ExpenseTotalPayoutPeriod } from "@/types/expense";
+import type { ExpenseHistoryExportQuery, ExpenseHistoryQuery, ExpenseTotalPayoutPeriod } from "@/types/expense";
 import { browserTimeZone } from "@/utils";
+import { stampDownloadFilename } from "@/views/pay/utils";
 import {
   EXPENSE_HISTORY_PAGE_SIZE,
   EXPENSE_RECENT_LIMIT_MAX,
   EXPENSE_RECENT_PAGE_SIZE,
 } from "@/views/expense/config";
+
+function saveBlob(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
 
 function useExpenseQueryContext() {
   const token = useAuthStore((state) => state.token);
@@ -155,6 +169,26 @@ export function useExpenseImportMutation() {
     mutationFn: importExpenses,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.expense.all });
+    },
+  });
+}
+
+export function useExpenseHistoryExportMutation() {
+  const { organizationId: orgId } = useExpenseQueryContext();
+  return useMutation({
+    mutationFn: (params: Pick<ExpenseHistoryExportQuery, "search" | "startTime" | "endTime">) => {
+      if (orgId == null) {
+        return Promise.reject(new Error("Organization is missing"));
+      }
+      return exportExpenseHistory({
+        organizationId: orgId,
+        search: params.search,
+        startTime: params.startTime,
+        endTime: params.endTime,
+      });
+    },
+    onSuccess: ({ blob, filename }) => {
+      saveBlob(blob, stampDownloadFilename(filename));
     },
   });
 }
