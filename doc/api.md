@@ -106,7 +106,7 @@ navigate(postAuthPath(session.user, returnTo));
 
 Paths are prefixed with `PAY_API_PREFIX` (`/v1/payroll`) or `NEARINTENTS_API_PREFIX` (`/v1/nearintents`) from `src/api/config.ts`. "Auth" is the default for that function; `caller` means the caller decides.
 
-Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), Organizations, Team members, Recipients, and the Payroll salaries dashboard endpoints are served by the Payroll backend. The Payout and Payment-request tables are the pre-Payroll contract kept unchanged under the new prefix; the screens that call them are not in scope yet, so those routes will 404. Do not treat them as a spec.
+Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), Organizations, Team members, Recipients, and the Payroll salaries / expenses dashboard endpoints are served by the Payroll backend. The Payout and Payment-request tables are the pre-Payroll contract kept unchanged under the new prefix; the screens that call them are not in scope yet, so those routes will 404. Do not treat them as a spec.
 
 ### Auth — `src/api/auth.ts`, `src/types/auth.ts`, `src/hooks/use-auth-api.ts`
 
@@ -205,6 +205,35 @@ Recent payouts have no `page` in the contract, only `limit` (max 100). `usePayro
 
 `POST /salaries/update` saves edits to the current next payroll with the same pay-date mapping. Existing rows send their numeric `id`; newly added drawer rows omit `id`. Removed original ids go in `delete_ids`. Items send `name`, `address`, `amount`, `network`, `symbol`, and optional `email` (no `description`). Success invalidates the payroll query namespace.
 
+### Expenses — `src/api/expense.ts`, `src/types/expense.ts`, `src/hooks/use-expense-api.ts`
+
+| Method | Path | Auth | Query | Data | API | Hook |
+| --- | --- | --- | --- | --- | --- | --- |
+| GET | `/v1/payroll/expenses/current` | yes | `organization_id`, `timezone` | `ExpenseCurrentStats` | `getExpenseCurrentStats` | `useExpenseCurrentStatsQuery` |
+| GET | `/v1/payroll/expenses/total-payout` | yes | `organization_id`, `period`, `timezone` | `ExpenseTotalPayoutPoint[]` | `getExpenseTotalPayout` | `useExpenseTotalPayoutQuery` |
+| GET | `/v1/payroll/expenses/recent` | yes | `organization_id`, `limit` | `ExpenseRecentPayout[]` | `getExpenseRecentPayouts` | `useExpenseRecentPayoutsInfiniteQuery` |
+| GET | `/v1/payroll/expenses/open` | yes | `organization_id` | `ExpenseOpenList` | `getExpenseOpen` | `useExpenseOpenQuery` |
+| GET | `/v1/payroll/expenses/open/requests/count` | yes | `organization_id` | `ExpenseOpenRequestsCount` | `getExpenseOpenRequestsCount` | `useExpenseOpenRequestsCountQuery` |
+| GET | `/v1/payroll/expenses/open/requests` | yes | `organization_id` | `ExpenseOpenList` | `getExpenseOpenRequests` | `useExpenseOpenRequestsQuery` |
+| GET | `/v1/payroll/expenses/history` | yes | `organization_id`, `page`, `pageSize`, `search?`, `start_time?`, `end_time?` | `ExpenseHistoryResp` | `getExpenseHistory` | `useExpenseHistoryInfiniteQuery` |
+| POST | `/v1/payroll/expenses/import` | yes | body: `organization_id`, `title`, `items` | `ExpenseImportResp` | `importExpenses` | `useExpenseImportMutation` |
+
+`organization_id` comes from `AuthUser.organization.id`. `timezone` is the browser IANA zone. Queries stay disabled until both the token and organization id are present.
+
+`period` is `day` \| `week` \| `month`. The Expense chart currently only exposes Last 6 months and sends `month`.
+
+Current stats map `total_reimbursement` → Total expense, `processed_expenses` → Number of expensed, and `total_expenses` → Number of expenses. Change strings such as `+10%` become numbers; blank / `-` map to `null`.
+
+Recent payouts have no `page` in the contract, only `limit` (max 100). `useExpenseRecentPayoutsInfiniteQuery` requests `limit = page * 10` and keeps the new slice. `failedCount` is counted from loaded rows with status `failed`. `completed` maps to `paid`.
+
+`GET /expenses/open` returns `total_payout`, `total_count`, and `batches` (`list` of operation items). The Open expense table flattens every batch list. `volume` is the USD expense; `amount` / `symbol` / `network` are the payout. `status` `paying` / `processing` / `submitted` shows the Paying control; anything else is Pay Now. Description fills the Receipt column.
+
+`GET /expenses/open/requests/count` is `{ count }` and drives the Request Payments tab badge (hidden when `count` is 0). `GET /expenses/open/requests` uses the same batch list shape as Open expense. The Request Payments table maps `purpose` → Request for, `description` → Description (a filename looks like a receipt; empty cells are `-`), and `amount` / `symbol` / `network` → Amount / Payout Preference. **Pay Now** uses the same `EXPENSE_PAY_NOW_FORM_ID` as Open expense. This tab does not show Import CSV / Add Expense.
+
+`GET /expenses/history` is paginated (`page` / `pageSize`, max 100) and accepts `search` (name, address, or amount) plus `start_time` / `end_time` as Unix seconds. `useExpenseHistoryInfiniteQuery` loads the next page on scroll and sends the History tab search and last-30-days (or custom) range. A description that looks like a file name is shown as a receipt; otherwise it is plain text. There is no history export route; **Export CSV** downloads the loaded rows.
+
+`POST /expenses/import` saves a draft open expense. **Add Expense** and **Import CSV** both open the Add Expense drawer first (CSV / Google Sheets is parsed locally, same as payroll); **Save** posts this route. Body is `organization_id`, `title` (≤ 100), and `items` (`name` ≤ 50, `address` ≤ 128, `amount`, `network` ≤ 32, `symbol` ≤ 32, optional `email` ≤ 100 / `purpose` ≤ 100 / `description` ≤ 5000). Empty optional fields are omitted. Success returns `{ batch_id, count }` and invalidates the expense query namespace.
+
 ### Payout (legacy wallet path) — `src/api/payout.ts`, `src/types/payout.ts`
 
 | Method | Path | Auth | Body / Query | Data | API | Hook |
@@ -278,4 +307,5 @@ All four pass `envelope: false`. They are called from `src/lib/confidential/` fo
 | `src/api/config.ts` | `PAY_API_PREFIX`, `NEARINTENTS_API_PREFIX` |
 | `src/api/query-keys.ts` | `queryKeys` factory |
 | `src/api/map.ts` | `asRecord`, `apiText`, `apiNumber` |
-| `src/api/payroll.ts` | Payroll salaries current / total-payout / recent |
+| `src/api/payroll.ts` | Payroll salaries current / total-payout / recent / next / history |
+| `src/api/expense.ts` | Expense current / total-payout / recent / open / open requests / history / import |

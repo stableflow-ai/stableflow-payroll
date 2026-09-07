@@ -14,7 +14,7 @@ import { chainDisplayName, txExplorerUrl } from "@/config/chains";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/utils";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";
-import type { ExpenseHistoryRow } from "@/mocks/expense";
+import type { ExpenseHistoryRow } from "@/types/expense";
 import {
   HISTORY_EXPENSE_TABLE_COLUMNS,
   EXPENSE_HISTORY_FAILED_CLASS,

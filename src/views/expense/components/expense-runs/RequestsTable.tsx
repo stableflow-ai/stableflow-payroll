@@ -1,3 +1,4 @@
+import { looksLikeExpenseReceipt } from "@/api/expense";
 import { IconReceipt } from "@/components/icons/receipt";
 import { IconUp } from "@/components/icons/up";
 import { Button } from "@/components/ui/button/Button";
@@ -14,21 +15,28 @@ import { formatAmount } from "@/utils";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";
 import type { ExpenseOpenRow } from "@/types/expense";
 import {
-  OPEN_EXPENSE_TABLE_COLUMNS,
+  REQUEST_PAYMENTS_TABLE_COLUMNS,
   EXPENSE_PAY_NOW_FORM_ID,
   EXPENSE_ROW_ACTION,
 } from "../../config";
 
-function ReceiptCell({ name }: { name: string }) {
-  return (
-    <span
-      className="flex min-w-0 max-w-full items-center gap-2 text-[#aaa] hover:text-[#6284F5]"
-      title={name}
-    >
-      <IconReceipt className="size-3.5 shrink-0" />
-      <span className="truncate">{name}</span>
-    </span>
-  );
+function DescriptionCell({ value }: { value: string }) {
+  const text = value.trim();
+  if (!text) {
+    return <span className="text-black">-</span>;
+  }
+  if (looksLikeExpenseReceipt(text)) {
+    return (
+      <span
+        className="flex min-w-0 max-w-full items-center gap-2 font-normal text-[#6284F5]"
+        title={text}
+      >
+        <IconReceipt className="size-3.5 shrink-0" />
+        <span className="truncate">{text}</span>
+      </span>
+    );
+  }
+  return <span className="truncate font-normal text-black">{text}</span>;
 }
 
 function RowAction(props: {
@@ -58,21 +66,20 @@ function RowAction(props: {
   );
 }
 
-export function OpenTable(props: {
+export function RequestsTable(props: {
   rows: ExpenseOpenRow[];
   onPayNow: (formId: string) => void;
 }) {
   const { rows, onPayNow } = props;
   return (
     <Table
-      columns={OPEN_EXPENSE_TABLE_COLUMNS}
+      columns={REQUEST_PAYMENTS_TABLE_COLUMNS}
       className="border-0 bg-transparent p-0 shadow-none"
     >
       <TableHeader className="border-b-0 bg-transparent">
         <TableHead>Name</TableHead>
-        <TableHead>Purpose</TableHead>
-        <TableHead>Receipt</TableHead>
-        <TableHead>Expense</TableHead>
+        <TableHead className="normal-case">Request for</TableHead>
+        <TableHead>Description</TableHead>
         <TableHead>Address</TableHead>
         <TableHead>Payout Preference</TableHead>
         <TableHead>Amount</TableHead>
@@ -84,17 +91,22 @@ export function OpenTable(props: {
             key={row.id}
             className="h-14 rounded-[12px] border-0 bg-[#f6f6f6] px-4 [&>*]:py-0"
           >
-            <TableCell>{row.name}</TableCell>
-            <TableCell>{row.purpose}</TableCell>
+            <TableCell>{row.name || "-"}</TableCell>
+            <TableCell>{row.purpose || "-"}</TableCell>
             <TableCell>
-              <ReceiptCell name={row.receiptName} />
-            </TableCell>
-            <TableCell>{formatAmount(row.expense)}</TableCell>
-            <TableCell>
-              <PayoutRecipientCell address={row.address} />
+              <DescriptionCell value={row.receiptName} />
             </TableCell>
             <TableCell>
-              {row.token} · {chainDisplayName(row.network)}
+              {row.address ? (
+                <PayoutRecipientCell address={row.address} />
+              ) : (
+                "-"
+              )}
+            </TableCell>
+            <TableCell>
+              {row.token || row.network
+                ? `${row.token} · ${chainDisplayName(row.network)}`
+                : "-"}
             </TableCell>
             <TableCell>{formatAmount(row.amount, { prefix: "" })}</TableCell>
             <TableCell className="justify-end">

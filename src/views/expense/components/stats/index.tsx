@@ -1,3 +1,4 @@
+import { IconLoading } from "@/components/icons/loading";
 import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/utils";
@@ -7,6 +8,8 @@ import {
 } from "../../config";
 
 export type StatsCardProps = {
+  loading?: boolean;
+  error?: string | null;
   totalExpense: string;
   totalChangePercent: number | null;
   expensedCount: number;
@@ -61,6 +64,8 @@ function StatColumn(props: {
 
 export function StatsCard(props: StatsCardProps) {
   const {
+    loading = false,
+    error = null,
     totalExpense,
     totalChangePercent,
     expensedCount,
@@ -71,27 +76,37 @@ export function StatsCard(props: StatsCardProps) {
 
   return (
     <Card className="grid grid-cols-1 gap-6 py-[22px] sm:grid-cols-3 sm:gap-8">
-      <StatColumn
-        label="Total expense"
-        value={formatAmount(totalExpense)}
-        hint="from last month"
-        hintValue={formatChange(totalChangePercent)}
-        hintTone={changeTone(totalChangePercent)}
-      />
-      <StatColumn
-        label="Number of expensed"
-        value={String(expensedCount)}
-        hint="from last month"
-        hintValue={formatChange(expensedChangePercent)}
-        hintTone={changeTone(expensedChangePercent)}
-      />
-      <StatColumn
-        label="Number of expenses"
-        value={String(expenseCount)}
-        hint="from last month"
-        hintValue={formatChange(expenseChangePercent)}
-        hintTone={changeTone(expenseChangePercent)}
-      />
+      {loading ? (
+        <div className="flex min-h-[88px] items-center justify-center sm:col-span-3">
+          <IconLoading className="size-5 animate-spin text-[#909090]" />
+        </div>
+      ) : error ? (
+        <p className="font-montserrat text-sm text-danger sm:col-span-3">{error}</p>
+      ) : (
+        <>
+          <StatColumn
+            label="Total expense"
+            value={formatAmount(totalExpense)}
+            hint="from last month"
+            hintValue={formatChange(totalChangePercent)}
+            hintTone={changeTone(totalChangePercent)}
+          />
+          <StatColumn
+            label="Number of expensed"
+            value={String(expensedCount)}
+            hint="from last month"
+            hintValue={formatChange(expensedChangePercent)}
+            hintTone={changeTone(expensedChangePercent)}
+          />
+          <StatColumn
+            label="Number of expenses"
+            value={String(expenseCount)}
+            hint="from last month"
+            hintValue={formatChange(expenseChangePercent)}
+            hintTone={changeTone(expenseChangePercent)}
+          />
+        </>
+      )}
     </Card>
   );
 }

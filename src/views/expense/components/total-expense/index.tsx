@@ -7,11 +7,12 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
+import { IconLoading } from "@/components/icons/loading";
 import { Card } from "@/components/ui/card/Card";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { cn } from "@/lib/utils";
+import type { ExpenseChartPoint } from "@/types/expense";
 import { formatAmount } from "@/utils";
-import type { ExpenseChartPoint } from "@/mocks/expense";
 import {
   EXPENSE_CHART_LINE_COLOR,
   EXPENSE_CHART_RANGE_OPTIONS,
@@ -52,9 +53,19 @@ export function TotalExpenseChart(props: {
   periodLabel: string;
   currentValue: string;
   points: ExpenseChartPoint[];
+  loading?: boolean;
+  error?: string | null;
 }) {
-  const { range, onRangeChange, periodLabel, currentValue, points } = props;
-  const isEmpty = points.every((point) => point.value === 0);
+  const {
+    range,
+    onRangeChange,
+    periodLabel,
+    currentValue,
+    points,
+    loading = false,
+    error = null,
+  } = props;
+  const isEmpty = !loading && points.every((point) => point.value === 0);
   const yMax = Math.max(EXPENSE_CHART_Y_MAX, ...points.map((point) => point.value));
 
   return (
@@ -86,58 +97,68 @@ export function TotalExpenseChart(props: {
         />
       </div>
       <div className="mt-4 h-[320px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={points} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-            <CartesianGrid stroke="#e3e3e3" />
-            <XAxis
-              dataKey="label"
-              axisLine={false}
-              tickLine={false}
-              tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              domain={[0, yMax]}
-              ticks={[0, yMax / 3, (yMax * 2) / 3, yMax]}
-              tickFormatter={formatYTick}
-              tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
-              width={48}
-            />
-            <Tooltip
-              content={(tooltipProps) => (
-                <ChartTooltip
-                  active={tooltipProps.active}
-                  payload={tooltipProps.payload}
-                  label={tooltipProps.label}
-                />
-              )}
-              cursor={{
-                stroke: EXPENSE_CHART_LINE_COLOR,
-                strokeWidth: 1,
-                strokeDasharray: "4 4",
-              }}
-            />
-            <Line
-              type="linear"
-              dataKey="value"
-              stroke={EXPENSE_CHART_LINE_COLOR}
-              strokeWidth={2}
-              dot={{
-                r: 6,
-                fill: EXPENSE_CHART_LINE_COLOR,
-                stroke: "#fff",
-                strokeWidth: 2,
-              }}
-              activeDot={{
-                r: 6,
-                fill: EXPENSE_CHART_LINE_COLOR,
-                stroke: "#fff",
-                strokeWidth: 2,
-              }}
-            />
-          </LineChart>
-        </ResponsiveContainer>
+        {loading ? (
+          <div className="flex h-full items-center justify-center">
+            <IconLoading className="size-5 animate-spin text-[#909090]" />
+          </div>
+        ) : error ? (
+          <div className="flex h-full items-center justify-center">
+            <p className="font-montserrat text-sm text-danger">{error}</p>
+          </div>
+        ) : (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={points} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
+              <CartesianGrid stroke="#e3e3e3" />
+              <XAxis
+                dataKey="label"
+                axisLine={false}
+                tickLine={false}
+                tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                domain={[0, yMax]}
+                ticks={[0, yMax / 3, (yMax * 2) / 3, yMax]}
+                tickFormatter={formatYTick}
+                tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
+                width={48}
+              />
+              <Tooltip
+                content={(tooltipProps) => (
+                  <ChartTooltip
+                    active={tooltipProps.active}
+                    payload={tooltipProps.payload}
+                    label={tooltipProps.label}
+                  />
+                )}
+                cursor={{
+                  stroke: EXPENSE_CHART_LINE_COLOR,
+                  strokeWidth: 1,
+                  strokeDasharray: "4 4",
+                }}
+              />
+              <Line
+                type="linear"
+                dataKey="value"
+                stroke={EXPENSE_CHART_LINE_COLOR}
+                strokeWidth={2}
+                dot={{
+                  r: 6,
+                  fill: EXPENSE_CHART_LINE_COLOR,
+                  stroke: "#fff",
+                  strokeWidth: 2,
+                }}
+                activeDot={{
+                  r: 6,
+                  fill: EXPENSE_CHART_LINE_COLOR,
+                  stroke: "#fff",
+                  strokeWidth: 2,
+                }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        )}
       </div>
     </Card>
   );

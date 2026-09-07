@@ -159,9 +159,9 @@ Dashboard for the Operations → Payroll nav item. Stats (`GET /v1/payroll/salar
 
 ### `/pay/expense` — Expense
 
-Files: `src/views/expense/`. Mock: `src/mocks/expense.ts`.
+Files: `src/views/expense/`. API: [api.md](api.md) expenses endpoints.
 
-Dashboard for the Operations → Expense nav item. Stats, a six-month total-expense chart, recent payouts, and Open expense / Expense History tabs. History has a name/address/amount search, a last-30-days date filter, and client-side CSV export. Data is mocked until the backend contract exists. **Pay Now** on an open row (not Paying) opens `PaymentByFormDialog` with `EXPENSE_PAY_NOW_FORM_ID` (`form-open-reimbursement`).
+Dashboard for the Operations → Expense nav item. Stats (`GET /v1/payroll/expenses/current`), a six-month total-expense chart (`GET /v1/payroll/expenses/total-payout`), recent payouts with scroll-to-load (`GET /v1/payroll/expenses/recent`), and Open expense (`GET /v1/payroll/expenses/open`) / Request Payments (`GET /v1/payroll/expenses/open/requests`, badge from `GET /v1/payroll/expenses/open/requests/count`) / Expense History (`GET /v1/payroll/expenses/history`, paginated) tabs. Each live block has its own loading state. An empty open-expense list shows the create-expense CTA (Download Template, Import CSV, Add Expense) and hides the tab toolbar. Request Payments hides the toolbar; an empty list shows "No payment requests". When Open expense has rows, or on Expense History, the tab toolbar shows **Import CSV** and **Add Expense**. **Import CSV** (Choose file or Google Docs) parses locally and opens the **Add Expense** drawer with the rows; **Add Expense** opens the same drawer empty. **Save** posts `POST /v1/payroll/expenses/import` (`title` plus items), then returns to the Open expense tab. History search and the date range are sent as `search` / `start_time` / `end_time`. **Export CSV** downloads the loaded history rows (there is no export route). **Pay Now** on an open or request row (not Paying) opens `PaymentByFormDialog` with `EXPENSE_PAY_NOW_FORM_ID` (`form-open-reimbursement`).
 
 ### `/pay/bonus` — Bonus
 
