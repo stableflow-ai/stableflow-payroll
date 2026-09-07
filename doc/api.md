@@ -106,7 +106,7 @@ navigate(postAuthPath(session.user, returnTo));
 
 Paths are prefixed with `PAY_API_PREFIX` (`/v1/payroll`) or `NEARINTENTS_API_PREFIX` (`/v1/nearintents`) from `src/api/config.ts`. "Auth" is the default for that function; `caller` means the caller decides.
 
-Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), Organizations, Team members, Recipients, and the Payroll salaries / expenses dashboard endpoints are served by the Payroll backend. The Payout and Payment-request tables are the pre-Payroll contract kept unchanged under the new prefix; the screens that call them are not in scope yet, so those routes will 404. Do not treat them as a spec.
+Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), Organizations, Team members, Recipients, Payroll salaries / expenses, Payables, and Transaction History endpoints are served by the Payroll backend. The Payout and Payment-request tables are the pre-Payroll contract kept unchanged under the new prefix; the screens that call them are not in scope yet, so those routes will 404. Do not treat them as a spec.
 
 ### Auth — `src/api/auth.ts`, `src/types/auth.ts`, `src/hooks/use-auth-api.ts`
 
@@ -135,6 +135,17 @@ Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), Organizations
 | POST | `/v1/payroll/organizations/{id}` | yes | `UpdateOrganizationBody` | — | `updateOrganization` | `useUpdateOrganizationMutation` |
 
 Integer `organization_id` / path `{id}` come from session `user.organization.id` and are unchanged for overview, payout, high-priority, and team. Queries and the update mutation do not fire when that id is missing. `GET /organizations/{id}` also returns string `org_id`, `address_settings`, and `notification_settings` (`disabled` / `optional` / `required`; blank or unknown maps to `disabled`). The string `org_id` is written onto the session as `organization.orgId` and is the only id used for invite URLs, `GET .../info/{org_id}`, and `POST /auth/register/user`. Settings picks the GET row whose `id` matches, or the first row. Organization Save and Integration Save both POST `name`, optional `logo`, and both settings objects; empty `logo` is omitted. Integration keeps EVM locked (`evm_address` stays the GET value). `period` is the existing `VOLUME_PERIOD` (`day` / `week` / `month`). `timezone` is `browserTimeZone()`. High-priority `category` values are `payroll` / `payFailed` / `paymentRequest`; unknown values are dropped.
+
+### Transaction history — `src/api/history.ts`, `src/types/history.ts`, `src/hooks/use-history-api.ts`
+
+| Method | Path | Auth | Body / Query | Data | API | Hook |
+| --- | --- | --- | --- | --- | --- | --- |
+| GET | `/v1/payroll/organizations/history` | yes | `HistoryQuery` | `HistoryListResp` | `getHistory` | `useHistoryQuery` |
+| GET | `/v1/payroll/organizations/history/export` | yes | `HistoryExportQuery` | CSV file | `exportHistory` | `useExportHistoryMutation` |
+| GET | `/v1/payroll/history` | yes | `HistoryQuery` | `HistoryListResp` | `getHistory` | `useHistoryQuery` |
+| GET | `/v1/payroll/history/export` | yes | `HistoryExportQuery` | CSV file | `exportHistory` | `useExportHistoryMutation` |
+
+Admin (`role` other than `"user"`) calls `/organizations/history`. Members (`role === "user"`) call `/history`. Both send session `organization_id`. List query: `page`, `pageSize`, optional `q`, `status` (`created` / `processing` / `completed` / `failed` / `expired`), `source_network`, `source_symbol`, `destination_network`, `destination_symbol`, `start_time`, `end_time` (unix seconds). Empty / All filters are omitted. Export uses the same filters without pagination. Filename comes from `Content-Disposition`, falling back to `transaction-history.csv`. Rows map `payment_id`, `source_*` / `destination_*`, `payer` / `recipient`, `tx_hash` / `destination_tx_hash`, `status`, and `submitted_at` (or `created_at`).
 
 ### Team members — `src/api/team.ts`, `src/types/team.ts`, `src/hooks/use-team-api.ts`
 

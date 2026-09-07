@@ -95,4 +95,8 @@ export const queryKeys = {
       [...queryKeys.payable.all, "list", orgId, timezone] as const,
     pay: (body: unknown) => [...queryKeys.payable.all, "pay", body] as const,
   },
+  history: {
+    all: ["history"] as const,
+    list: (params: unknown) => [...queryKeys.history.all, "list", params] as const,
+  },
 } as const;

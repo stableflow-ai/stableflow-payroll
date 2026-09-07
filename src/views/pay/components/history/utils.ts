@@ -1,25 +1,31 @@
+import { HISTORY_STATUS } from "@/types/history";
 import {
-  HISTORY_AMOUNT_FILTER,
   HISTORY_FILTER_ALL,
+  HISTORY_STATUS_FAILED_CLASS,
+  HISTORY_STATUS_OPTIONS,
+  HISTORY_STATUS_OTHER_CLASS,
+  HISTORY_STATUS_SUCCESS_CLASS,
 } from "./config";
 
 export function historyOptionalFilter(value: string): string | undefined {
   return value === HISTORY_FILTER_ALL ? undefined : value;
 }
 
-export function historyAmountBounds(filter: string): { min?: number; max?: number } {
-  if (filter === HISTORY_AMOUNT_FILTER.Under1k) return { min: 0, max: 1000 };
-  if (filter === HISTORY_AMOUNT_FILTER.From1kTo10k) return { min: 1000, max: 10000 };
-  if (filter === HISTORY_AMOUNT_FILTER.Over10k) return { min: 10000 };
-  return {};
+export function historyStatusLabel(status: string): string {
+  const value = status.trim().toLowerCase();
+  if (!value) return "-";
+  const option = HISTORY_STATUS_OPTIONS.find((item) => item.value === value);
+  if (option && option.value !== HISTORY_FILTER_ALL) return option.label;
+  return value;
 }
 
-export function historyMatchesAmount(amount: string, filter: string): boolean {
-  const bounds = historyAmountBounds(filter);
-  if (bounds.min == null && bounds.max == null) return true;
-  const value = Number(amount.replace(/,/g, ""));
-  if (!Number.isFinite(value)) return false;
-  if (bounds.min != null && value < bounds.min) return false;
-  if (bounds.max != null && value >= bounds.max) return false;
-  return true;
+export function historyStatusClass(status: string): string {
+  const value = status.trim().toLowerCase();
+  if (value === HISTORY_STATUS.Completed || value === "success") {
+    return HISTORY_STATUS_SUCCESS_CLASS;
+  }
+  if (value === HISTORY_STATUS.Failed || value === HISTORY_STATUS.Expired) {
+    return HISTORY_STATUS_FAILED_CLASS;
+  }
+  return HISTORY_STATUS_OTHER_CLASS;
 }

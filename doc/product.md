@@ -187,9 +187,9 @@ Read-only `PayoutsTable` over `GET /v1/payroll/payments/pending`. Every row rend
 
 ### `/pay/history` — Transaction History
 
-Mock data (`history` in [mocks.md](mocks.md)) until that contract exists. Top bar: Search, `DateRangePicker` (last 30 days), Export CSV of the current filter result. Card toolbar (same grid as v3 Reports Transactions): Source Network, Source Token, Destination Network, Destination Token, Amount (`All` / `0-1,000` / `1,000-10,000` / `>10,000`), Status (`All` / `Success` / `Failed`). Network options are `FIXED_CHAINS` plus All; token options are `PAYOUT_SYMBOLS` plus All. Every filter change resets to page 1. The table has no Status column.
+Admin loads `GET /v1/payroll/organizations/history`; members load `GET /v1/payroll/history`. Both send session `organization_id`. Top bar: Search (`q`, debounced 300ms), `DateRangePicker` (last 30 days → `start_time` / `end_time` unix seconds), Export CSV of the current filter result (`.../history/export`, no pagination). Card toolbar: Source Network, Source Token, Destination Network, Destination Token, Status (`All` / `Created` / `Processing` / `Completed` / `Failed` / `Expired`). Network options are `FIXED_CHAINS` plus All; token options are `PAYOUT_SYMBOLS` plus All. Every filter change resets to page 1. There is no Amount filter. The table Status column is green (`#84A20F`) for completed, red (`#FF5656`) for failed / expired, and black for created / processing.
 
-Columns: Amount, Source, arrow, Received, Destination, From, To, Time. Source / Destination show token logo and `SYMBOL · Chain`. From / To truncate the address, copy it, and open the tx explorer (`txHash` on the source chain, `destinationTxHash` on the destination). Pagination sits in the card footer. Export does not call `/payments/export`.
+Columns: Amount, Source, arrow, Received, Destination, From, To, Time, Status. Source / Destination show token logo and `SYMBOL · Chain`. From / To truncate the address, copy it, and open the tx explorer (`txHash` on the source chain, `destinationTxHash` on the destination). Pagination sits in the card footer.
 
 ### `/pay/request` and `/pay/requests` — Request Payment
 
