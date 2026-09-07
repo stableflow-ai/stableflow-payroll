@@ -3,8 +3,8 @@ import type { PayRecipient } from "@/types/recipient";
 
 export type Contact = PayRecipient;
 
-export function useContacts() {
-  const query = useRecipientsQuery();
+export function useContacts(options?: { enabled?: boolean }) {
+  const query = useRecipientsQuery(options?.enabled ?? true);
   const { createMutation, updateMutation, deleteMutation } = useRecipientMutations();
 
   return {

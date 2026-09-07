@@ -57,6 +57,7 @@ export function PayrollRunsCard(props: {
   historyHasMore?: boolean;
   onHistoryLoadMore?: () => void;
   onViewHistoryDetails: (run: PayrollHistoryRun) => void;
+  onPayNow: () => void;
 }) {
   const {
     tab,
@@ -76,7 +77,8 @@ export function PayrollRunsCard(props: {
     historyLoadingMore = false,
     historyHasMore = false,
     onHistoryLoadMore,
-    onViewHistoryDetails
+    onViewHistoryDetails,
+    onPayNow
   } = props;
   const isNextTab = tab === PAYROLL_TAB.Next;
   const tabLoading = isNextTab ? nextLoading : historyLoading;
@@ -141,6 +143,7 @@ export function PayrollRunsCard(props: {
               netPayById={netPayById}
               onNetPayChange={onNetPayChange}
               onEdit={onEditPayroll}
+              onPayNow={onPayNow}
             />
           ) : (
             <CreatePayrollEmpty

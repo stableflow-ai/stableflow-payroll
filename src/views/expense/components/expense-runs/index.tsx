@@ -36,8 +36,9 @@ export function ExpenseRunsCard(props: {
   onTabChange: (tab: ExpenseTab) => void;
   open: ExpenseOpenList;
   history: ExpenseHistoryRow[];
+  onPayNow: (formId: string) => void;
 }) {
-  const { tab, onTabChange, open, history } = props;
+  const { tab, onTabChange, open, history, onPayNow } = props;
 
   return (
     <div>
@@ -57,7 +58,7 @@ export function ExpenseRunsCard(props: {
       </div>
       <Card className="mt-3 px-5 py-6 sm:px-8">
         {tab === EXPENSE_TAB.Open ? (
-          <OpenPanel list={open} />
+          <OpenPanel list={open} onPayNow={onPayNow} />
         ) : (
           <HistoryPanel items={history} />
         )}

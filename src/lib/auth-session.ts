@@ -1,4 +1,3 @@
-import { apiNumber, apiText, asRecord } from "@/api/map";
 import { AUTH_USER_ROLE, type AuthOrganization, type AuthSession, type AuthUser } from "@/types/auth";
 
 const SESSION_KEY = "stableflow-pay.session";
@@ -21,6 +20,31 @@ function getStorage(): Storage | null {
   }
 }
 
+function optionalTrimmed(value: unknown): string | undefined {
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  return trimmed || undefined;
+}
+
+function hydrateOrganization(value: unknown): AuthOrganization | null | undefined {
+  if (value === undefined) return undefined;
+  if (value === null) return null;
+  if (!value || typeof value !== "object") return undefined;
+  const row = value as { id?: unknown; name?: unknown; logo?: unknown; orgId?: unknown };
+  if (typeof row.name !== "string") return undefined;
+  const name = row.name.trim();
+  if (!name) return null;
+  const id = typeof row.id === "number" && Number.isFinite(row.id) ? row.id : 0;
+  const logo = typeof row.logo === "string" ? row.logo.trim() : "";
+  const orgId = optionalTrimmed(row.orgId);
+  return {
+    id,
+    name,
+    ...(logo ? { logo } : {}),
+    ...(orgId ? { orgId } : {}),
+  };
+}
+
 function isAuthUserRecord(value: unknown): value is {
   id: number;
   email: string;
@@ -37,30 +61,24 @@ function isAuthUserRecord(value: unknown): value is {
   );
 }
 
-function hydrateOrganization(value: unknown): AuthOrganization | null {
-  const row = asRecord(value);
-  if (!row) return null;
-  const id = apiNumber(row.id);
-  if (id == null) return null;
-  return {
-    id,
-    name: apiText(row.name),
-    logo: apiText(row.logo),
-  };
-}
-
 export function hydrateAuthUser(user: {
   id: number;
   email: string;
   name: string;
   role?: unknown;
+  telegram?: unknown;
+  slack?: unknown;
   organization?: unknown;
 }): AuthUser {
+  const telegram = optionalTrimmed(user.telegram);
+  const slack = optionalTrimmed(user.slack);
   return {
     id: user.id,
     email: user.email,
     name: user.name,
-    role: user.role === AUTH_USER_ROLE.Employee ? AUTH_USER_ROLE.Employee : AUTH_USER_ROLE.Admin,
+    role: user.role === AUTH_USER_ROLE.User ? AUTH_USER_ROLE.User : AUTH_USER_ROLE.Admin,
+    ...(telegram ? { telegram } : {}),
+    ...(slack ? { slack } : {}),
     organization: hydrateOrganization(user.organization),
   };
 }

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { IconQuestion } from "@/components/icons/question";
 import { Button } from "@/components/ui/button/Button";
 import { InputNumber } from "@/components/ui/input-number/InputNumber";
@@ -6,9 +6,12 @@ import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
 import { useCreatePayrollPaymentMutation } from "@/hooks/use-single-payout-api";
 import { useContacts, type Contact } from "@/hooks/use-contacts";
+import { useTeamMembersInfiniteQuery } from "@/hooks/use-team-api";
 import useToast from "@/hooks/use-toast";
-import { sameAddress } from "@/utils";
+import { isUser } from "@/lib/auth-role";
+import { useAuthStore } from "@/stores/auth";
 import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
+import type { TeamMemberWallets } from "@/types/team";
 import { ContactFormDialog } from "../ContactFormDialog";
 import { DeleteContactDialog } from "../DeleteContactDialog";
 import { RecipientAddressField } from "../RecipientAddressField";
@@ -21,20 +24,35 @@ import {
   parsePositiveDecimal,
   payoutNetworkToken,
 } from "../../utils";
-
-function matchContact(address: string, contacts: Contact[]): Contact | null {
-  const kind = detectAddressChainKind(address);
-  if (!kind) return null;
-  return contacts.find((row) => sameAddress(row.wallet, address, kind)) ?? null;
-}
+import {
+  matchContact,
+  matchPayNowMember,
+  matchTeamMember,
+  teamMembersToContacts,
+} from "./utils";
+import { walletForChainKind } from "../team/utils";
 
 export function SinglePayoutCard(props: {
-  recipientLocked?: boolean;
   initialRecipient?: { name: string; address: string };
+  memberWallets?: TeamMemberWallets;
 }) {
-  const { recipientLocked = false, initialRecipient } = props;
+  const { initialRecipient, memberWallets } = props;
   const toast = useToast();
-  const { contacts, addContact, updateContact, deleteContact, isPending: contactsPending } = useContacts();
+  const user = useAuthStore((state) => state.user);
+  const employee = isUser(user);
+  const { contacts, addContact, updateContact, deleteContact, isPending: contactsPending } =
+    useContacts({ enabled: employee });
+  const teamQuery = useTeamMembersInfiniteQuery(!employee);
+  const teamMembers = useMemo(
+    () => teamQuery.data?.pages.flatMap((page) => page.list) ?? [],
+    [teamQuery.data],
+  );
+  const teamContacts = useMemo(
+    () => teamMembersToContacts(teamMembers),
+    [teamMembers],
+  );
+  const bookContacts = employee ? contacts : teamContacts;
+  const bookLoading = employee ? contactsPending : teamQuery.isPending;
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const tokens = useIntentsTokensStore((s) => s.tokens);
   const createPayment = useCreatePayrollPaymentMutation();
@@ -55,15 +73,14 @@ export function SinglePayoutCard(props: {
     void ensureFresh();
   }, [ensureFresh]);
 
-  const lockedMatch = recipientLocked && initialRecipient
-    ? {
-        id: "locked",
-        name: initialRecipient.name,
-        wallet: initialRecipient.address,
-        email: null,
-      }
-    : null;
-  const matched = lockedMatch ?? matchContact(addressInput, contacts);
+  const payNowMatch =
+    memberWallets && initialRecipient
+      ? matchPayNowMember(addressInput, initialRecipient.name, memberWallets)
+      : null;
+  const matched = payNowMatch
+    ?? (employee
+      ? matchContact(addressInput, contacts)
+      : matchTeamMember(addressInput, teamMembers));
   const destLockChainKind = detectAddressChainKind(addressInput);
   const destinationAddress = destLockChainKind ? addressInput.trim() : "";
   const amountDecimals = parsePositiveDecimal(amount, AMOUNT_MAX_DECIMALS);
@@ -115,7 +132,6 @@ export function SinglePayoutCard(props: {
       <RecipientAddressField
         value={addressInput}
         matched={matched}
-        locked={recipientLocked}
         onChange={setAddressInput}
         onClear={() => {
           setAddressInput("");
@@ -173,33 +189,42 @@ export function SinglePayoutCard(props: {
         onClose={() => setDestDialogOpen(false)}
         title="Recipient token"
         selectedAssetId={destToken?.assetId}
-        lockChainKind={destLockChainKind}
-        onSelect={({ token }) => setDestToken(token)}
+        lockChainKind={memberWallets ? undefined : destLockChainKind}
+        onSelect={({ token }) => {
+          setDestToken(token);
+          if (memberWallets) {
+            setAddressInput(walletForChainKind(memberWallets, token.chain.chainKind));
+          }
+        }}
       />
 
-      {recipientLocked ? null : (
-        <>
-          <RecipientsDialog
-            open={bookOpen}
-            onClose={() => setBookOpen(false)}
-            contacts={contacts}
-            loading={contactsPending}
-            selectedAddress={addressInput}
-            onSelect={(contact) => {
-              setAddressInput(contact.wallet);
-              setBookOpen(false);
-            }}
-            onAdd={() => {
-              setEditing(null);
-              setFormOpen(true);
-            }}
-            onEdit={(contact) => {
-              setEditing(contact);
-              setFormOpen(true);
-            }}
-            onDelete={(contact) => setDeleting(contact)}
-          />
+      <RecipientsDialog
+        open={bookOpen}
+        onClose={() => setBookOpen(false)}
+        contacts={bookContacts}
+        loading={bookLoading}
+        selectedAddress={addressInput}
+        manageable={employee}
+        hasMore={!employee && teamQuery.hasNextPage}
+        loadingMore={!employee && teamQuery.isFetchingNextPage}
+        onLoadMore={!employee ? () => void teamQuery.fetchNextPage() : undefined}
+        onSelect={(contact) => {
+          setAddressInput(contact.wallet);
+          setBookOpen(false);
+        }}
+        onAdd={employee ? () => {
+          setEditing(null);
+          setFormOpen(true);
+        } : undefined}
+        onEdit={employee ? (contact) => {
+          setEditing(contact);
+          setFormOpen(true);
+        } : undefined}
+        onDelete={employee ? (contact) => setDeleting(contact) : undefined}
+      />
 
+      {employee ? (
+        <>
           <ContactFormDialog
             open={formOpen}
             onClose={() => {
@@ -235,7 +260,7 @@ export function SinglePayoutCard(props: {
             }}
           />
         </>
-      )}
+      ) : null}
     </>
   );
 }

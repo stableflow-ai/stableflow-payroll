@@ -15,7 +15,7 @@ export function OpenRequestsCard(props: { requests: EmployeeOpenRequest[] }) {
           Open Requests
         </h2>
         <Link
-          to="/pay/request"
+          to="/pay/requests"
           className="inline-flex shrink-0 items-center gap-1 font-montserrat text-xs text-[#606060]"
         >
           View All

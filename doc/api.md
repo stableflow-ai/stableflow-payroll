@@ -98,15 +98,15 @@ export function usePaymentsQuery(params: PayPaymentsQuery) {
 ```tsx
 const loginMutation = useLoginMutation();
 
-await loginMutation.mutateAsync({ email, password });  // writes the session
-navigate(returnTo ?? "/", { replace: true });
+const session = await loginMutation.mutateAsync({ email, password });  // writes the session
+navigate(postAuthPath(session.user, returnTo));
 ```
 
 ## Endpoints
 
 Paths are prefixed with `PAY_API_PREFIX` (`/v1/payroll`) or `NEARINTENTS_API_PREFIX` (`/v1/nearintents`) from `src/api/config.ts`. "Auth" is the default for that function; `caller` means the caller decides.
 
-Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), and the Payroll salaries dashboard endpoints are served by the Payroll backend. The Payout, Recipients, and Payment-request tables are the pre-Payroll contract kept unchanged under the new prefix; the screens that call them are not in scope yet, so those routes will 404. Do not treat them as a spec.
+Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), Organizations, Team members, Recipients, and the Payroll salaries dashboard endpoints are served by the Payroll backend. The Payout and Payment-request tables are the pre-Payroll contract kept unchanged under the new prefix; the screens that call them are not in scope yet, so those routes will 404. Do not treat them as a spec.
 
 ### Auth — `src/api/auth.ts`, `src/types/auth.ts`, `src/hooks/use-auth-api.ts`
 
@@ -114,13 +114,38 @@ Only Auth, Single Payout (`/payments`), Batch Payout (`/batches`), and the Payro
 | --- | --- | --- | --- | --- | --- | --- |
 | POST | `/v1/payroll/auth/login` | no | `LoginBody` | `AuthSession` | `login` | `useLoginMutation` |
 | POST | `/v1/payroll/auth/register` | no | `RegisterBody` | `AuthSession` | `register` | `useRegisterMutation` |
+| POST | `/v1/payroll/auth/register/user` | no | `RegisterUserBody` | `AuthSession` | `registerUser` | `useInviteRegisterMutation` |
 | POST | `/v1/payroll/change-password` | yes | `ChangePasswordBody` | — | `changePassword` | `useChangePasswordMutation` |
 | POST | `/v1/payroll/reset-password/code` | no | `ResetPasswordCodeBody` | — | `sendResetPasswordCode` | `useSendResetPasswordCodeMutation` |
 | POST | `/v1/payroll/reset-password` | no | `ResetPasswordBody` | — | `resetPassword` | `useResetPasswordMutation` |
 | GET | `/v1/payroll/profile` | yes | — | `AuthUser` | `getProfile` | `useProfileQuery` |
 | POST | `/v1/payroll/profile` | yes | `UpdateProfileBody` | — | `updateProfile` | `useUpdateProfileMutation` |
 
-`AuthUser` includes `role`: `"admin"` | `"employee"`, and `organization`: `{ id, name, logo } | null`. Login, register, and profile are typed as already returning those fields (`http<AuthSession>` / `http<AuthUser>`). Do not remap `role` until the backend uses a different name. Stored sessions without `role` hydrate as admin; stored sessions without `organization` hydrate as `null`. `hydrateAuthUser` reads `organization` with `asRecord` / `apiNumber` / `apiText`.
+`AuthUser` includes `role`: `"admin"` | `"user"`, optional `telegram` / `slack`, and optional `organization?: { id: number; name: string; logo?: string; orgId?: string } | null`. `login`, `register`, `registerUser`, and `getProfile` map that payload with `mapAuthUser` / `mapAuthSession`. Only `"user"` is stored as the member role; any other value, including a missing role, hydrates as admin. Register body includes required `organization.name` and optional `organization.logo`. Empty telegram / slack handles are omitted from the mapped user. Invite-register (`POST /auth/register/user`, `src/hooks/use-invite-api.ts`) sends string `org_id` and omits empty optional wallet / handle fields. Profile POST still sends only `name`.
+
+### Organizations — `src/api/organization.ts`, `src/types/organization.ts`, `src/hooks/use-admin-overview-api.ts`, `src/hooks/use-organization-api.ts`, `src/hooks/use-settings-api.ts`, `src/hooks/use-invite-api.ts`
+
+| Method | Path | Auth | Body / Query | Data | API | Hook |
+| --- | --- | --- | --- | --- | --- | --- |
+| GET | `/v1/payroll/organizations/overview` | yes | `organization_id` | `OrganizationOverview` | `getOrganizationOverview` | `useOrganizationOverviewQuery` |
+| GET | `/v1/payroll/organizations/payout` | yes | `organization_id`, `period`, `timezone` | `OrganizationPayoutPoint[]` | `getOrganizationPayout` | `useOrganizationPayoutQuery` |
+| GET | `/v1/payroll/organizations/high-priority` | yes | `organization_id`, `timezone` | `OrganizationHighPriorityItem[]` | `getOrganizationHighPriority` | `useOrganizationHighPriorityQuery` |
+| GET | `/v1/payroll/organizations/{id}` | yes | path `id` | `OrganizationItem[]` | `getOrganization` | `useOrganizationQuery` |
+| GET | `/v1/payroll/organizations/info/{org_id}` | no | path `org_id` (string) | `OrganizationPublicInfo` | `getOrganizationInfo` | `useInvitePreviewQuery` |
+| POST | `/v1/payroll/organizations/{id}` | yes | `UpdateOrganizationBody` | — | `updateOrganization` | `useUpdateOrganizationMutation` |
+
+Integer `organization_id` / path `{id}` come from session `user.organization.id` and are unchanged for overview, payout, high-priority, and team. Queries and the update mutation do not fire when that id is missing. `GET /organizations/{id}` also returns string `org_id`, `address_settings`, and `notification_settings` (`disabled` / `optional` / `required`; blank or unknown maps to `disabled`). The string `org_id` is written onto the session as `organization.orgId` and is the only id used for invite URLs, `GET .../info/{org_id}`, and `POST /auth/register/user`. Settings picks the GET row whose `id` matches, or the first row. Organization Save and Integration Save both POST `name`, optional `logo`, and both settings objects; empty `logo` is omitted. Integration keeps EVM locked (`evm_address` stays the GET value). `period` is the existing `VOLUME_PERIOD` (`day` / `week` / `month`). `timezone` is `browserTimeZone()`. High-priority `category` values are `payroll` / `payFailed` / `paymentRequest`; unknown values are dropped.
+
+### Team members — `src/api/team.ts`, `src/types/team.ts`, `src/hooks/use-team-api.ts`
+
+| Method | Path | Auth | Body / Query | Data | API | Hook |
+| --- | --- | --- | --- | --- | --- | --- |
+| GET | `/v1/payroll/team/members` | yes | `organization_id`, `page`, `pageSize`, `q?` | `TeamMembersPage` | `getTeamMembers` | `useTeamMembersQuery` / `useTeamMembersInfiniteQuery` |
+| POST | `/v1/payroll/team/members` | yes | `TeamMemberWrite` + `organization_id` | `TeamMember` | `createTeamMember` | `useTeamMemberMutations` |
+| POST | `/v1/payroll/team/members/{member_id}` | yes | `TeamMemberWrite` | `TeamMember` | `updateTeamMember` | `useTeamMemberMutations` |
+| DELETE | `/v1/payroll/team/members/{member_id}` | yes | — | — | `deleteTeamMember` | `useTeamMemberMutations` |
+
+`organization_id` comes from session `user.organization.id`. Queries and create do not fire when that id is missing. `q` searches name, email, position, and `evm_address`. Empty `email` / `position` / wallet fields are omitted from POST bodies. Telegram and Slack are not sent. The Team table uses paged `useTeamMembersQuery`; the admin Recipients address book uses `useTeamMembersInfiniteQuery` (`pageSize` 20).
 
 ### Payments (hosted checkout) — `src/api/payout.ts`, `src/types/payout.ts`, `src/hooks/use-single-payout-api.ts`
 
@@ -205,12 +230,12 @@ Both `submit` calls are driven by the persisted retry queues rather than a hook:
 
 | Method | Path | Auth | Body | Data | API | Hook |
 | --- | --- | --- | --- | --- | --- | --- |
-| GET | `/v1/payroll/recipient/list` | yes | — | `PayRecipient[]` | `listRecipients` | `useRecipientsQuery` |
-| POST | `/v1/payroll/recipient` | yes | `PayRecipientBody` | `PayRecipient` | `createRecipient` | `useRecipientMutations` |
-| POST | `/v1/payroll/recipient/{id}` | yes | `PayRecipientBody` | `PayRecipient` | `updateRecipient` | `useRecipientMutations` |
-| DELETE | `/v1/payroll/recipient/{id}` | yes | — | — | `deleteRecipient` | `useRecipientMutations` |
+| GET | `/v1/payroll/recipients` | yes | — | `PayRecipient[]` | `listRecipients` | `useRecipientsQuery` |
+| POST | `/v1/payroll/recipients` | yes | `{ name, address, email? }` | `PayRecipient` | `createRecipient` | `useRecipientMutations` |
+| POST | `/v1/payroll/recipients/{id}` | yes | `{ name, address, email? }` | `PayRecipient` | `updateRecipient` | `useRecipientMutations` |
+| DELETE | `/v1/payroll/recipients/{id}` | yes | — | — | `deleteRecipient` | `useRecipientMutations` |
 
-`useContacts` wraps these hooks and is what the Pay views use.
+`useContacts` wraps these hooks. The UI `PayRecipient` still uses `wallet`; the mapper reads `address` (and `wallet` as a fallback) and writes `address`. Numeric `id` values are stored as strings. Empty `email` is omitted on POST. The GET list is a full array with no pagination. Single Payment uses this book for **employee** only; **admin** Recipients lists Team members instead (`useTeamMembersInfiniteQuery`).
 
 ### Payment requests — `src/api/request-payment.ts`, `src/types/request-payment.ts`, `src/hooks/use-request-payment.ts`
 

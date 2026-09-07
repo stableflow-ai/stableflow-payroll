@@ -162,7 +162,7 @@ export function Dropdown(props: DropdownProps) {
                       selectValue(option.value);
                     }}
                     className={cn(
-                      "flex w-full text-left text-sm font-medium text-black hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-30",
+                      "flex w-full text-left text-xs font-medium text-black hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-30",
                       renderOption ? "items-center px-2.5 py-1.5" : "px-3 py-2",
                       selected && "bg-black/5",
                     )}

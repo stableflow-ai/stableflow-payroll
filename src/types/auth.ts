@@ -1,6 +1,6 @@
 export const AUTH_USER_ROLE = {
   Admin: "admin",
-  Employee: "employee",
+  User: "user",
 } as const;
 
 export type AuthUserRole = (typeof AUTH_USER_ROLE)[keyof typeof AUTH_USER_ROLE];
@@ -8,7 +8,8 @@ export type AuthUserRole = (typeof AUTH_USER_ROLE)[keyof typeof AUTH_USER_ROLE];
 export interface AuthOrganization {
   id: number;
   name: string;
-  logo: string;
+  logo?: string;
+  orgId?: string;
 }
 
 export interface AuthUser {
@@ -16,7 +17,23 @@ export interface AuthUser {
   email: string;
   name: string;
   role: AuthUserRole;
-  organization: AuthOrganization | null;
+  telegram?: string;
+  slack?: string;
+  organization?: AuthOrganization | null;
+}
+
+export interface RegisterUserBody {
+  orgId: string;
+  email: string;
+  password: string;
+  name: string;
+  position?: string;
+  evmAddress?: string;
+  solanaAddress?: string;
+  nearAddress?: string;
+  tronAddress?: string;
+  telegram?: string;
+  slack?: string;
 }
 
 export interface LoginBody {
@@ -24,11 +41,17 @@ export interface LoginBody {
   password: string;
 }
 
+export interface RegisterOrganizationBody {
+  name: string;
+  logo?: string;
+}
+
 export interface RegisterBody {
   name: string;
   email: string;
   password: string;
   inviteCode: string;
+  organization: RegisterOrganizationBody;
 }
 
 export interface AuthSession {

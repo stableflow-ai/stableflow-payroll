@@ -13,10 +13,12 @@ import {
 import useToast from "@/hooks/use-toast";
 import type { PayLayoutOutletContext } from "@/layouts/PayLayout";
 import { useAuthStore } from "@/stores/auth";
+import { PaymentByFormDialog } from "@/views/pay/components/payment-form/PaymentByFormDialog";
 import {
   PAYROLL_CHART_RANGE,
   PAYROLL_CHART_RANGE_PERIOD,
   PAYROLL_DRAWER_MODE,
+  PAYROLL_PAY_NOW_FORM_ID,
   PAYROLL_PAYOUT_STATUS,
   PAYROLL_TAB,
   type PayrollChartRange,
@@ -68,6 +70,7 @@ export function PayrollView() {
   const [editOriginalRows, setEditOriginalRows] = useState<PayrollRecipientRow[] | null>(null);
   const [nextPayrollOverride, setNextPayrollOverride] = useState<PayrollNextRun | null>(null);
   const [historyDetailRun, setHistoryDetailRun] = useState<PayrollHistoryRun | null>(null);
+  const [payingFormId, setPayingFormId] = useState<string | null>(null);
   const drawerSaving = importMutation.isPending || updateMutation.isPending;
 
   useEffect(() => {
@@ -245,6 +248,12 @@ export function PayrollView() {
           void historyQuery.fetchNextPage();
         }}
         onViewHistoryDetails={setHistoryDetailRun}
+        onPayNow={() => setPayingFormId(PAYROLL_PAY_NOW_FORM_ID)}
+      />
+      <PaymentByFormDialog
+        open={Boolean(payingFormId)}
+        formId={payingFormId}
+        onClose={() => setPayingFormId(null)}
       />
       <PayrollHistoryDetailDrawer
         open={historyDetailRun !== null}

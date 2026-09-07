@@ -12,7 +12,11 @@ function formatSplitUsd(value: string) {
   };
 }
 
-export function OpenPanel({ list }: { list: ExpenseOpenList }) {
+export function OpenPanel(props: {
+  list: ExpenseOpenList;
+  onPayNow: (formId: string) => void;
+}) {
+  const { list, onPayNow } = props;
   const total = formatSplitUsd(list.total);
 
   if (list.rows.length === 0) {
@@ -47,7 +51,7 @@ export function OpenPanel({ list }: { list: ExpenseOpenList }) {
         </div>
       </div>
       <div className="mt-5 border-t border-black/10 pt-5">
-        <OpenTable rows={list.rows} />
+        <OpenTable rows={list.rows} onPayNow={onPayNow} />
       </div>
     </div>
   );

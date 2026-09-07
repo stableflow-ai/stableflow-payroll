@@ -35,8 +35,9 @@ export function BonusRunsCard(props: {
   pending: BonusPendingList | null;
   history: BonusHistoryItem[];
   onAddBonus: () => void;
+  onPayNow: (formId: string) => void;
 }) {
-  const { tab, onTabChange, pending, history, onAddBonus } = props;
+  const { tab, onTabChange, pending, history, onAddBonus, onPayNow } = props;
 
   return (
     <div>
@@ -57,7 +58,11 @@ export function BonusRunsCard(props: {
       <Card className="mt-3 px-5 py-6 sm:px-8">
         {tab === BONUS_TAB.ToBePaid ? (
           pending ? (
-            <PendingBonusPanel list={pending} onAddBonus={onAddBonus} />
+            <PendingBonusPanel
+              list={pending}
+              onAddBonus={onAddBonus}
+              onPayNow={onPayNow}
+            />
           ) : (
             <CreateBonusEmpty onAddBonus={onAddBonus} />
           )

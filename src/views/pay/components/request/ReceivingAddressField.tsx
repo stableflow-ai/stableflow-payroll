@@ -1,50 +1,37 @@
-import { IconClose } from "@/components/icons/close";
-import { BatchFieldStatus } from "@/views/pay/components/batch/BatchFieldStatus";
 import { cn } from "@/lib/utils";
+
+const FIELD_CLASS =
+  "mt-2 h-9 w-full rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-3 font-montserrat text-sm font-medium text-black outline-none placeholder:text-black/30";
 
 export function ReceivingAddressField(props: {
   value: string;
   onChange: (value: string) => void;
-  onClear: () => void;
   error: string | null;
   showStatus: boolean;
   placeholder?: string;
 }) {
-  const { value, onChange, onClear, error, showStatus, placeholder = "Wallet address" } = props;
+  const { value, onChange, error, showStatus, placeholder = "Wallet address" } = props;
   const invalid = showStatus && Boolean(error);
 
   return (
     <div>
-      <p className="font-montserrat text-sm font-medium text-[#606060]">
-        Receiving Address
-      </p>
-      <div
-        className={cn(
-          "mt-2 flex h-9 min-w-0 items-center rounded-[6px] border bg-[#f6f6f6] pr-2 pl-2",
-          invalid ? "border-danger" : "border-[#e3e3e3]",
-        )}
-      >
-        <input
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
-          className={cn(
-            "min-w-0 flex-1 bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
-            invalid ? "text-danger" : "text-black",
-          )}
-          placeholder={placeholder}
-        />
-        {value ? (
-          <button
-            type="button"
-            aria-label="Clear address"
-            onClick={onClear}
-            className="ml-1 inline-flex size-5 shrink-0 items-center justify-center rounded-full border border-black/10 bg-white text-black"
-          >
-            <IconClose className="size-2.5" />
-          </button>
-        ) : null}
-        {showStatus ? <BatchFieldStatus ok={!error} /> : null}
+      <div className="flex items-center justify-between gap-3">
+        <p className="font-montserrat text-sm font-medium text-[#606060]">
+          Receiving Address
+        </p>
+        <button
+          type="button"
+          className="inline-flex h-[30px] items-center rounded-[8px] border border-black/10 px-2.5 font-montserrat text-xs font-medium text-[#606060]"
+        >
+          Save as default
+        </button>
       </div>
+      <input
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        placeholder={placeholder}
+        className={cn(FIELD_CLASS, invalid && "border-danger text-danger")}
+      />
     </div>
   );
 }

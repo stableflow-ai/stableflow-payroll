@@ -1,3 +1,4 @@
+import { useEffect, useRef } from "react";
 import { RecipientAvatar } from "@/components/recipient-avatar/RecipientAvatar";
 import { IconDelete } from "@/components/icons/delete";
 import { IconPen } from "@/components/icons/pen";
@@ -15,12 +16,42 @@ export function RecipientsDialog(props: {
   contacts: Contact[];
   selectedAddress: string;
   onSelect: (contact: Contact) => void;
-  onAdd: () => void;
-  onEdit: (contact: Contact) => void;
-  onDelete: (contact: Contact) => void;
+  onAdd?: () => void;
+  onEdit?: (contact: Contact) => void;
+  onDelete?: (contact: Contact) => void;
   loading?: boolean;
+  loadingMore?: boolean;
+  hasMore?: boolean;
+  onLoadMore?: () => void;
+  manageable?: boolean;
 }) {
-  const { loading, open, onClose, contacts, selectedAddress, onSelect, onAdd, onEdit, onDelete } = props;
+  const {
+    loading,
+    loadingMore = false,
+    hasMore = false,
+    onLoadMore,
+    open,
+    onClose,
+    contacts,
+    selectedAddress,
+    onSelect,
+    onAdd,
+    onEdit,
+    onDelete,
+    manageable = true,
+  } = props;
+  const sentinelRef = useRef<HTMLLIElement>(null);
+
+  useEffect(() => {
+    if (!open || !hasMore || loadingMore || !onLoadMore) return;
+    const el = sentinelRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver((entries) => {
+      if (entries[0]?.isIntersecting) onLoadMore();
+    });
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [contacts.length, hasMore, loadingMore, onLoadMore, open]);
 
   return (
     <Dialog
@@ -29,58 +60,72 @@ export function RecipientsDialog(props: {
       title="Recipients"
       cardClassName="w-full md:w-[500px]"
       headerAction={
-        <Button size="sm" className="gap-1.5 px-3" onClick={onAdd}>
-          <IconPlus className="size-3 text-white" />
-          Add
-        </Button>
+        manageable ? (
+          <Button size="sm" className="gap-1.5 px-3" onClick={onAdd}>
+            <IconPlus className="size-3 text-white" />
+            Add
+          </Button>
+        ) : undefined
       }
     >
-      <ul className="flex max-h-[min(70vh,520px)] flex-col gap-1">
+      <ul className="flex max-h-[min(70vh,520px)] flex-col gap-1 overflow-y-auto">
         {
-          contacts.length > 0 ? contacts.map((contact) => {
-            const selected = Boolean(
-              selectedAddress
-              && sameAddress(contact.wallet, selectedAddress, detectAddressChainKind(selectedAddress)),
-            );
-            return (
-              <li
-                key={contact.id}
-                className={`group flex items-center gap-3 rounded-[12px] px-2 py-2 ${selected ? "bg-[#f6f6f6]" : "hover:bg-[#f6f6f6]"
-                  }`}
-              >
-                <RecipientAvatar
-                  name={contact.name}
-                  address={contact.wallet}
-                  className="size-8 text-xs"
-                />
-                <div className="min-w-0 flex-1">
-                  <p className="truncate font-montserrat text-sm font-medium text-black">{contact.name}</p>
-                  <p className="font-montserrat text-[10px] text-[#606060]">{formatAddress(contact.wallet)}</p>
-                </div>
-                <div className="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100">
-                  <button
-                    type="button"
-                    aria-label="Edit"
-                    className="cursor-pointer text-[#606060]"
-                    onClick={() => onEdit(contact)}
+          contacts.length > 0 ? (
+            <>
+              {contacts.map((contact) => {
+                const selected = Boolean(
+                  selectedAddress
+                  && sameAddress(contact.wallet, selectedAddress, detectAddressChainKind(selectedAddress)),
+                );
+                return (
+                  <li
+                    key={contact.id}
+                    className={`group flex items-center gap-3 rounded-[12px] px-2 py-2 ${selected ? "bg-[#f6f6f6]" : "hover:bg-[#f6f6f6]"
+                      }`}
                   >
-                    <IconPen className="size-3.5" />
-                  </button>
-                  <button
-                    type="button"
-                    aria-label="Delete"
-                    className="cursor-pointer text-[#606060]"
-                    onClick={() => onDelete(contact)}
-                  >
-                    <IconDelete className="size-3.5" />
-                  </button>
-                </div>
-                <Button size="sm" variant="normal" className="w-[79px]" onClick={() => onSelect(contact)}>
-                  Select
-                </Button>
-              </li>
-            );
-          }) : (
+                    <RecipientAvatar
+                      name={contact.name}
+                      address={contact.wallet}
+                      className="size-8 text-xs"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-montserrat text-sm font-medium text-black">{contact.name}</p>
+                      <p className="font-montserrat text-[10px] text-[#606060]">{formatAddress(contact.wallet)}</p>
+                    </div>
+                    {manageable ? (
+                      <div className="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100">
+                        <button
+                          type="button"
+                          aria-label="Edit"
+                          className="cursor-pointer text-[#606060]"
+                          onClick={() => onEdit?.(contact)}
+                        >
+                          <IconPen className="size-3.5" />
+                        </button>
+                        <button
+                          type="button"
+                          aria-label="Delete"
+                          className="cursor-pointer text-[#606060]"
+                          onClick={() => onDelete?.(contact)}
+                        >
+                          <IconDelete className="size-3.5" />
+                        </button>
+                      </div>
+                    ) : null}
+                    <Button size="sm" variant="normal" className="w-[79px]" onClick={() => onSelect(contact)}>
+                      Select
+                    </Button>
+                  </li>
+                );
+              })}
+              {hasMore ? <li ref={sentinelRef} className="h-1 shrink-0" aria-hidden /> : null}
+              {loadingMore ? (
+                <li className="flex justify-center py-3">
+                  <IconLoading className="size-5 animate-spin text-[#909090]" />
+                </li>
+              ) : null}
+            </>
+          ) : (
             loading ? (
               <div className="w-full py-8 flex justify-center items-center">
                 <IconLoading className="size-6 animate-spin text-[#909090]" />

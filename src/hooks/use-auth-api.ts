@@ -33,8 +33,33 @@ function isSameUser(left: AuthUser, right: AuthUser): boolean {
     left.email === right.email &&
     left.name === right.name &&
     left.role === right.role &&
-    left.organization?.id === right.organization?.id
+    (left.telegram ?? "") === (right.telegram ?? "") &&
+    (left.slack ?? "") === (right.slack ?? "") &&
+    (left.organization?.id ?? 0) === (right.organization?.id ?? 0) &&
+    (left.organization?.name ?? "") === (right.organization?.name ?? "") &&
+    (left.organization?.logo ?? "") === (right.organization?.logo ?? "") &&
+    (left.organization?.orgId ?? "") === (right.organization?.orgId ?? "")
   );
+}
+
+function mergeProfileUser(profile: AuthUser, local: AuthUser | null): AuthUser {
+  const profileOrg = profile.organization;
+  const localOrg = local?.organization;
+  if (!profileOrg || !localOrg || profileOrg.id !== localOrg.id) return profile;
+  const logo = profileOrg.logo || localOrg.logo;
+  const orgId = profileOrg.orgId || localOrg.orgId;
+  if (!logo && !orgId) return profile;
+  if ((profileOrg.logo ?? "") === (logo ?? "") && (profileOrg.orgId ?? "") === (orgId ?? "")) {
+    return profile;
+  }
+  return {
+    ...profile,
+    organization: {
+      ...profileOrg,
+      ...(logo ? { logo } : {}),
+      ...(orgId ? { orgId } : {}),
+    },
+  };
 }
 
 export function useLoginMutation() {
@@ -93,7 +118,7 @@ export function useProfileQuery() {
   const query = useQuery({
     queryKey: queryKeys.auth.profile,
     queryFn: getProfile,
-    enabled: Boolean(token),
+    enabled: Boolean(token) && !token?.startsWith("mock:"),
     retry: (failureCount, error) => {
       if (error instanceof ApiError && error.status === 401) return false;
       return failureCount < 1;
@@ -102,8 +127,9 @@ export function useProfileQuery() {
 
   useEffect(() => {
     if (!token || !query.data) return;
-    if (user && isSameUser(user, query.data)) return;
-    applySession(token, query.data);
+    const nextUser = mergeProfileUser(query.data, user);
+    if (user && isSameUser(user, nextUser)) return;
+    applySession(token, nextUser);
   }, [applySession, query.data, token, user]);
 
   return query;

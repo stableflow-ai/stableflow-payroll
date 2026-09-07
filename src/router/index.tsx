@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from "react-router-dom";
 import { LoginView } from "@/views/auth/LoginView";
 import { RegisterView } from "@/views/auth/RegisterView";
+import { InviteRegisterView } from "@/views/auth/InviteRegisterView";
 import { HowItWorksView } from "@/views/how-it-works/HowItWorksView";
 import { HomeView } from "@/views/home/HomeView";
 import { AnalyticsView } from "@/views/analytics/AnalyticsView";
@@ -11,9 +12,10 @@ import { BonusView } from "@/views/bonus";
 import { PendingPayoutsView } from "@/views/pay/PendingPayoutsView";
 import { RequestPayView } from "@/views/pay/RequestPayView";
 import { RequestPaymentView } from "@/views/pay/RequestPaymentView";
+import { RequestsView } from "@/views/pay/RequestsView";
 import { PayoutResultView } from "@/views/pay/PayoutResultView";
 import { PaymentByFormView } from "@/views/pay/PaymentByFormView";
-import { PayPlaceholderView } from "@/views/pay/PayPlaceholderView";
+import { SettingView } from "@/views/pay/SettingView";
 import { OverviewView } from "@/views/pay/OverviewView";
 import { SinglePayoutView } from "@/views/pay/SinglePayoutView";
 import { TransactionHistoryView } from "@/views/pay/TransactionHistoryView";
@@ -41,6 +43,14 @@ export const router = createBrowserRouter([
     element: (
       <RedirectIfAuthed>
         <RegisterView />
+      </RedirectIfAuthed>
+    ),
+  },
+  {
+    path: "/invite/:orgId",
+    element: (
+      <RedirectIfAuthed>
+        <InviteRegisterView />
       </RedirectIfAuthed>
     ),
   },
@@ -83,8 +93,9 @@ export const router = createBrowserRouter([
                   { path: "/pay/reimbursement", element: <Navigate to="/pay/expense" replace /> },
                   { path: "/pay/bonus", element: <BonusView /> },
                   { path: "/pay/team", element: <TeamView /> },
-                  { path: "/pay/setting", element: <PayPlaceholderView /> },
+                  { path: "/pay/setting", element: <SettingView /> },
                   { path: "/pay/request", element: <RequestPaymentView /> },
+                  { path: "/pay/requests", element: <RequestsView /> },
                   { path: "/pay/pending", element: <PendingPayoutsView /> },
                   { path: "/pay/history", element: <TransactionHistoryView /> },
                 ],

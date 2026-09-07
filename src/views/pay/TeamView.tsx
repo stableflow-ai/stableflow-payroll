@@ -1,9 +1,5 @@
-import { useMemo, useState } from "react";
-import { IconLink } from "@/components/icons/link";
-import { IconPlus } from "@/components/icons/plus";
+import { useEffect, useState } from "react";
 import { RecipientAvatar } from "@/components/recipient-avatar/RecipientAvatar";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_SIZE, BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Pagination } from "@/components/ui/pagination/Pagination";
 import { SearchInput } from "@/components/ui/search-input/SearchInput";
 import {
@@ -14,27 +10,32 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/Table";
-import {
-  useTeamMemberMutations,
-  useTeamMembersQuery,
-  type TeamMember,
-} from "@/hooks/use-team-api";
+import { useOrganizationQuery } from "@/hooks/use-organization-api";
+import { useTeamMemberMutations, useTeamMembersQuery, type TeamMember } from "@/hooks/use-team-api";
 import useToast from "@/hooks/use-toast";
+import { TeamActionButtons } from "./components/setting/TeamActionButtons";
+import { SinglePayoutDialog } from "./components/single-payout/SinglePayoutDialog";
 import { RemoveMemberDialog } from "./components/team/RemoveMemberDialog";
 import { TeamInviteDialog } from "./components/team/TeamInviteDialog";
 import { TeamMemberFormDialog } from "./components/team/TeamMemberFormDialog";
 import { TeamMemberMenu } from "./components/team/TeamMemberMenu";
-import { TeamPayNowDialog } from "./components/team/TeamPayNowDialog";
 import { TeamWalletCell } from "./components/team/TeamWalletCell";
-import { TEAM_PAGE_SIZE, TEAM_TABLE_COLUMNS } from "./components/team/config";
-import { dash, memberDisplayWallet, memberMatchesSearch } from "./components/team/utils";
+import { TEAM_PAGE_SIZE, TEAM_SEARCH_DEBOUNCE_MS, TEAM_TABLE_COLUMNS } from "./components/team/config";
+import { dash, memberDisplayWallet, organizationInviteUrl } from "./components/team/utils";
+
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), delayMs);
+    return () => window.clearTimeout(timer);
+  }, [delayMs, value]);
+  return debounced;
+}
 
 export function TeamView() {
   const toast = useToast();
-  const query = useTeamMembersQuery();
-  const { createMutation, updateMutation, removeMutation, inviteMutation } = useTeamMemberMutations();
-  const members = query.data ?? [];
-
+  const orgQuery = useOrganizationQuery();
+  const inviteOrgId = orgQuery.data?.orgId.trim() ?? "";
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [formOpen, setFormOpen] = useState(false);
@@ -42,14 +43,15 @@ export function TeamView() {
   const [inviteOpen, setInviteOpen] = useState(false);
   const [paying, setPaying] = useState<TeamMember | null>(null);
   const [removing, setRemoving] = useState<TeamMember | null>(null);
-
-  const filtered = useMemo(
-    () => members.filter((row) => memberMatchesSearch(row, search)),
-    [members, search],
-  );
-  const totalPage = Math.max(1, Math.ceil(filtered.length / TEAM_PAGE_SIZE));
-  const safePage = Math.min(page, totalPage);
-  const pageRows = filtered.slice((safePage - 1) * TEAM_PAGE_SIZE, safePage * TEAM_PAGE_SIZE);
+  const debouncedSearch = useDebouncedValue(search, TEAM_SEARCH_DEBOUNCE_MS);
+  const query = useTeamMembersQuery({
+    page,
+    pageSize: TEAM_PAGE_SIZE,
+    q: debouncedSearch,
+  });
+  const { createMutation, updateMutation, removeMutation } = useTeamMemberMutations();
+  const members = query.data?.list ?? [];
+  const totalPage = Math.max(1, query.data?.totalPage ?? 1);
 
   function openAdd() {
     setEditing(null);
@@ -72,25 +74,16 @@ export function TeamView() {
           }}
           className="w-full sm:max-w-[230px]"
         />
-        <div className="flex items-center gap-3">
-          <Button
-            variant={BUTTON_VARIANT.Normal}
-            size={BUTTON_SIZE.Sm}
-            className="h-9 rounded-[6px] px-3 text-black"
-            onClick={openAdd}
-          >
-            <IconPlus className="size-3.5 shrink-0" />
-            Add Member
-          </Button>
-          <Button
-            size={BUTTON_SIZE.Sm}
-            className="h-9 min-w-[120px] rounded-[6px] px-3"
-            onClick={() => setInviteOpen(true)}
-          >
-            <IconLink className="size-3.5 shrink-0 text-white" />
-            Invite
-          </Button>
-        </div>
+        <TeamActionButtons
+          onAddMember={openAdd}
+          onInvite={() => {
+            if (!inviteOrgId) {
+              toast.fail({ title: "Invite link is unavailable" });
+              return;
+            }
+            setInviteOpen(true);
+          }}
+        />
       </div>
 
       {query.isError ? (
@@ -102,18 +95,17 @@ export function TeamView() {
           <TableHeader>
             <TableHead>Name</TableHead>
             <TableHead>Position</TableHead>
-            <TableHead>Schedule</TableHead>
             <TableHead>Email</TableHead>
             <TableHead>Wallet</TableHead>
             <TableHead />
           </TableHeader>
           <TableBody>
-            {pageRows.length === 0 ? (
+            {members.length === 0 ? (
               <p className="py-8 text-center font-montserrat text-sm text-[#909090]">
                 {query.isPending ? "Loading team…" : "No members"}
               </p>
             ) : (
-              pageRows.map((row) => {
+              members.map((row) => {
                 const wallet = memberDisplayWallet(row);
                 return (
                   <TableRow key={row.id}>
@@ -121,7 +113,7 @@ export function TeamView() {
                       <span className="inline-flex min-w-0 items-center gap-2.5">
                         <RecipientAvatar
                           name={row.name}
-                          address={wallet ?? row.id}
+                          address={wallet ?? String(row.id)}
                           className="size-8 text-[11px]"
                         />
                         <span className="truncate">{row.name}</span>
@@ -130,7 +122,6 @@ export function TeamView() {
                     <TableCell>
                       <span className="truncate">{dash(row.position)}</span>
                     </TableCell>
-                    <TableCell>{dash(row.schedule)}</TableCell>
                     <TableCell>
                       <span className="truncate">{dash(row.email)}</span>
                     </TableCell>
@@ -139,15 +130,8 @@ export function TeamView() {
                     </TableCell>
                     <TableCell className="justify-end">
                       <TeamMemberMenu
-                        payDisabled={!wallet}
                         onEdit={() => openEdit(row)}
-                        onPayNow={() => {
-                          if (!wallet) {
-                            toast.fail({ title: "Add a wallet first" });
-                            return;
-                          }
-                          setPaying(row);
-                        }}
+                        onPayNow={() => setPaying(row)}
                         onRemove={() => setRemoving(row)}
                       />
                     </TableCell>
@@ -160,7 +144,7 @@ export function TeamView() {
       )}
 
       <div className="mt-4 flex justify-center sm:justify-end">
-        <Pagination page={safePage} totalPage={totalPage} onPageChange={setPage} />
+        <Pagination page={page} totalPage={totalPage} onPageChange={setPage} />
       </div>
 
       <TeamMemberFormDialog
@@ -190,24 +174,13 @@ export function TeamView() {
 
       <TeamInviteDialog
         open={inviteOpen}
-        sending={inviteMutation.isPending}
+        url={inviteOrgId ? organizationInviteUrl(window.location.origin, inviteOrgId) : ""}
         onClose={() => setInviteOpen(false)}
-        onSend={async (input) => {
-          try {
-            await inviteMutation.mutateAsync(input);
-            toast.success({ title: `Invitation sent to ${input.email}` });
-            setInviteOpen(false);
-          } catch (error) {
-            toast.fail({
-              title: error instanceof Error ? error.message : "Failed to send invitation",
-            });
-          }
-        }}
       />
 
-      <TeamPayNowDialog
+      <SinglePayoutDialog
         open={Boolean(paying)}
-        member={paying}
+        recipient={paying ? { name: paying.name, wallets: paying.wallets } : null}
         onClose={() => setPaying(null)}
       />
 

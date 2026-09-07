@@ -11,13 +11,14 @@ import { Drawer } from "@/components/ui/drawer/Drawer";
 import { DRAWER_SIDE } from "@/components/ui/drawer/config";
 import { useBatchPayoutCommitQueue } from "@/hooks/use-batch-payout-commit-queue";
 import { useQuickPayCommitQueue } from "@/hooks/use-quick-pay-commit-queue";
-import { isEmployee, userRole } from "@/lib/auth-role";
+import { isUser, organizationName, userRole } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { PaymentModeTabs } from "@/views/pay/components/PaymentModeTabs";
+import { RequestPaymentTabs } from "@/views/pay/components/request/RequestPaymentTabs";
 import { PayNav, PaySidebar } from "@/views/pay/components/PaySidebar";
 import {
-  MOCK_ORGANIZATION_NAME,
   isPayModePath,
+  isRequestPaymentPath,
   payTitleForPath,
 } from "@/views/pay/config";
 
@@ -35,8 +36,10 @@ export function PayLayout() {
   const setHeaderExtra = useCallback((node: ReactNode) => {
     setHeaderExtraState(node);
   }, []);
-  const showModeTabs = isPayModePath(pathname) && !isEmployee(user);
+  const showModeTabs = isPayModePath(pathname) && !isUser(user);
+  const showRequestTabs = isRequestPaymentPath(pathname);
   const closeMenu = () => setMenuOpen(false);
+  const orgName = organizationName(user) ?? "";
 
   return (
     <div className="flex flex-col lg:min-h-svh lg:flex-row">
@@ -47,7 +50,7 @@ export function PayLayout() {
         <div className="flex justify-end items-center gap-3 flex-1">
           <div className="min-w-0">
             <p className="font-montserrat text-xs font-medium text-[#909090]">
-              {MOCK_ORGANIZATION_NAME}
+              {orgName}
             </p>
             <HeaderAccountMenu
               variant={HEADER_ACCOUNT_MENU_VARIANT.Sidebar}
@@ -65,11 +68,15 @@ export function PayLayout() {
         </div>
       </div>
       <PaySidebar />
-      <div className="min-w-0 flex-1 px-2 py-4 md:px-5 lg:px-[26px] lg:py-[15px]">
-        <div className="relative flex items-center justify-between gap-3">
-          <h1 className="font-montserrat text-[20px] font-medium text-black">
-            {payTitleForPath(pathname, userRole(user))}
-          </h1>
+      <div className="min-w-0 flex-1">
+        <div className="relative flex h-[65px] items-center justify-between gap-3 border-b border-black/10 px-2 md:px-5 lg:px-[26px]">
+          {showRequestTabs ? (
+            <RequestPaymentTabs />
+          ) : (
+            <h1 className="font-montserrat text-[20px] font-medium text-black">
+              {payTitleForPath(pathname, userRole(user))}
+            </h1>
+          )}
           <div className="flex items-center gap-3">
             {headerExtra}
             <div className="hidden lg:block">
@@ -77,12 +84,12 @@ export function PayLayout() {
             </div>
           </div>
         </div>
-        {showModeTabs ? (
-          <div className="mt-8">
-            <PaymentModeTabs />
-          </div>
-        ) : null}
-        <div className={showModeTabs ? "mt-4" : "mt-6"}>
+        <div className="px-2 py-5 md:px-5 lg:px-[26px]">
+          {showModeTabs ? (
+            <div className="mb-4">
+              <PaymentModeTabs />
+            </div>
+          ) : null}
           <Outlet context={{ setHeaderExtra } satisfies PayLayoutOutletContext} />
         </div>
       </div>

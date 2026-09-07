@@ -66,7 +66,7 @@ import { PAYOUT_TABLE_COLUMNS } from "@/views/pay/config";
 
 ## Notes
 
-- Keep the column template in the feature's `config.ts` (`PAYOUT_TABLE_COLUMNS`, `RECEIVED_PAYMENT_TABLE_COLUMNS`), not inline, so the header and the row cannot drift apart.
+- Keep the column template in the feature's `config.ts` (`PAYOUT_TABLE_COLUMNS`, `REQUESTS_TABLE_COLUMNS`), not inline, so the header and the row cannot drift apart.
 - Do not add a second `overflow` on `TableBody`; that is what breaks header alignment.
 - Header and body must stay inside the same `Table` so they share `columns`.
 - Do not wrap rows in `w-max`. That makes `fr` tracks grow with content and blocks `truncate`.
