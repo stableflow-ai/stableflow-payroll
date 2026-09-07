@@ -1,5 +1,6 @@
 import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
+import type { PayableKey } from "@/types/payable";
 import type {
   ExpenseHistoryRow,
   ExpenseOpenList,
@@ -36,7 +37,7 @@ export function ExpenseRunsCard(props: {
   onTabChange: (tab: ExpenseTab) => void;
   open: ExpenseOpenList;
   history: ExpenseHistoryRow[];
-  onPayNow: (formId: string) => void;
+  onPayNow: (payable: PayableKey) => void;
 }) {
   const { tab, onTabChange, open, history, onPayNow } = props;
 

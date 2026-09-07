@@ -1,3 +1,4 @@
+import type { PayableKey } from "@/types/payable";
 import { formatAmount } from "@/utils";
 import type { ExpenseOpenList } from "@/mocks/expense";
 import { OpenTable } from "./OpenTable";
@@ -14,7 +15,7 @@ function formatSplitUsd(value: string) {
 
 export function OpenPanel(props: {
   list: ExpenseOpenList;
-  onPayNow: (formId: string) => void;
+  onPayNow: (payable: PayableKey) => void;
 }) {
   const { list, onPayNow } = props;
   const total = formatSplitUsd(list.total);

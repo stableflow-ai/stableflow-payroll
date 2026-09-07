@@ -46,16 +46,18 @@ export function matchPayNowMember(
   address: string,
   name: string,
   wallets: TeamMemberWallets,
+  email?: string | null,
 ): Contact | null {
   const kind = detectAddressChainKind(address);
   if (!kind) return null;
   const wallet = walletForChainKind(wallets, kind);
   if (!wallet || !sameAddress(wallet, address, kind)) return null;
+  const trimmed = email?.trim() ?? "";
   return {
     id: "pay-now",
     name,
     wallet,
-    email: null,
+    email: trimmed || null,
   };
 }
 

@@ -12,10 +12,12 @@ import { isUser } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
 import type { TeamMemberWallets } from "@/types/team";
+import { payrollPaymentNotification } from "@/types/payout";
 import { ContactFormDialog } from "../ContactFormDialog";
 import { DeleteContactDialog } from "../DeleteContactDialog";
 import { RecipientAddressField } from "../RecipientAddressField";
 import { RecipientsDialog } from "../RecipientsDialog";
+import { NotifyRecipientBar } from "../NotifyRecipientBar";
 import { TokenSelectButton } from "../TokenSelectButton";
 import { AMOUNT_MAX_DECIMALS, MEMO_MAX_LENGTH, PAYOUT_RESULT_PATH } from "../../config";
 import {
@@ -30,10 +32,10 @@ import {
   matchTeamMember,
   teamMembersToContacts,
 } from "./utils";
-import { walletForChainKind } from "../team/utils";
+import { emailFieldError, walletForChainKind } from "../team/utils";
 
 export function SinglePayoutCard(props: {
-  initialRecipient?: { name: string; address: string };
+  initialRecipient?: { name: string; address: string; email?: string | null };
   memberWallets?: TeamMemberWallets;
 }) {
   const { initialRecipient, memberWallets } = props;
@@ -66,6 +68,8 @@ export function SinglePayoutCard(props: {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Contact | null>(null);
   const [deleting, setDeleting] = useState<Contact | null>(null);
+  const [notifyEnabled, setNotifyEnabled] = useState(false);
+  const [notifyEmail, setNotifyEmail] = useState("");
   /** Stays true while the browser navigates to the hosted checkout. */
   const [redirecting, setRedirecting] = useState(false);
 
@@ -75,7 +79,12 @@ export function SinglePayoutCard(props: {
 
   const payNowMatch =
     memberWallets && initialRecipient
-      ? matchPayNowMember(addressInput, initialRecipient.name, memberWallets)
+      ? matchPayNowMember(
+          addressInput,
+          initialRecipient.name,
+          memberWallets,
+          initialRecipient.email,
+        )
       : null;
   const matched = payNowMatch
     ?? (employee
@@ -96,6 +105,10 @@ export function SinglePayoutCard(props: {
     if (next) setDestToken(next);
   }, [destLockChainKind, destToken, tokens]);
 
+  useEffect(() => {
+    setNotifyEmail(matched?.email?.trim() ?? "");
+  }, [matched?.email, destinationAddress]);
+
   const sending = createPayment.isPending || redirecting;
   const canSend = Boolean(
     destinationAddress
@@ -106,7 +119,19 @@ export function SinglePayoutCard(props: {
 
   async function handleSend() {
     if (!destToken || !amountDecimals || !destinationAddress) return;
+    if (notifyEnabled) {
+      const emailError = notifyEmail.trim()
+        ? emailFieldError(notifyEmail)
+        : "Enter a valid email";
+      if (emailError) {
+        toast.fail({ title: emailError });
+        return;
+      }
+    }
     const dest = payoutNetworkToken(destToken);
+    const notification = notifyEnabled
+      ? payrollPaymentNotification({ email: notifyEmail })
+      : undefined;
     try {
       const payment = await createPayment.mutateAsync({
         amount: amountDecimals,
@@ -115,6 +140,7 @@ export function SinglePayoutCard(props: {
         recipient: destinationAddress,
         memo: memo.trim() || undefined,
         success_url: `${window.location.origin}${PAYOUT_RESULT_PATH}`,
+        ...(notification ? { notification } : {}),
       });
       setRedirecting(true);
       window.location.assign(payment.payUrl);
@@ -173,6 +199,20 @@ export function SinglePayoutCard(props: {
           className="h-9 min-w-0 flex-1 rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-3 font-montserrat text-sm text-black outline-none placeholder:text-black/30"
         />
       </div>
+
+      <NotifyRecipientBar
+        className="mt-6"
+        enabled={notifyEnabled}
+        onEnabledChange={setNotifyEnabled}
+      >
+        <input
+          type="email"
+          value={notifyEmail}
+          onChange={(event) => setNotifyEmail(event.target.value)}
+          placeholder="Email"
+          className="h-9 min-w-0 flex-1 rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-3 font-montserrat text-sm text-black outline-none placeholder:text-black/30"
+        />
+      </NotifyRecipientBar>
 
       <Button
         size="xl"

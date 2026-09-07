@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useExpenseOverviewQuery } from "@/hooks/use-expense-api";
 import { IconLoading } from "@/components/icons/loading";
 import { PaymentByFormDialog } from "@/views/pay/components/payment-form/PaymentByFormDialog";
+import type { PayableKey } from "@/types/payable";
 import { RecentPayoutsCard } from "./components/recent-payouts";
 import { ExpenseRunsCard } from "./components/expense-runs";
 import { StatsCard } from "./components/stats";
@@ -19,7 +20,7 @@ export function ExpenseView() {
   const [chartRange, setChartRange] = useState<ExpenseChartRange>(
     EXPENSE_CHART_RANGE.Months6
   );
-  const [payingFormId, setPayingFormId] = useState<string | null>(null);
+  const [payingPayable, setPayingPayable] = useState<PayableKey | null>(null);
 
   const data = overview.data;
 
@@ -66,12 +67,12 @@ export function ExpenseView() {
         onTabChange={setTab}
         open={data.open}
         history={data.history}
-        onPayNow={(formId) => setPayingFormId(formId)}
+        onPayNow={(payable) => setPayingPayable(payable)}
       />
       <PaymentByFormDialog
-        open={Boolean(payingFormId)}
-        formId={payingFormId}
-        onClose={() => setPayingFormId(null)}
+        open={Boolean(payingPayable)}
+        payable={payingPayable}
+        onClose={() => setPayingPayable(null)}
       />
     </div>
   );

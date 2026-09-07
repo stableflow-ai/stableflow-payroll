@@ -156,7 +156,7 @@ Integer `organization_id` / path `{id}` come from session `user.organization.id`
 
 `POST /payments` does not settle anything. The backend opens a hosted checkout session and answers with `pay_url`; `SinglePayoutView` sends the browser there, and the payer completes the transfer on the checkout. `createPayrollPayment` throws `ApiError(..., "NO_PAY_URL")` when the response has no link.
 
-`memo` (≤ 200 characters) is accepted but is not in the Swagger contract. There is no `notifyEmail` parameter.
+`memo` (≤ 200 characters) is accepted but is not in the Swagger contract. Optional `notification: { email?, slack? }` is sent from Single Payment when Notify Recipient is on; empty keys are omitted. The switch-off path omits `notification` entirely.
 
 The checkout returns to the `success_url` we send (`{origin}/pay/result`) only after a successful payment, with `out_order_no` set to the Payroll `payment_id`. `PayoutResultView` reads it and calls `GET /payments/{payment_id}` once — there is no state left to poll for.
 
@@ -171,7 +171,30 @@ The checkout returns to the `success_url` we send (`{origin}/pay/result`) only a
 
 Confirm signs and broadcasts that transaction. There is no submit call after broadcast. `GET .../transaction` is a status lookup; the page does not call it (success resets to the upload step). A consumed `batchId` is stored in `consumed-batches` before broadcast so the same deposit addresses are never paid twice.
 
-`notification.email` / `notification.slack` are omitted: the page does not collect them.
+`notification.email` / `notification.slack` are omitted: `/pay/batch` does not collect them.
+
+### Payment by form — `src/api/payable.ts`, `src/types/payable.ts`, `src/hooks/use-payable-api.ts`
+
+| Method | Path | Auth | Body / Query | Data | API | Hook |
+| --- | --- | --- | --- | --- | --- | --- |
+| GET | `/v1/payroll/payables` | yes | `organization_id`, `timezone` | `Payable[]` | `getPayables` | `usePayablesQuery` |
+| POST | `/v1/payroll/salaries/pay` | yes | `PayrollPayParam` | `PayrollBatch` | `payPayrollSalaries` | `usePayablePayQuery` |
+| POST | `/v1/payroll/expenses/{batch_id}/pay` | yes | `PayablePayBaseParam` | `PayrollBatch` | `payExpenseBatch` | `usePayablePayQuery` |
+| POST | `/v1/payroll/bonuses/{batch_id}/pay` | yes | `PayablePayBaseParam` | `PayrollBatch` | `payBonusBatch` | `usePayablePayQuery` |
+
+`organization_id` is session `user.organization.id`. `timezone` is `browserTimeZone()`. Rows whose `type` is not `payroll` / `expense` / `bonus` are dropped. Payroll keys use `period_month`; expense and bonus keys use `batch_id`. `list[].email` is mapped when present.
+
+The three pay routes return `{ batch, execution_id }`. The mapper reads `batch` through `mapPayrollBatch` and throws `ApiError(..., "NO_BATCH_TX")` when the transaction cannot be broadcast. `PaymentByFormCard` posts pay as the quote (`usePayablePayQuery`, `staleTime: Infinity`); Send uses `markBatchConsumed` then `broadcastBatchPayout`. Expired or consumed quotes refetch pay. Optional `notification` is an array of selected `item_id`s. `adjustments` is `{ item_id, net_pay }[]` for every item (override after Details Save, otherwise payable `netPay`) and is omitted only when the form has no items. Both fields are part of the quote query key. `payablePayBody` copies a non-empty `adjustments` array onto all three pay bodies.
+
+### Operations survey (not wired)
+
+These dashboards stay on mocks. The routes below are for the later Payroll / Expense / Bonus integrations — do not add hooks for them in this pass.
+
+**Salaries** (`/v1/payroll/salaries`): `/current`, `/next`, `/history`, `/history/{execution_id}`, `/recent`, `/total-payout`, `/import`, `/update`, `/pay`. Payroll pay identity is `period_month` + `timezone`.
+
+**Expenses** (`/v1/payroll/expenses`): `/current`, `/open`, `/open/requests`, `/open/requests/count`, `/history`, `/recent`, `/total-payout`, `/import`, `/{batch_id}/pay`.
+
+**Bonuses** (`/v1/payroll/bonuses`): same shape as expenses except there is no `/open/requests` (or `/open/requests/count`).
 
 ### Payroll salaries — `src/api/payroll.ts`, `src/types/payroll.ts`, `src/hooks/use-payroll-api.ts`
 
@@ -277,5 +300,6 @@ All four pass `envelope: false`. They are called from `src/lib/confidential/` fo
 | `src/lib/query-client.ts` | `queryClient` (30s `staleTime`, 1 retry, no refetch on focus) |
 | `src/api/config.ts` | `PAY_API_PREFIX`, `NEARINTENTS_API_PREFIX` |
 | `src/api/query-keys.ts` | `queryKeys` factory |
+| `src/api/payable.ts` | Payables list and salaries/expense/bonus pay |
 | `src/api/map.ts` | `asRecord`, `apiText`, `apiNumber` |
 | `src/api/payroll.ts` | Payroll salaries current / total-payout / recent |

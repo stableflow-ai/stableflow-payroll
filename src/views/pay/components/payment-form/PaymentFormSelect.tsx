@@ -1,22 +1,22 @@
 import { IconCheck } from "@/components/icons";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { formatAmount } from "@/utils";
-import type { PaymentFormSummary } from "@/hooks/use-payment-forms-api";
+import { payableKeyId, type Payable } from "@/types/payable";
 import { PaymentFormCategoryTag } from "./PaymentFormCategoryTag";
 
 function PaymentFormOptionRow(props: {
-  form: PaymentFormSummary;
+  form: Payable;
   selected: boolean;
 }) {
   const { form, selected } = props;
   return (
     <span className="flex w-full min-w-0 items-center gap-2">
-      <PaymentFormCategoryTag category={form.category} />
+      <PaymentFormCategoryTag category={form.type} />
       <span className="min-w-0 flex-1 truncate font-montserrat text-sm font-medium text-black">
-        {form.name}
+        {form.title}
       </span>
       <span className="shrink-0 font-montserrat text-sm font-medium text-black">
-        {formatAmount(form.totalValued, { maxDecimals: 0 })}
+        {formatAmount(form.totalPayout, { maxDecimals: 2, showDust: true })}
       </span>
       <span className="inline-flex size-3.5 shrink-0 items-center justify-center">
         {selected ? <IconCheck className="text-[#6284f5]" /> : null}
@@ -26,7 +26,7 @@ function PaymentFormOptionRow(props: {
 }
 
 export function PaymentFormSelect(props: {
-  forms: PaymentFormSummary[];
+  forms: Payable[];
   value: string;
   onChange: (id: string) => void;
   disabled?: boolean;
@@ -38,15 +38,16 @@ export function PaymentFormSelect(props: {
       onChange={onChange}
       disabled={disabled}
       placeholder="Select"
+      empty="No forms"
       className="w-full"
       triggerClassName="h-10 rounded-[8px] border-[#ebebeb]"
       panelClassName="py-1.5"
       options={forms.map((form) => ({
-        value: form.id,
-        label: form.name,
+        value: payableKeyId(form.key),
+        label: form.title,
       }))}
       renderOption={(option, selected) => {
-        const form = forms.find((row) => row.id === option.value);
+        const form = forms.find((row) => payableKeyId(row.key) === option.value);
         if (!form) return option.label;
         return <PaymentFormOptionRow form={form} selected={selected} />;
       }}

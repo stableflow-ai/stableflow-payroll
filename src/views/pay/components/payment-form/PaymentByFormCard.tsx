@@ -1,35 +1,41 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconLock } from "@/components/icons";
+import { IconEmail, IconLock } from "@/components/icons";
 import { Button } from "@/components/ui/button/Button";
 import { BATCH_BLOCKCHAINS } from "@/config/chains";
 import { queryKeys } from "@/api/query-keys";
-import { useCreatePayrollBatchQuery } from "@/hooks/use-batch-payout-api";
 import { usePayOriginToken } from "@/hooks/use-pay-origin-token";
+import { usePayablePayQuery, usePayablesQuery } from "@/hooks/use-payable-api";
 import { usePaymentWallet } from "@/hooks/use-payment-wallet";
-import {
-  usePaymentFormQuery,
-  usePaymentFormsQuery,
-} from "@/hooks/use-payment-forms-api";
 import { useTokenBalancesStore } from "@/stores/token-balances";
 import { useIntentsTokensStore } from "@/stores/intents-tokens";
+import { useAuthStore } from "@/stores/auth";
 import {
   isBatchConsumed,
   markBatchConsumed,
   useConsumedBatchesStore,
 } from "@/stores/consumed-batches";
 import useToast from "@/hooks/use-toast";
-import { formatAmount } from "@/utils";
+import { organizationId } from "@/lib/auth-role";
+import { formatAmount, browserTimeZone } from "@/utils";
 import { cn } from "@/lib/utils";
 import { broadcastBatchPayout } from "@/wallet/broadcast-batch-payout";
 import type { ChainKind } from "@/wallet";
-import type { PayrollCreateBatchParam } from "@/types/payout";
+import {
+  findPayable,
+  parsePayableKey,
+  payableKeyId,
+  type PayableKey,
+} from "@/types/payable";
 import { QUOTE_EXPIRED_MESSAGE, SPENT_BATCH_MESSAGE } from "../../config";
 import { isBatchOriginToken, isPayrollBatchExpired } from "../../batch-utils";
 import { formatQuoteErrorMessage } from "../../utils";
 import { YouPaySection } from "../YouPaySection";
+import { NotifyRecipientBar } from "../NotifyRecipientBar";
+import { NotifyRecipientsDrawer } from "./NotifyRecipientsDrawer";
 import { PaymentFormDetailsDrawer } from "./PaymentFormDetailsDrawer";
 import { PaymentFormSelect } from "./PaymentFormSelect";
+import { buildPayablePayRequest, payableItemIds, sumPayableNetPay } from "./utils";
 
 class BalanceGateError extends Error {
   constructor(message: string) {
@@ -39,13 +45,16 @@ class BalanceGateError extends Error {
 }
 
 export function PaymentByFormCard(props: {
-  formId?: string;
+  payable?: PayableKey;
   formLocked?: boolean;
   onSettled?: () => void;
 }) {
-  const { formId: formIdProp, formLocked = false, onSettled } = props;
+  const { payable: payableProp, formLocked = false, onSettled } = props;
   const queryClient = useQueryClient();
   const toast = useToast();
+  const user = useAuthStore((state) => state.user);
+  const orgId = organizationId(user);
+  const timezone = browserTimeZone();
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const { originToken, setOriginToken } = usePayOriginToken(BATCH_BLOCKCHAINS);
   const originKind: ChainKind =
@@ -59,9 +68,13 @@ export function PaymentByFormCard(props: {
   const connectedAddress = paymentWallet.connectedAddress;
   const fetchOneBalance = useTokenBalancesStore((s) => s.fetchOne);
 
-  const [pickedId, setPickedId] = useState(formIdProp ?? "");
+  const [pickedId, setPickedId] = useState(payableProp ? payableKeyId(payableProp) : "");
   const [phase, setPhase] = useState<"idle" | "sending" | "done">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [notifyEnabled, setNotifyEnabled] = useState(false);
+  const [notifyOpen, setNotifyOpen] = useState(false);
+  const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(() => new Set());
+  const [netPayById, setNetPayById] = useState<Record<number, string>>({});
   const refreshedForBatchId = useRef("");
 
   useEffect(() => {
@@ -69,31 +82,52 @@ export function PaymentByFormCard(props: {
   }, [ensureFresh]);
 
   useEffect(() => {
-    if (formIdProp !== undefined) setPickedId(formIdProp);
-  }, [formIdProp]);
+    if (payableProp) setPickedId(payableKeyId(payableProp));
+  }, [payableProp]);
 
-  const selectedId = formLocked ? (formIdProp ?? "") : pickedId;
-  const formsQuery = usePaymentFormsQuery();
-  const detailQuery = usePaymentFormQuery(selectedId);
-  const forms = formLocked
-    ? (detailQuery.data ? [detailQuery.data] : [])
-    : (formsQuery.data ?? []);
-  const detail = detailQuery.data;
+  const selectedId = formLocked
+    ? (payableProp ? payableKeyId(payableProp) : "")
+    : pickedId;
+  const selectedKey = parsePayableKey(selectedId);
+  const formsQuery = usePayablesQuery();
+  const forms = formsQuery.data ?? [];
+  const detail = selectedKey ? findPayable(forms, selectedKey) : null;
+  const lockedForms = formLocked ? (detail ? [detail] : []) : forms;
 
-  const batchBody = useMemo((): PayrollCreateBatchParam | null => {
-    const payments = detail?.payments;
-    if (!payments?.length || !originToken || !connectedAddress) return null;
-    if (!isBatchOriginToken(originToken)) return null;
-    return {
-      payer: connectedAddress,
-      source_network: originToken.blockchain,
-      source_symbol: originToken.symbol,
-      payments,
-    };
-  }, [detail, originToken, connectedAddress]);
+  useEffect(() => {
+    setNotifyEnabled(false);
+    setNotifyOpen(false);
+    setDetailsOpen(false);
+    setSelectedItemIds(new Set());
+    setNetPayById({});
+  }, [selectedId]);
 
-  const batchQuery = useCreatePayrollBatchQuery(batchBody);
-  const batch = batchBody ? batchQuery.data : undefined;
+  const payBody = useMemo(
+    () =>
+      buildPayablePayRequest({
+        payable: detail,
+        originToken,
+        payer: connectedAddress,
+        organizationId: orgId,
+        timezone,
+        notifyEnabled,
+        selectedItemIds: [...selectedItemIds],
+        netPayById,
+      }),
+    [
+      detail,
+      originToken,
+      connectedAddress,
+      orgId,
+      timezone,
+      notifyEnabled,
+      selectedItemIds,
+      netPayById,
+    ],
+  );
+
+  const batchQuery = usePayablePayQuery(payBody);
+  const batch = payBody ? batchQuery.data : undefined;
   const batchId = batch?.batchId ?? "";
   const batchConsumed = useConsumedBatchesStore(
     (state) => Boolean(batchId) && state.items.some((item) => item.batchId === batchId),
@@ -108,14 +142,14 @@ export function PaymentByFormCard(props: {
     void refetchBatch();
   }, [batchConsumed, batchId, phase, refetchBatch]);
 
-  const quoteStale = Boolean(batchBody) && (
+  const quoteStale = Boolean(payBody) && (
     batchQuery.isPlaceholderData
     || (batchQuery.isPending && batchQuery.isFetching)
   );
   const quoteError = batchQuery.isError
     ? formatQuoteErrorMessage(batchQuery.error, 2)
     : null;
-  const quoting = Boolean(batchBody) && (quoteStale || batchQuery.isFetching) && !quoteError;
+  const quoting = Boolean(payBody) && (quoteStale || batchQuery.isFetching) && !quoteError;
   const youPayQuoted = Boolean(batch?.totalSourceAmount);
   const youPayAmount = youPayQuoted
     ? formatAmount(batch!.totalSourceAmount, { prefix: "", maxDecimals: 6 })
@@ -124,12 +158,13 @@ export function PaymentByFormCard(props: {
     ? `${formatAmount(batch!.totalSourceAmount, { prefix: "", maxDecimals: 6 })} ${originToken.symbol}`
     : "-";
   const totalValuedLabel = detail
-    ? formatAmount(detail.totalValued, { maxDecimals: 0 })
+    ? formatAmount(sumPayableNetPay(detail, netPayById), { maxDecimals: 6 })
     : "$0";
+  const emailCount = detail?.items.length ?? 0;
 
   const settleMutation = useMutation({
     mutationFn: async () => {
-      if (!originToken || !batchBody || !batch || !connectedAddress) {
+      if (!originToken || !payBody || !batch || !connectedAddress) {
         throw new Error("Missing payment inputs");
       }
       if (!wallet.isConnected || !wallet.account?.address) {
@@ -177,9 +212,11 @@ export function PaymentByFormCard(props: {
     onSuccess: () => {
       setPhase("done");
       toast.success({ title: "Payment submitted" });
-      void queryClient.removeQueries({ queryKey: [...queryKeys.payout.all, "payroll-batch"] });
+      void queryClient.removeQueries({ queryKey: [...queryKeys.payable.all, "pay"] });
       if (!formLocked) setPickedId("");
       setDetailsOpen(false);
+      setNotifyOpen(false);
+      setNetPayById({});
       setPhase("idle");
       onSettled?.();
     },
@@ -196,7 +233,7 @@ export function PaymentByFormCard(props: {
   const canSend = Boolean(
     formSelected
     && isBatchOriginToken(originToken)
-    && batchBody
+    && payBody
     && batch
     && !quoteStale
     && !quoteError
@@ -212,13 +249,38 @@ export function PaymentByFormCard(props: {
     void settleMutation.mutateAsync();
   }
 
+  function handleNotifyEnabled(next: boolean) {
+    if (!next) {
+      setNotifyEnabled(false);
+      setNotifyOpen(false);
+      return;
+    }
+    if (detail) setSelectedItemIds(new Set(payableItemIds(detail)));
+    setNotifyEnabled(true);
+  }
+
+  function handleNotifyMaster(checked: boolean) {
+    handleNotifyEnabled(checked);
+  }
+
+  function handleToggleItem(id: number, checked: boolean) {
+    const next = new Set(selectedItemIds);
+    if (checked) next.add(id);
+    else next.delete(id);
+    setSelectedItemIds(next);
+    if (next.size === 0) {
+      setNotifyEnabled(false);
+      setNotifyOpen(false);
+    }
+  }
+
   return (
     <>
       <div>
         <p className="font-montserrat text-sm font-medium text-[#606060]">Form</p>
         <div className="mt-2">
           <PaymentFormSelect
-            forms={forms}
+            forms={lockedForms}
             value={selectedId}
             onChange={(id) => {
               if (formLocked) return;
@@ -282,6 +344,29 @@ export function PaymentByFormCard(props: {
         </span>
       </div>
 
+      <NotifyRecipientBar
+        className="mt-6"
+        enabled={notifyEnabled}
+        disabled={!formSelected}
+        onEnabledChange={handleNotifyEnabled}
+      >
+        <button
+          type="button"
+          className="inline-flex items-center gap-[7px] text-[#06F]"
+          onClick={() => {
+            if (detail && selectedItemIds.size === 0) {
+              setSelectedItemIds(new Set(payableItemIds(detail)));
+            }
+            setNotifyOpen(true);
+          }}
+        >
+          <IconEmail className="h-[11px] w-[14px]" />
+          <span className="font-montserrat text-xs font-normal">
+            {emailCount} Email
+          </span>
+        </button>
+      </NotifyRecipientBar>
+
       {quoteError ? (
         <p className="mt-2 font-montserrat text-sm text-danger">{quoteError}</p>
       ) : null}
@@ -289,7 +374,7 @@ export function PaymentByFormCard(props: {
       <Button
         size="xl"
         className="mt-8 w-full"
-        loading={formPicked && (detailQuery.isFetching || quoting || sending)}
+        loading={formPicked && (formsQuery.isFetching || quoting || sending)}
         disabled={!canSend}
         onClick={handleSend}
       >
@@ -299,7 +384,18 @@ export function PaymentByFormCard(props: {
       <PaymentFormDetailsDrawer
         open={detailsOpen}
         onClose={() => setDetailsOpen(false)}
-        detail={detail ?? null}
+        detail={detail}
+        netPayById={netPayById}
+        onSaveNetPay={setNetPayById}
+      />
+
+      <NotifyRecipientsDrawer
+        open={notifyOpen && notifyEnabled}
+        onClose={() => setNotifyOpen(false)}
+        items={detail?.items ?? []}
+        selectedIds={selectedItemIds}
+        onToggle={handleToggleItem}
+        onMasterChange={handleNotifyMaster}
       />
     </>
   );

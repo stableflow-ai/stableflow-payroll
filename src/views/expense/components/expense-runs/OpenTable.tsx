@@ -12,10 +12,11 @@ import {
 import { chainDisplayName } from "@/config/chains";
 import { formatAmount } from "@/utils";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";
+import type { PayableKey } from "@/types/payable";
 import type { ExpenseOpenRow } from "@/mocks/expense";
 import {
   OPEN_EXPENSE_TABLE_COLUMNS,
-  EXPENSE_PAY_NOW_FORM_ID,
+  EXPENSE_PAY_NOW_PAYABLE,
   EXPENSE_ROW_ACTION,
 } from "../../config";
 
@@ -60,7 +61,7 @@ function RowAction(props: {
 
 export function OpenTable(props: {
   rows: ExpenseOpenRow[];
-  onPayNow: (formId: string) => void;
+  onPayNow: (payable: PayableKey) => void;
 }) {
   const { rows, onPayNow } = props;
   return (
@@ -100,7 +101,7 @@ export function OpenTable(props: {
             <TableCell className="justify-end">
               <RowAction
                 action={row.action}
-                onPayNow={() => onPayNow(EXPENSE_PAY_NOW_FORM_ID)}
+                onPayNow={() => onPayNow(EXPENSE_PAY_NOW_PAYABLE)}
               />
             </TableCell>
           </TableRow>

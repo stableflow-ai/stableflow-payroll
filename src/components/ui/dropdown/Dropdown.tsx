@@ -26,6 +26,7 @@ export type DropdownProps = {
   className?: string;
   triggerClassName?: string;
   panelClassName?: string;
+  empty?: ReactNode;
   renderOption?: (option: DropdownOption, selected: boolean) => ReactNode;
 };
 
@@ -41,6 +42,7 @@ export function Dropdown(props: DropdownProps) {
     className,
     triggerClassName,
     panelClassName,
+    empty = "No options",
     renderOption,
   } = props;
   const triggerRef = useRef<HTMLButtonElement>(null);
@@ -148,29 +150,38 @@ export function Dropdown(props: DropdownProps) {
                 panelClassName,
               )}
             >
-              {options.map((option) => {
-                const selected = option.value === selectedValue;
-                return (
-                  <button
-                    key={option.value}
-                    type="button"
-                    role="option"
-                    aria-selected={selected}
-                    disabled={option.disabled}
-                    onClick={() => {
-                      if (option.disabled) return;
-                      selectValue(option.value);
-                    }}
-                    className={cn(
-                      "flex w-full text-left text-xs font-medium text-black hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-30",
-                      renderOption ? "items-center px-2.5 py-1.5" : "px-3 py-2",
-                      selected && "bg-black/5",
-                    )}
-                  >
-                    {renderOption ? renderOption(option, selected) : option.label}
-                  </button>
-                );
-              })}
+              {options.length === 0 ? (
+                <p
+                  role="status"
+                  className="px-3 py-4 text-center font-montserrat text-sm font-medium text-[#aaa]"
+                >
+                  {empty}
+                </p>
+              ) : (
+                options.map((option) => {
+                  const selected = option.value === selectedValue;
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      role="option"
+                      aria-selected={selected}
+                      disabled={option.disabled}
+                      onClick={() => {
+                        if (option.disabled) return;
+                        selectValue(option.value);
+                      }}
+                      className={cn(
+                        "flex w-full text-left text-xs font-medium text-black hover:bg-black/5 disabled:cursor-not-allowed disabled:opacity-30",
+                        renderOption ? "items-center px-2.5 py-1.5" : "px-3 py-2",
+                        selected && "bg-black/5",
+                      )}
+                    >
+                      {renderOption ? renderOption(option, selected) : option.label}
+                    </button>
+                  );
+                })
+              )}
             </div>,
             document.body,
           )

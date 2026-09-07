@@ -1,3 +1,5 @@
+import { PAYABLE_TYPE, type PayableKey } from "@/types/payable";
+
 export const BONUS_CREATE_PATH = "/pay/batch";
 export const BONUS_HISTORY_PATH = "/pay/history";
 
@@ -62,10 +64,10 @@ export const BONUS_ROW_ACTION = {
 export type BonusRowAction =
   (typeof BONUS_ROW_ACTION)[keyof typeof BONUS_ROW_ACTION];
 
-export const BONUS_PAY_NOW_FORM_ID = {
-  "bonus-team-a": "form-2026-bonus-team-a",
-  "bonus-team-b": "form-2026-bonus-team-b",
-} as const;
+export const BONUS_PAY_NOW_PAYABLE: Record<string, PayableKey> = {
+  "bonus-team-a": { type: PAYABLE_TYPE.Bonus, batchId: 1 },
+  "bonus-team-b": { type: PAYABLE_TYPE.Bonus, batchId: 2 },
+};
 
 export const BONUS_CHART_LINE_COLOR = "#6284F5";
 export const BONUS_CHART_HIGHLIGHT_COLOR = "#3F8AFB";
