@@ -18,13 +18,14 @@ import { NextPayrollPanel } from "./NextPayrollPanel";
 
 function TabLink(props: {
   to: string;
+  end?: boolean;
   children: string;
 }) {
-  const { to, children } = props;
+  const { to, end = true, children } = props;
   return (
     <NavLink
       to={to}
-      end
+      end={end}
       className={({ isActive }) =>
         cn(
           "relative pb-2.5 font-montserrat text-base text-black",
@@ -97,7 +98,7 @@ export function PayrollRunsCard(props: {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-end gap-8">
           <TabLink to={PAYROLL_PATH}>Next Payroll</TabLink>
-          <TabLink to={PAYROLL_HISTORY_PATH}>Payroll History</TabLink>
+          <TabLink to={PAYROLL_HISTORY_PATH} end={false}>Payroll History</TabLink>
         </div>
         {showToolbar ? (
           <div className="flex items-center gap-2 pb-1">

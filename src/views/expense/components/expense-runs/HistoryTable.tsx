@@ -47,7 +47,7 @@ function StatusCell({ row }: { row: ExpenseHistoryRow }) {
           EXPENSE_HISTORY_FAILED_CLASS,
         )}
       >
-        <IconAlert className="h-[7px] w-0.5 shrink-0" />
+        <IconAlert className="h-2.5 w-1 shrink-0" />
         Failed
       </span>
     );

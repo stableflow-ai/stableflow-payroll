@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useLocation, useNavigate, useOutletContext } from "react-router-dom";
+import { useLocation, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import {
   usePayrollCurrentStatsQuery,
   usePayrollHistoryExportMutation,
@@ -21,6 +21,8 @@ import {
   PAYROLL_HISTORY_PATH,
   PAYROLL_PAYOUT_STATUS,
   PAYROLL_TAB,
+  isPayrollHistoryPath,
+  payrollHistoryDetailPath,
   type PayrollChartRange,
   type PayrollDrawerMode,
 } from "./config";
@@ -30,9 +32,10 @@ import { PayrollRunsCard } from "./components/payroll-runs";
 import { RecentPayoutsCard } from "./components/recent-payouts";
 import { StatsCard } from "./components/stats";
 import { TotalPayrollChart } from "./components/total-payroll";
-import { type PayrollHistoryRun, type PayrollNextRun, type PayrollRecipientRow } from "@/types/payroll";
+import { type PayrollNextRun, type PayrollRecipientRow } from "@/types/payroll";
 import {
   mapPayrollChartSeries,
+  payrollHistoryRunStub,
   payrollNextRunToPayDay,
   payrollPayDayToParam,
   payrollUpdateDeleteIds,
@@ -47,6 +50,7 @@ function queryErrorMessage(error: unknown, fallback: string) {
 export function PayrollView() {
   const { setHeaderExtra } = useOutletContext<PayLayoutOutletContext>();
   const { pathname } = useLocation();
+  const { executionId } = useParams();
   const navigate = useNavigate();
   const toast = useToast();
   const organizationId = useAuthStore((state) => state.user?.organization?.id ?? null);
@@ -56,7 +60,7 @@ export function PayrollView() {
   const importMutation = usePayrollImportMutation();
   const updateMutation = usePayrollUpdateMutation();
   const historyExportMutation = usePayrollHistoryExportMutation();
-  const tab = pathname === PAYROLL_HISTORY_PATH ? PAYROLL_TAB.History : PAYROLL_TAB.Next;
+  const tab = isPayrollHistoryPath(pathname) ? PAYROLL_TAB.History : PAYROLL_TAB.Next;
   const [chartRange, setChartRange] = useState<PayrollChartRange>(
     PAYROLL_CHART_RANGE.Month
   );
@@ -68,7 +72,6 @@ export function PayrollView() {
   const [importRows, setImportRows] = useState<PayrollRecipientRow[] | null>(null);
   const [editOriginalRows, setEditOriginalRows] = useState<PayrollRecipientRow[] | null>(null);
   const [nextPayrollOverride, setNextPayrollOverride] = useState<PayrollNextRun | null>(null);
-  const [historyDetailRun, setHistoryDetailRun] = useState<PayrollHistoryRun | null>(null);
   const [payingPayable, setPayingPayable] = useState<PayableKey | null>(null);
   const drawerSaving = importMutation.isPending || updateMutation.isPending;
 
@@ -99,6 +102,10 @@ export function PayrollView() {
     () => historyQuery.data?.pages.flatMap((page) => page.list) ?? [],
     [historyQuery.data]
   );
+  const historyDetailRun = useMemo(() => {
+    if (!executionId) return null;
+    return historyItems.find((row) => row.id === executionId) ?? payrollHistoryRunStub(executionId);
+  }, [executionId, historyItems]);
   const failedRecentCount = recentItems.filter(
     (item) => item.status === PAYROLL_PAYOUT_STATUS.Failed
   ).length;
@@ -246,7 +253,9 @@ export function PayrollView() {
           if (!historyQuery.hasNextPage || historyQuery.isFetchingNextPage) return;
           void historyQuery.fetchNextPage();
         }}
-        onViewHistoryDetails={setHistoryDetailRun}
+        onViewHistoryDetails={(run) => {
+          navigate(payrollHistoryDetailPath(run.id));
+        }}
         onPayNow={() => {
           const payDate = nextPayroll?.payDate.trim() ?? "";
           if (!payDate) {
@@ -264,7 +273,7 @@ export function PayrollView() {
       <PayrollHistoryDetailDrawer
         open={historyDetailRun !== null}
         run={historyDetailRun}
-        onClose={() => setHistoryDetailRun(null)}
+        onClose={() => navigate(PAYROLL_HISTORY_PATH)}
       />
       <PayrollFormDrawer
         key={`${drawerMode ?? "closed"}-${drawerSeed}`}

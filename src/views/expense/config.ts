@@ -60,7 +60,7 @@ export const EXPENSE_STATUS_PENDING_CLASS = "text-[#0066FF]";
 export const EXPENSE_STATUS_FAILED_CLASS = "text-[#E43222]";
 export const EXPENSE_STATUS_PAID_CLASS = "text-[#84A20F]";
 export const EXPENSE_HISTORY_PAID_CLASS = "text-[#769400]";
-export const EXPENSE_HISTORY_FAILED_CLASS = "text-[#FF5353]";
+export const EXPENSE_HISTORY_FAILED_CLASS = "text-danger";
 
 export const OPEN_EXPENSE_TABLE_COLUMNS =
   "minmax(160px,1.4fr) minmax(88px,0.8fr) minmax(140px,1.1fr) minmax(140px,1.2fr) minmax(80px,0.7fr) minmax(120px,0.9fr)";

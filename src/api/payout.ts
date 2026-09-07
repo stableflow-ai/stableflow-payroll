@@ -12,6 +12,7 @@ import type {
   PayrollExecution,
   PayrollExecutionItem,
   PayrollPayment,
+  PayrollPayoutRetryParam,
   PayrollPayoutSubmitResult,
 } from "@/types/payout";
 
@@ -77,6 +78,19 @@ export async function getPayrollPayment(paymentId: string): Promise<PayrollPayme
   return mapPayrollPayment(
     await http<unknown>(`${PAY_API_PREFIX}/payments/${encodeURIComponent(paymentId)}`),
   );
+}
+
+/** Retries a failed execution item and returns a hosted checkout session. */
+export async function retryPayrollPayout(
+  body: PayrollPayoutRetryParam,
+): Promise<PayrollPayment> {
+  const payment = mapPayrollPayment(
+    await http<unknown>(`${PAY_API_PREFIX}/payouts/retry`, { method: "POST", body }),
+  );
+  if (!payment.payUrl) {
+    throw new ApiError("Payment link is missing from the response", 502, "NO_PAY_URL");
+  }
+  return payment;
 }
 
 function mapPayrollBatchNearAction(raw: unknown): PayBatchNearAction | null {

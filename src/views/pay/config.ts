@@ -171,8 +171,13 @@ export function isRequestPaymentPath(pathname: string): boolean {
 }
 
 export function isPayNavLeafActive(item: PayNavLeaf, pathname: string): boolean {
-  if (item.match) return item.match.includes(pathname);
-  return pathname === item.to;
+  const paths = item.match ?? [item.to];
+  return paths.some((path) => {
+    if (path === PAYROLL_HISTORY_PATH) {
+      return pathname === path || pathname.startsWith(`${path}/`);
+    }
+    return pathname === path;
+  });
 }
 
 export function payTitleForPath(pathname: string, role: AuthUserRole = AUTH_USER_ROLE.Admin): string {

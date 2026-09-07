@@ -56,7 +56,7 @@ src/
     views/                       one folder per area; see product.md
     auth/                      login, register, create organization, invite register, reset password
     pay/                       overview, single, form, result, request, requests, history, team, setting
-    payroll/                   payroll dashboard (Next Payroll / Payroll History routes)
+    payroll/                   payroll dashboard (Next Payroll / Payroll History / history detail routes)
     expense/                   expense dashboard (open / requests / history routes)
     bonus/                     bonus dashboard (to be paid / history routes)
     how-it-works/              public marketing page

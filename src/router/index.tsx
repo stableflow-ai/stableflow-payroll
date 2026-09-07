@@ -66,6 +66,7 @@ export const router = createBrowserRouter([
                   { path: "/pay/result", element: <PayoutResultView /> },
                   { path: "/pay/payroll", element: <PayrollView /> },
                   { path: "/pay/payroll/history", element: <PayrollView /> },
+                  { path: "/pay/payroll/history/:executionId", element: <PayrollView /> },
                   { path: "/pay/expense", element: <ExpenseView /> },
                   { path: "/pay/expense/requests", element: <ExpenseView /> },
                   { path: "/pay/expense/history", element: <ExpenseView /> },

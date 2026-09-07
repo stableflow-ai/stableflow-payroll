@@ -121,6 +121,12 @@ export interface PayrollCreatePaymentParam {
   notification?: PayrollPaymentNotification;
 }
 
+export interface PayrollPayoutRetryParam {
+  execution_item_id: number;
+  organization_id: number;
+  success_url: string;
+}
+
 /** Builds `POST /payments` `notification`. Empty email/slack keys are omitted. */
 export function payrollPaymentNotification(input: {
   email?: string;

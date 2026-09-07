@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { IconAlert, IconAlertCircle } from "@/components/icons/alert";
 import { IconCheck2 } from "@/components/icons/check";
 import { IconExportLink, IconOutLink } from "@/components/icons/link";
@@ -14,7 +14,11 @@ import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { chainDisplayName, txExplorerUrl } from "@/config/chains";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { usePayrollHistoryDetailQuery } from "@/hooks/use-payroll-api";
+import { useRetryPayrollPayoutMutation } from "@/hooks/use-single-payout-api";
+import useToast from "@/hooks/use-toast";
+import { organizationId } from "@/lib/auth-role";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth";
 import type {
   PayrollHistoryDetailRow,
   PayrollHistoryRun
@@ -32,8 +36,10 @@ import {
   PAYROLL_HISTORY_DETAIL_PAID_CLASS,
   PAYROLL_PAYOUT_STATUS,
   PAYROLL_STATUS_FAILED_CLASS,
-  PAYROLL_STATUS_PENDING_CLASS
+  PAYROLL_STATUS_PENDING_CLASS,
+  payrollHistoryDetailPath
 } from "../../config";
+import { payrollExecutionItemId } from "../../utils";
 
 function queryErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
@@ -141,11 +147,42 @@ function HistoryDetailBody(props: {
   error: string | null;
 }) {
   const { run, rows, loading, error } = props;
+  const toast = useToast();
+  const user = useAuthStore((state) => state.user);
+  const orgId = organizationId(user);
+  const retryPayout = useRetryPayrollPayoutMutation();
+  const [retryingId, setRetryingId] = useState<string | null>(null);
   const failedCount =
     run.failedCount > 0
       ? run.failedCount
       : rows.filter((row) => row.status === PAYROLL_PAYOUT_STATUS.Failed)
           .length;
+
+  async function handlePayAgain(row: PayrollHistoryDetailRow) {
+    const itemId = payrollExecutionItemId(row.id);
+    if (itemId == null) {
+      toast.fail({ title: "Payment item is missing" });
+      return;
+    }
+    if (orgId == null) {
+      toast.fail({ title: "Organization is missing" });
+      return;
+    }
+    try {
+      setRetryingId(row.id);
+      const payment = await retryPayout.mutateAsync({
+        execution_item_id: itemId,
+        organization_id: orgId,
+        success_url: `${window.location.origin}${payrollHistoryDetailPath(run.id)}`,
+      });
+      window.location.assign(payment.payUrl);
+    } catch (error) {
+      setRetryingId(null);
+      toast.fail({
+        title: queryErrorMessage(error, "Unable to create the payment"),
+      });
+    }
+  }
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-6">
@@ -206,7 +243,14 @@ function HistoryDetailBody(props: {
           </div>
           <div className="flex flex-col gap-3.5">
             {rows.map((row) => (
-              <HistoryDetailRow key={row.id} row={row} />
+              <HistoryDetailRow
+                key={row.id}
+                row={row}
+                payAgainLoading={retryingId === row.id}
+                onPayAgain={() => {
+                  void handlePayAgain(row);
+                }}
+              />
             ))}
           </div>
         </div>
@@ -215,7 +259,12 @@ function HistoryDetailBody(props: {
   );
 }
 
-function HistoryDetailRow({ row }: { row: PayrollHistoryDetailRow }) {
+function HistoryDetailRow(props: {
+  row: PayrollHistoryDetailRow;
+  payAgainLoading: boolean;
+  onPayAgain: () => void;
+}) {
+  const { row, payAgainLoading, onPayAgain } = props;
   const adjustment = netPayAdjustment(row.amount, row.netPay);
 
   return (
@@ -261,12 +310,21 @@ function HistoryDetailRow({ row }: { row: PayrollHistoryDetailRow }) {
           </p>
         ) : null}
       </div>
-      <HistoryDetailStatus row={row} />
+      <HistoryDetailStatus
+        row={row}
+        payAgainLoading={payAgainLoading}
+        onPayAgain={onPayAgain}
+      />
     </div>
   );
 }
 
-function HistoryDetailStatus({ row }: { row: PayrollHistoryDetailRow }) {
+function HistoryDetailStatus(props: {
+  row: PayrollHistoryDetailRow;
+  payAgainLoading: boolean;
+  onPayAgain: () => void;
+}) {
+  const { row, payAgainLoading, onPayAgain } = props;
   if (row.status === PAYROLL_PAYOUT_STATUS.Failed) {
     return (
       <Tooltip
@@ -278,8 +336,12 @@ function HistoryDetailStatus({ row }: { row: PayrollHistoryDetailRow }) {
             <p className="font-montserrat text-sm font-medium text-[#606060]">
               {PAYROLL_HISTORY_DETAIL_FAILED_COPY}
             </p>
-            <Button className="h-9 w-[140px] whitespace-nowrap rounded-[10px] text-sm">
-              <IconUp className="size-3.5 shrink-0" />
+            <Button
+              className="h-9 w-[140px] whitespace-nowrap rounded-[10px] text-sm"
+              loading={payAgainLoading}
+              onClick={onPayAgain}
+            >
+              {payAgainLoading ? null : <IconUp className="size-3.5 shrink-0" />}
               Pay Again
             </Button>
           </div>
@@ -291,7 +353,7 @@ function HistoryDetailStatus({ row }: { row: PayrollHistoryDetailRow }) {
             PAYROLL_HISTORY_DETAIL_FAILED_CLASS
           )}
         >
-          <IconAlert className="h-[7px] w-0.5 shrink-0" />
+          <IconAlert className="h-2.5 w-1 shrink-0" />
           Failed
         </span>
       </Tooltip>

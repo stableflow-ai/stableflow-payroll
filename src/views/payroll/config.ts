@@ -3,6 +3,14 @@ import { PAYROLL_IMPORT_DAY_TYPE, PAYROLL_TOTAL_PAYOUT_PERIOD } from "@/types/pa
 export const PAYROLL_PATH = "/pay/payroll";
 export const PAYROLL_HISTORY_PATH = "/pay/payroll/history";
 
+export function payrollHistoryDetailPath(executionId: string): string {
+  return `${PAYROLL_HISTORY_PATH}/${encodeURIComponent(executionId)}`;
+}
+
+export function isPayrollHistoryPath(pathname: string): boolean {
+  return pathname === PAYROLL_HISTORY_PATH || pathname.startsWith(`${PAYROLL_HISTORY_PATH}/`);
+}
+
 export const PAYROLL_DRAWER_MODE = {
   Add: "add",
   Edit: "edit",
@@ -134,9 +142,9 @@ export const PAYROLL_HISTORY_DETAIL_GRID =
   "grid min-w-[760px] grid-cols-[1.3fr_1.2fr_1.1fr_0.7fr_0.7fr_0.9fr] items-center gap-x-3";
 
 export const PAYROLL_HISTORY_DETAIL_PAID_CLASS = "text-[#769400]";
-export const PAYROLL_HISTORY_DETAIL_FAILED_CLASS = "text-[#FF5353]";
+export const PAYROLL_HISTORY_DETAIL_FAILED_CLASS = "text-danger";
 export const PAYROLL_HISTORY_DETAIL_DELTA_UP_CLASS = "text-[#94ba00]";
-export const PAYROLL_HISTORY_DETAIL_DELTA_DOWN_CLASS = "text-[#ff5353]";
+export const PAYROLL_HISTORY_DETAIL_DELTA_DOWN_CLASS = "text-danger";
 export const PAYROLL_HISTORY_DETAIL_FAILED_COPY =
   "This payment transaction has failed";
 

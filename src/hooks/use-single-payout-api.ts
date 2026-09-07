@@ -10,6 +10,13 @@ export function useCreatePayrollPaymentMutation() {
   });
 }
 
+/** `POST /v1/payroll/payouts/retry` — hosted checkout for a failed execution item. */
+export function useRetryPayrollPayoutMutation() {
+  return useMutation({
+    mutationFn: payoutApi.retryPayrollPayout,
+  });
+}
+
 /**
  * `GET /v1/payroll/payments/{payment_id}` — read once on the result page.
  * The checkout only returns here after a successful payment, so there is

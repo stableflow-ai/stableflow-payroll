@@ -172,8 +172,11 @@ Admin (`role` other than `"user"`) calls `/organizations/history`. Members (`rol
 | --- | --- | --- | --- | --- | --- | --- |
 | POST | `/v1/payroll/payments` | yes | `PayrollCreatePaymentParam` | `PayrollPayment` | `createPayrollPayment` | `useCreatePayrollPaymentMutation` |
 | GET | `/v1/payroll/payments/{payment_id}` | yes | — | `PayrollPayment` | `getPayrollPayment` | `usePayrollPaymentQuery` |
+| POST | `/v1/payroll/payouts/retry` | yes | `PayrollPayoutRetryParam` (`execution_item_id`, `organization_id`, `success_url`) | `PayrollPayment` | `retryPayrollPayout` | `useRetryPayrollPayoutMutation` |
 
 `POST /payments` does not settle anything. The backend opens a hosted checkout session and answers with `pay_url`; `SinglePayoutView` sends the browser there, and the payer completes the transfer on the checkout. `createPayrollPayment` throws `ApiError(..., "NO_PAY_URL")` when the response has no link.
+
+`POST /payouts/retry` is the Payroll History **Pay Again** path for a failed execution item. Body is `execution_item_id` (detail row `id`, posted as a number), session `organization_id`, and `success_url` `{origin}/pay/payroll/history/{executionId}`. The mapper reuses `mapPayrollPayment` and throws `NO_PAY_URL` when the link is missing. On success the drawer sends the browser to `pay_url` with `window.location.assign`. Checkout query params on return are ignored; the drawer opens from the path.
 
 `memo` (≤ 200 characters) is accepted but is not in the Swagger contract. Optional `notification: { email?, slack? }` is sent from Single Payment when Notify Recipient is on; empty keys are omitted. The switch-off path omits `notification` entirely.
 
@@ -289,6 +292,7 @@ Recent payouts have no `page` in the contract, only `limit` (max 100). `useBonus
 | Method | Path | Auth | Body / Query | Data | API | Hook |
 | --- | --- | --- | --- | --- | --- | --- |
 | POST | `/v1/payroll/payouts/submit` | yes | `PayBatchSubmitParam` (`quote_id`, `tx_hash`) | `PayrollPayoutSubmitResult` | `batchSubmit` | via `batch-payout-commit-queue` |
+| POST | `/v1/payroll/payouts/retry` | yes | `PayrollPayoutRetryParam` | `PayrollPayment` | `retryPayrollPayout` | `useRetryPayrollPayoutMutation` |
 | GET | `/v1/payroll/executions/{execution_id}` | yes | `organization_id` | `PayrollExecution` | `getPayrollExecution` | `usePayoutExecutionPoll` |
 
 Payment by form signs and broadcasts the payable quote, then `enqueueBatchPayoutCommit` stores `{ quoteId, txHash, title, type }`. `useBatchPayoutCommitQueue` (mounted in `PayLayout`) retries `POST /payouts/submit` with exponential backoff from 5s and drops the item once the server accepts it. Submit returns `execution_id`. The layout then polls `GET /executions/{execution_id}` every 5s without blocking the pay form. Only the latest execution is polled. Progress is an `info` toast (`{processed} / {total}` plus View). Newly terminal list items toast `completed` / `failed` / `expired`. View goes to the matching history list and stops polling. `finished: true` keeps the progress toast 3s then closes it.

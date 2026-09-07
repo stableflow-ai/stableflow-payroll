@@ -3,6 +3,8 @@ import {
   fallbackPayrollImportName,
   parsePayrollImportRows,
   payDayFromPaymentDate,
+  payrollExecutionItemId,
+  payrollHistoryRunStub,
   payrollNextRunToPayDay,
   payrollPayDayToParam,
   payrollPayDayToType,
@@ -260,5 +262,23 @@ describe("recipientRowsToImportItems", () => {
         symbol: "USDT",
       },
     ]);
+  });
+});
+
+describe("payrollHistoryRunStub", () => {
+  it("opens the detail drawer with the URL execution id", () => {
+    expect(payrollHistoryRunStub("42")).toMatchObject({
+      id: "42",
+      title: "",
+      status: "pending",
+    });
+  });
+});
+
+describe("payrollExecutionItemId", () => {
+  it("posts the detail row id as a positive integer", () => {
+    expect(payrollExecutionItemId("7")).toBe(7);
+    expect(payrollExecutionItemId("0")).toBeNull();
+    expect(payrollExecutionItemId("abc")).toBeNull();
   });
 });

@@ -3,6 +3,7 @@ import type { IntentsToken } from "@/stores/intents-tokens";
 import { normalizeSymbol } from "@/stores/intents-tokens";
 import type {
   PayrollChartPoint,
+  PayrollHistoryRun,
   PayrollImportDayType,
   PayrollImportItem,
   PayrollTotalPayoutPeriod,
@@ -486,4 +487,24 @@ export function mapPayrollChartSeries(
     periodLabel,
     currentValue: active?.volume ?? "0",
   };
+}
+
+export function payrollHistoryRunStub(executionId: string): PayrollHistoryRun {
+  return {
+    id: executionId,
+    title: "",
+    status: "pending",
+    paidCount: 0,
+    recipientCount: 0,
+    totalPayout: "0",
+    transactionCount: 0,
+    failedCount: 0,
+    executedAt: "",
+  };
+}
+
+export function payrollExecutionItemId(id: string): number | null {
+  const parsed = Number(id);
+  if (!Number.isInteger(parsed) || parsed <= 0) return null;
+  return parsed;
 }
