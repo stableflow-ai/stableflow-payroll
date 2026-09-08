@@ -50,7 +50,7 @@ export function Table(props: TableProps) {
       >
         {toolbar ? <div className="shrink-0">{toolbar}</div> : null}
         <div
-          className={cn("min-h-0 flex-1 overflow-auto", scrollClassName)}
+          className={cn("min-h-0 flex-1", scrollClassName)}
           style={{ scrollbarGutter: "stable" }}
         >
           <div className="min-w-full">{children}</div>

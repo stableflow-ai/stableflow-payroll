@@ -152,7 +152,7 @@ function PaymentFormDetailsBody(props: {
       <div
         className={cn(
           "grid gap-4 rounded-[12px] border border-white bg-[#fdfdfd] px-8 py-4 shadow-[0_0_20px_0_rgba(0,0,0,0.06)]",
-          isPayroll ? "grid-cols-3" : "grid-cols-2",
+          isPayroll ? "grid-cols-3" : "grid-cols-2"
         )}
       >
         <SummaryCell
@@ -171,7 +171,7 @@ function PaymentFormDetailsBody(props: {
         ) : null}
       </div>
 
-      <div className="min-h-0 flex-1 overflow-auto">
+      <div className="min-h-0 flex-1">
         <div className={cn(DETAILS_GRID, "px-4 pb-2")}>
           {PAYMENT_FORM_DETAILS_COLUMNS.map((column) => (
             <p
@@ -188,7 +188,10 @@ function PaymentFormDetailsBody(props: {
             return (
               <div
                 key={row.id}
-                className={cn(DETAILS_GRID, "h-14 rounded-[12px] bg-[#f6f6f6] px-4")}
+                className={cn(
+                  DETAILS_GRID,
+                  "h-14 rounded-[12px] bg-[#f6f6f6] px-4"
+                )}
               >
                 <div className="min-w-0">
                   <p className="truncate font-montserrat text-sm font-medium text-black">
@@ -205,7 +208,10 @@ function PaymentFormDetailsBody(props: {
                   {row.symbol} · {chainDisplayName(row.network)}
                 </p>
                 <p className="font-montserrat text-sm font-medium text-black">
-                  {formatAmount(row.amount, { prefix: "", maxDecimals: AMOUNT_MAX_DECIMALS })}
+                  {formatAmount(row.amount, {
+                    prefix: "",
+                    maxDecimals: AMOUNT_MAX_DECIMALS
+                  })}
                 </p>
                 {editing ? (
                   <InputNumber
@@ -216,7 +222,10 @@ function PaymentFormDetailsBody(props: {
                   />
                 ) : (
                   <p className="font-montserrat text-sm font-medium text-black">
-                    {formatAmount(netPay, { prefix: "", maxDecimals: AMOUNT_MAX_DECIMALS })}
+                    {formatAmount(netPay, {
+                      prefix: "",
+                      maxDecimals: AMOUNT_MAX_DECIMALS
+                    })}
                   </p>
                 )}
               </div>

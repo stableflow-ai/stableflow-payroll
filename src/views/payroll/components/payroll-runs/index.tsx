@@ -98,21 +98,25 @@ export function PayrollRunsCard(props: {
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-end gap-8">
           <TabLink to={PAYROLL_PATH}>Next Payroll</TabLink>
-          <TabLink to={PAYROLL_HISTORY_PATH} end={false}>Payroll History</TabLink>
+          <TabLink to={PAYROLL_HISTORY_PATH} end={false}>
+            Payroll History
+          </TabLink>
         </div>
         {showToolbar ? (
           <div className="flex items-center gap-2 pb-1">
-            {tab === PAYROLL_TAB.History ? (
+            {/* {tab === PAYROLL_TAB.History ? (
               <Button
                 variant={BUTTON_VARIANT.Normal}
                 loading={exporting}
                 className="h-9 rounded-[10px] border-black/10 px-4 text-sm text-black"
                 onClick={onExport}
               >
-                {exporting ? null : <IconExportLink className="size-3.5 shrink-0" />}
-                Export CSV
+                {exporting ? null : (
+                  <IconExportLink className="size-3.5 shrink-0" />
+                )}
+                Export CSV1
               </Button>
-            ) : null}
+            ) : null} */}
             <Button
               variant={BUTTON_VARIANT.Normal}
               className="h-9 rounded-[10px] border-black/10 px-4 text-sm text-black"

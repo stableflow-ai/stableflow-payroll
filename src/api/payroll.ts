@@ -285,6 +285,7 @@ export async function getPayrollHistory(params: PayrollHistoryQuery): Promise<Pa
 }
 
 const PAYROLL_HISTORY_EXPORT_FILENAME = "payroll-history.csv";
+const PAYROLL_HISTORY_DETAIL_EXPORT_FILENAME = "payroll-history-detail.csv";
 
 export function exportPayrollHistory(params: PayrollHistoryExportQuery) {
   return httpBlob(`${PAY_API_PREFIX}/salaries/history/export`, {
@@ -294,6 +295,19 @@ export function exportPayrollHistory(params: PayrollHistoryExportQuery) {
     },
     fallbackFilename: PAYROLL_HISTORY_EXPORT_FILENAME,
   });
+}
+
+export function exportPayrollHistoryDetail(params: PayrollHistoryDetailQuery) {
+  return httpBlob(
+    `${PAY_API_PREFIX}/salaries/history/${encodeURIComponent(params.executionId)}/export`,
+    {
+      query: {
+        organization_id: params.organizationId,
+        timezone: params.timezone,
+      },
+      fallbackFilename: PAYROLL_HISTORY_DETAIL_EXPORT_FILENAME,
+    },
+  );
 }
 
 export function mapPayrollHistoryDetailRow(raw: unknown, index = 0): PayrollHistoryDetailRow {

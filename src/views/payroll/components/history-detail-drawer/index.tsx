@@ -13,7 +13,10 @@ import { DRAWER_SIDE } from "@/components/ui/drawer/config";
 import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { chainDisplayName, txExplorerUrl } from "@/config/chains";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { usePayrollHistoryDetailQuery } from "@/hooks/use-payroll-api";
+import {
+  usePayrollHistoryDetailExportMutation,
+  usePayrollHistoryDetailQuery,
+} from "@/hooks/use-payroll-api";
 import { useRetryPayrollPayoutMutation } from "@/hooks/use-single-payout-api";
 import useToast from "@/hooks/use-toast";
 import { organizationId } from "@/lib/auth-role";
@@ -52,35 +55,24 @@ export function PayrollHistoryDetailDrawer(props: {
 }) {
   const { open, run, onClose } = props;
   const isDesktop = useMediaQuery(PAYROLL_HISTORY_DETAIL_DESKTOP_QUERY);
+  const toast = useToast();
   const detail = usePayrollHistoryDetailQuery(open ? (run?.id ?? null) : null);
+  const exportMutation = usePayrollHistoryDetailExportMutation();
   const summary = detail.data ?? run;
   const rows = detail.data?.rows ?? [];
   const title = summary?.title ?? "";
+  const exporting = exportMutation.isPending;
 
-  function handleExport() {
-    if (!summary) return;
-    const header = "name,address,email,token,network,amount,net_pay,status";
-    const lines = rows.map((row) =>
-      [
-        row.name,
-        row.address,
-        row.email,
-        row.token,
-        row.network,
-        row.amount,
-        row.netPay,
-        row.status
-      ].join(",")
-    );
-    const blob = new Blob([[header, ...lines].join("\n")], {
-      type: "text/csv;charset=utf-8"
-    });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.href = url;
-    link.download = `${title.toLowerCase().replace(/\s+/g, "-") || "payroll-history"}.csv`;
-    link.click();
-    URL.revokeObjectURL(url);
+  async function handleExport() {
+    const executionId = run?.id ?? summary?.id;
+    if (!executionId) return;
+    try {
+      await exportMutation.mutateAsync(executionId);
+    } catch (error) {
+      toast.fail({
+        title: queryErrorMessage(error, "Could not export payroll history"),
+      });
+    }
   }
 
   return (
@@ -107,10 +99,13 @@ export function PayrollHistoryDetailDrawer(props: {
           <Button
             variant={BUTTON_VARIANT.Normal}
             size={BUTTON_SIZE.Sm}
+            loading={exporting}
             className="h-8 rounded-[10px] border-black/10 bg-white px-3 text-xs capitalize text-black"
-            onClick={handleExport}
+            onClick={() => {
+              void handleExport();
+            }}
           >
-            <IconExportLink className="size-3.5 shrink-0" />
+            {exporting ? null : <IconExportLink className="size-3.5 shrink-0" />}
             Export CSV
           </Button>
         ) : null
