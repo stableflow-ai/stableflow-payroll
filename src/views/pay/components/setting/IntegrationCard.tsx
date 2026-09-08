@@ -92,12 +92,12 @@ export function IntegrationCard() {
               config={draft.email}
               onChange={(next) => patch(INTEGRATION_FIELD.Email, next)}
             />
-            <IntegrationChannelCard
+            {/* <IntegrationChannelCard
               title="Telegram"
               icon={integrationIconImg("/setting/telegram.svg", "Telegram")}
               config={draft.telegram}
               onChange={(next) => patch(INTEGRATION_FIELD.Telegram, next)}
-            />
+            /> */}
             <IntegrationChannelCard
               title="Slack"
               icon={integrationIconImg("/setting/slack.svg", "Slack")}
