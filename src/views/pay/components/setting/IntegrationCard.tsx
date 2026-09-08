@@ -1,13 +1,16 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IconEmail } from "@/components/icons";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_SIZE } from "@/components/ui/button/config";
 import { Card } from "@/components/ui/card/Card";
 import {
   integrationSettingsFromOrganization,
-  organizationSettingsFromIntegration,
+  statusFromChannelConfig,
 } from "@/api/organization";
-import { useOrganizationQuery, useUpdateOrganizationMutation } from "@/hooks/use-organization-api";
+import {
+  useConnectSlackMutation,
+  useOrganizationQuery,
+  useUpdateAddressSettingsMutation,
+  useUpdateNotificationSettingsMutation,
+} from "@/hooks/use-organization-api";
 import {
   INTEGRATION_FIELD,
   type ChannelConfig,
@@ -15,14 +18,21 @@ import {
   type IntegrationSettings,
 } from "@/hooks/use-settings-api";
 import useToast from "@/hooks/use-toast";
+import { ADDRESS_SETTING_FIELD } from "./config";
 import { IntegrationChannelCard, integrationIconImg } from "./IntegrationChannelCard";
 
 export function IntegrationCard() {
   const toast = useToast();
   const query = useOrganizationQuery();
-  const updateMutation = useUpdateOrganizationMutation();
+  const addressMutation = useUpdateAddressSettingsMutation();
+  const notificationMutation = useUpdateNotificationSettingsMutation();
+  const connectSlackMutation = useConnectSlackMutation();
   const saved = query.data;
   const [draft, setDraft] = useState<IntegrationSettings | null>(null);
+  const [pendingKeys, setPendingKeys] = useState<ReadonlySet<IntegrationFieldKey>>(
+    () => new Set(),
+  );
+  const pendingCount = useRef(0);
   const savedSettingsKey = saved
     ? [
         saved.addressSettings.evmAddress,
@@ -36,7 +46,7 @@ export function IntegrationCard() {
     : "";
 
   useEffect(() => {
-    if (!saved) return;
+    if (!saved || pendingCount.current > 0) return;
     setDraft(integrationSettingsFromOrganization(saved));
   }, [saved, savedSettingsKey]);
 
@@ -47,24 +57,61 @@ export function IntegrationCard() {
     });
   }
 
-  async function handleSave() {
-    if (!saved || !draft) return;
-    const settings = organizationSettingsFromIntegration(
-      draft,
-      saved.addressSettings.evmAddress,
-    );
+  function beginPending(key: IntegrationFieldKey) {
+    pendingCount.current += 1;
+    setPendingKeys((current) => new Set(current).add(key));
+  }
+
+  function endPending(key: IntegrationFieldKey) {
+    pendingCount.current = Math.max(0, pendingCount.current - 1);
+    setPendingKeys((current) => {
+      const next = new Set(current);
+      next.delete(key);
+      return next;
+    });
+  }
+
+  async function persist(key: IntegrationFieldKey, next: Partial<ChannelConfig>) {
+    if (!draft) return;
+    const current = draft[key];
+    const merged = { ...current, ...next };
+    const status = statusFromChannelConfig(merged);
+
+    if (key === INTEGRATION_FIELD.Slack && next.enabled === true && !current.enabled) {
+      beginPending(key);
+      try {
+        const { authorizationUrl } = await connectSlackMutation.mutateAsync();
+        window.location.assign(authorizationUrl);
+      } catch (cause) {
+        endPending(key);
+        toast.fail({
+          title: cause instanceof Error ? cause.message : "Failed to connect Slack",
+        });
+      }
+      return;
+    }
+
+    beginPending(key);
+    patch(key, next);
     try {
-      await updateMutation.mutateAsync({
-        name: saved.name,
-        ...(saved.logo ? { logo: saved.logo } : {}),
-        addressSettings: settings.addressSettings,
-        notificationSettings: settings.notificationSettings,
-      });
-      toast.success({ title: "Integration saved" });
+      if (
+        key === INTEGRATION_FIELD.Near ||
+        key === INTEGRATION_FIELD.Solana ||
+        key === INTEGRATION_FIELD.Tron
+      ) {
+        await addressMutation.mutateAsync({
+          [ADDRESS_SETTING_FIELD[key]]: status,
+        });
+      } else if (key === INTEGRATION_FIELD.Slack || key === INTEGRATION_FIELD.Telegram) {
+        await notificationMutation.mutateAsync({ [key]: status });
+      }
     } catch (cause) {
+      patch(key, current);
       toast.fail({
         title: cause instanceof Error ? cause.message : "Failed to save integration",
       });
+    } finally {
+      endPending(key);
     }
   }
 
@@ -90,19 +137,22 @@ export function IntegrationCard() {
               title="Email"
               icon={<IconEmail className="h-[13px] w-[17px]" />}
               config={draft.email}
-              onChange={(next) => patch(INTEGRATION_FIELD.Email, next)}
+              locked
+              onChange={() => undefined}
             />
             {/* <IntegrationChannelCard
               title="Telegram"
               icon={integrationIconImg("/setting/telegram.svg", "Telegram")}
               config={draft.telegram}
-              onChange={(next) => patch(INTEGRATION_FIELD.Telegram, next)}
+              saving={pendingKeys.has(INTEGRATION_FIELD.Telegram)}
+              onChange={(next) => void persist(INTEGRATION_FIELD.Telegram, next)}
             /> */}
             <IntegrationChannelCard
               title="Slack"
               icon={integrationIconImg("/setting/slack.svg", "Slack")}
               config={draft.slack}
-              onChange={(next) => patch(INTEGRATION_FIELD.Slack, next)}
+              saving={pendingKeys.has(INTEGRATION_FIELD.Slack)}
+              onChange={(next) => void persist(INTEGRATION_FIELD.Slack, next)}
             />
           </div>
           <p className="mt-8 font-montserrat text-sm font-medium text-[#606060]">Wallet Address</p>
@@ -116,28 +166,21 @@ export function IntegrationCard() {
             <IntegrationChannelCard
               title="SOLANA Address"
               config={draft.solana}
-              onChange={(next) => patch(INTEGRATION_FIELD.Solana, next)}
+              saving={pendingKeys.has(INTEGRATION_FIELD.Solana)}
+              onChange={(next) => void persist(INTEGRATION_FIELD.Solana, next)}
             />
             <IntegrationChannelCard
               title="NEAR Address"
               config={draft.near}
-              onChange={(next) => patch(INTEGRATION_FIELD.Near, next)}
+              saving={pendingKeys.has(INTEGRATION_FIELD.Near)}
+              onChange={(next) => void persist(INTEGRATION_FIELD.Near, next)}
             />
             <IntegrationChannelCard
               title="Tron Address"
               config={draft.tron}
-              onChange={(next) => patch(INTEGRATION_FIELD.Tron, next)}
+              saving={pendingKeys.has(INTEGRATION_FIELD.Tron)}
+              onChange={(next) => void persist(INTEGRATION_FIELD.Tron, next)}
             />
-          </div>
-          <div className="mt-6 flex justify-end">
-            <Button
-              size={BUTTON_SIZE.Sm}
-              className="h-9 min-w-[120px] rounded-[8px] px-4"
-              loading={updateMutation.isPending}
-              onClick={() => void handleSave()}
-            >
-              Save
-            </Button>
           </div>
         </>
       )}

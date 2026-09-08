@@ -63,7 +63,7 @@ export function NextPayrollPanel(props: {
             onClick={onPayNow}
           >
             <IconUp className="size-3.5 shrink-0" />
-            Pay Now
+            {run.payable ? "Pay Now" : "Not payday yet"}
           </Button>
         </div>
       </div>

@@ -156,10 +156,17 @@ export function mapPayrollNextRun(raw: unknown): PayrollNextRun | null {
     totalPayout: apiText(row.total_payout ?? row.totalPayout) || "0",
     recipients: apiNumber(row.recipients) ?? rows.length,
     payDate: apiText(row.payment_date ?? row.paymentDate),
+    payable: mapPayrollPayable(row.payable),
     ...(payrollDayType ? { payrollDayType } : {}),
     ...(payrollDay != null ? { payrollDay } : {}),
     rows,
   };
+}
+
+function mapPayrollPayable(value: unknown): boolean {
+  if (value === false || value === 0) return false;
+  const text = apiText(value).trim().toLowerCase();
+  return text !== "false" && text !== "0";
 }
 
 export async function getPayrollNext(params: PayrollNextQuery): Promise<PayrollNextRun | null> {

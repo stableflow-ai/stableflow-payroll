@@ -23,6 +23,7 @@ export const PAY_FORM_PATH = "/pay/form";
 export const TEAM_PATH = "/team";
 export const HISTORY_PATH = "/history";
 export const SETTING_PATH = "/setting";
+export const SETTING_SLACK_CALLBACK_PATH = "/setting/slack/callback";
 
 export const PAY_NAV_ID = {
   Overview: "overview",
@@ -156,7 +157,8 @@ export function isPayShellPath(pathname: string): boolean {
     pathname.startsWith("/pay") ||
     pathname === TEAM_PATH ||
     pathname === HISTORY_PATH ||
-    pathname === SETTING_PATH
+    pathname === SETTING_PATH ||
+    pathname.startsWith(`${SETTING_PATH}/`)
   );
 }
 
@@ -173,7 +175,7 @@ export function isRequestPaymentPath(pathname: string): boolean {
 export function isPayNavLeafActive(item: PayNavLeaf, pathname: string): boolean {
   const paths = item.match ?? [item.to];
   return paths.some((path) => {
-    if (path === PAYROLL_HISTORY_PATH) {
+    if (path === PAYROLL_HISTORY_PATH || path === SETTING_PATH) {
       return pathname === path || pathname.startsWith(`${path}/`);
     }
     return pathname === path;
@@ -209,6 +211,7 @@ export const PAY_ROUTE_TITLES: Record<string, string> = {
   [PAYOUT_RESULT_PATH]: "Payment Result",
   [PAY_REQUEST_PATH]: "Request Payment",
   [PAY_REQUESTS_PATH]: "Requests",
+  [SETTING_SLACK_CALLBACK_PATH]: "Connecting Slack",
 };
 
 export const PAYOUT_TABLE_COLUMNS =

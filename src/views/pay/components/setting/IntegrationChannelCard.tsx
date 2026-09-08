@@ -10,10 +10,11 @@ export function IntegrationChannelCard(props: {
   icon?: ReactNode;
   config: ChannelConfig;
   locked?: boolean;
+  saving?: boolean;
   onChange: (patch: Partial<ChannelConfig>) => void;
 }) {
-  const { title, icon, config, locked = false, onChange } = props;
-  const dropdownDisabled = locked || !config.enabled;
+  const { title, icon, config, locked = false, saving = false, onChange } = props;
+  const dropdownDisabled = locked || saving || !config.enabled;
 
   return (
     <div className="flex h-[103px] w-full max-w-[275px] flex-col rounded-[12px] border border-white bg-[#fdfdfd] px-4 py-4 shadow-[0_0_20px_0_rgba(0,0,0,0.06)]">
@@ -29,6 +30,7 @@ export function IntegrationChannelCard(props: {
         {locked ? null : (
           <Switch
             checked={config.enabled}
+            disabled={saving}
             onCheckedChange={(enabled) => onChange({ enabled })}
           />
         )}

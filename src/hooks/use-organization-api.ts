@@ -1,11 +1,25 @@
 import { useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { getOrganization, pickOrganization, updateOrganization } from "@/api/organization";
+import {
+  completeOrganizationSlackOAuth,
+  connectOrganizationSlack,
+  getOrganization,
+  pickOrganization,
+  updateOrganization,
+  updateOrganizationAddressSettings,
+  updateOrganizationNotificationSettings,
+} from "@/api/organization";
 import { queryKeys } from "@/api/query-keys";
 import { organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import type { AuthOrganization, AuthUser } from "@/types/auth";
-import type { OrganizationItem, UpdateOrganizationBody } from "@/types/organization";
+import type {
+  OrganizationItem,
+  SlackOAuthBody,
+  UpdateAddressSettingsBody,
+  UpdateNotificationSettingsBody,
+  UpdateOrganizationBody,
+} from "@/types/organization";
 
 function sessionOrganization(
   current: AuthOrganization | null | undefined,
@@ -64,6 +78,14 @@ export function useOrganizationQuery() {
   return query;
 }
 
+function requireOrganizationId(user: AuthUser | null): number {
+  const numericId = organizationId(user);
+  if (numericId === null) {
+    throw new Error("Organization is missing");
+  }
+  return numericId;
+}
+
 export function useUpdateOrganizationMutation() {
   const queryClient = useQueryClient();
   const applySession = useAuthStore((state) => state.applySession);
@@ -72,10 +94,7 @@ export function useUpdateOrganizationMutation() {
 
   return useMutation({
     mutationFn: async (body: UpdateOrganizationBody) => {
-      const numericId = organizationId(user);
-      if (numericId === null) {
-        throw new Error("Organization is missing");
-      }
+      const numericId = requireOrganizationId(user);
       await updateOrganization(numericId, body);
       return { id: numericId, name: body.name, logo: body.logo };
     },
@@ -92,5 +111,56 @@ export function useUpdateOrganizationMutation() {
       }
       void queryClient.invalidateQueries({ queryKey: queryKeys.organization.all });
     },
+  });
+}
+
+function useInvalidateOrganization() {
+  const queryClient = useQueryClient();
+  return () => {
+    void queryClient.invalidateQueries({ queryKey: queryKeys.organization.all });
+  };
+}
+
+export function useUpdateAddressSettingsMutation() {
+  const user = useAuthStore((state) => state.user);
+  const invalidate = useInvalidateOrganization();
+
+  return useMutation({
+    mutationFn: async (body: UpdateAddressSettingsBody) => {
+      await updateOrganizationAddressSettings(requireOrganizationId(user), body);
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useUpdateNotificationSettingsMutation() {
+  const user = useAuthStore((state) => state.user);
+  const invalidate = useInvalidateOrganization();
+
+  return useMutation({
+    mutationFn: async (body: UpdateNotificationSettingsBody) => {
+      await updateOrganizationNotificationSettings(requireOrganizationId(user), body);
+    },
+    onSuccess: invalidate,
+  });
+}
+
+export function useConnectSlackMutation() {
+  const user = useAuthStore((state) => state.user);
+
+  return useMutation({
+    mutationFn: async () => connectOrganizationSlack(requireOrganizationId(user)),
+  });
+}
+
+export function useSlackOAuthMutation() {
+  const user = useAuthStore((state) => state.user);
+  const invalidate = useInvalidateOrganization();
+
+  return useMutation({
+    mutationFn: async (body: SlackOAuthBody) => {
+      return completeOrganizationSlackOAuth(requireOrganizationId(user), body);
+    },
+    onSuccess: invalidate,
   });
 }

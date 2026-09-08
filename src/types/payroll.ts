@@ -84,6 +84,7 @@ export interface PayrollNextRun {
   totalPayout: string;
   recipients: number;
   payDate: string;
+  payable: boolean;
   payrollDayType?: PayrollImportDayType;
   payrollDay?: number;
   rows: PayrollRecipientRow[];

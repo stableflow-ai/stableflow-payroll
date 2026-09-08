@@ -21,6 +21,11 @@ import {
   type OrganizationOverview,
   type OrganizationPayoutPoint,
   type OrganizationPublicInfo,
+  type SlackConnectResult,
+  type SlackOAuthBody,
+  type SlackOAuthResult,
+  type UpdateAddressSettingsBody,
+  type UpdateNotificationSettingsBody,
   type UpdateOrganizationBody,
 } from "@/types/organization";
 
@@ -223,22 +228,43 @@ export function pickOrganization(
   return items.find((item) => item.id === id) ?? items[0] ?? null;
 }
 
-function updateOrganizationRequestBody(body: UpdateOrganizationBody) {
+export function updateOrganizationRequestBody(body: UpdateOrganizationBody) {
   const logo = body.logo?.trim();
   return {
     name: body.name,
     ...(logo ? { logo } : {}),
-    address_settings: {
-      evm_address: body.addressSettings.evmAddress,
-      near_address: body.addressSettings.nearAddress,
-      solana_address: body.addressSettings.solanaAddress,
-      tron_address: body.addressSettings.tronAddress,
-    },
-    notification_settings: {
-      email: body.notificationSettings.email,
-      telegram: body.notificationSettings.telegram,
-      slack: body.notificationSettings.slack,
-    },
+  };
+}
+
+export function addressSettingsRequestBody(body: UpdateAddressSettingsBody) {
+  return {
+    ...(body.nearAddress != null ? { near_address: body.nearAddress } : {}),
+    ...(body.solanaAddress != null ? { solana_address: body.solanaAddress } : {}),
+    ...(body.tronAddress != null ? { tron_address: body.tronAddress } : {}),
+  };
+}
+
+export function notificationSettingsRequestBody(body: UpdateNotificationSettingsBody) {
+  return {
+    ...(body.telegram != null ? { telegram: body.telegram } : {}),
+    ...(body.slack != null ? { slack: body.slack } : {}),
+  };
+}
+
+export function mapSlackConnect(raw: unknown): SlackConnectResult {
+  const row = asRecord(raw) ?? {};
+  const authorizationUrl = apiText(row.authorization_url ?? row.authorizationUrl).trim();
+  if (!authorizationUrl) {
+    throw new ApiError("Slack authorization URL is missing", 502, "NO_SLACK_URL");
+  }
+  return { authorizationUrl };
+}
+
+export function mapSlackOAuth(raw: unknown): SlackOAuthResult {
+  const row = asRecord(raw) ?? {};
+  return {
+    slackTeamId: apiText(row.slack_team_id ?? row.slackTeamId).trim(),
+    slackTeamName: apiText(row.slack_team_name ?? row.slackTeamName).trim(),
   };
 }
 
@@ -301,4 +327,44 @@ export async function updateOrganization(id: number, body: UpdateOrganizationBod
     method: "POST",
     body: updateOrganizationRequestBody(body),
   });
+}
+
+export async function updateOrganizationAddressSettings(
+  id: number,
+  body: UpdateAddressSettingsBody,
+) {
+  await http<void>(`${PAY_API_PREFIX}/organizations/${id}/address-settings`, {
+    method: "POST",
+    body: addressSettingsRequestBody(body),
+  });
+}
+
+export async function updateOrganizationNotificationSettings(
+  id: number,
+  body: UpdateNotificationSettingsBody,
+) {
+  await http<void>(`${PAY_API_PREFIX}/organizations/${id}/notification-settings`, {
+    method: "POST",
+    body: notificationSettingsRequestBody(body),
+  });
+}
+
+export async function connectOrganizationSlack(id: number) {
+  return mapSlackConnect(
+    await http<unknown>(`${PAY_API_PREFIX}/organizations/${id}/slack/connect`, {
+      method: "POST",
+    }),
+  );
+}
+
+export async function completeOrganizationSlackOAuth(id: number, body: SlackOAuthBody) {
+  return mapSlackOAuth(
+    await http<unknown>(`${PAY_API_PREFIX}/organizations/${id}/slack/oauth`, {
+      method: "POST",
+      body: {
+        code: body.code,
+        state: body.state,
+      },
+    }),
+  );
 }

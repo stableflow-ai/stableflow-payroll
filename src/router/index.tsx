@@ -11,6 +11,7 @@ import { RequestsView } from "@/views/pay/RequestsView";
 import { PayoutResultView } from "@/views/pay/PayoutResultView";
 import { PaymentByFormView } from "@/views/pay/PaymentByFormView";
 import { SettingView } from "@/views/pay/SettingView";
+import { SlackCallbackView } from "@/views/pay/SlackCallbackView";
 import { OverviewView } from "@/views/pay/OverviewView";
 import { SinglePayoutView } from "@/views/pay/SinglePayoutView";
 import { TransactionHistoryView } from "@/views/pay/TransactionHistoryView";
@@ -74,6 +75,7 @@ export const router = createBrowserRouter([
                   { path: "/pay/bonus/history", element: <BonusView /> },
                   { path: "/team", element: <TeamView /> },
                   { path: "/setting", element: <SettingView /> },
+                  { path: "/setting/slack/callback", element: <SlackCallbackView /> },
                   { path: "/pay/request", element: <RequestPaymentView /> },
                   { path: "/pay/requests", element: <RequestsView /> },
                   { path: "/history", element: <TransactionHistoryView /> },

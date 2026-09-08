@@ -166,6 +166,7 @@ function getPayrollOverviewFilledMock(): PayrollOverview {
       totalPayout: "273500",
       recipients: 12,
       payDate: "Oct. 1, 2026",
+      payable: true,
       rows: filledNextRows(),
     },
     history: [

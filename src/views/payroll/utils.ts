@@ -276,6 +276,7 @@ export function formRowsToNextRun(
     totalPayout: sumPayrollFormAmounts(rows),
     recipients: mapped.length,
     payDate: payrollPayDayLabel(normalizePayrollPayDay(payDay)),
+    payable: true,
     payrollDayType: schedule.payrollDayType,
     payrollDay: schedule.payrollDay,
     rows: mapped,

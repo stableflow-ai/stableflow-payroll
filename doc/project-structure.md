@@ -1,6 +1,6 @@
 # Project Structure
 
-Stableflow Pay is a Vite 8 + React 19 single-page app. Wallet providers for EVM, Near, Solana, and Tron are wired. The authenticated shell is a 220px Pay sidebar plus a content column; the released surface is Auth, `/` (Overview), `/pay/*`, `/team`, `/history`, and `/setting`.
+Stableflow Pay is a Vite 8 + React 19 single-page app. Wallet providers for EVM, Near, Solana, and Tron are wired. The authenticated shell is a 220px Pay sidebar plus a content column; the released surface is Auth, `/` (Overview), `/pay/*`, `/team`, `/history`, and `/setting` (including `/setting/slack/callback`).
 
 Product areas, routes, and constraints: [product.md](product.md).
 

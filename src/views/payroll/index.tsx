@@ -257,7 +257,8 @@ export function PayrollView() {
           navigate(payrollHistoryDetailPath(run.id));
         }}
         onPayNow={() => {
-          const payDate = nextPayroll?.payDate.trim() ?? "";
+          if (!nextPayroll?.payable) return;
+          const payDate = nextPayroll.payDate.trim();
           if (!payDate) {
             toast.fail({ title: "Next pay date is missing" });
             return;

@@ -93,8 +93,28 @@ export interface OrganizationPublicInfo {
 export interface UpdateOrganizationBody {
   name: string;
   logo?: string;
-  addressSettings: OrganizationAddressSettings;
-  notificationSettings: OrganizationNotificationSettings;
+}
+
+export type UpdateAddressSettingsBody = Partial<
+  Pick<OrganizationAddressSettings, "nearAddress" | "solanaAddress" | "tronAddress">
+>;
+
+export type UpdateNotificationSettingsBody = Partial<
+  Pick<OrganizationNotificationSettings, "telegram" | "slack">
+>;
+
+export interface SlackOAuthBody {
+  code: string;
+  state: string;
+}
+
+export interface SlackConnectResult {
+  authorizationUrl: string;
+}
+
+export interface SlackOAuthResult {
+  slackTeamId: string;
+  slackTeamName: string;
 }
 
 export function defaultAddressSettings(): OrganizationAddressSettings {

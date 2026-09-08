@@ -215,6 +215,7 @@ describe("mapPayrollNextRun", () => {
       totalPayout: "273500",
       recipients: 2,
       payDate: "2026-10-01",
+      payable: true,
       payrollDayType: "day_of_month",
       payrollDay: 15,
       rows: [
@@ -230,6 +231,20 @@ describe("mapPayrollNextRun", () => {
         },
       ],
     });
+  });
+
+  it("treats explicit false as not payable and defaults missing payable to true", () => {
+    expect(
+      mapPayrollNextRun({
+        payable: false,
+        list: [{ id: 1, name: "Andrew", address: "0xabc", amount: "1" }],
+      })?.payable,
+    ).toBe(false);
+    expect(
+      mapPayrollNextRun({
+        list: [{ id: 1, name: "Andrew", address: "0xabc", amount: "1" }],
+      })?.payable,
+    ).toBe(true);
   });
 });
 

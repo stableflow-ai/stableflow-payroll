@@ -5,12 +5,17 @@ import {
   mapOrganizationOverview,
   mapOrganizationPayoutPoints,
   mapOrganizationPublicInfo,
+  addressSettingsRequestBody,
   channelConfigFromStatus,
   integrationSettingsFromOrganization,
   mapOrganizationFieldStatus,
+  mapSlackConnect,
+  mapSlackOAuth,
+  notificationSettingsRequestBody,
   organizationSettingsFromIntegration,
   pickOrganization,
   statusFromChannelConfig,
+  updateOrganizationRequestBody,
 } from "./organization";
 import {
   FIELD_REQUIREMENT,
@@ -159,6 +164,57 @@ describe("organization field settings", () => {
       logo: "https://cdn.example/logo.png",
       addressSettings: defaultAddressSettings(),
       notificationSettings: defaultNotificationSettings(),
+    });
+  });
+});
+
+describe("organization settings request bodies", () => {
+  it("posts name and optional logo without settings", () => {
+    expect(updateOrganizationRequestBody({ name: "Eureka Labs" })).toEqual({
+      name: "Eureka Labs",
+    });
+    expect(
+      updateOrganizationRequestBody({
+        name: "Eureka Labs",
+        logo: "https://cdn.example/logo.png",
+      }),
+    ).toEqual({
+      name: "Eureka Labs",
+      logo: "https://cdn.example/logo.png",
+    });
+  });
+
+  it("sends only the address or notification fields that were set", () => {
+    expect(
+      addressSettingsRequestBody({
+        solanaAddress: ORGANIZATION_FIELD_STATUS.Required,
+      }),
+    ).toEqual({ solana_address: "required" });
+    expect(
+      notificationSettingsRequestBody({
+        slack: ORGANIZATION_FIELD_STATUS.Disabled,
+      }),
+    ).toEqual({ slack: "disabled" });
+  });
+});
+
+describe("slack oauth mappers", () => {
+  it("maps the authorization url and throws when it is missing", () => {
+    expect(mapSlackConnect({ authorization_url: "https://slack.com/oauth" })).toEqual({
+      authorizationUrl: "https://slack.com/oauth",
+    });
+    expect(() => mapSlackConnect({})).toThrow(/Slack authorization URL is missing/);
+  });
+
+  it("maps slack team fields", () => {
+    expect(
+      mapSlackOAuth({
+        slack_team_id: "T1",
+        slack_team_name: "Eureka",
+      }),
+    ).toEqual({
+      slackTeamId: "T1",
+      slackTeamName: "Eureka",
     });
   });
 });

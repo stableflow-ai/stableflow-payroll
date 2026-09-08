@@ -46,8 +46,6 @@ export function OrganizationCard(props: {
       await updateMutation.mutateAsync({
         name: name.trim(),
         ...(logo ? { logo } : {}),
-        addressSettings: saved.addressSettings,
-        notificationSettings: saved.notificationSettings,
       });
       toast.success({ title: "Organization saved" });
     } catch (cause) {
