@@ -42,12 +42,12 @@ function isSameUser(left: AuthUser, right: AuthUser): boolean {
   );
 }
 
-function mergeProfileUser(profile: AuthUser, local: AuthUser | null): AuthUser {
+export function mergeProfileUser(profile: AuthUser, local: AuthUser | null): AuthUser {
   const profileOrg = profile.organization;
   const localOrg = local?.organization;
   if (!profileOrg || !localOrg || profileOrg.id !== localOrg.id) return profile;
-  const logo = profileOrg.logo || localOrg.logo;
-  const orgId = profileOrg.orgId || localOrg.orgId;
+  const logo = localOrg.logo || profileOrg.logo;
+  const orgId = localOrg.orgId || profileOrg.orgId;
   if (!logo && !orgId) return profile;
   if ((profileOrg.logo ?? "") === (logo ?? "") && (profileOrg.orgId ?? "") === (orgId ?? "")) {
     return profile;

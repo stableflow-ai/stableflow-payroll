@@ -110,6 +110,7 @@ export function useUpdateOrganizationMutation() {
         });
       }
       void queryClient.invalidateQueries({ queryKey: queryKeys.organization.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.auth.profile });
     },
   });
 }

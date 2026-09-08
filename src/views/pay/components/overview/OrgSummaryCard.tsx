@@ -28,7 +28,7 @@ export function OrgSummaryCard(props: { ownerEmail: string; teamMemberCount: num
           <img
             src={logo ?? ""}
             alt=""
-            className="size-10 shrink-0 rounded-[12px] object-cover"
+            className="h-10 min-w-10 max-w-30 shrink-0 object-contain"
             onError={() => setLogoFailed(true)}
           />
         ) : (

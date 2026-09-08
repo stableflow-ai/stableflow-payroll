@@ -19,6 +19,7 @@ export function TeamInviteDialog(props: {
     try {
       await navigator.clipboard.writeText(url);
       toast.success({ title: "Copied" });
+      onClose();
     } catch {
       toast.fail({ title: "Could not copy" });
     } finally {

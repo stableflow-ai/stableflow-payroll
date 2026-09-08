@@ -170,7 +170,7 @@ export function InviteRegisterView() {
               <img
                 src={preview.logo}
                 alt=""
-                className="size-5 shrink-0 rounded-full object-cover"
+                className="h-6 min-w-6 max-w-20 shrink-0 object-contain"
               />
             ) : null}
             <span className="font-montserrat text-sm font-normal text-black">{email.trim()}</span>
@@ -281,7 +281,7 @@ export function InviteRegisterView() {
             <img
               src={preview.logo}
               alt=""
-              className="size-8 shrink-0 rounded-full object-cover"
+              className="h-8 min-w-8 max-w-24 shrink-0 object-contain"
             />
           ) : null}
           <h1 className={cn("text-center font-montserrat text-xl font-semibold text-black", preview.logo && "mt-3")}>
