@@ -2,7 +2,8 @@ import { PAY_API_PREFIX } from "@/api/config";
 import { apiNumber, apiText, asRecord } from "@/api/map";
 import { ApiError } from "@/lib/api-error";
 import { http } from "@/lib/http";
-import type { VolumePeriod } from "@/types/payout";
+import { VOLUME_PERIOD, type VolumePeriod } from "@/types/payout";
+import { DATE_FORMAT, formatDate } from "@/utils";
 import {
   FIELD_REQUIREMENT,
   ORGANIZATION_FIELD_STATUS,
@@ -38,22 +39,36 @@ export function mapOrganizationOverview(raw: unknown): OrganizationOverview {
   };
 }
 
-function mapPayoutPoint(raw: unknown): OrganizationPayoutPoint | null {
+export function payoutChartLabel(time: string, period: VolumePeriod): string {
+  const variant =
+    period === VOLUME_PERIOD.Monthly ? DATE_FORMAT.Month : DATE_FORMAT.MonthDay;
+  const day = time.trim().match(/^(\d{4}-\d{2}-\d{2})/);
+  if (day) {
+    const formatted = formatDate(`${day[1]}T12:00:00`, variant);
+    if (formatted) return formatted;
+  }
+  return formatDate(time, variant) || time;
+}
+
+function mapPayoutPoint(raw: unknown, period: VolumePeriod): OrganizationPayoutPoint | null {
   const row = asRecord(raw);
   if (!row) return null;
-  const label = apiText(row.time).trim();
-  if (!label) return null;
+  const time = apiText(row.time).trim();
+  if (!time) return null;
   return {
-    label,
+    label: payoutChartLabel(time, period),
     volume: apiNumber(row.total_payout ?? row.totalPayout) ?? 0,
     transaction: apiNumber(row.total_payments ?? row.totalPayments) ?? 0,
   };
 }
 
-export function mapOrganizationPayoutPoints(raw: unknown): OrganizationPayoutPoint[] {
+export function mapOrganizationPayoutPoints(
+  raw: unknown,
+  period: VolumePeriod = VOLUME_PERIOD.Daily,
+): OrganizationPayoutPoint[] {
   if (!Array.isArray(raw)) return [];
   return raw.flatMap((row) => {
-    const point = mapPayoutPoint(row);
+    const point = mapPayoutPoint(row, period);
     return point ? [point] : [];
   });
 }
@@ -248,6 +263,7 @@ export async function getOrganizationPayout(params: {
         timezone: params.timezone,
       },
     }),
+    params.period,
   );
 }
 

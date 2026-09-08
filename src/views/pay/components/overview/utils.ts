@@ -138,15 +138,21 @@ export function chartXTickMinPx(labels: string[]): number {
 
 export function maxCategoryTicks(hostWidth: number, minTickPx: number): number {
   const plotWidth = hostWidth - ADMIN_CHART_Y_AXIS_WIDTH - ADMIN_CHART_PLOT_RIGHT_MARGIN;
-  if (plotWidth <= 0 || minTickPx <= 0) return Number.POSITIVE_INFINITY;
+  if (plotWidth <= 0 || minTickPx <= 0) return 2;
   return Math.max(2, Math.floor(plotWidth / minTickPx) + 1);
 }
 
 export function evenCategoryTicks(labels: string[], maxTicks: number): string[] {
-  if (maxTicks < 2 || labels.length <= maxTicks) return labels;
-  const step = Math.ceil((labels.length - 1) / (maxTicks - 1));
+  if (labels.length <= 2) return labels;
+  if (!Number.isFinite(maxTicks) || maxTicks >= labels.length) return labels;
+  const count = Math.max(2, Math.floor(maxTicks));
+  const last = labels.length - 1;
   const ticks: string[] = [];
-  for (let i = labels.length - 1; i >= 0; i -= step) ticks.unshift(labels[i]);
+  for (let i = 0; i < count; i += 1) {
+    const index = Math.round((i * last) / (count - 1));
+    const label = labels[index];
+    if (ticks[ticks.length - 1] !== label) ticks.push(label);
+  }
   return ticks;
 }
 

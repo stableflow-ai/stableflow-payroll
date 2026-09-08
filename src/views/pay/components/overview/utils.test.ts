@@ -9,6 +9,8 @@ import {
   formatAdminChartAxis,
   greetingName,
   highPriorityDisplayItems,
+  evenCategoryTicks,
+  maxCategoryTicks,
   volumeChartPoints,
 } from "./utils";
 
@@ -97,5 +99,20 @@ describe("formatAdminChartAxis", () => {
     expect(formatAdminChartAxis(0, CHART_METRIC.Volume)).toBe("$0");
     expect(formatAdminChartAxis(20000, CHART_METRIC.Volume)).toBe("$20K");
     expect(formatAdminChartAxis(12, CHART_METRIC.Transaction)).toBe("12");
+  });
+});
+
+describe("evenCategoryTicks", () => {
+  it("keeps first and last labels with even index gaps", () => {
+    const labels = Array.from({ length: 30 }, (_, index) => `d${index}`);
+    expect(evenCategoryTicks(labels, 6)).toEqual(["d0", "d6", "d12", "d17", "d23", "d29"]);
+    expect(evenCategoryTicks(labels, 30)).toEqual(labels);
+    expect(evenCategoryTicks(labels, 0)).toEqual(["d0", "d29"]);
+  });
+});
+
+describe("maxCategoryTicks", () => {
+  it("uses at least two ticks when the plot width is unknown", () => {
+    expect(maxCategoryTicks(0, 58)).toBe(2);
   });
 });

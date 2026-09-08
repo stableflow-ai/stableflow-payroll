@@ -37,13 +37,25 @@ describe("mapOrganizationOverview", () => {
 });
 
 describe("mapOrganizationPayoutPoints", () => {
-  it("maps time to label and numeric volume", () => {
+  it("maps time to a period label and numeric volume", () => {
     expect(
-      mapOrganizationPayoutPoints([
-        { time: "Aug 1", total_payout: "42000", total_payments: 8 },
-        { time: "  ", total_payout: "1", total_payments: 1 },
-      ]),
-    ).toEqual([{ label: "Aug 1", volume: 42000, transaction: 8 }]);
+      mapOrganizationPayoutPoints(
+        [
+          { time: "2026-08-10T00:00:00+08:00", total_payout: "42000", total_payments: 8 },
+          { time: "  ", total_payout: "1", total_payments: 1 },
+        ],
+        "day",
+      ),
+    ).toEqual([{ label: "Aug 10", volume: 42000, transaction: 8 }]);
+  });
+
+  it("formats monthly buckets as the month name", () => {
+    expect(
+      mapOrganizationPayoutPoints(
+        [{ time: "2026-08-01T00:00:00+08:00", total_payout: "1", total_payments: 2 }],
+        "month",
+      ),
+    ).toEqual([{ label: "Aug", volume: 1, transaction: 2 }]);
   });
 });
 
