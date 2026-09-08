@@ -28,7 +28,7 @@ export function NotifyRecipientsDrawer(props: {
       side={isDesktop ? DRAWER_SIDE.Right : DRAWER_SIDE.Bottom}
       title="Notify Recipients"
       headerAction={
-        <div className="ml-auto">
+        <div className="ml-auto absolute right-6 translate-y-0.5">
           <Switch
             checked={masterOn}
             onCheckedChange={onMasterChange}

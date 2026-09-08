@@ -355,13 +355,17 @@ export function PaymentByFormCard(props: {
       <NotifyRecipientBar
         className="mt-6"
         enabled={notifyEnabled}
-        disabled={!formSelected}
+        disabled={!formSelected || (formPicked && (formsQuery.isFetching || quoting || sending))}
         onEnabledChange={handleNotifyEnabled}
       >
         <button
           type="button"
           className="inline-flex items-center gap-[7px] text-[#06F]"
           onClick={() => {
+            if ((formPicked && (formsQuery.isFetching || quoting || sending))) {
+              return;
+            }
+            console.log(detail)
             if (detail && selectedItemIds.size === 0) {
               setSelectedItemIds(new Set(payableItemIds(detail)));
             }

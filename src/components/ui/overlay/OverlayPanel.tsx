@@ -36,7 +36,7 @@ export function OverlayPanel(props: OverlayPanelProps) {
       style={style}
       onClick={(event) => event.stopPropagation()}
     >
-      <div className="flex shrink-0 items-center gap-3">
+      <div className="relative flex shrink-0 items-center gap-3">
         <h2
           className={cn(
             "min-h-5 font-montserrat text-[20px] font-semibold leading-normal text-black",
