@@ -103,7 +103,7 @@ export function PaymentFormDetailsDrawer(props: {
       }
       titleClassName="flex min-w-0 flex-1 items-center gap-2"
       headerAction={
-        detail ? (
+        detail?.type === PAYABLE_TYPE.Payroll ? (
           <div className="ml-auto">
             <Button
               size="sm"
