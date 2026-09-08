@@ -205,6 +205,7 @@ The three quote routes return `{ quote_id, batch }` (`quote_id` is a sibling of 
 | GET | `/v1/payroll/salaries/next` | yes | `organization_id`, `timezone` | `PayrollNextRun \| null` | `getPayrollNext` | `usePayrollNextQuery` |
 | GET | `/v1/payroll/salaries/history` | yes | `organization_id`, `page`, `pageSize`, `timezone` | `PayrollHistoryResp` | `getPayrollHistory` | `usePayrollHistoryInfiniteQuery` |
 | GET | `/v1/payroll/salaries/history/{execution_id}` | yes | `organization_id`, `timezone` | `PayrollHistoryDetail` | `getPayrollHistoryDetail` | `usePayrollHistoryDetailQuery` |
+| GET | `/v1/payroll/salaries/history/{execution_id}/export` | yes | `organization_id`, `timezone` | CSV file | `exportPayrollHistoryDetail` | `usePayrollHistoryDetailExportMutation` |
 | GET | `/v1/payroll/salaries/history/export` | yes | `organization_id`, `timezone` | CSV file | `exportPayrollHistory` | `usePayrollHistoryExportMutation` |
 | POST | `/v1/payroll/salaries/import` | yes | body: `organization_id`, `payroll_day_type`, `items` | `PayrollImportResp` | `importPayrollSalaries` | `usePayrollImportMutation` |
 | POST | `/v1/payroll/salaries/update` | yes | body: `organization_id`, `payroll_day_type`, `items`, `delete_ids` | — | `updatePayrollSalaries` | `usePayrollUpdateMutation` |
@@ -220,6 +221,8 @@ Recent payouts have no `page` in the contract, only `limit` (max 100). `usePayro
 `GET /salaries/history` is paginated (`page` / `pageSize`, max 100). `usePayrollHistoryInfiniteQuery` loads the next page on scroll. Each row maps `month` → title (`August Payroll`), `transactions` → paid count / transaction count, `recipients`, `total_payout`, and `execution_time`. The list contract has no status or failed count; status is `pending` when `transactions` is 0 and there are recipients, otherwise `paid`.
 
 `GET /salaries/history/{execution_id}` returns the same summary plus `list` (`PayrollOperationExecutionItem`). Rows map `recipient` → address, `destination_symbol` / `destination_network` → payout preference, `amount` / `net_pay`, `status` (`completed` → `paid`), and `destination_tx_hash`. Failed count is counted from loaded `failed` rows. The item has no email field; that line is omitted when empty.
+
+`GET /salaries/history/{execution_id}/export` downloads that run's CSV. The history detail drawer **Export CSV** button calls it with the same `organization_id` and browser IANA `timezone` as the detail query. Filename comes from `Content-Disposition`, falling back to `payroll-history-detail.csv`.
 
 `GET /salaries/history/export` downloads the payroll history CSV. The Payroll History tab **Export CSV** button calls it with `organization_id` and the browser IANA `timezone`. Filename comes from `Content-Disposition`, falling back to `payroll-history.csv`.
 

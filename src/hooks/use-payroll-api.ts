@@ -2,6 +2,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import { queryKeys } from "@/api/query-keys";
 import {
   exportPayrollHistory,
+  exportPayrollHistoryDetail,
   getPayrollCurrentStats,
   getPayrollHistory,
   getPayrollHistoryDetail,
@@ -201,6 +202,28 @@ export function usePayrollHistoryExportMutation() {
         return Promise.reject(new Error("Organization is missing"));
       }
       return exportPayrollHistory({ organizationId, timezone });
+    },
+    onSuccess: ({ blob, filename }) => {
+      saveBlob(blob, stampDownloadFilename(filename));
+    },
+  });
+}
+
+export function usePayrollHistoryDetailExportMutation() {
+  const { organizationId, timezone } = usePayrollQueryContext();
+  return useMutation({
+    mutationFn: (executionId: string) => {
+      if (organizationId == null) {
+        return Promise.reject(new Error("Organization is missing"));
+      }
+      if (!executionId) {
+        return Promise.reject(new Error("Execution is missing"));
+      }
+      return exportPayrollHistoryDetail({
+        organizationId,
+        timezone,
+        executionId,
+      });
     },
     onSuccess: ({ blob, filename }) => {
       saveBlob(blob, stampDownloadFilename(filename));
