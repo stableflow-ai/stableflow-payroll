@@ -64,7 +64,7 @@ export function TeamView() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1212px]">
+    <div className="mx-auto w-full">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
         <SearchInput
           value={search}

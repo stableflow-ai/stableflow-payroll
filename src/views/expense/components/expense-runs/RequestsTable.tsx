@@ -116,7 +116,7 @@ export function RequestsTable(props: {
                 ? `${row.token} · ${chainDisplayName(row.network)}`
                 : "-"}
             </TableCell>
-            <TableCell>{formatAmount(row.amount, { prefix: "" })}</TableCell>
+            <TableCell>{formatAmount(row.amount, { prefix: "", showDust: true })}</TableCell>
             <TableCell className="justify-end last:pr-4">
               <RowAction
                 action={row.action}

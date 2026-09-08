@@ -103,14 +103,14 @@ export function HistoryTable({ rows }: { rows: ExpenseHistoryRow[] }) {
             <TableCell>
               <DescriptionCell row={row} />
             </TableCell>
-            <TableCell>{formatAmount(row.expense)}</TableCell>
+            <TableCell>{formatAmount(row.expense, { showDust: true })}</TableCell>
             <TableCell>
               <PayoutRecipientCell address={row.address} />
             </TableCell>
             <TableCell>
               {row.token} · {chainDisplayName(row.network)}
             </TableCell>
-            <TableCell>{formatAmount(row.amount, { prefix: "" })}</TableCell>
+            <TableCell>{formatAmount(row.amount, { prefix: "", showDust: true })}</TableCell>
             <TableCell className="last:pr-4">
               <StatusCell row={row} />
             </TableCell>

@@ -99,7 +99,7 @@ function BonusItemBlock(props: {
           )}
         </TableCell>
         <TableCell className="font-medium text-black">
-          {formatAmount(item.amount)}
+          {formatAmount(item.amount, { showDust: true })}
         </TableCell>
         <TableCell>
           {!isGroup && sole?.address ? (

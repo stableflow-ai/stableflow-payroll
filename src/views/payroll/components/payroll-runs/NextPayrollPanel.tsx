@@ -33,7 +33,7 @@ export function NextPayrollPanel(props: {
           <div>
             <p className="font-montserrat text-sm font-medium text-[#606060]">Total Payout</p>
             <p className="mt-1.5 font-montserrat text-[20px] font-semibold text-black">
-              {formatAmount(run.totalPayout)}
+              {formatAmount(run.totalPayout, { showDust: true })}
             </p>
           </div>
           <div>

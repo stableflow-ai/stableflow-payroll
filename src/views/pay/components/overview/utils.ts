@@ -1,7 +1,6 @@
 import { format, subDays, subMonths, subWeeks } from "date-fns";
 import { formatAmount } from "@/utils";
 import {
-  ORGANIZATION_HIGH_PRIORITY_CATEGORY,
   type OrganizationHighPriorityItem,
   type OrganizationPayoutPoint,
 } from "@/types/organization";
@@ -72,35 +71,13 @@ export type AdminHighPriorityItem = {
 export function highPriorityDisplayItems(
   items: OrganizationHighPriorityItem[],
 ): AdminHighPriorityItem[] {
-  return items.map((item, index) => {
-    const month = item.month;
-    const count = item.count;
-    if (item.category === ORGANIZATION_HIGH_PRIORITY_CATEGORY.Payroll) {
-      return {
-        id: `hp-${item.category}-${index}`,
-        kind: item.category,
-        title: `${month} payroll`,
-        subtitle: `${count} items`,
-        to: HIGH_PRIORITY_PATH[item.category],
-      };
-    }
-    if (item.category === ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest) {
-      return {
-        id: `hp-${item.category}-${index}`,
-        kind: item.category,
-        title: `${count} Payment Requests`,
-        subtitle: month,
-        to: HIGH_PRIORITY_PATH[item.category],
-      };
-    }
-    return {
-      id: `hp-${item.category}-${index}`,
-      kind: item.category,
-      title: "Transaction Failed",
-      subtitle: `${month} · ${count} failed`,
-      to: HIGH_PRIORITY_PATH[item.category],
-    };
-  });
+  return items.map((item, index) => ({
+    id: `hp-${item.category}-${index}`,
+    kind: item.category,
+    title: item.title,
+    subtitle: item.description,
+    to: HIGH_PRIORITY_PATH[item.category],
+  }));
 }
 
 export function emptyAdminChartBuckets(

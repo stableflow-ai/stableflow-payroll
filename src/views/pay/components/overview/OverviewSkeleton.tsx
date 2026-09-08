@@ -2,7 +2,7 @@ export function AdminOverviewSkeleton() {
   return (
     <div className="flex flex-col gap-5" aria-busy="true" aria-label="Loading overview">
       <div className="h-[148px] animate-pulse rounded-[20px] bg-[#e8e8e8]" />
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,800px)_minmax(0,432px)]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_0.54fr]">
         <div className="min-h-[540px] animate-pulse rounded-[20px] bg-[#e8e8e8]" />
         <div className="min-h-[540px] animate-pulse rounded-[20px] bg-[#e8e8e8]" />
       </div>

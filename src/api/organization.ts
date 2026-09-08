@@ -65,8 +65,8 @@ function mapHighPriorityItem(raw: unknown): OrganizationHighPriorityItem | null 
   if (!HIGH_PRIORITY_CATEGORIES.has(category)) return null;
   return {
     category: category as OrganizationHighPriorityCategory,
-    count: apiNumber(row.count) ?? 0,
-    month: apiText(row.month).trim(),
+    title: apiText(row.title).trim(),
+    description: apiText(row.description).trim(),
   };
 }
 
@@ -241,7 +241,7 @@ export async function getOrganizationPayout(params: {
   timezone: string;
 }) {
   return mapOrganizationPayoutPoints(
-    await http<unknown>(`${PAY_API_PREFIX}/organizations/payout`, {
+    await http<unknown>(`${PAY_API_PREFIX}/organizations/overview/payout`, {
       query: {
         organization_id: params.organizationId,
         period: params.period,

@@ -116,7 +116,7 @@ function ExpenseBatchBlock(props: {
           {isGroup ? "-" : payoutPreference(sole?.token ?? "", sole?.network ?? "")}
         </TableCell>
         <TableCell className="font-medium text-black">
-          {formatAmount(batch.volume, { prefix: "" })}
+          {formatAmount(batch.volume, { prefix: "", showDust: true })}
         </TableCell>
         <TableCell className="justify-end last:pr-4">
           <RowAction
@@ -149,7 +149,7 @@ function ExpenseBatchBlock(props: {
                 {payoutPreference(member.token, member.network)}
               </TableCell>
               <TableCell className="font-medium text-black">
-                {formatAmount(member.amount, { prefix: "" })}
+                {formatAmount(member.amount, { prefix: "", showDust: true })}
               </TableCell>
               <TableCell className="last:pr-4" />
             </TableRow>

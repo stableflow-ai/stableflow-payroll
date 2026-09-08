@@ -50,7 +50,7 @@ export function HistoryPanel(props: {
                 Total Payout
               </p>
               <p className="mt-2 font-montserrat text-sm font-medium text-black">
-                {formatAmount(item.totalPayout)}
+                {formatAmount(item.totalPayout, { showDust: true })}
               </p>
             </div>
             <div>

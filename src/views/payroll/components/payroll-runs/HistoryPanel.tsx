@@ -69,7 +69,7 @@ function HistoryCard(props: {
               Total Payout
             </p>
             <p className="mt-2.5 font-montserrat text-sm font-medium text-black">
-              {formatAmount(run.totalPayout)}
+              {formatAmount(run.totalPayout, { showDust: true })}
             </p>
           </div>
           <div>

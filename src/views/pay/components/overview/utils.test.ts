@@ -47,12 +47,24 @@ describe("adminChartPoints", () => {
 });
 
 describe("highPriorityDisplayItems", () => {
-  it("maps category copy and routes", () => {
+  it("maps API title and description onto routes", () => {
     expect(
       highPriorityDisplayItems([
-        { category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.Payroll, count: 3, month: "September" },
-        { category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest, count: 2, month: "August" },
-        { category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed, count: 4, month: "July" },
+        {
+          category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.Payroll,
+          title: "September payroll",
+          description: "3 items",
+        },
+        {
+          category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest,
+          title: "2 Payment Requests",
+          description: "August",
+        },
+        {
+          category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed,
+          title: "Transaction Failed",
+          description: "July · 4 failed",
+        },
       ]),
     ).toEqual([
       {
@@ -63,7 +75,7 @@ describe("highPriorityDisplayItems", () => {
         to: HIGH_PRIORITY_PATH[ORGANIZATION_HIGH_PRIORITY_CATEGORY.Payroll],
       },
       {
-        id: "hp-paymentRequest-1",
+        id: "hp-requests-1",
         kind: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest,
         title: "2 Payment Requests",
         subtitle: "August",

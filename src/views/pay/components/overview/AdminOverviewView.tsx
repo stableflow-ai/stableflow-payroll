@@ -59,7 +59,7 @@ export function AdminOverviewView() {
         ownerEmail={user?.email ?? ""}
         teamMemberCount={overviewQuery.data.teamMembers}
       />
-      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[minmax(0,800px)_minmax(0,432px)]">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-[1fr_0.54fr]">
         <PaymentsCard
           totalPayment={overviewQuery.data.totalPayout}
           paymentCount={overviewQuery.data.totalPayments}

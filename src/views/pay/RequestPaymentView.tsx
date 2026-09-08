@@ -134,6 +134,14 @@ export function RequestPaymentView() {
       });
       setPaymentLink(buildPaymentRequestUrl(window.location.origin, created.batchId));
       setLinkDialogOpen(true);
+      skipAutofillRef.current = false;
+      setPurpose("");
+      setDescription("");
+      setAmount("");
+      setDestToken(null);
+      setAddressInput("");
+      setSaveAsDefault(false);
+      setShowAddressErrors(false);
     } catch (err) {
       toast.fail({ title: formatQuoteErrorMessage(err, destToken.decimals) });
     }

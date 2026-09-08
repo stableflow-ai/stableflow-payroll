@@ -51,18 +51,26 @@ describe("mapOrganizationHighPriorityItems", () => {
   it("keeps known categories and drops unknown ones", () => {
     expect(
       mapOrganizationHighPriorityItems([
-        { category: "payroll", count: 3, month: "September" },
-        { category: "payFailed", count: 2, month: "August" },
-        { category: "paymentRequest", count: 1, month: "September" },
-        { category: "other", count: 9, month: "May" },
+        { category: "payroll", title: "September payroll", description: "3 items" },
+        { category: "payFailed", title: "Transaction Failed", description: "August · 2 failed" },
+        { category: "requests", title: "2 Payment Requests", description: "September" },
+        { category: "other", title: "Other", description: "May" },
       ]),
     ).toEqual([
-      { category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.Payroll, count: 3, month: "September" },
-      { category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed, count: 2, month: "August" },
+      {
+        category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.Payroll,
+        title: "September payroll",
+        description: "3 items",
+      },
+      {
+        category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed,
+        title: "Transaction Failed",
+        description: "August · 2 failed",
+      },
       {
         category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest,
-        count: 1,
-        month: "September",
+        title: "2 Payment Requests",
+        description: "September",
       },
     ]);
   });
