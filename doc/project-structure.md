@@ -10,7 +10,7 @@ Product areas, routes, and constraints: [product.md](product.md).
 - **Styling:** Tailwind CSS 4 (`@tailwindcss/vite`, no `tailwind.config.js`), `cn()` (`clsx` + `tailwind-merge`), `class-variance-authority`
 - **State:** Zustand (cross-page client state), TanStack Query (server cache). The JWT session goes through `src/lib/auth-session.ts`; nothing else touches `localStorage` / `sessionStorage`.
 - **Routing:** `react-router-dom` 7 (`createBrowserRouter`)
-- **Wallets:** RainbowKit + wagmi + viem (EVM), `@near-wallet-selector` (Near), `@solana/wallet-adapter` (Solana), `@tronweb3/tronwallet-adapters` (Tron)
+- **Wallets:** RainbowKit + wagmi + viem (EVM), `@near-wallet-selector` (Near), `@solana/wallet-adapter` (Solana), `@tronweb3/tronwallet-adapters` (Tron). Solana send is HTTP-only (the HMAC proxy has no WebSocket): unsigned transactions refresh `recentBlockhash` locally, stay on the RPC that issued it, and rebroadcast until confirmed or the blockhash expires.
 - **Other:** `motion` (animation), `recharts` (charts), `react-toastify` (toasts), `date-fns` (dates), `big.js` (amounts), `papaparse` (CSV)
 - **Tests:** Vitest (`src/**/*.test.ts`, `environment: "node"`). There is no ESLint or Prettier config; `pnpm check` and `pnpm test` are the quality gate.
 - **Path alias:** `@/` → `src/`

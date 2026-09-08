@@ -2,6 +2,17 @@ import { Connection, type ConnectionConfig } from "@solana/web3.js";
 import { isProxyRpcUrl, rpcUrlsFor } from "./chain-rpc";
 import { generateRpcSignature } from "./signature";
 
+const ACTIVE_CONNECTION_PROP = "__stableflowActiveConnection";
+
+type RpcWebSocket = {
+  connect?: () => void;
+  close?: () => void;
+};
+
+type ConnectionWithSocket = Connection & {
+  _rpcWebSocket?: RpcWebSocket;
+};
+
 const isRpcUnavailableError = (error: unknown) => {
   const message = (error as Error)?.message?.toLowerCase?.() || "";
   return (
@@ -28,23 +39,54 @@ function signedFetch(url: string): ConnectionConfig["fetch"] {
   };
 }
 
-function connectionFor(url: string): Connection {
-  return new Connection(url, {
-    commitment: "confirmed",
-    fetch: signedFetch(url),
-  });
+function connectionConfigFor(url: string): ConnectionConfig {
+  return { commitment: "confirmed", fetch: signedFetch(url) };
+}
+
+/**
+ * The HMAC proxy (and some public HTTP RPCs) do not speak WebSocket.
+ * @solana/web3.js still rewrites https → wss and retries forever, which spams
+ * the console and can stall confirmTransaction's signature subscription.
+ */
+export function disableSolanaWebsocket(connection: Connection): Connection {
+  const socket = (connection as ConnectionWithSocket)._rpcWebSocket;
+  try {
+    socket?.close?.();
+  } catch {
+    // The socket may never have opened on an HTTP-only endpoint.
+  }
+  if (socket) {
+    socket.connect = () => undefined;
+  }
+  return connection;
+}
+
+/**
+ * Unwrap the fallback proxy to the endpoint that answered last.
+ * Sending a transaction to a different node than the one that issued the
+ * blockhash is a known way to lose it.
+ */
+export function getActiveSolanaConnection(connection: Connection): Connection {
+  const active = (connection as unknown as Record<string, Connection | undefined>)[ACTIVE_CONNECTION_PROP];
+  return active ?? connection;
+}
+
+export function createSolanaHttpConnection(url: string): Connection {
+  return disableSolanaWebsocket(new Connection(url, connectionConfigFor(url)));
 }
 
 export function createSolanaFallbackConnection(): Connection {
   const rpcUrls = rpcUrlsFor("sol");
   if (!rpcUrls.length) throw new Error("No Solana RPC URLs configured");
 
-  const connections = rpcUrls.map(connectionFor);
+  const connections = rpcUrls.map(createSolanaHttpConnection);
   let activeIndex = 0;
   let active = connections[activeIndex];
 
   return new Proxy(connections[0], {
     get(_, prop, receiver) {
+      if (prop === ACTIVE_CONNECTION_PROP) return active;
+
       const activeValue = Reflect.get(active, prop, receiver);
       if (typeof activeValue !== "function") return activeValue;
 
@@ -90,9 +132,4 @@ export function getSolanaConnection(): Connection {
 
 export function solanaPrimaryRpcUrl(): string {
   return rpcUrlsFor("sol")[0] || "https://solana-rpc.publicnode.com";
-}
-
-export function solanaConnectionConfig(): ConnectionConfig {
-  const url = solanaPrimaryRpcUrl();
-  return { commitment: "confirmed", fetch: signedFetch(url) };
 }
