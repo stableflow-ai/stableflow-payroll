@@ -116,6 +116,7 @@ export interface PayrollCreatePaymentParam {
   network: string;
   recipient: string;
   symbol: string;
+  organization_id: number | null;
   memo?: string;
   success_url?: string;
   notification?: PayrollPaymentNotification;

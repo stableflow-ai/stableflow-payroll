@@ -4,7 +4,6 @@ import {
   useExpenseCurrentStatsQuery,
   useExpenseImportMutation,
   useExpenseOpenQuery,
-  useExpenseOpenRequestsCountQuery,
   useExpenseRecentPayoutsInfiniteQuery,
   useExpenseTotalPayoutQuery
 } from "@/hooks/use-expense-api";
@@ -42,7 +41,6 @@ export function ExpenseView() {
   );
   const current = useExpenseCurrentStatsQuery();
   const openQuery = useExpenseOpenQuery();
-  const openRequestsCount = useExpenseOpenRequestsCountQuery();
   const recent = useExpenseRecentPayoutsInfiniteQuery();
   const importMutation = useExpenseImportMutation();
   const tab =
@@ -166,7 +164,6 @@ export function ExpenseView() {
             ? queryErrorMessage(openQuery.error, "Failed to load open expenses")
             : null
         }
-        requestCount={openRequestsCount.data?.count ?? 0}
         onPayNow={(payable) => setPayingPayable(payable)}
         onAddExpense={() => openAddDrawer()}
         onImported={openAddDrawer}

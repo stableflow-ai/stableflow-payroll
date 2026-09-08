@@ -8,7 +8,7 @@ import { useCreatePayrollPaymentMutation } from "@/hooks/use-single-payout-api";
 import { useContacts, type Contact } from "@/hooks/use-contacts";
 import { useTeamMembersInfiniteQuery } from "@/hooks/use-team-api";
 import useToast from "@/hooks/use-toast";
-import { isUser } from "@/lib/auth-role";
+import { isUser, organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
 import type { TeamMemberWallets } from "@/types/team";
@@ -140,6 +140,7 @@ export function SinglePayoutCard(props: {
         recipient: destinationAddress,
         memo: memo.trim() || undefined,
         success_url: `${window.location.origin}${PAYOUT_RESULT_PATH}`,
+        organization_id: organizationId(user),
         ...(notification ? { notification } : {}),
       });
       setRedirecting(true);

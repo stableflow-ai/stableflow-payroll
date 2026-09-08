@@ -5,9 +5,11 @@ import { IconPlus } from "@/components/icons/plus";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Card } from "@/components/ui/card/Card";
+import { useExpenseOpenRequestsCountQuery } from "@/hooks/use-expense-api";
 import { cn } from "@/lib/utils";
 import type { ExpenseDraftRow, ExpenseOpenList } from "@/types/expense";
 import type { PayableKey } from "@/types/payable";
+import { CountBadge } from "@/views/pay/components/CountBadge";
 import {
   EXPENSE_HISTORY_PATH,
   EXPENSE_PATH,
@@ -40,11 +42,7 @@ function TabLink(props: {
       {({ isActive }) => (
         <>
           {children}
-          {count > 0 ? (
-            <span className="inline-flex h-4 min-w-4 shrink-0 items-center justify-center rounded-[8px] bg-[#06f] px-0.5 font-montserrat text-[12px] font-medium leading-none text-white">
-              {count}
-            </span>
-          ) : null}
+          <CountBadge count={count} />
           {isActive ? (
             <span className="absolute inset-x-3 -bottom-px h-[3px] rounded-full bg-[#06f]" />
           ) : null}
@@ -59,7 +57,6 @@ export function ExpenseRunsCard(props: {
   open: ExpenseOpenList;
   openLoading?: boolean;
   openError?: string | null;
-  requestCount?: number;
   onPayNow: (payable: PayableKey) => void;
   onAddExpense: () => void;
   onImported: (rows: ExpenseDraftRow[]) => void;
@@ -70,12 +67,12 @@ export function ExpenseRunsCard(props: {
     open,
     openLoading = false,
     openError = null,
-    requestCount = 0,
     onPayNow,
     onAddExpense,
     onImported,
     importBusy = false,
   } = props;
+  const requestCount = useExpenseOpenRequestsCountQuery().data?.count ?? 0;
   const isOpenTab = tab === EXPENSE_TAB.Open;
   const isRequestsTab = tab === EXPENSE_TAB.Requests;
   const isHistoryTab = tab === EXPENSE_TAB.History;

@@ -3,12 +3,15 @@ import { NavLink, useLocation } from "react-router-dom";
 import { IconArrowDown } from "@/components/icons/arrow-down";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { HEADER_ACCOUNT_MENU_VARIANT } from "@/components/layout/config";
+import { useExpenseOpenRequestsCountQuery } from "@/hooks/use-expense-api";
 import { organizationName, userRole } from "@/lib/auth-role";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
+import { CountBadge } from "./CountBadge";
 import {
   isPayNavGroup,
   isPayNavLeafActive,
+  PAY_NAV_ID,
   payNavItemsForRole,
   type PayNavGroupItem,
   type PayNavLeaf,
@@ -44,6 +47,7 @@ function OperationsGroup(props: { item: PayNavGroupItem; onNavigate?: () => void
   const childActive = item.children.some((child) => isPayNavLeafActive(child, pathname));
   const [open, setOpen] = useState(true);
   const Icon = item.icon;
+  const expenseRequestCount = useExpenseOpenRequestsCountQuery().data?.count ?? 0;
 
   useEffect(() => {
     if (childActive) setOpen(true);
@@ -80,6 +84,9 @@ function OperationsGroup(props: { item: PayNavGroupItem; onNavigate?: () => void
               className={navLinkClass(isPayNavLeafActive(child, pathname))}
             >
               <span className="pl-6">{child.label}</span>
+              {child.id === PAY_NAV_ID.Expense ? (
+                <CountBadge count={expenseRequestCount} className="ml-auto" />
+              ) : null}
             </NavLink>
           ))}
         </div>

@@ -11,13 +11,14 @@ import {
   importExpenses,
 } from "@/api/expense";
 import { queryKeys } from "@/api/query-keys";
-import { organizationId } from "@/lib/auth-role";
+import { isUser, organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import type { ExpenseHistoryExportQuery, ExpenseHistoryQuery, ExpenseTotalPayoutPeriod } from "@/types/expense";
 import { browserTimeZone } from "@/utils";
 import { stampDownloadFilename } from "@/views/pay/utils";
 import {
   EXPENSE_HISTORY_PAGE_SIZE,
+  EXPENSE_OPEN_REQUESTS_COUNT_POLL_MS,
   EXPENSE_RECENT_LIMIT_MAX,
   EXPENSE_RECENT_PAGE_SIZE,
 } from "@/views/expense/config";
@@ -120,7 +121,10 @@ export function useExpenseOpenRequestsQuery() {
 }
 
 export function useExpenseOpenRequestsCountQuery() {
-  const { organizationId: orgId, enabled } = useExpenseQueryContext();
+  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
+  const orgId = organizationId(user);
+  const enabled = Boolean(token) && orgId !== null && !isUser(user);
   return useQuery({
     queryKey: queryKeys.expense.openRequestsCount(orgId ?? 0),
     queryFn: () =>
@@ -128,6 +132,9 @@ export function useExpenseOpenRequestsCountQuery() {
         organizationId: orgId!,
       }),
     enabled,
+    refetchInterval: EXPENSE_OPEN_REQUESTS_COUNT_POLL_MS,
+    refetchIntervalInBackground: false,
+    refetchOnWindowFocus: "always",
   });
 }
 

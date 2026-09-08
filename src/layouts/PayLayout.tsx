@@ -10,6 +10,7 @@ import {
 import { Drawer } from "@/components/ui/drawer/Drawer";
 import { DRAWER_SIDE } from "@/components/ui/drawer/config";
 import { useBatchPayoutCommitQueue } from "@/hooks/use-batch-payout-commit-queue";
+import { useExpenseOpenRequestsCountQuery } from "@/hooks/use-expense-api";
 import { isUser, organizationName, userRole } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { PaymentModeTabs } from "@/views/pay/components/PaymentModeTabs";
@@ -27,6 +28,7 @@ export interface PayLayoutOutletContext {
 
 export function PayLayout() {
   useBatchPayoutCommitQueue();
+  useExpenseOpenRequestsCountQuery();
   const { pathname } = useLocation();
   const user = useAuthStore((state) => state.user);
   const [headerExtra, setHeaderExtraState] = useState<ReactNode>(null);

@@ -29,6 +29,7 @@ export const EXPENSE_RECENT_PAGE_SIZE = 10;
 export const EXPENSE_RECENT_LIMIT_MAX = 100;
 export const EXPENSE_HISTORY_PAGE_SIZE = 10;
 export const EXPENSE_SEARCH_DEBOUNCE_MS = 300;
+export const EXPENSE_OPEN_REQUESTS_COUNT_POLL_MS = 60_000;
 
 export const EXPENSE_PAYOUT_STATUS = {
   Pending: "pending",
