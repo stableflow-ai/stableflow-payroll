@@ -1,3 +1,4 @@
+import { queryKeys } from "@/api/query-keys";
 import {
   PAYROLL_EXECUTION_ITEM_STATUS,
   type PayrollExecutionItem,
@@ -75,4 +76,46 @@ export function executionItemToastKind(status: string): "success" | "fail" | nul
     return "fail";
   }
   return null;
+}
+
+const PENDING_STATUS = "pending";
+
+export function pollIntervalIfPending(
+  items: ReadonlyArray<{ status: string }> | undefined,
+  intervalMs: number,
+): number | false {
+  if (!items?.some((item) => item.status === PENDING_STATUS)) return false;
+  return intervalMs;
+}
+
+export function executionProgressMessage(finished: boolean): string {
+  return finished ? "Transactions completed" : "Transactions are in progress...";
+}
+
+export function payoutStatusQueryKeys(type: string): Array<readonly unknown[]> {
+  const normalized = type.trim().toLowerCase();
+  if (
+    normalized === PAYABLE_TYPE.Payroll
+    || normalized === "salary"
+    || normalized === "salaries"
+  ) {
+    return [
+      [...queryKeys.payroll.all, "recent"],
+      [...queryKeys.payroll.all, "history"],
+      [...queryKeys.payroll.all, "history-detail"],
+    ];
+  }
+  if (normalized === PAYABLE_TYPE.Expense) {
+    return [
+      [...queryKeys.expense.all, "recent"],
+      [...queryKeys.expense.all, "history"],
+    ];
+  }
+  if (normalized === PAYABLE_TYPE.Bonus) {
+    return [
+      [...queryKeys.bonus.all, "recent"],
+      [...queryKeys.bonus.all, "history"],
+    ];
+  }
+  return [];
 }

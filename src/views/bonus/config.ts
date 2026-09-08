@@ -43,6 +43,7 @@ export const BONUS_CHART_RANGE_OPTIONS = [
 
 export const BONUS_RECENT_PAGE_SIZE = 10;
 export const BONUS_RECENT_LIMIT_MAX = 100;
+export const RECENT_PAYOUTS_POLL_MS = 30_000;
 export const BONUS_HISTORY_PAGE_SIZE = 10;
 
 export const BONUS_PAYOUT_STATUS = {
@@ -68,7 +69,6 @@ export function bonusPayNowPayable(batchId: number): PayableKey {
 
 export const BONUS_CHART_LINE_COLOR = "#6284F5";
 export const BONUS_CHART_HIGHLIGHT_COLOR = "#3F8AFB";
-export const BONUS_CHART_Y_MAX = 600;
 
 export const BONUS_CHANGE_UP_CLASS = "text-[#0ED000]";
 export const BONUS_CHANGE_DOWN_CLASS = "text-[#E43222]";

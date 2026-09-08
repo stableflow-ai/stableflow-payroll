@@ -12,13 +12,12 @@ import { IconLoading } from "@/components/icons/loading";
 import { Card } from "@/components/ui/card/Card";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { cn } from "@/lib/utils";
-import { formatAmount } from "@/utils";
+import { chartYTicks, formatAmount } from "@/utils";
 import type { PayrollChartPoint } from "@/types/payroll";
 import {
   PAYROLL_CHART_HIGHLIGHT_COLOR,
   PAYROLL_CHART_LINE_COLOR,
   PAYROLL_CHART_RANGE_OPTIONS,
-  PAYROLL_CHART_Y_MAX,
   type PayrollChartRange,
 } from "../../config";
 
@@ -68,7 +67,8 @@ export function TotalPayrollChart(props: {
     error = null,
   } = props;
   const isEmpty = !loading && points.every((point) => point.value === 0);
-  const yMax = Math.max(PAYROLL_CHART_Y_MAX, ...points.map((point) => point.value));
+  const yTicks = chartYTicks(Math.max(0, ...points.map((point) => point.value)), 4);
+  const yMax = yTicks[yTicks.length - 1] ?? 1;
   const highlightedLabel = points.find((point) => point.highlighted)?.label;
 
   return (
@@ -144,7 +144,7 @@ export function TotalPayrollChart(props: {
                 axisLine={false}
                 tickLine={false}
                 domain={[0, yMax]}
-                ticks={[0, yMax / 4, yMax / 2, (yMax * 3) / 4, yMax]}
+                ticks={yTicks}
                 tickFormatter={formatYTick}
                 tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
                 width={48}

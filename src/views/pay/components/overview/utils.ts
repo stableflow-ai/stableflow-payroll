@@ -1,5 +1,5 @@
 import { format, subDays, subMonths, subWeeks } from "date-fns";
-import { formatAmount } from "@/utils";
+import { chartYTicks, formatAmount, niceCeil } from "@/utils";
 import {
   type OrganizationHighPriorityItem,
   type OrganizationPayoutPoint,
@@ -121,14 +121,13 @@ export function formatAdminChartAxis(value: number, metric: ChartMetric): string
 }
 
 export function adminChartYTicks(maxValue: number, metric: ChartMetric): number[] {
-  const niceMax = niceCeil(maxValue);
   if (metric === CHART_METRIC.Transaction) {
+    const niceMax = niceCeil(maxValue);
     const step = Math.max(1, Math.ceil(niceMax / 5));
     const top = step * 5;
     return [0, step, 2 * step, 3 * step, 4 * step, top];
   }
-  const step = niceMax / 5;
-  return [0, step, 2 * step, 3 * step, 4 * step, niceMax];
+  return chartYTicks(maxValue, 5);
 }
 
 export function chartXTickMinPx(labels: string[]): number {
@@ -154,12 +153,4 @@ export function evenCategoryTicks(labels: string[], maxTicks: number): string[] 
     if (ticks[ticks.length - 1] !== label) ticks.push(label);
   }
   return ticks;
-}
-
-function niceCeil(value: number): number {
-  if (value <= 0) return 1;
-  const magnitude = 10 ** Math.floor(Math.log10(value));
-  const normalized = value / magnitude;
-  const nice = normalized <= 1 ? 1 : normalized <= 2 ? 2 : normalized <= 5 ? 5 : 10;
-  return nice * magnitude;
 }

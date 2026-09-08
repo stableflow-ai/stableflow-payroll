@@ -95,6 +95,7 @@ export const PAYROLL_CHART_RANGE_OPTIONS = [
 
 export const PAYROLL_RECENT_PAGE_SIZE = 10;
 export const PAYROLL_RECENT_LIMIT_MAX = 100;
+export const RECENT_PAYOUTS_POLL_MS = 30_000;
 export const PAYROLL_HISTORY_PAGE_SIZE = 10;
 
 export const PAYROLL_PAYOUT_STATUS = {
@@ -117,7 +118,6 @@ export type PayrollRunStatus =
 
 export const PAYROLL_CHART_LINE_COLOR = "#6284F5";
 export const PAYROLL_CHART_HIGHLIGHT_COLOR = "#3F8AFB";
-export const PAYROLL_CHART_Y_MAX = 40_000;
 
 export const PAYROLL_CHANGE_UP_CLASS = "text-[#0ED000]";
 export const PAYROLL_STATUS_PENDING_CLASS = "text-[#0066FF]";

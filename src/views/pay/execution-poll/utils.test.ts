@@ -9,7 +9,10 @@ import {
   executionItemToastKind,
   executionItemToastText,
   executionItemToastTitle,
+  executionProgressMessage,
   newTerminalExecutionItems,
+  payoutStatusQueryKeys,
+  pollIntervalIfPending,
 } from "./utils";
 
 function item(
@@ -82,5 +85,39 @@ describe("execution item toast copy", () => {
     expect(executionItemToastKind("failed")).toBe("fail");
     expect(executionItemToastKind("expired")).toBe("fail");
     expect(executionItemToastKind("processing")).toBeNull();
+  });
+});
+
+describe("executionProgressMessage", () => {
+  it("uses in-progress copy until the execution finishes", () => {
+    expect(executionProgressMessage(false)).toBe("Transactions are in progress...");
+    expect(executionProgressMessage(true)).toBe("Transactions completed");
+  });
+});
+
+describe("pollIntervalIfPending", () => {
+  it("returns the interval only while a row is pending", () => {
+    expect(pollIntervalIfPending(undefined, 5_000)).toBe(false);
+    expect(pollIntervalIfPending([{ status: "paid" }, { status: "failed" }], 5_000)).toBe(false);
+    expect(pollIntervalIfPending([{ status: "paid" }, { status: "pending" }], 30_000)).toBe(30_000);
+  });
+});
+
+describe("payoutStatusQueryKeys", () => {
+  it("maps execution type to recent and history caches", () => {
+    expect(payoutStatusQueryKeys("payroll")).toEqual([
+      ["payroll", "recent"],
+      ["payroll", "history"],
+      ["payroll", "history-detail"],
+    ]);
+    expect(payoutStatusQueryKeys("expense")).toEqual([
+      ["expense", "recent"],
+      ["expense", "history"],
+    ]);
+    expect(payoutStatusQueryKeys("bonus")).toEqual([
+      ["bonus", "recent"],
+      ["bonus", "history"],
+    ]);
+    expect(payoutStatusQueryKeys("other")).toEqual([]);
   });
 });

@@ -49,6 +49,15 @@ formatAmount(row.amount, { prefix: "", showDust: true });   // "1,234.56"
 formatAmount(raw, { decimals: 6, maxDecimals: 6, prefix: "" });
 ```
 
+## Chart — `src/utils/chart.ts`
+
+Y-axis ticks for Recharts money charts. `niceCeil(value)` rounds up to 1 / 2 / 5 / 10 times a power of ten (`0` and negatives become `1`). `chartYTicks(maxValue, divisions = 4)` returns `divisions + 1` even ticks from `0` to that ceiling.
+
+```ts
+chartYTicks(200, 4);   // [0, 50, 100, 150, 200]
+chartYTicks(201, 3);   // [0, 500/3, 1000/3, 500]
+```
+
 ## Date — `src/utils/date.ts`
 
 Wrappers over `date-fns` that return `""` for an invalid input instead of throwing.

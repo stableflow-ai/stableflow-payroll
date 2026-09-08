@@ -18,7 +18,9 @@ import {
   BONUS_HISTORY_PAGE_SIZE,
   BONUS_RECENT_LIMIT_MAX,
   BONUS_RECENT_PAGE_SIZE,
+  RECENT_PAYOUTS_POLL_MS,
 } from "@/views/bonus/config";
+import { pollIntervalIfPending } from "@/views/pay/execution-poll/utils";
 
 function saveBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -90,6 +92,9 @@ export function useBonusRecentPayoutsInfiniteQuery() {
       return allPages.length + 1;
     },
     enabled,
+    refetchInterval: (query) =>
+      pollIntervalIfPending(query.state.data?.pages.flat(), RECENT_PAYOUTS_POLL_MS),
+    refetchIntervalInBackground: false,
   });
 }
 

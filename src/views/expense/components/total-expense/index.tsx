@@ -12,11 +12,10 @@ import { Card } from "@/components/ui/card/Card";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { cn } from "@/lib/utils";
 import type { ExpenseChartPoint } from "@/types/expense";
-import { formatAmount } from "@/utils";
+import { formatAmount, chartYTicks } from "@/utils";
 import {
   EXPENSE_CHART_LINE_COLOR,
   EXPENSE_CHART_RANGE_OPTIONS,
-  EXPENSE_CHART_Y_MAX,
   type ExpenseChartRange,
 } from "../../config";
 
@@ -66,7 +65,8 @@ export function TotalExpenseChart(props: {
     error = null,
   } = props;
   const isEmpty = !loading && points.every((point) => point.value === 0);
-  const yMax = Math.max(EXPENSE_CHART_Y_MAX, ...points.map((point) => point.value));
+  const yTicks = chartYTicks(Math.max(0, ...points.map((point) => point.value)), 3);
+  const yMax = yTicks[yTicks.length - 1] ?? 1;
 
   return (
     <Card className="flex min-h-[454px] flex-col">
@@ -119,7 +119,7 @@ export function TotalExpenseChart(props: {
                 axisLine={false}
                 tickLine={false}
                 domain={[0, yMax]}
-                ticks={[0, yMax / 3, (yMax * 2) / 3, yMax]}
+                ticks={yTicks}
                 tickFormatter={formatYTick}
                 tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
                 width={48}

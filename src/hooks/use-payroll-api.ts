@@ -17,11 +17,14 @@ import { getPayrollOverviewMock } from "@/mocks/payroll";
 import { useAuthStore } from "@/stores/auth";
 import type { PayrollTotalPayoutPeriod } from "@/types/payroll";
 import { stampDownloadFilename } from "@/views/pay/utils";
+import { EXECUTION_POLL_INTERVAL_MS } from "@/views/pay/execution-poll/config";
+import { pollIntervalIfPending } from "@/views/pay/execution-poll/utils";
 import {
   PAYROLL_HISTORY_PAGE_SIZE,
   PAYROLL_MOCK_VARIANT,
   PAYROLL_RECENT_LIMIT_MAX,
   PAYROLL_RECENT_PAGE_SIZE,
+  RECENT_PAYOUTS_POLL_MS,
   type PayrollMockVariant,
 } from "@/views/payroll/config";
 
@@ -119,6 +122,9 @@ export function usePayrollRecentPayoutsInfiniteQuery() {
       return allPages.length + 1;
     },
     enabled,
+    refetchInterval: (query) =>
+      pollIntervalIfPending(query.state.data?.pages.flat(), RECENT_PAYOUTS_POLL_MS),
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -150,6 +156,9 @@ export function usePayrollHistoryDetailQuery(executionId: string | null) {
         executionId: executionId!,
       }),
     enabled: enabled && Boolean(executionId),
+    refetchInterval: (query) =>
+      pollIntervalIfPending(query.state.data?.rows, EXECUTION_POLL_INTERVAL_MS),
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -171,6 +180,12 @@ export function usePayrollHistoryInfiniteQuery() {
       return allPages.length + 1;
     },
     enabled,
+    refetchInterval: (query) =>
+      pollIntervalIfPending(
+        query.state.data?.pages.flatMap((page) => page.list),
+        EXECUTION_POLL_INTERVAL_MS,
+      ),
+    refetchIntervalInBackground: false,
   });
 }
 

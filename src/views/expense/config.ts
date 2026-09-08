@@ -27,6 +27,7 @@ export const EXPENSE_CHART_RANGE_OPTIONS = [
 
 export const EXPENSE_RECENT_PAGE_SIZE = 10;
 export const EXPENSE_RECENT_LIMIT_MAX = 100;
+export const RECENT_PAYOUTS_POLL_MS = 30_000;
 export const EXPENSE_HISTORY_PAGE_SIZE = 10;
 export const EXPENSE_SEARCH_DEBOUNCE_MS = 300;
 export const EXPENSE_OPEN_REQUESTS_COUNT_POLL_MS = 60_000;
@@ -53,7 +54,6 @@ export function expensePayNowPayable(batchId: number): PayableKey {
 }
 
 export const EXPENSE_CHART_LINE_COLOR = "#6284F5";
-export const EXPENSE_CHART_Y_MAX = 6_000;
 
 export const EXPENSE_CHANGE_UP_CLASS = "text-[#0ED000]";
 export const EXPENSE_CHANGE_DOWN_CLASS = "text-[#E43222]";

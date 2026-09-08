@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { getPayrollExecution } from "@/api/payout";
 import { queryKeys } from "@/api/query-keys";
@@ -19,15 +19,22 @@ import {
   executionItemToastKind,
   executionItemToastText,
   executionItemToastTitle,
+  executionProgressMessage,
   newTerminalExecutionItems,
+  payoutStatusQueryKeys,
 } from "@/views/pay/execution-poll/utils";
 
-function progressText(processed: number, total: number, onView: () => void): ReactNode {
+function progressText(
+  processed: number,
+  total: number,
+  finished: boolean,
+  onView: () => void,
+): ReactNode {
   return (
     <span className="flex w-full items-center justify-between gap-2">
       <span>
         <span className="text-[#003bff]">{processed} / {total} </span>
-        Transactions are in progress...
+        {executionProgressMessage(finished)}
       </span>
       <button type="button" className="shrink-0 text-[#003bff]" onClick={onView}>
         View
@@ -39,6 +46,7 @@ function progressText(processed: number, total: number, onView: () => void): Rea
 export function usePayoutExecutionPoll() {
   const toastApi = useToast();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
   const orgId = organizationId(user);
   const [active, setActive] = useState<BatchPayoutCommitSuccess | null>(null);
@@ -48,6 +56,8 @@ export function usePayoutExecutionPoll() {
   toastRef.current = toastApi;
   const navigateRef = useRef(navigate);
   navigateRef.current = navigate;
+  const queryClientRef = useRef(queryClient);
+  queryClientRef.current = queryClient;
   const seenRef = useRef(new Set<number>());
   const progressRef = useRef<ToastHandle | null>(null);
   const dismissingRef = useRef(false);
@@ -81,7 +91,7 @@ export function usePayoutExecutionPoll() {
           if (activeRef.current?.executionId !== result.executionId) return;
           stop(false);
         },
-        text: progressText(0, 0, () => handleView(result.type)),
+        text: progressText(0, 0, false, () => handleView(result.type)),
       });
     });
 
@@ -125,7 +135,7 @@ export function usePayoutExecutionPoll() {
 
     progressRef.current?.update({
       title,
-      text: progressText(data.processed, data.total, () => {
+      text: progressText(data.processed, data.total, data.finished, () => {
         navigateRef.current(executionHistoryPath(type));
         setActive(null);
         seenRef.current = new Set();
@@ -138,6 +148,9 @@ export function usePayoutExecutionPoll() {
     });
 
     if (data.finished) {
+      for (const queryKey of payoutStatusQueryKeys(type)) {
+        void queryClientRef.current.invalidateQueries({ queryKey });
+      }
       setActive(null);
     }
   }, [active, query.data]);

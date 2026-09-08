@@ -83,8 +83,8 @@ pending.update({
   text: (
     <span className="flex w-full items-center justify-between gap-2">
       <span>
-        <span className="text-[#003bff]">3 / 12 </span>
-        Transactions are in progress...
+        <span className="text-[#003bff]">12 / 12 </span>
+        Transactions completed
       </span>
       <button type="button" className="text-[#003bff]">View</button>
     </span>
@@ -96,4 +96,4 @@ pending.update({
 
 - `useToast` is a default export; import it without braces.
 - Toast copy is user-facing, so it is English and short. Long backend errors go through a formatter (`formatQuoteErrorMessage`, `authErrorMessage`) before they reach a toast.
-- Progress counts, View links, and similar product UI belong in the caller’s `text` node, not in `Toast`.
+- Progress counts, View links, and similar product UI belong in the caller’s `text` node, not in `Toast`. The execution progress toast stays open until `finished`, then switches to `N / N Transactions completed` and auto-closes after 3s.

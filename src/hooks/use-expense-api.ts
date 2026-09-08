@@ -21,7 +21,10 @@ import {
   EXPENSE_OPEN_REQUESTS_COUNT_POLL_MS,
   EXPENSE_RECENT_LIMIT_MAX,
   EXPENSE_RECENT_PAGE_SIZE,
+  RECENT_PAYOUTS_POLL_MS,
 } from "@/views/expense/config";
+import { EXECUTION_POLL_INTERVAL_MS } from "@/views/pay/execution-poll/config";
+import { pollIntervalIfPending } from "@/views/pay/execution-poll/utils";
 
 function saveBlob(blob: Blob, filename: string) {
   const url = URL.createObjectURL(blob);
@@ -93,6 +96,9 @@ export function useExpenseRecentPayoutsInfiniteQuery() {
       return allPages.length + 1;
     },
     enabled,
+    refetchInterval: (query) =>
+      pollIntervalIfPending(query.state.data?.pages.flat(), RECENT_PAYOUTS_POLL_MS),
+    refetchIntervalInBackground: false,
   });
 }
 
@@ -167,6 +173,12 @@ export function useExpenseHistoryInfiniteQuery(
     },
     enabled: scopedEnabled && enabled,
     placeholderData: keepPreviousData,
+    refetchInterval: (query) =>
+      pollIntervalIfPending(
+        query.state.data?.pages.flatMap((page) => page.list),
+        EXECUTION_POLL_INTERVAL_MS,
+      ),
+    refetchIntervalInBackground: false,
   });
 }
 

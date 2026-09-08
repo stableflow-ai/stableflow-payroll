@@ -1,6 +1,7 @@
 import { IconAlert } from "@/components/icons/alert";
 import { IconCheck2 } from "@/components/icons/check";
 import { IconOutLink } from "@/components/icons/link";
+import { IconPayoutPending } from "@/components/icons/payout-status";
 import { IconReceipt } from "@/components/icons/receipt";
 import {
   Table,
@@ -20,6 +21,7 @@ import {
   EXPENSE_HISTORY_FAILED_CLASS,
   EXPENSE_HISTORY_PAID_CLASS,
   EXPENSE_PAYOUT_STATUS,
+  EXPENSE_STATUS_PENDING_CLASS,
 } from "../../config";
 
 function DescriptionCell({ row }: { row: ExpenseHistoryRow }) {
@@ -49,6 +51,15 @@ function StatusCell({ row }: { row: ExpenseHistoryRow }) {
       >
         <IconAlert className="h-2.5 w-1 shrink-0" />
         Failed
+      </span>
+    );
+  }
+
+  if (row.status !== EXPENSE_PAYOUT_STATUS.Paid) {
+    return (
+      <span className={cn("inline-flex items-center gap-1.5", EXPENSE_STATUS_PENDING_CLASS)}>
+        <IconPayoutPending className="size-4 shrink-0" />
+        Pending
       </span>
     );
   }

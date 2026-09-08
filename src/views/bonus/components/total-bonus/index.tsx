@@ -13,12 +13,11 @@ import { Card } from "@/components/ui/card/Card";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { cn } from "@/lib/utils";
 import type { BonusChartPoint } from "@/types/bonus";
-import { formatAmount } from "@/utils";
+import { formatAmount, chartYTicks } from "@/utils";
 import {
   BONUS_CHART_HIGHLIGHT_COLOR,
   BONUS_CHART_LINE_COLOR,
   BONUS_CHART_RANGE_OPTIONS,
-  BONUS_CHART_Y_MAX,
   type BonusChartRange,
 } from "../../config";
 
@@ -68,7 +67,8 @@ export function TotalBonusChart(props: {
     error = null,
   } = props;
   const isEmpty = !loading && points.every((point) => point.value === 0);
-  const yMax = Math.max(BONUS_CHART_Y_MAX, ...points.map((point) => point.value));
+  const yTicks = chartYTicks(Math.max(0, ...points.map((point) => point.value)), 3);
+  const yMax = yTicks[yTicks.length - 1] ?? 1;
   const highlightedLabel = points.find((point) => point.highlighted)?.label;
 
   return (
@@ -144,7 +144,7 @@ export function TotalBonusChart(props: {
                 axisLine={false}
                 tickLine={false}
                 domain={[0, yMax]}
-                ticks={[0, yMax / 3, (yMax * 2) / 3, yMax]}
+                ticks={yTicks}
                 tickFormatter={formatYTick}
                 tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
                 width={48}

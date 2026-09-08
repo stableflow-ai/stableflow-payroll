@@ -93,6 +93,13 @@
   [role="button"]:not([aria-disabled="true"]) {
     cursor: pointer;
   }
+
+  .recharts-wrapper:focus,
+  .recharts-wrapper:focus-visible,
+  .recharts-surface:focus,
+  .recharts-surface:focus-visible {
+    outline: none;
+  }
 }
 
 @layer components {
