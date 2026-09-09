@@ -367,6 +367,40 @@ describe("mapPayablePayResponse", () => {
       expect(error).toMatchObject({ code: "NO_QUOTE_ID" });
     }
   });
+
+  it("accepts a Zcash quote that only has transaction.outputs", () => {
+    const mapped = mapPayablePayResponse({
+      quote_id: "q-zec",
+      batch: {
+        ...batch,
+        source_network: "zec",
+        source_symbol: "ZEC",
+        transaction: {
+          outputs: [
+            {
+              address: "t1aDV9wRNwVrVJVSoUCUrFpcYSTbcKrc1Dj",
+              amount: "0.1",
+              amountRaw: "10000000",
+            },
+          ],
+        },
+      },
+    });
+    expect(mapped.quoteId).toBe("q-zec");
+    expect(mapped.transaction.outputs?.[0]?.address).toBe("t1aDV9wRNwVrVJVSoUCUrFpcYSTbcKrc1Dj");
+  });
+
+  it("throws NO_BATCH_TX when the quote has no broadcastable transaction", () => {
+    try {
+      mapPayablePayResponse({
+        quote_id: "q-1",
+        batch: { ...batch, transaction: { callData: "", batch_contract: "" } },
+      });
+      throw new Error("expected NO_BATCH_TX");
+    } catch (error) {
+      expect(error).toMatchObject({ code: "NO_BATCH_TX" });
+    }
+  });
 });
 
 describe("payrollPaymentNotification", () => {

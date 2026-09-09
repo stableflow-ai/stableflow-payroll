@@ -8,6 +8,7 @@ import { getPublicClientForNetwork, readErc20Balance, readErc20Balances, readNat
 import { readNativeNearBalance, readNearFtBalance } from "@/wallet/near/balance";
 import { readNativeSolBalance, readSplBalance } from "@/wallet/solana/balance";
 import { readNativeTrxBalance, readTrc20Balance } from "@/wallet/tron/balance";
+import { readNativeZecBalance } from "@/wallet/zec/balance";
 import { create } from "zustand";
 
 export type TokenBalanceStatus = "idle" | "loading" | "success" | "error";
@@ -33,7 +34,7 @@ interface TokenBalancesState {
 }
 
 function ownerKey(owner: string, chainKind: string): string {
-  return chainKind === "solana" ? owner : owner.toLowerCase();
+  return chainKind === "solana" || chainKind === "zec" ? owner : owner.toLowerCase();
 }
 
 function balanceKey(owner: string, assetId: string, chainKind = "evm"): string {
@@ -45,9 +46,7 @@ function chainFetchKey(owner: string, blockchain: string, chainKind: ChainKind):
 }
 
 function tokenChainKind(token: IntentsToken): ChainKind | null {
-  const kind = token.chain.chainKind;
-  if (kind === "evm" || kind === "near" || kind === "solana" || kind === "tron") return kind;
-  return null;
+  return token.chain.chainKind || null;
 }
 
 function ownerForToken(owners: ChainOwners, token: IntentsToken): string | undefined {
@@ -129,6 +128,9 @@ async function readRawBalance(owner: string, token: IntentsToken): Promise<bigin
     if (native) return readNativeTrxBalance({ owner });
     if (!token.contractAddress) throw new Error("Missing contract address");
     return readTrc20Balance({ tokenContract: token.contractAddress, owner });
+  }
+  if (kind === "zec") {
+    return readNativeZecBalance();
   }
   if (native) {
     const result = await readNativeBalance({

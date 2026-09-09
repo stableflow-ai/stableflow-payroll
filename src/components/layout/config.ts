@@ -29,6 +29,7 @@ export const HEADER_CHAIN_LOGO: Record<ChainKind, string> = {
   near: "near",
   solana: "solana",
   tron: "tron",
+  zec: "zcash",
 };
 
 export function isHeaderNavActive(pathname: string, to: string): boolean {
@@ -41,5 +42,6 @@ export function primaryConnectedKind(owners: ChainOwners): ChainKind | null {
   if (owners.solana && FIXED_CHAIN_KINDS.has("solana")) return "solana";
   if (owners.near && FIXED_CHAIN_KINDS.has("near")) return "near";
   if (owners.tron && FIXED_CHAIN_KINDS.has("tron")) return "tron";
+  if (owners.zec && FIXED_CHAIN_KINDS.has("zec")) return "zec";
   return null;
 }

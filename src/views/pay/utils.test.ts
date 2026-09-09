@@ -21,6 +21,11 @@ describe("detectAddressChainKind", () => {
   it("classifies a 64-character hex implicit Near account", () => {
     expect(detectAddressChainKind("a".repeat(64))).toBe("near");
   });
+
+  it("classifies a transparent Zcash address before Solana", () => {
+    expect(detectAddressChainKind("t1aDV9wRNwVrVJVSoUCUrFpcYSTbcKrc1Dj")).toBe("zec");
+    expect(detectAddressChainKind("t3Z4Y7w5XQvM6nN8pLqRsTuVwXyZaBcDeFg")).toBe("zec");
+  });
 });
 
 describe("formatQuoteErrorMessage", () => {

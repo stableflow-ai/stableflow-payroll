@@ -1,8 +1,8 @@
 /**
  * Root wallet provider tree.
  *
- * Wagmi/RainbowKit (EVM) wraps Solana, Near, and Tron adapters so UI can
- * connect any of the four without page-level provider changes.
+ * Wagmi/RainbowKit (EVM) wraps Solana, Near, Tron, and Zcash adapters so UI can
+ * connect any of them without page-level provider changes.
  */
 
 import { RainbowKitProvider } from "@rainbow-me/rainbowkit";
@@ -13,6 +13,7 @@ import { wagmiConfig } from "./evm/config";
 import { NearWalletProvider } from "./near/provider";
 import { SolanaWalletProvider } from "./solana/provider";
 import { TronWalletProvider } from "./tron/provider";
+import { ZecWalletProvider } from "./zec/provider";
 import { WalletSync } from "./WalletSync";
 
 export function WalletProvider({ children }: { children: ReactNode }) {
@@ -22,8 +23,10 @@ export function WalletProvider({ children }: { children: ReactNode }) {
         <SolanaWalletProvider>
           <NearWalletProvider>
             <TronWalletProvider>
-              <WalletSync />
-              {children}
+              <ZecWalletProvider>
+                <WalletSync />
+                {children}
+              </ZecWalletProvider>
             </TronWalletProvider>
           </NearWalletProvider>
         </SolanaWalletProvider>

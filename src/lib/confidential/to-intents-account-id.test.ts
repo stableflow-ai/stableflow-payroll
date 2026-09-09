@@ -24,4 +24,10 @@ describe("toIntentsAccountId", () => {
       "0x1111111111111111111111111111111111111111",
     );
   });
+
+  it("rejects Zcash", () => {
+    expect(() => toIntentsAccountId("t1aDV9wRNwVrVJVSoUCUrFpcYSTbcKrc1Dj", "zec")).toThrow(
+      /Zcash is not supported/,
+    );
+  });
 });

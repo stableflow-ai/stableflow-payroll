@@ -15,6 +15,7 @@ export function walletForChainKind(
   wallets: TeamMemberWallets,
   kind: WalletChainKind,
 ): string {
+  if (kind === "zec") return "";
   return wallets[kind]?.trim() ?? "";
 }
 
@@ -41,6 +42,7 @@ function kindLabel(kind: WalletChainKind): string {
   if (kind === "near") return "NEAR";
   if (kind === "solana") return "Solana";
   if (kind === "tron") return "Tron";
+  if (kind === "zec") return "Zcash";
   return "EVM";
 }
 

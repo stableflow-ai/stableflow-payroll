@@ -8,5 +8,8 @@ import type { ChainKind } from "@/wallet";
 export function toIntentsAccountId(address: string, chainKind: ChainKind): string {
   const value = address.trim();
   if (!value) throw new Error("Invalid wallet address");
+  if (chainKind === "zec") {
+    throw new Error("Zcash is not supported for Near Intents accounts");
+  }
   return authIdentity.authHandleToIntentsUserId(value, chainKind);
 }

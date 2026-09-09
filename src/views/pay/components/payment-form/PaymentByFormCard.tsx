@@ -34,6 +34,8 @@ import {
   INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE,
   QUOTE_EXPIRED_MESSAGE,
   SPENT_BATCH_MESSAGE,
+  ZCASH_BATCH_UNSUPPORTED_MESSAGE,
+  ZCASH_DISABLED_BLOCKCHAINS,
 } from "../../config";
 import { isBatchOriginToken, isPayrollBatchExpired } from "../../batch-utils";
 import { formatQuoteErrorMessage } from "../../utils";
@@ -69,16 +71,6 @@ export function PaymentByFormCard(props: {
   const orgId = organizationId(user);
   const timezone = browserTimeZone();
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
-  const { originToken, setOriginToken } = usePayOriginToken(BATCH_BLOCKCHAINS);
-  const originKind: ChainKind =
-    originToken?.chain.chainKind === "near" || originToken?.chain.chainKind === "solana"
-      ? originToken.chain.chainKind
-      : originToken?.chain.chainKind === "tron"
-        ? "tron"
-        : "evm";
-  const paymentWallet = usePaymentWallet(originKind);
-  const wallet = paymentWallet.wallet;
-  const connectedAddress = paymentWallet.connectedAddress;
   const fetchOneBalance = useTokenBalancesStore((s) => s.fetchOne);
 
   const [pickedId, setPickedId] = useState(payableProp ? payableKeyId(payableProp) : "");
@@ -111,6 +103,20 @@ export function PaymentByFormCard(props: {
   const formsLoading = formsQuery.isPending;
   const detail = selectedKey ? findPayable(forms, selectedKey) : null;
   const lockedForms = formLocked ? (detail ? [detail] : []) : forms;
+  const zcashBatchDisabled = (detail?.items.length ?? 0) > 1;
+  const { originToken, setOriginToken } = usePayOriginToken(BATCH_BLOCKCHAINS, {
+    excludeBlockchains: zcashBatchDisabled ? ZCASH_DISABLED_BLOCKCHAINS : null,
+  });
+  const originKind: ChainKind =
+    originToken?.chain.chainKind === "near"
+    || originToken?.chain.chainKind === "solana"
+    || originToken?.chain.chainKind === "tron"
+    || originToken?.chain.chainKind === "zec"
+      ? originToken.chain.chainKind
+      : "evm";
+  const paymentWallet = usePaymentWallet(originKind);
+  const wallet = paymentWallet.wallet;
+  const connectedAddress = paymentWallet.connectedAddress;
 
   useEffect(() => {
     setNotifyEnabled(false);
@@ -192,6 +198,10 @@ export function PaymentByFormCard(props: {
       if (!isBatchOriginToken(originToken)) {
         toast.fail({ title: "Select a paying token" });
         throw new BalanceGateError("Select a paying token");
+      }
+      if (originKind === "zec" && (detail?.items.length ?? 0) > 1) {
+        toast.fail({ title: ZCASH_BATCH_UNSUPPORTED_MESSAGE });
+        throw new BalanceGateError(ZCASH_BATCH_UNSUPPORTED_MESSAGE);
       }
       if (isPayrollBatchExpired(batch.deadline)) {
         toast.fail({ title: QUOTE_EXPIRED_MESSAGE });
@@ -361,11 +371,13 @@ export function PaymentByFormCard(props: {
           onOriginTokenChange={setOriginToken}
           walletAddress={connectedAddress}
           walletConnected={wallet.isConnected}
-          walletIcon={originKind === "evm" ? paymentWallet.walletInfo.icon : null}
+          walletIcon={originKind === "evm" ? paymentWallet.walletInfo.icon : wallet.account?.icon}
           connecting={wallet.isConnecting}
           onConnectWallet={() => paymentWallet.connectWallet()}
           onDisconnectWallet={() => paymentWallet.disconnect()}
           allowedBlockchains={BATCH_BLOCKCHAINS}
+          disabledBlockchains={zcashBatchDisabled ? ZCASH_DISABLED_BLOCKCHAINS : null}
+          disabledReason={zcashBatchDisabled ? ZCASH_BATCH_UNSUPPORTED_MESSAGE : undefined}
         />
       </div>
 

@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "@/lib/api-error";
 import {
+  isPayrollBatchBroadcastable,
+  mapPayrollBatch,
   mapPayrollExecution,
   mapPayoutSubmit,
 } from "./payout";
@@ -65,5 +67,40 @@ describe("mapPayrollExecution", () => {
 
   it("returns null without execution_id", () => {
     expect(mapPayrollExecution({ title: "x" })).toBeNull();
+  });
+});
+
+describe("mapPayrollBatch transaction outputs", () => {
+  it("maps amount_raw onto amountRaw and treats outputs as broadcastable", () => {
+    const mapped = mapPayrollBatch({
+      quote_id: "q-zec",
+      batch_id: "b-zec",
+      source_network: "zec",
+      source_symbol: "ZEC",
+      transaction: {
+        outputs: [
+          {
+            address: "t1aDV9wRNwVrVJVSoUCUrFpcYSTbcKrc1Dj",
+            amount: "0.1",
+            amount_raw: "10000000",
+          },
+        ],
+      },
+    });
+    expect(mapped.transaction.outputs).toEqual([
+      {
+        address: "t1aDV9wRNwVrVJVSoUCUrFpcYSTbcKrc1Dj",
+        amount: "0.1",
+        amountRaw: "10000000",
+      },
+    ]);
+    expect(isPayrollBatchBroadcastable(mapped)).toBe(true);
+  });
+
+  it("is not broadcastable when callData and outputs are both empty", () => {
+    const mapped = mapPayrollBatch({
+      transaction: { callData: "", batch_contract: "" },
+    });
+    expect(isPayrollBatchBroadcastable(mapped)).toBe(false);
   });
 });

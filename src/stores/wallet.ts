@@ -35,6 +35,7 @@ function emptyChains(): Record<ChainKind, ChainWalletState> {
     near: { ...EMPTY_CHAIN },
     solana: { ...EMPTY_CHAIN },
     tron: { ...EMPTY_CHAIN },
+    zec: { ...EMPTY_CHAIN },
   };
 }
 

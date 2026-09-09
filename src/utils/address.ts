@@ -1,7 +1,8 @@
 /**
- * Address validation for EVM, Near, Solana, and Tron.
+ * Address validation for EVM, Near, Solana, Tron, and Zcash.
  * Near follows near-sdk-js / Nomicon account ID rules.
  * Solana also checks 32-byte base58 decode. Tron uses TronWeb.isAddress.
+ * Zcash accepts transparent t1/t3 only (NEAR Intents does not support u1/zs1).
  */
 
 import { TronWeb } from "tronweb";
@@ -52,9 +53,10 @@ export function resolveChainKind(networkOrKind: string | null | undefined): Wall
   const raw = String(networkOrKind || "").trim();
   if (!raw) return null;
   const lower = raw.toLowerCase();
-  if (lower === "evm" || lower === "near" || lower === "solana" || lower === "tron") return lower;
+  if (lower === "evm" || lower === "near" || lower === "solana" || lower === "tron" || lower === "zec") return lower;
   if (lower === "sol") return "solana";
   if (lower === "trx") return "tron";
+  if (lower === "zcash") return "zec";
   const chain = getChainByNetwork(raw);
   if (!chain) return null;
   return chain.chainKind;
@@ -94,6 +96,13 @@ function validateTronAddress(address: string): AddressValidationResult {
   return { isValid: true };
 }
 
+function validateZecAddress(address: string): AddressValidationResult {
+  if (!/^t[13][a-zA-Z0-9]{33,}$/.test(address)) {
+    return { isValid: false, error: "Invalid Zcash transparent address" };
+  }
+  return { isValid: true };
+}
+
 export function validateAddress(
   address: string,
   chainKind: WalletChainKind | string | null | undefined,
@@ -105,6 +114,7 @@ export function validateAddress(
   if (kind === "evm") return validateEvmAddress(trimmed);
   if (kind === "near") return validateNearAddress(trimmed);
   if (kind === "tron") return validateTronAddress(trimmed);
+  if (kind === "zec") return validateZecAddress(trimmed);
   return validateSolanaAddress(trimmed);
 }
 
@@ -134,7 +144,7 @@ export function sameAddress(
 ): boolean {
   if (!a || !b) return false;
   const kind = resolveChainKind(chainKind);
-  if (kind === "solana" || kind === "tron") return a.trim() === b.trim();
+  if (kind === "solana" || kind === "tron" || kind === "zec") return a.trim() === b.trim();
   return a.trim().toLowerCase() === b.trim().toLowerCase();
 }
 
@@ -143,6 +153,7 @@ export function getAddressPlaceholder(chainKind: WalletChainKind | string | null
   if (kind === "near") return "alice.near";
   if (kind === "solana") return "Solana address";
   if (kind === "tron") return "T…";
+  if (kind === "zec") return "t1…";
   return "0x…";
 }
 
