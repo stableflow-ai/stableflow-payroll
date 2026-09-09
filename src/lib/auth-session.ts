@@ -1,4 +1,4 @@
-import { AUTH_USER_ROLE, type AuthOrganization, type AuthSession, type AuthUser } from "@/types/auth";
+import { AUTH_USER_ROLE, type AuthOrganization, type AuthSession, type AuthTeamMember, type AuthUser } from "@/types/auth";
 
 const SESSION_KEY = "stableflow-pay.session";
 
@@ -61,6 +61,32 @@ function isAuthUserRecord(value: unknown): value is {
   );
 }
 
+function hydrateWallets(value: unknown): AuthTeamMember["wallets"] {
+  if (!value || typeof value !== "object") {
+    return { evm: "", solana: "", near: "", tron: "" };
+  }
+  const row = value as Record<string, unknown>;
+  return {
+    evm: optionalTrimmed(row.evm) ?? "",
+    solana: optionalTrimmed(row.solana) ?? "",
+    near: optionalTrimmed(row.near) ?? "",
+    tron: optionalTrimmed(row.tron) ?? "",
+  };
+}
+
+function hydrateTeamMember(value: unknown): AuthTeamMember | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const row = value as Record<string, unknown>;
+  return {
+    name: optionalTrimmed(row.name) ?? "",
+    position: optionalTrimmed(row.position) ?? "",
+    email: optionalTrimmed(row.email) ?? "",
+    telegram: optionalTrimmed(row.telegram) ?? "",
+    slack: optionalTrimmed(row.slack) ?? "",
+    wallets: hydrateWallets(row.wallets),
+  };
+}
+
 export function hydrateAuthUser(user: {
   id: number;
   email: string;
@@ -68,10 +94,12 @@ export function hydrateAuthUser(user: {
   role?: unknown;
   telegram?: unknown;
   slack?: unknown;
+  teamMember?: unknown;
   organization?: unknown;
 }): AuthUser {
   const telegram = optionalTrimmed(user.telegram);
   const slack = optionalTrimmed(user.slack);
+  const teamMember = hydrateTeamMember(user.teamMember);
   return {
     id: user.id,
     email: user.email,
@@ -79,6 +107,7 @@ export function hydrateAuthUser(user: {
     role: user.role === AUTH_USER_ROLE.User ? AUTH_USER_ROLE.User : AUTH_USER_ROLE.Admin,
     ...(telegram ? { telegram } : {}),
     ...(slack ? { slack } : {}),
+    ...(teamMember ? { teamMember } : {}),
     organization: hydrateOrganization(user.organization),
   };
 }

@@ -7,6 +7,7 @@
  *   POST /v1/payroll/reset-password/code
  *   GET  /v1/payroll/profile
  *   POST /v1/payroll/profile
+ *   POST /v1/payroll/profile/user
  *
  * Login / register / profile success writes the session to the Zustand auth
  * store (and localStorage). Views should still `mutateAsync` and then navigate.
@@ -20,12 +21,28 @@ import {
   register,
   resetPassword,
   sendResetPasswordCode,
+  updateMemberProfile,
   updateProfile,
 } from "@/api/auth";
 import { queryKeys } from "@/api/query-keys";
 import { ApiError } from "@/lib/api-error";
 import { useAuthStore } from "@/stores/auth";
-import type { AuthUser } from "@/types/auth";
+import type { AuthTeamMember, AuthUser } from "@/types/auth";
+
+function teamMemberKey(member: AuthTeamMember | undefined): string {
+  if (!member) return "";
+  return [
+    member.name,
+    member.position,
+    member.email,
+    member.telegram,
+    member.slack,
+    member.wallets.evm,
+    member.wallets.solana,
+    member.wallets.near,
+    member.wallets.tron,
+  ].join("\0");
+}
 
 function isSameUser(left: AuthUser, right: AuthUser): boolean {
   return (
@@ -35,6 +52,7 @@ function isSameUser(left: AuthUser, right: AuthUser): boolean {
     left.role === right.role &&
     (left.telegram ?? "") === (right.telegram ?? "") &&
     (left.slack ?? "") === (right.slack ?? "") &&
+    teamMemberKey(left.teamMember) === teamMemberKey(right.teamMember) &&
     (left.organization?.id ?? 0) === (right.organization?.id ?? 0) &&
     (left.organization?.name ?? "") === (right.organization?.name ?? "") &&
     (left.organization?.logo ?? "") === (right.organization?.logo ?? "") &&
@@ -104,6 +122,16 @@ export function useUpdateProfileMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: updateProfile,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.auth.profile });
+    },
+  });
+}
+
+export function useUpdateMemberProfileMutation() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: updateMemberProfile,
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.auth.profile });
     },

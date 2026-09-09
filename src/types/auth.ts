@@ -1,3 +1,5 @@
+import type { TeamMemberWallets } from "@/types/team";
+
 export const AUTH_USER_ROLE = {
   Admin: "admin",
   User: "user",
@@ -12,6 +14,15 @@ export interface AuthOrganization {
   orgId?: string;
 }
 
+export interface AuthTeamMember {
+  name: string;
+  position: string;
+  email: string;
+  telegram: string;
+  slack: string;
+  wallets: TeamMemberWallets;
+}
+
 export interface AuthUser {
   id: number;
   email: string;
@@ -19,6 +30,7 @@ export interface AuthUser {
   role: AuthUserRole;
   telegram?: string;
   slack?: string;
+  teamMember?: AuthTeamMember;
   organization?: AuthOrganization | null;
 }
 
@@ -76,4 +88,13 @@ export interface ResetPasswordBody {
 
 export interface UpdateProfileBody {
   name: string;
+}
+
+export interface UpdateMemberProfileBody {
+  name: string;
+  organizationId: number;
+  position: string;
+  telegram: string;
+  slack: string;
+  wallets: TeamMemberWallets;
 }

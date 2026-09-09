@@ -6,6 +6,7 @@ import {
   AUTH_USER_ROLE,
   type AuthOrganization,
   type AuthSession,
+  type AuthTeamMember,
   type AuthUser,
   type ChangePasswordBody,
   type LoginBody,
@@ -13,6 +14,7 @@ import {
   type RegisterUserBody,
   type ResetPasswordBody,
   type ResetPasswordCodeBody,
+  type UpdateMemberProfileBody,
   type UpdateProfileBody,
 } from "@/types/auth";
 
@@ -39,6 +41,24 @@ function optionalHandle(value: unknown): string | undefined {
   return text || undefined;
 }
 
+function mapAuthTeamMember(value: unknown): AuthTeamMember | undefined {
+  const row = asRecord(value);
+  if (!row) return undefined;
+  return {
+    name: apiText(row.name).trim(),
+    position: apiText(row.position).trim(),
+    email: apiText(row.email).trim(),
+    telegram: apiText(row.telegram_chat_id ?? row.telegramChatId).trim(),
+    slack: apiText(row.slack_user_id ?? row.slackUserId).trim(),
+    wallets: {
+      evm: apiText(row.evm_address ?? row.evmAddress).trim(),
+      solana: apiText(row.solana_address ?? row.solanaAddress).trim(),
+      near: apiText(row.near_address ?? row.nearAddress).trim(),
+      tron: apiText(row.tron_address ?? row.tronAddress).trim(),
+    },
+  };
+}
+
 export function mapAuthUser(raw: unknown): AuthUser {
   const row = asRecord(raw) ?? {};
   const id = apiNumber(row.id);
@@ -47,6 +67,7 @@ export function mapAuthUser(raw: unknown): AuthUser {
   }
   const telegram = optionalHandle(row.telegram);
   const slack = optionalHandle(row.slack);
+  const teamMember = mapAuthTeamMember(row.team_member ?? row.teamMember);
   return {
     id,
     email: apiText(row.email),
@@ -54,6 +75,7 @@ export function mapAuthUser(raw: unknown): AuthUser {
     role: apiText(row.role) === AUTH_USER_ROLE.User ? AUTH_USER_ROLE.User : AUTH_USER_ROLE.Admin,
     ...(telegram ? { telegram } : {}),
     ...(slack ? { slack } : {}),
+    ...(teamMember ? { teamMember } : {}),
     organization: mapAuthOrganization(row.organization),
   };
 }
@@ -158,5 +180,34 @@ export function updateProfile(body: UpdateProfileBody) {
   return http<void>(`${PAY_API_PREFIX}/profile`, {
     method: "POST",
     body,
+  });
+}
+
+export function updateMemberProfileBody(body: UpdateMemberProfileBody) {
+  const wallets = body.wallets;
+  const teamMember: Record<string, string> = {};
+  const optional: Array<[string, string | undefined]> = [
+    ["position", omitEmpty(body.position)],
+    ["evm_address", omitEmpty(wallets.evm)],
+    ["solana_address", omitEmpty(wallets.solana)],
+    ["near_address", omitEmpty(wallets.near)],
+    ["tron_address", omitEmpty(wallets.tron)],
+    ["telegram_chat_id", omitEmpty(body.telegram)],
+    ["slack_user_id", omitEmpty(body.slack)],
+  ];
+  for (const [key, value] of optional) {
+    if (value) teamMember[key] = value;
+  }
+  return {
+    name: body.name.trim(),
+    organization_id: body.organizationId,
+    ...(Object.keys(teamMember).length > 0 ? { team_member: teamMember } : {}),
+  };
+}
+
+export function updateMemberProfile(body: UpdateMemberProfileBody) {
+  return http<void>(`${PAY_API_PREFIX}/profile/user`, {
+    method: "POST",
+    body: updateMemberProfileBody(body),
   });
 }
