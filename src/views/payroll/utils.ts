@@ -407,6 +407,21 @@ export function payrollSalaryItemId(id: string): number | undefined {
   return Number.isSafeInteger(value) && value > 0 ? value : undefined;
 }
 
+/** Maps Next Payroll net-pay edits onto payable item ids for quote adjustments. */
+export function payrollNetPayToPayableOverrides(
+  netPayById: Record<string, string>,
+): Record<number, string> {
+  const next: Record<number, string> = {};
+  for (const [id, value] of Object.entries(netPayById)) {
+    const itemId = payrollSalaryItemId(id);
+    if (itemId == null) continue;
+    const trimmed = value.trim();
+    if (!trimmed) continue;
+    next[itemId] = trimmed;
+  }
+  return next;
+}
+
 export function recipientRowsToUpdateItems(rows: PayrollRecipientRow[]): PayrollUpdateItem[] {
   return rows.map((row) => {
     const item: PayrollUpdateItem = {

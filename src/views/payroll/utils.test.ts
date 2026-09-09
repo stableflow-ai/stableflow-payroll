@@ -5,6 +5,7 @@ import {
   payDayFromPaymentDate,
   payrollExecutionItemId,
   payrollHistoryRunStub,
+  payrollNetPayToPayableOverrides,
   payrollNextRunToPayDay,
   payrollPayDayToParam,
   payrollPayDayToType,
@@ -116,6 +117,20 @@ describe("payrollSalaryItemId", () => {
     expect(payrollSalaryItemId("12")).toBe(12);
     expect(payrollSalaryItemId("0")).toBeUndefined();
     expect(payrollSalaryItemId("a1b2c3d4-e5f6-7890-abcd-ef1234567890")).toBeUndefined();
+  });
+});
+
+describe("payrollNetPayToPayableOverrides", () => {
+  it("keeps numeric ids and skips empty values and UUIDs", () => {
+    expect(
+      payrollNetPayToPayableOverrides({
+        "12": "80.5",
+        "0": "1",
+        "a1b2c3d4-e5f6-7890-abcd-ef1234567890": "9",
+        "7": "  ",
+        "3": "100",
+      }),
+    ).toEqual({ 12: "80.5", 3: "100" });
   });
 });
 

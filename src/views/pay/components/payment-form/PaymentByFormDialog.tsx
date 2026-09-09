@@ -7,8 +7,9 @@ export function PaymentByFormDialog(props: {
   open: boolean;
   onClose: () => void;
   payable: PayableKey | null;
+  initialNetPayById?: Record<number, string>;
 }) {
-  const { open, onClose, payable } = props;
+  const { open, onClose, payable, initialNetPayById } = props;
 
   return (
     <Dialog
@@ -22,6 +23,7 @@ export function PaymentByFormDialog(props: {
           key={payableKeyId(payable)}
           payable={payable}
           formLocked
+          initialNetPayById={initialNetPayById}
           onSettled={onClose}
         />
       ) : null}

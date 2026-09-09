@@ -92,7 +92,7 @@ export function NextPayrollPanel(props: {
               <TableCell>
                 {row.token} · {chainDisplayName(row.network)}
               </TableCell>
-              <TableCell>{formatAmount(row.amount, { prefix: "", showDust: true })}</TableCell>
+              <TableCell>{formatAmount(row.amount, { maxDecimals: 6, prefix: "", showDust: true })}</TableCell>
               <TableCell className="last:pr-4">
                 <InputNumber
                   value={netPayById[row.id] ?? row.netPay}

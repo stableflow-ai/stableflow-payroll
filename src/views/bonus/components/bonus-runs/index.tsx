@@ -1,6 +1,7 @@
 import { NavLink } from "react-router-dom";
 import { IconExportLink } from "@/components/icons/link";
 import { IconLoading } from "@/components/icons/loading";
+import { IconPlus } from "@/components/icons/plus";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Card } from "@/components/ui/card/Card";
@@ -13,6 +14,7 @@ import {
   BONUS_TAB,
   type BonusTab,
 } from "../../config";
+import { BonusImportCsvButton } from "./BonusImportCsvButton";
 import { CreateBonusEmpty } from "./CreateBonusEmpty";
 import { HistoryPanel } from "./HistoryPanel";
 import { PendingBonusPanel } from "./PendingBonusPanel";
@@ -85,6 +87,8 @@ export function BonusRunsCard(props: {
   const tabLoading = isPendingTab ? pendingLoading : historyLoading;
   const tabError = isPendingTab ? pendingError : historyError;
   const hasPending = Boolean(pending && pending.items.length > 0);
+  const showPendingToolbar =
+    isPendingTab && !tabLoading && !tabError && hasPending;
   const showExport =
     !isPendingTab && !tabLoading && !tabError && history.length > 0 && Boolean(onExport);
 
@@ -95,7 +99,27 @@ export function BonusRunsCard(props: {
           <TabLink to={BONUS_PATH}>Bonuses to be paid</TabLink>
           <TabLink to={BONUS_HISTORY_PATH}>Bonus History</TabLink>
         </div>
-        {showExport ? (
+        {showPendingToolbar ? (
+          <div className="flex items-center gap-2 pb-1">
+            <BonusImportCsvButton
+              onImported={onImported}
+              busy={importBusy}
+              variant={BUTTON_VARIANT.Normal}
+              fullWidth={false}
+              menuAlign="end"
+              className="h-9 rounded-[10px] border-black/10 px-4 text-sm text-black"
+            />
+            <Button
+              variant={BUTTON_VARIANT.Normal}
+              className="h-9 rounded-[10px] border-black/10 px-4 text-sm text-black"
+              disabled={importBusy}
+              onClick={onAddBonus}
+            >
+              <IconPlus className="size-3 shrink-0" />
+              Add Bonus
+            </Button>
+          </div>
+        ) : showExport ? (
           <div className="flex items-center gap-2 pb-1">
             <Button
               variant={BUTTON_VARIANT.Normal}
@@ -120,7 +144,6 @@ export function BonusRunsCard(props: {
           hasPending && pending ? (
             <PendingBonusPanel
               list={pending}
-              onAddBonus={onAddBonus}
               onPayNow={onPayNow}
             />
           ) : (

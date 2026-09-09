@@ -21,6 +21,7 @@ import { organizationId } from "@/lib/auth-role";
 import { formatAmount, browserTimeZone } from "@/utils";
 import { cn } from "@/lib/utils";
 import { broadcastBatchPayout } from "@/wallet/broadcast-batch-payout";
+import { INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE } from "@/wallet/config";
 import type { ChainKind } from "@/wallet";
 import {
   findPayable,
@@ -28,7 +29,12 @@ import {
   payableKeyId,
   type PayableKey,
 } from "@/types/payable";
-import { AMOUNT_MAX_DECIMALS, QUOTE_EXPIRED_MESSAGE, SPENT_BATCH_MESSAGE } from "../../config";
+import {
+  AMOUNT_MAX_DECIMALS,
+  INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE,
+  QUOTE_EXPIRED_MESSAGE,
+  SPENT_BATCH_MESSAGE,
+} from "../../config";
 import { isBatchOriginToken, isPayrollBatchExpired } from "../../batch-utils";
 import { formatQuoteErrorMessage } from "../../utils";
 import { YouPaySection } from "../YouPaySection";
@@ -49,8 +55,14 @@ export function PaymentByFormCard(props: {
   payable?: PayableKey;
   formLocked?: boolean;
   onSettled?: () => void;
+  initialNetPayById?: Record<number, string>;
 }) {
-  const { payable: payableProp, formLocked = false, onSettled } = props;
+  const {
+    payable: payableProp,
+    formLocked = false,
+    onSettled,
+    initialNetPayById,
+  } = props;
   const queryClient = useQueryClient();
   const toast = useToast();
   const user = useAuthStore((state) => state.user);
@@ -75,7 +87,11 @@ export function PaymentByFormCard(props: {
   const [notifyEnabled, setNotifyEnabled] = useState(false);
   const [notifyOpen, setNotifyOpen] = useState(false);
   const [selectedItemIds, setSelectedItemIds] = useState<Set<number>>(() => new Set());
-  const [netPayById, setNetPayById] = useState<Record<number, string>>({});
+  const [netPayById, setNetPayById] = useState<Record<number, string>>(
+    () => initialNetPayById ?? {},
+  );
+  const initialNetPayRef = useRef(initialNetPayById);
+  initialNetPayRef.current = initialNetPayById;
   const refreshedForBatchId = useRef("");
 
   useEffect(() => {
@@ -101,7 +117,7 @@ export function PaymentByFormCard(props: {
     setNotifyOpen(false);
     setDetailsOpen(false);
     setSelectedItemIds(new Set());
-    setNetPayById({});
+    setNetPayById(initialNetPayRef.current ?? {});
   }, [selectedId]);
 
   const payBody = useMemo(
@@ -204,12 +220,25 @@ export function PaymentByFormCard(props: {
       }
       setPhase("sending");
       markBatchConsumed(batch.batchId);
-      const txHash = await broadcastBatchPayout({
-        token: originToken,
-        transaction: tx,
-        amountIn,
-        payer,
-      });
+      let txHash: string;
+      try {
+        txHash = await broadcastBatchPayout({
+          token: originToken,
+          transaction: tx,
+          amountIn,
+          payer,
+        });
+      } catch (error) {
+        if (
+          error instanceof Error
+          && error.message === INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE
+        ) {
+          toast.fail({ title: INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE });
+          void refetchBatch();
+          throw new BalanceGateError(INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE);
+        }
+        throw error;
+      }
       enqueueBatchPayoutCommit({
         quoteId: batch.quoteId,
         txHash,

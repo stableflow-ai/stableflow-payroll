@@ -36,6 +36,7 @@ import { type PayrollNextRun, type PayrollRecipientRow } from "@/types/payroll";
 import {
   mapPayrollChartSeries,
   payrollHistoryRunStub,
+  payrollNetPayToPayableOverrides,
   payrollNextRunToPayDay,
   payrollPayDayToParam,
   payrollUpdateDeleteIds,
@@ -73,6 +74,9 @@ export function PayrollView() {
   const [editOriginalRows, setEditOriginalRows] = useState<PayrollRecipientRow[] | null>(null);
   const [nextPayrollOverride, setNextPayrollOverride] = useState<PayrollNextRun | null>(null);
   const [payingPayable, setPayingPayable] = useState<PayableKey | null>(null);
+  const [payingNetPayById, setPayingNetPayById] = useState<Record<number, string>>(
+    {},
+  );
   const drawerSaving = importMutation.isPending || updateMutation.isPending;
 
   useEffect(() => {
@@ -257,19 +261,27 @@ export function PayrollView() {
           navigate(payrollHistoryDetailPath(run.id));
         }}
         onPayNow={() => {
-          if (!nextPayroll?.payable) return;
+          if (!nextPayroll?.payable) {
+            toast.fail({ title: "Not payday yet" });
+            return;
+          }
           const payDate = nextPayroll.payDate.trim();
           if (!payDate) {
             toast.fail({ title: "Next pay date is missing" });
             return;
           }
+          setPayingNetPayById(payrollNetPayToPayableOverrides(resolvedNetPay));
           setPayingPayable({ type: PAYABLE_TYPE.Payroll, periodMonth: payDate });
         }}
       />
       <PaymentByFormDialog
         open={Boolean(payingPayable)}
         payable={payingPayable}
-        onClose={() => setPayingPayable(null)}
+        initialNetPayById={payingNetPayById}
+        onClose={() => {
+          setPayingPayable(null);
+          setPayingNetPayById({});
+        }}
       />
       <PayrollHistoryDetailDrawer
         open={historyDetailRun !== null}

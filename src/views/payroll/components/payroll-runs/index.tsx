@@ -123,7 +123,7 @@ export function PayrollRunsCard(props: {
               onClick={onAddPayroll}
             >
               <IconPlus className="size-3 shrink-0" />
-              Add a new Payroll
+              Change Payroll
             </Button>
           </div>
         ) : null}
