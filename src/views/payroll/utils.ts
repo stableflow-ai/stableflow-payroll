@@ -1,8 +1,10 @@
 import { format, isValid } from "date-fns";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import { normalizeSymbol } from "@/stores/intents-tokens";
+import { unparseCsv } from "@/lib/import/csv";
 import type {
   PayrollChartPoint,
+  PayrollHistoryDetailRow,
   PayrollHistoryRun,
   PayrollImportDayType,
   PayrollImportItem,
@@ -19,10 +21,14 @@ import {
   resolveImportToken,
   type FindTokenByChainAndSymbol,
 } from "@/views/pay/batch-utils";
-import { isValidEmail } from "@/views/pay/utils";
+import { isValidEmail, stampDownloadFilename } from "@/views/pay/utils";
 import type { PayrollNextRun, PayrollRecipientRow } from "@/mocks/payroll";
 import {
   PAYROLL_FORM_MAX_ROWS,
+  PAYROLL_HISTORY_MONTH_EXPORT_COLUMNS,
+  PAYROLL_HISTORY_MONTH_EXPORT_FILENAME,
+  PAYROLL_NEXT_EXPORT_COLUMNS,
+  PAYROLL_NEXT_EXPORT_FILENAME,
   PAYROLL_PAY_DAY,
   payrollPayDayLabel,
 } from "./config";
@@ -523,4 +529,74 @@ export function payrollExecutionItemId(id: string): number | null {
   const parsed = Number(id);
   if (!Number.isInteger(parsed) || parsed <= 0) return null;
   return parsed;
+}
+
+export function sanitizeDownloadBasename(value: string, fallback: string): string {
+  const cleaned = value
+    .trim()
+    .replace(/[\\/:*?"<>|]+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+  return cleaned || fallback;
+}
+
+export function payrollNextRowsToCsv(rows: readonly PayrollRecipientRow[]): string {
+  return unparseCsv([
+    [...PAYROLL_NEXT_EXPORT_COLUMNS],
+    ...rows.map((row) => [
+      row.name,
+      row.address,
+      row.email,
+      row.amount,
+      row.token,
+      row.network,
+      row.memo ?? "",
+    ]),
+  ]);
+}
+
+export function payrollHistoryDetailToCsv(
+  rows: readonly PayrollHistoryDetailRow[],
+): string {
+  return unparseCsv([
+    [...PAYROLL_HISTORY_MONTH_EXPORT_COLUMNS],
+    ...rows.map((row) => [
+      row.name,
+      row.email,
+      row.address,
+      row.token,
+      row.network,
+      row.amount,
+      row.netPay,
+      row.status,
+    ]),
+  ]);
+}
+
+function saveCsvFile(filename: string, csv: string) {
+  const blob = new Blob([`\uFEFF${csv}`], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = stampDownloadFilename(filename);
+  link.rel = "noopener";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
+}
+
+export function exportPayrollNextCsv(rows: readonly PayrollRecipientRow[]) {
+  saveCsvFile(PAYROLL_NEXT_EXPORT_FILENAME, payrollNextRowsToCsv(rows));
+}
+
+export function exportPayrollHistoryMonthCsv(
+  title: string,
+  rows: readonly PayrollHistoryDetailRow[],
+) {
+  const basename = `${sanitizeDownloadBasename(
+    title,
+    PAYROLL_HISTORY_MONTH_EXPORT_FILENAME.replace(/\.csv$/i, ""),
+  )}.csv`;
+  saveCsvFile(basename, payrollHistoryDetailToCsv(rows));
 }

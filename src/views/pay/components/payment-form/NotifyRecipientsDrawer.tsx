@@ -37,7 +37,10 @@ export function NotifyRecipientsDrawer(props: {
         </div>
       }
       panelClassName={isDesktop ? "w-[min(100%,520px)]" : undefined}
-      cardClassName={cn("gap-6 p-10", !isDesktop && "w-full max-h-[90vh] rounded-b-none")}
+      cardClassName={cn(
+        "gap-6 p-6 sm:p-10",
+        !isDesktop && "w-full max-h-[90vh] rounded-b-none",
+      )}
     >
       <div className="flex h-full min-h-0 flex-col gap-3">
         <div className={cn(ROW_GRID, "px-4")}>

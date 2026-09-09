@@ -129,7 +129,7 @@ export function RecentPayoutsCard(props: {
         </div>
       ) : (
         <div ref={listRef} className="mt-4 min-h-0 flex-1 overflow-y-auto">
-          <ul className="flex flex-col">
+          <ul className="flex flex-col max-h-[350px]">
             {items.map((item) => (
               <li key={item.id} className="border-b border-black/10 last:border-b-0">
                 <button

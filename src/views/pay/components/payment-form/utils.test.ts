@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PAYABLE_TYPE, type Payable } from "@/types/payable";
-import { buildPayablePayRequest, sumPayableNetPay } from "./utils";
+import { buildPayablePayRequest, sumPayableNetPay, sumPayableVolume } from "./utils";
 
 const PAYABLE: Payable = {
   key: { type: PAYABLE_TYPE.Payroll, periodMonth: "2026-09" },
@@ -20,6 +20,7 @@ const PAYABLE: Payable = {
       network: "eth",
       symbol: "USDC",
       amount: "1",
+      volume: "",
       netPay: "1",
       purpose: "",
       status: "",
@@ -32,6 +33,7 @@ const PAYABLE: Payable = {
       network: "eth",
       symbol: "USDC",
       amount: "1",
+      volume: "",
       netPay: "1",
       purpose: "",
       status: "",
@@ -133,6 +135,25 @@ describe("buildPayablePayRequest", () => {
         selectedItemIds: [5],
       })?.notification,
     ).toBe("5");
+  });
+});
+
+describe("sumPayableVolume", () => {
+  it("sums item volume and ignores net pay overrides", () => {
+    const mixed: Payable = {
+      ...PAYABLE,
+      totalPayout: "255.05378700",
+      items: [
+        { ...PAYABLE.items[0]!, volume: "0.99993600" },
+        { ...PAYABLE.items[1]!, volume: "252.05400000" },
+      ],
+    };
+    expect(sumPayableVolume(mixed)).toBe("253.053936");
+    expect(sumPayableNetPay(mixed, { 2: "99" })).toBe("100");
+  });
+
+  it("falls back to totalPayout when every volume is empty", () => {
+    expect(sumPayableVolume(PAYABLE)).toBe("35000");
   });
 });
 

@@ -71,3 +71,7 @@ export async function parseCsvFile(file: File): Promise<string[][]> {
     return parseCsvString(text);
   }
 }
+
+export function unparseCsv(rows: string[][]): string {
+  return Papa.unparse(rows);
+}

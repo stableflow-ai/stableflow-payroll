@@ -14,11 +14,11 @@ Select-style trigger with a portalled option list. Works controlled (`value` + `
 
 ## Panel defaults
 
-Rendered into `document.body` at `z-index: 1100`, positioned below the trigger with a 6px offset and clamped to the viewport by `useFloatingPosition`. Minimum width matches the trigger. Radius 12px, border `#E0E0E0`, background `#FDFDFD`, shadow `0 0 20px 0 rgba(0,0,0,0.06)`.
+Rendered into `document.body`. `z-index` is `floatingLayerZIndex()` from the overlay stack: `1100` when no overlay is open, otherwise the current top overlay plus 10 so the list stays above Dialog / Drawer. Positioned below the trigger with a 6px offset and clamped to the viewport by `useFloatingPosition`. Minimum width matches the trigger. Radius 12px, border `#E0E0E0`, background `#FDFDFD`, shadow `0 0 20px 0 rgba(0,0,0,0.06)`.
 
 Options are 14px Montserrat Medium; hover and the selected row use `rgba(0,0,0,0.05)`; disabled options are `opacity: 0.3`. When nothing is selected, the trigger placeholder is `#606060`. When `loading` is true, the trigger shows a spinning `IconLoading` and the open panel shows `Loading...` instead of options. When `options` is empty and not loading, the panel shows `empty` (`"No options"` by default) instead of a blank list.
 
-It closes on outside pointer-down, Escape, or any scroll in the capture phase.
+It closes on outside pointer-down, Escape, or any scroll in the capture phase, except scroll inside the option panel itself (so a `panelClassName` with `overflow-y-auto` can scroll without closing).
 
 ## Props
 

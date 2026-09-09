@@ -150,6 +150,27 @@ export const PAYROLL_HISTORY_DETAIL_FAILED_COPY =
 
 export const IMPORT_CSV_ACCEPT = ".csv,text/csv";
 export const IMPORT_CSV_TEMPLATE_FILENAME = "payroll-import-template.csv";
+export const PAYROLL_NEXT_EXPORT_FILENAME = "next-payroll.csv";
+export const PAYROLL_NEXT_EXPORT_COLUMNS = [
+  "name",
+  "address",
+  "email",
+  "amount",
+  "token",
+  "network",
+  "memo",
+] as const;
+export const PAYROLL_HISTORY_MONTH_EXPORT_FILENAME = "payroll-history.csv";
+export const PAYROLL_HISTORY_MONTH_EXPORT_COLUMNS = [
+  "name",
+  "email",
+  "address",
+  "token",
+  "network",
+  "amount",
+  "net_pay",
+  "status",
+] as const;
 export const IMPORT_CSV_TEMPLATE = [
   "recipient,email,amount,token,network,memo",
   "0x557be3f47a45499385f60cd64e2ff455e42a3311,alice@example.com,100,USDC,eth,payroll",

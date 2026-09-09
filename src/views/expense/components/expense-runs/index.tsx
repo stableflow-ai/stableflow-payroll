@@ -8,7 +8,7 @@ import { Card } from "@/components/ui/card/Card";
 import { useExpenseOpenRequestsCountQuery } from "@/hooks/use-expense-api";
 import { cn } from "@/lib/utils";
 import type { ExpenseDraftRow, ExpenseOpenList } from "@/types/expense";
-import type { PayableKey } from "@/types/payable";
+import type { Payable } from "@/types/payable";
 import { CountBadge } from "@/views/pay/components/CountBadge";
 import {
   EXPENSE_HISTORY_PATH,
@@ -57,7 +57,7 @@ export function ExpenseRunsCard(props: {
   open: ExpenseOpenList;
   openLoading?: boolean;
   openError?: string | null;
-  onPayNow: (payable: PayableKey) => void;
+  onPayNow: (form: Payable) => void;
   onAddExpense: () => void;
   onImported: (rows: ExpenseDraftRow[]) => void;
   importBusy?: boolean;

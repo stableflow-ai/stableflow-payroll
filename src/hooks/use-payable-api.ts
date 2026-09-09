@@ -6,7 +6,7 @@ import { useAuthStore } from "@/stores/auth";
 import type { PayablePayRequest } from "@/types/payable";
 import { browserTimeZone } from "@/utils";
 
-export function usePayablesQuery() {
+export function usePayablesQuery(options?: { enabled?: boolean }) {
   const token = useAuthStore((state) => state.token);
   const user = useAuthStore((state) => state.user);
   const orgId = organizationId(user);
@@ -14,7 +14,7 @@ export function usePayablesQuery() {
   return useQuery({
     queryKey: queryKeys.payable.list(orgId ?? -1, timezone),
     queryFn: () => getPayables(orgId!, timezone),
-    enabled: Boolean(token) && orgId !== null,
+    enabled: Boolean(token) && orgId !== null && options?.enabled !== false,
   });
 }
 

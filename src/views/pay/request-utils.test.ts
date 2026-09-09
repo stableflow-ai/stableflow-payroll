@@ -98,7 +98,7 @@ describe("received payment view", () => {
     expect(receivedPaymentStatusLabel(toReceivedPaymentView({
       ...item,
       status: PAY_REQUEST_STATUS.Expired,
-    }))).toBe("Failed");
+    }))).toBe("Expired");
   });
 
   it("picks explorer hashes when a receive tx hash is present", () => {

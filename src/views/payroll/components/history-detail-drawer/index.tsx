@@ -112,7 +112,7 @@ export function PayrollHistoryDetailDrawer(props: {
       }
       panelClassName={isDesktop ? "w-[min(100%,860px)]" : undefined}
       cardClassName={cn(
-        "gap-6 p-[30px] sm:p-10",
+        "gap-6 p-6 sm:p-10",
         !isDesktop && "w-full max-h-[90vh] rounded-b-none"
       )}
     >
@@ -225,28 +225,30 @@ function HistoryDetailBody(props: {
           <p className="font-montserrat text-sm text-[#aaa]">No recipients</p>
         </div>
       ) : (
-        <div className="min-h-0 flex-1">
-          <div className={cn(PAYROLL_HISTORY_DETAIL_GRID, "px-4 pb-2")}>
-            {PAYROLL_HISTORY_DETAIL_COLUMNS.map((column) => (
-              <p
-                key={column.key}
-                className="font-montserrat text-sm font-medium capitalize text-[#aaa]"
-              >
-                {column.label}
-              </p>
-            ))}
-          </div>
-          <div className="flex flex-col gap-3.5">
-            {rows.map((row) => (
-              <HistoryDetailRow
-                key={row.id}
-                row={row}
-                payAgainLoading={retryingId === row.id}
-                onPayAgain={() => {
-                  void handlePayAgain(row);
-                }}
-              />
-            ))}
+        <div className="min-h-0 min-w-0 flex-1 overflow-x-auto">
+          <div className="min-w-[760px]">
+            <div className={cn(PAYROLL_HISTORY_DETAIL_GRID, "px-4 pb-2")}>
+              {PAYROLL_HISTORY_DETAIL_COLUMNS.map((column) => (
+                <p
+                  key={column.key}
+                  className="font-montserrat text-sm font-medium capitalize text-[#aaa]"
+                >
+                  {column.label}
+                </p>
+              ))}
+            </div>
+            <div className="flex flex-col gap-3.5">
+              {rows.map((row) => (
+                <HistoryDetailRow
+                  key={row.id}
+                  row={row}
+                  payAgainLoading={retryingId === row.id}
+                  onPayAgain={() => {
+                    void handlePayAgain(row);
+                  }}
+                />
+              ))}
+            </div>
           </div>
         </div>
       )}

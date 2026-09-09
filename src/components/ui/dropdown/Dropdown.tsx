@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import { IconArrowDown } from "@/components/icons/arrow-down";
 import { IconLoading } from "@/components/icons/loading";
 import { cn } from "@/lib/utils";
+import { floatingLayerZIndex } from "@/components/ui/overlay/stack";
 import {
   FLOATING_ALIGN,
   FLOATING_SIDE,
@@ -97,7 +98,11 @@ export function Dropdown(props: DropdownProps) {
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") close();
     };
-    const onScroll = () => close();
+    const onScroll = (event: Event) => {
+      const target = event.target;
+      if (target instanceof Node && panelRef.current?.contains(target)) return;
+      close();
+    };
     document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
     window.addEventListener("scroll", onScroll, true);
@@ -151,9 +156,13 @@ export function Dropdown(props: DropdownProps) {
             <div
               ref={panelRef}
               role="listbox"
-              style={{ ...panelStyle, minWidth: triggerWidth }}
+              style={{
+                ...panelStyle,
+                minWidth: triggerWidth,
+                zIndex: floatingLayerZIndex(),
+              }}
               className={cn(
-                "z-1100 w-max overflow-hidden rounded-[12px] border border-[#E0E0E0] bg-[#FDFDFD] py-1 font-montserrat text-base font-medium leading-normal text-black shadow-[0_0_20px_0_rgba(0,0,0,0.06)]",
+                "w-max overflow-hidden rounded-[12px] border border-[#E0E0E0] bg-[#FDFDFD] py-1 font-montserrat text-base font-medium leading-normal text-black shadow-[0_0_20px_0_rgba(0,0,0,0.06)]",
                 panelClassName,
               )}
             >

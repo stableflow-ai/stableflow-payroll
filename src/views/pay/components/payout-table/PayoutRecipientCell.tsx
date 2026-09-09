@@ -13,11 +13,15 @@ export function PayoutRecipientCell({
   suffix?: number;
 }) {
   const toast = useToast();
+  const trimmed = address.trim();
+  if (!trimmed) {
+    return <span>-</span>;
+  }
 
   return (
     <span className="inline-flex min-w-0 items-center gap-1.5">
-      <Tooltip content={address} triggerClassName="min-w-0">
-        <span className="truncate">{formatAddress(address, prefix, suffix)}</span>
+      <Tooltip content={trimmed} triggerClassName="min-w-0">
+        <span className="truncate">{formatAddress(trimmed, prefix, suffix)}</span>
       </Tooltip>
       <button
         type="button"
@@ -25,7 +29,7 @@ export function PayoutRecipientCell({
         aria-label="Copy address"
         onClick={async () => {
           try {
-            await navigator.clipboard.writeText(address);
+            await navigator.clipboard.writeText(trimmed);
             toast.success({ title: "Copied" });
           } catch {
             toast.fail({ title: "Could not copy" });

@@ -24,6 +24,8 @@ export function mapTeamMember(raw: unknown): TeamMember | null {
     name,
     position: apiText(row.position).trim(),
     email: apiText(row.email).trim(),
+    telegram: apiText(row.telegram_chat_id ?? row.telegramChatId).trim(),
+    slack: apiText(row.slack_user_id ?? row.slackUserId).trim(),
     wallets: {
       evm: apiText(row.evm_address ?? row.evmAddress).trim(),
       solana: apiText(row.solana_address ?? row.solanaAddress).trim(),
@@ -57,6 +59,8 @@ export function teamMemberWriteBody(body: TeamMemberWrite) {
     name: body.name.trim(),
     ...(omitEmpty(body.position) ? { position: body.position.trim() } : {}),
     ...(omitEmpty(body.email) ? { email: body.email.trim() } : {}),
+    ...(omitEmpty(body.telegram) ? { telegram_chat_id: body.telegram.trim() } : {}),
+    ...(omitEmpty(body.slack) ? { slack_user_id: body.slack.trim() } : {}),
     ...(omitEmpty(wallets.evm) ? { evm_address: wallets.evm.trim() } : {}),
     ...(omitEmpty(wallets.solana) ? { solana_address: wallets.solana.trim() } : {}),
     ...(omitEmpty(wallets.near) ? { near_address: wallets.near.trim() } : {}),

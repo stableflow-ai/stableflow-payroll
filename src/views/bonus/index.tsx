@@ -13,7 +13,7 @@ import useToast from "@/hooks/use-toast";
 import type { PayLayoutOutletContext } from "@/layouts/PayLayout";
 import { useAuthStore } from "@/stores/auth";
 import type { BonusImportItem, BonusPendingRow } from "@/types/bonus";
-import type { PayableKey } from "@/types/payable";
+import type { Payable } from "@/types/payable";
 import { PaymentByFormDialog } from "@/views/pay/components/payment-form/PaymentByFormDialog";
 import { BonusFormDrawer } from "./components/bonus-form-drawer";
 import { BonusRunsCard } from "./components/bonus-runs";
@@ -58,7 +58,7 @@ export function BonusView() {
   const [drawerMode, setDrawerMode] = useState<BonusDrawerMode | null>(null);
   const [drawerSeed, setDrawerSeed] = useState(0);
   const [importRows, setImportRows] = useState<BonusPendingRow[] | null>(null);
-  const [payingPayable, setPayingPayable] = useState<PayableKey | null>(null);
+  const [payingForm, setPayingForm] = useState<Payable | null>(null);
 
   useEffect(() => {
     setHeaderExtra(null);
@@ -201,14 +201,14 @@ export function BonusView() {
         onAddBonus={() => openAddDrawer()}
         onImported={openAddDrawer}
         importBusy={drawerSaving}
-        onPayNow={(payable) => setPayingPayable(payable)}
+        onPayNow={(form) => setPayingForm(form)}
         onExport={handleExport}
         exporting={historyExportMutation.isPending}
       />
       <PaymentByFormDialog
-        open={Boolean(payingPayable)}
-        payable={payingPayable}
-        onClose={() => setPayingPayable(null)}
+        open={Boolean(payingForm)}
+        form={payingForm}
+        onClose={() => setPayingForm(null)}
       />
       <BonusFormDrawer
         key={`${drawerMode ?? "closed"}-${drawerSeed}`}

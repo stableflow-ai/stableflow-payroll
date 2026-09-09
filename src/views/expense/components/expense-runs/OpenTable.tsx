@@ -13,13 +13,13 @@ import {
 import { chainDisplayName } from "@/config/chains";
 import { cn } from "@/lib/utils";
 import type { ExpenseOpenBatch } from "@/types/expense";
-import type { PayableKey } from "@/types/payable";
+import type { Payable } from "@/types/payable";
 import { formatAmount } from "@/utils";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";
+import { expenseBatchToPayable } from "@/views/pay/components/payment-form/from-source";
 import {
   EXPENSE_ROW_ACTION,
   OPEN_EXPENSE_TABLE_COLUMNS,
-  expensePayNowPayable,
 } from "../../config";
 
 function payoutPreference(token: string, network: string): string {
@@ -31,10 +31,10 @@ function payoutPreference(token: string, network: string): string {
 
 function RowAction(props: {
   action: ExpenseOpenBatch["action"];
-  batchId: number;
-  onPayNow: (payable: PayableKey) => void;
+  batch: ExpenseOpenBatch;
+  onPayNow: (form: Payable) => void;
 }) {
-  const { action, batchId, onPayNow } = props;
+  const { action, batch, onPayNow } = props;
   if (action === EXPENSE_ROW_ACTION.Paying) {
     return (
       <Button
@@ -46,15 +46,15 @@ function RowAction(props: {
     );
   }
 
-  const payable = batchId > 0 ? expensePayNowPayable(batchId) : null;
+  const form = expenseBatchToPayable(batch);
 
   return (
     <Button
       className="h-9 min-w-[113px] whitespace-nowrap rounded-[10px] px-4 text-sm"
-      disabled={!payable}
+      disabled={!form}
       onClick={() => {
-        if (!payable) return;
-        onPayNow(payable);
+        if (!form) return;
+        onPayNow(form);
       }}
     >
       <IconUp className="size-3.5 shrink-0" />
@@ -65,7 +65,7 @@ function RowAction(props: {
 
 function ExpenseBatchBlock(props: {
   batch: ExpenseOpenBatch;
-  onPayNow: (payable: PayableKey) => void;
+  onPayNow: (form: Payable) => void;
 }) {
   const { batch, onPayNow } = props;
   const isGroup = batch.members.length > 1;
@@ -121,7 +121,7 @@ function ExpenseBatchBlock(props: {
         <TableCell className="justify-end last:pr-4">
           <RowAction
             action={batch.action}
-            batchId={batch.batchId}
+            batch={batch}
             onPayNow={onPayNow}
           />
         </TableCell>
@@ -162,7 +162,7 @@ function ExpenseBatchBlock(props: {
 
 export function OpenTable(props: {
   batches: ExpenseOpenBatch[];
-  onPayNow: (payable: PayableKey) => void;
+  onPayNow: (form: Payable) => void;
 }) {
   const { batches, onPayNow } = props;
   return (

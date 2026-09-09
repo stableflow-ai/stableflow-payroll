@@ -1,6 +1,7 @@
 import { IconLoading } from "@/components/icons/loading";
 import { useExpenseOpenRequestsQuery } from "@/hooks/use-expense-api";
-import type { PayableKey } from "@/types/payable";
+import type { Payable } from "@/types/payable";
+import { expenseBatchToPayable, findExpenseOpenBatch } from "@/views/pay/components/payment-form/from-source";
 import { formatAmount } from "@/utils";
 import { RequestsTable } from "./RequestsTable";
 
@@ -18,7 +19,7 @@ function queryErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
 }
 
-export function RequestsPanel(props: { onPayNow: (payable: PayableKey) => void }) {
+export function RequestsPanel(props: { onPayNow: (form: Payable) => void }) {
   const { onPayNow } = props;
   const requestsQuery = useExpenseOpenRequestsQuery();
   const list = requestsQuery.data ?? { total: "0", count: 0, batches: [] };
@@ -74,7 +75,13 @@ export function RequestsPanel(props: { onPayNow: (payable: PayableKey) => void }
       <div className="mt-5 border-t border-black/10 pt-5">
         <RequestsTable
           rows={list.batches.flatMap((batch) => batch.members)}
-          onPayNow={onPayNow}
+          onPayNow={(batchId) => {
+            const batch = findExpenseOpenBatch(list.batches, batchId);
+            if (!batch) return;
+            const form = expenseBatchToPayable(batch);
+            if (!form) return;
+            onPayNow(form);
+          }}
         />
       </div>
     </div>

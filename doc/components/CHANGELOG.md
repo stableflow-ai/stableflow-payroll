@@ -4,6 +4,12 @@ Newest first. Add an entry whenever you add or change a component under `src/com
 
 Format: one `## YYYY-MM-DD` heading per day, one `- **ComponentName:** what changed` bullet per component.
 
+## 2026-09-09
+
+- **Dropdown:** Capture-phase `scroll` no longer closes the panel when the scroll target is inside the list, so a caller can set `panelClassName` with `max-h-* overflow-y-auto`. Portalled list `z-index` uses `floatingLayerZIndex()` so it stays above the current Dialog / Drawer. Overlay `layerSeq` resets when the stack is empty.
+- **Tooltip:** Same overlay-aware `z-index` as Dropdown.
+- **Table:** Restored `overflow-auto` on the scroll container so wide tables can pan horizontally again.
+
 ## 2026-09-08
 
 - **Toast:** Optional `onClose` on `useToast()` params runs when that toast is dismissed (close button, `dismiss()`, or auto-close).

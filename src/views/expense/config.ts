@@ -1,5 +1,4 @@
 import { EXPENSE_IMPORT_LIMITS, EXPENSE_TOTAL_PAYOUT_PERIOD } from "@/types/expense";
-import { PAYABLE_TYPE, type PayableKey } from "@/types/payable";
 
 export const EXPENSE_PATH = "/pay/expense";
 export const EXPENSE_REQUESTS_PATH = "/pay/expense/requests";
@@ -49,10 +48,6 @@ export const EXPENSE_ROW_ACTION = {
 export type ExpenseRowAction =
   (typeof EXPENSE_ROW_ACTION)[keyof typeof EXPENSE_ROW_ACTION];
 
-export function expensePayNowPayable(batchId: number): PayableKey {
-  return { type: PAYABLE_TYPE.Expense, batchId };
-}
-
 export const EXPENSE_CHART_LINE_COLOR = "#6284F5";
 
 export const EXPENSE_CHANGE_UP_CLASS = "text-[#0ED000]";
@@ -73,6 +68,7 @@ export const HISTORY_EXPENSE_TABLE_COLUMNS =
   "minmax(88px,0.7fr) minmax(128px,1fr) minmax(180px,1.6fr) minmax(100px,0.8fr) minmax(120px,1fr) minmax(128px,1.1fr) minmax(72px,0.6fr) minmax(100px,0.85fr)";
 
 export const EXPENSE_DRAWER_TITLE = "Add Expense";
+export const EXPENSE_FORM_DESKTOP_QUERY = "(min-width: 768px)";
 export const EXPENSE_FORM_MAX_ROWS = 50;
 export const EXPENSE_FORM_AMOUNT_MAX_DECIMALS = 6;
 export const EXPENSE_FORM_TITLE_MAX = EXPENSE_IMPORT_LIMITS.title;

@@ -7,6 +7,7 @@ export const PAYOUT_ROW_STATUS = {
   Pending: "pending",
   Complete: "complete",
   Failed: "failed",
+  Expired: "expired",
 } as const;
 
 export type PayoutRowStatus = (typeof PAYOUT_ROW_STATUS)[keyof typeof PAYOUT_ROW_STATUS];
@@ -15,6 +16,7 @@ export function paymentRowStatus(status: string): PayoutRowStatus {
   const key = status.toLowerCase();
   if (key === "completed" || key === "complete") return PAYOUT_ROW_STATUS.Complete;
   if (key === "failed") return PAYOUT_ROW_STATUS.Failed;
+  if (key === "expired") return PAYOUT_ROW_STATUS.Expired;
   return PAYOUT_ROW_STATUS.Pending;
 }
 
@@ -55,6 +57,17 @@ export function PayoutStatusCell(props: {
     return (
       <span className="inline-flex w-full items-center gap-1.5">
         <span className="text-danger">Failed</span>
+        <span className="ml-auto">
+          <ExplorerLink href={explorerUrl} />
+        </span>
+      </span>
+    );
+  }
+
+  if (status === PAYOUT_ROW_STATUS.Expired) {
+    return (
+      <span className="inline-flex w-full items-center gap-1.5">
+        <span className="text-danger">Expired</span>
         <span className="ml-auto">
           <ExplorerLink href={explorerUrl} />
         </span>

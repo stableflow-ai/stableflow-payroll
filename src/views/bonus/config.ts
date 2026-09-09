@@ -1,5 +1,4 @@
 import { BONUS_IMPORT_LIMITS, BONUS_TOTAL_PAYOUT_PERIOD } from "@/types/bonus";
-import { PAYABLE_TYPE, type PayableKey } from "@/types/payable";
 
 export const BONUS_PATH = "/pay/bonus";
 export const BONUS_HISTORY_PATH = "/pay/bonus/history";
@@ -22,6 +21,7 @@ export const BONUS_FORM_AMOUNT_MAX_DECIMALS = 6;
 export const BONUS_FORM_TITLE_MAX = BONUS_IMPORT_LIMITS.title;
 export const BONUS_FORM_COLUMNS =
   "minmax(110px,126px) minmax(0,1fr) minmax(140px,180px) 184px 99px 38px";
+export const BONUS_FORM_DESKTOP_QUERY = "(min-width: 768px)";
 
 export const BONUS_TAB = {
   ToBePaid: "to_be_paid",
@@ -62,10 +62,6 @@ export const BONUS_ROW_ACTION = {
 
 export type BonusRowAction =
   (typeof BONUS_ROW_ACTION)[keyof typeof BONUS_ROW_ACTION];
-
-export function bonusPayNowPayable(batchId: number): PayableKey {
-  return { type: PAYABLE_TYPE.Bonus, batchId };
-}
 
 export const BONUS_CHART_LINE_COLOR = "#6284F5";
 export const BONUS_CHART_HIGHLIGHT_COLOR = "#3F8AFB";

@@ -4,8 +4,10 @@ import {
   parsePayrollImportRows,
   payDayFromPaymentDate,
   payrollExecutionItemId,
+  payrollHistoryDetailToCsv,
   payrollHistoryRunStub,
   payrollNetPayToPayableOverrides,
+  payrollNextRowsToCsv,
   payrollNextRunToPayDay,
   payrollPayDayToParam,
   payrollPayDayToType,
@@ -13,6 +15,7 @@ import {
   payrollUpdateDeleteIds,
   recipientRowsToImportItems,
   recipientRowsToUpdateItems,
+  sanitizeDownloadBasename,
 } from "./utils";
 
 describe("parsePayrollImportRows", () => {
@@ -295,5 +298,58 @@ describe("payrollExecutionItemId", () => {
     expect(payrollExecutionItemId("7")).toBe(7);
     expect(payrollExecutionItemId("0")).toBeNull();
     expect(payrollExecutionItemId("abc")).toBeNull();
+  });
+});
+
+describe("sanitizeDownloadBasename", () => {
+  it("strips reserved filename characters and falls back", () => {
+    expect(sanitizeDownloadBasename("August Payroll", "payroll-history")).toBe(
+      "August Payroll",
+    );
+    expect(sanitizeDownloadBasename("Aug/Payroll:1", "payroll-history")).toBe(
+      "Aug Payroll 1",
+    );
+    expect(sanitizeDownloadBasename("   ", "payroll-history")).toBe("payroll-history");
+  });
+});
+
+describe("payrollNextRowsToCsv", () => {
+  it("writes the next-payroll export columns", () => {
+    const csv = payrollNextRowsToCsv([
+      {
+        id: "1",
+        name: "Alice",
+        address: "0xabc",
+        email: "alice@example.com",
+        token: "USDC",
+        network: "eth",
+        amount: "100",
+        netPay: "100",
+        memo: "payroll",
+      },
+    ]);
+    expect(csv).toContain("name,address,email,amount,token,network,memo");
+    expect(csv).toContain("Alice,0xabc,alice@example.com,100,USDC,eth,payroll");
+  });
+});
+
+describe("payrollHistoryDetailToCsv", () => {
+  it("writes the monthly history export columns", () => {
+    const csv = payrollHistoryDetailToCsv([
+      {
+        id: "1",
+        name: "Alice",
+        email: "alice@example.com",
+        address: "0xabc",
+        token: "USDC",
+        network: "eth",
+        amount: "100",
+        netPay: "100",
+        status: "paid",
+        txHash: "0x1",
+      },
+    ]);
+    expect(csv).toContain("name,email,address,token,network,amount,net_pay,status");
+    expect(csv).toContain("Alice,alice@example.com,0xabc,USDC,eth,100,100,paid");
   });
 });

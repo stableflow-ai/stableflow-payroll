@@ -1,5 +1,5 @@
 import type { ExpenseDraftRow, ExpenseOpenList } from "@/types/expense";
-import type { PayableKey } from "@/types/payable";
+import type { Payable } from "@/types/payable";
 import { formatAmount } from "@/utils";
 import { CreateExpenseEmpty } from "./CreateExpenseEmpty";
 import { OpenTable } from "./OpenTable";
@@ -16,7 +16,7 @@ function formatSplitUsd(value: string) {
 
 export function OpenPanel(props: {
   list: ExpenseOpenList;
-  onPayNow: (payable: PayableKey) => void;
+  onPayNow: (form: Payable) => void;
   onAddExpense: () => void;
   onImported: (rows: ExpenseDraftRow[]) => void;
   busy?: boolean;

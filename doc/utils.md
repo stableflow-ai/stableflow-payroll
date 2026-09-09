@@ -75,6 +75,15 @@ Wrappers over `date-fns` that return `""` for an invalid input instead of throwi
 
 `browserTimeZone()` returns `Intl.DateTimeFormat().resolvedOptions().timeZone`, or `"UTC"` when that value is missing.
 
+## URL — `src/utils/url.ts`
+
+Split `http://` / `https://` URLs out of free text for linkified copy. `javascript:` and `data:` are ignored.
+
+| Function | Notes |
+| --- | --- |
+| `isHttpUrl(value)` | `true` only when `URL` parses and the protocol is `http:` or `https:`. |
+| `splitHttpUrls(text)` | Returns `{ type: "text" \| "url"; value: string }[]`. Trailing `),.;!?` after a URL is left as text. |
+
 ## Related helpers outside `@/utils`
 
 These are shared but live elsewhere on purpose. Update this list when that changes.
@@ -86,5 +95,6 @@ These are shared but live elsewhere on purpose. Update this list when that chang
 | Chain / token / route logos | `src/lib/logo.ts` | Remote URLs on `assets.dapdap.net` |
 | Envelope field readers | `src/api/map.ts` | `asRecord`, `apiText`, `apiNumber` |
 | Date-range maths | `src/components/date-range-picker/utils.ts` | See [components/date-range-picker.md](components/date-range-picker.md) |
+| CSV parse / unparse | `src/lib/import/csv.ts` | `parseCsvFile`, `parseCsvString`, `unparseCsv` (Papa) |
 | Download filename stamping | `src/views/pay/utils.ts` | `stampDownloadFilename` — Pay-specific for now |
 | Intents account ids | `src/lib/confidential/to-intents-account-id.ts` | Throws for Zcash (`zec`); native ZEC is not a Near Intents account |

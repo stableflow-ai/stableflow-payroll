@@ -7,7 +7,7 @@ import { BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
 import type { BonusHistoryItem, BonusPendingList, BonusPendingRow } from "@/types/bonus";
-import type { PayableKey } from "@/types/payable";
+import type { Payable } from "@/types/payable";
 import {
   BONUS_HISTORY_PATH,
   BONUS_PATH,
@@ -61,7 +61,7 @@ export function BonusRunsCard(props: {
   onAddBonus: () => void;
   onImported: (rows: BonusPendingRow[]) => void;
   importBusy?: boolean;
-  onPayNow: (payable: PayableKey) => void;
+  onPayNow: (form: Payable) => void;
   onExport?: () => void;
   exporting?: boolean;
 }) {

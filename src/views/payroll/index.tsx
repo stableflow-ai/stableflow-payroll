@@ -13,8 +13,9 @@ import {
 import useToast from "@/hooks/use-toast";
 import type { PayLayoutOutletContext } from "@/layouts/PayLayout";
 import { useAuthStore } from "@/stores/auth";
-import { PAYABLE_TYPE, type PayableKey } from "@/types/payable";
+import type { Payable } from "@/types/payable";
 import { PaymentByFormDialog } from "@/views/pay/components/payment-form/PaymentByFormDialog";
+import { payrollNextToPayable } from "@/views/pay/components/payment-form/from-source";
 import {
   PAYROLL_CHART_RANGE,
   PAYROLL_DRAWER_MODE,
@@ -73,7 +74,7 @@ export function PayrollView() {
   const [importRows, setImportRows] = useState<PayrollRecipientRow[] | null>(null);
   const [editOriginalRows, setEditOriginalRows] = useState<PayrollRecipientRow[] | null>(null);
   const [nextPayrollOverride, setNextPayrollOverride] = useState<PayrollNextRun | null>(null);
-  const [payingPayable, setPayingPayable] = useState<PayableKey | null>(null);
+  const [payingForm, setPayingForm] = useState<Payable | null>(null);
   const [payingNetPayById, setPayingNetPayById] = useState<Record<number, string>>(
     {},
   );
@@ -265,21 +266,21 @@ export function PayrollView() {
             toast.fail({ title: "Not payday yet" });
             return;
           }
-          const payDate = nextPayroll.payDate.trim();
-          if (!payDate) {
+          const form = payrollNextToPayable(nextPayroll);
+          if (!form) {
             toast.fail({ title: "Next pay date is missing" });
             return;
           }
           setPayingNetPayById(payrollNetPayToPayableOverrides(resolvedNetPay));
-          setPayingPayable({ type: PAYABLE_TYPE.Payroll, periodMonth: payDate });
+          setPayingForm(form);
         }}
       />
       <PaymentByFormDialog
-        open={Boolean(payingPayable)}
-        payable={payingPayable}
+        open={Boolean(payingForm)}
+        form={payingForm}
         initialNetPayById={payingNetPayById}
         onClose={() => {
-          setPayingPayable(null);
+          setPayingForm(null);
           setPayingNetPayById({});
         }}
       />

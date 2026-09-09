@@ -127,13 +127,11 @@ const PENDING_STATUSES = new Set<string>([
   PAY_REQUEST_STATUS.Submitted,
 ]);
 
-const FAILED_STATUSES = new Set<string>([
-  PAY_REQUEST_STATUS.Failed,
-  PAY_REQUEST_STATUS.Expired,
-]);
+const FAILED_STATUSES = new Set<string>([PAY_REQUEST_STATUS.Failed]);
 
 export function receivedPaymentStatusLabel(row: ReceivedPaymentView): string {
   if (row.status === PAY_REQUEST_STATUS.Completed) return "Complete";
+  if (row.status === PAY_REQUEST_STATUS.Expired) return "Expired";
   if (PENDING_STATUSES.has(row.status)) return "Pending";
   if (FAILED_STATUSES.has(row.status)) return "Failed";
   return row.status;
@@ -142,6 +140,9 @@ export function receivedPaymentStatusLabel(row: ReceivedPaymentView): string {
 export function receivedPaymentStatusClass(status: string): string {
   if (status === PAY_REQUEST_STATUS.Completed) {
     return PAY_REQUEST_STATUS_CLASS[PAY_REQUEST_STATUS.Completed];
+  }
+  if (status === PAY_REQUEST_STATUS.Expired) {
+    return PAY_REQUEST_STATUS_CLASS[PAY_REQUEST_STATUS.Expired];
   }
   if (FAILED_STATUSES.has(status)) return PAY_REQUEST_STATUS_CLASS[PAY_REQUEST_STATUS.Failed];
   if (PENDING_STATUSES.has(status)) return PAY_REQUEST_STATUS_CLASS[PAY_REQUEST_STATUS.Pending];

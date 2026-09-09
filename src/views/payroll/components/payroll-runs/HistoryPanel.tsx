@@ -1,5 +1,6 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { IconAlertCircle } from "@/components/icons/alert";
+import { IconExportLink } from "@/components/icons/link";
 import { IconLoading } from "@/components/icons/loading";
 import {
   IconPayoutPaid,
@@ -7,10 +8,15 @@ import {
 } from "@/components/icons/payout-status";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_VARIANT } from "@/components/ui/button/config";
+import { getPayrollHistoryDetail } from "@/api/payroll";
+import useToast from "@/hooks/use-toast";
+import { organizationId } from "@/lib/auth-role";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth";
 import type { PayrollHistoryRun } from "@/types/payroll";
-import { DATE_FORMAT, formatAmount, formatDate } from "@/utils";
+import { DATE_FORMAT, browserTimeZone, formatAmount, formatDate } from "@/utils";
 import { PAYROLL_RUN_STATUS, type PayrollRunStatus } from "../../config";
+import { exportPayrollHistoryMonthCsv } from "../../utils";
 
 function statusTone(status: PayrollRunStatus) {
   if (status === PAYROLL_RUN_STATUS.Failed) {
@@ -36,9 +42,11 @@ function statusTone(status: PayrollRunStatus) {
 
 function HistoryCard(props: {
   run: PayrollHistoryRun;
+  exporting?: boolean;
   onViewDetails: (run: PayrollHistoryRun) => void;
+  onExport: (run: PayrollHistoryRun) => void;
 }) {
-  const { run, onViewDetails } = props;
+  const { run, exporting = false, onViewDetails, onExport } = props;
   const tone = statusTone(run.status);
 
   return (
@@ -116,13 +124,15 @@ function HistoryCard(props: {
           >
             View Details
           </Button>
-          {/* <Button
+          <Button
             variant={BUTTON_VARIANT.Normal}
-            aria-label="Open details"
+            aria-label="Export CSV"
+            loading={exporting}
             className="h-9 w-[39px] rounded-[10px] border-black/10 p-0 text-black"
+            onClick={() => onExport(run)}
           >
-            <IconOutLink className="size-2.5" />
-          </Button> */}
+            {exporting ? null : <IconExportLink className="size-3.5 shrink-0" />}
+          </Button>
         </div>
       </div>
     </article>
@@ -143,6 +153,10 @@ export function HistoryPanel(props: {
     onLoadMore,
     onViewDetails,
   } = props;
+  const toast = useToast();
+  const user = useAuthStore((state) => state.user);
+  const orgId = organizationId(user);
+  const [exportingId, setExportingId] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -159,6 +173,30 @@ export function HistoryPanel(props: {
     return () => observer.disconnect();
   }, [hasMore, loadingMore, onLoadMore, items.length]);
 
+  async function handleExport(run: PayrollHistoryRun) {
+    if (!orgId) {
+      toast.fail({ title: "Organization is missing" });
+      return;
+    }
+    if (exportingId) return;
+    setExportingId(run.id);
+    try {
+      const detail = await getPayrollHistoryDetail({
+        organizationId: orgId,
+        timezone: browserTimeZone(),
+        executionId: run.id,
+      });
+      exportPayrollHistoryMonthCsv(detail.title || run.title, detail.rows);
+    } catch (error) {
+      toast.fail({
+        title:
+          error instanceof Error ? error.message : "Could not export payroll history",
+      });
+    } finally {
+      setExportingId(null);
+    }
+  }
+
   if (items.length === 0) {
     return (
       <div className="flex min-h-[280px] items-center justify-center">
@@ -172,7 +210,15 @@ export function HistoryPanel(props: {
   return (
     <div className="flex flex-col gap-5">
       {items.map((run) => (
-        <HistoryCard key={run.id} run={run} onViewDetails={onViewDetails} />
+        <HistoryCard
+          key={run.id}
+          run={run}
+          exporting={exportingId === run.id}
+          onViewDetails={onViewDetails}
+          onExport={() => {
+            void handleExport(run);
+          }}
+        />
       ))}
       {hasMore ? <div ref={sentinelRef} className="h-4 shrink-0" aria-hidden /> : null}
       {loadingMore ? (

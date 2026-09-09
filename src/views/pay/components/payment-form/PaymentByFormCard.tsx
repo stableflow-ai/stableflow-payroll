@@ -27,6 +27,7 @@ import {
   findPayable,
   parsePayableKey,
   payableKeyId,
+  type Payable,
   type PayableKey,
 } from "@/types/payable";
 import {
@@ -44,7 +45,7 @@ import { NotifyRecipientBar } from "../NotifyRecipientBar";
 import { NotifyRecipientsDrawer } from "./NotifyRecipientsDrawer";
 import { PaymentFormDetailsDrawer } from "./PaymentFormDetailsDrawer";
 import { PaymentFormSelect } from "./PaymentFormSelect";
-import { buildPayablePayRequest, payableItemIds, sumPayableNetPay } from "./utils";
+import { buildPayablePayRequest, payableItemIds, sumPayableVolume } from "./utils";
 
 class BalanceGateError extends Error {
   constructor(message: string) {
@@ -55,12 +56,14 @@ class BalanceGateError extends Error {
 
 export function PaymentByFormCard(props: {
   payable?: PayableKey;
+  form?: Payable;
   formLocked?: boolean;
   onSettled?: () => void;
   initialNetPayById?: Record<number, string>;
 }) {
   const {
     payable: payableProp,
+    form: formProp,
     formLocked = false,
     onSettled,
     initialNetPayById,
@@ -73,7 +76,14 @@ export function PaymentByFormCard(props: {
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const fetchOneBalance = useTokenBalancesStore((s) => s.fetchOne);
 
-  const [pickedId, setPickedId] = useState(payableProp ? payableKeyId(payableProp) : "");
+  const lockedForm = formLocked && formProp ? formProp : null;
+  const [pickedId, setPickedId] = useState(
+    lockedForm
+      ? payableKeyId(lockedForm.key)
+      : payableProp
+        ? payableKeyId(payableProp)
+        : "",
+  );
   const [phase, setPhase] = useState<"idle" | "sending" | "done">("idle");
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [notifyEnabled, setNotifyEnabled] = useState(false);
@@ -91,17 +101,27 @@ export function PaymentByFormCard(props: {
   }, [ensureFresh]);
 
   useEffect(() => {
+    if (lockedForm) {
+      setPickedId(payableKeyId(lockedForm.key));
+      return;
+    }
     if (payableProp) setPickedId(payableKeyId(payableProp));
-  }, [payableProp]);
+  }, [lockedForm, payableProp]);
 
   const selectedId = formLocked
-    ? (payableProp ? payableKeyId(payableProp) : "")
+    ? (lockedForm
+        ? payableKeyId(lockedForm.key)
+        : payableProp
+          ? payableKeyId(payableProp)
+          : "")
     : pickedId;
   const selectedKey = parsePayableKey(selectedId);
-  const formsQuery = usePayablesQuery();
+  const formsQuery = usePayablesQuery({ enabled: !lockedForm });
   const forms = formsQuery.data ?? [];
-  const formsLoading = formsQuery.isPending;
-  const detail = selectedKey ? findPayable(forms, selectedKey) : null;
+  const formsLoading = lockedForm ? false : formsQuery.isPending;
+  const formsFetching = lockedForm ? false : formsQuery.isFetching;
+  const detail = lockedForm
+    ?? (selectedKey ? findPayable(forms, selectedKey) : null);
   const lockedForms = formLocked ? (detail ? [detail] : []) : forms;
   const zcashBatchDisabled = (detail?.items.length ?? 0) > 1;
   const { originToken, setOriginToken } = usePayOriginToken(BATCH_BLOCKCHAINS, {
@@ -182,7 +202,7 @@ export function PaymentByFormCard(props: {
     ? `${formatAmount(batch!.totalSourceAmount, { prefix: "", maxDecimals: 6 })} ${originToken.symbol}`
     : "-";
   const totalValuedLabel = detail
-    ? formatAmount(sumPayableNetPay(detail, netPayById), { maxDecimals: AMOUNT_MAX_DECIMALS })
+    ? formatAmount(sumPayableVolume(detail), { maxDecimals: AMOUNT_MAX_DECIMALS })
     : "$0";
   const emailCount = detail?.items.length ?? 0;
 
@@ -396,17 +416,16 @@ export function PaymentByFormCard(props: {
       <NotifyRecipientBar
         className="mt-6"
         enabled={notifyEnabled}
-        disabled={!formSelected || (formPicked && (formsQuery.isFetching || quoting || sending))}
+        disabled={!formSelected || (formPicked && (formsFetching || quoting || sending))}
         onEnabledChange={handleNotifyEnabled}
       >
         <button
           type="button"
           className="inline-flex items-center gap-[7px] text-[#06F]"
           onClick={() => {
-            if ((formPicked && (formsQuery.isFetching || quoting || sending))) {
+            if ((formPicked && (formsFetching || quoting || sending))) {
               return;
             }
-            console.log(detail)
             if (detail && selectedItemIds.size === 0) {
               setSelectedItemIds(new Set(payableItemIds(detail)));
             }
@@ -427,7 +446,7 @@ export function PaymentByFormCard(props: {
       <Button
         size="xl"
         className="mt-8 w-full"
-        loading={formPicked && (formsQuery.isFetching || quoting || sending)}
+        loading={formPicked && (formsFetching || quoting || sending)}
         disabled={!canSend}
         onClick={handleSend}
       >

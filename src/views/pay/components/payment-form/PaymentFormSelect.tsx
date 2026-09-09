@@ -43,7 +43,7 @@ export function PaymentFormSelect(props: {
       empty="No forms"
       className="w-full"
       triggerClassName="h-10 rounded-[8px] border-[#ebebeb]"
-      panelClassName="py-1.5"
+      panelClassName="max-h-60 overflow-y-auto py-1.5"
       options={forms.map((form) => ({
         value: payableKeyId(form.key),
         label: form.title,

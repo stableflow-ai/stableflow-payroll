@@ -1,4 +1,8 @@
-import { OVERLAY_BASE_Z_INDEX, OVERLAY_Z_INDEX_STEP } from "./config";
+import {
+  FLOATING_LAYER_Z_INDEX,
+  OVERLAY_BASE_Z_INDEX,
+  OVERLAY_Z_INDEX_STEP,
+} from "./config";
 
 let layerSeq = 0;
 const openLayers: number[] = [];
@@ -32,10 +36,17 @@ export function releaseOverlayLayer(zIndex: number) {
     openLayers.splice(index, 1);
   }
   if (openLayers.length === 0) {
+    layerSeq = 0;
     unlockBodyScroll();
   }
 }
 
 export function isTopOverlay(zIndex: number) {
   return openLayers[openLayers.length - 1] === zIndex;
+}
+
+export function floatingLayerZIndex(): number {
+  const top = openLayers[openLayers.length - 1];
+  if (top == null) return FLOATING_LAYER_Z_INDEX;
+  return top + OVERLAY_Z_INDEX_STEP;
 }

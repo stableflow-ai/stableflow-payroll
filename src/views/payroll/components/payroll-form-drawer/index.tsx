@@ -1,15 +1,17 @@
 import { useEffect, useState } from "react";
 import { IconAlertCircle } from "@/components/icons/alert";
 import { IconDelete } from "@/components/icons/delete";
+import { IconExportLink } from "@/components/icons/link";
 import { IconPlus } from "@/components/icons/plus";
 import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
 import { Button } from "@/components/ui/button/Button";
-import { BUTTON_VARIANT } from "@/components/ui/button/config";
+import { BUTTON_SIZE, BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Dialog } from "@/components/ui/dialog/Dialog";
 import { Drawer } from "@/components/ui/drawer/Drawer";
 import { DRAWER_SIDE } from "@/components/ui/drawer/config";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { InputNumber } from "@/components/ui/input-number/InputNumber";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import {
   PAYROLL_IMPORT_DAY_TYPE,
@@ -20,10 +22,12 @@ import { amountError } from "@/views/pay/batch-utils";
 import { BatchTokenTrigger } from "@/views/pay/components/batch/BatchTokenTrigger";
 import type { PayrollNextRun, PayrollRecipientRow } from "@/mocks/payroll";
 import {
+  PAYROLL_DRAWER_MODE,
   PAYROLL_DRAWER_TITLE,
   PAYROLL_FORM_AMOUNT_MAX_DECIMALS,
   PAYROLL_FORM_COLUMNS,
   PAYROLL_FORM_MAX_ROWS,
+  PAYROLL_HISTORY_DETAIL_DESKTOP_QUERY,
   PAYROLL_PAY_DATE_TYPE_OPTIONS,
   PAYROLL_PAY_DAY_NUMBERS,
   type PayrollDrawerMode
@@ -31,6 +35,7 @@ import {
 import {
   createEmptyPayrollFormRow,
   defaultPayrollPayDay,
+  exportPayrollNextCsv,
   formRowFromRecipient,
   formRowsToNextRun,
   isPayrollFormValid,
@@ -113,6 +118,10 @@ export function PayrollFormDrawer(props: {
 
   const destRow = rows.find((row) => row.id === destRowId) ?? null;
   const canSave = isPayrollFormValid(rows);
+  const isDesktop = useMediaQuery(PAYROLL_HISTORY_DETAIL_DESKTOP_QUERY);
+  const savedRows = initialRows ?? [];
+  const canExport =
+    mode === PAYROLL_DRAWER_MODE.Edit && savedRows.length > 0;
 
   function handlePayDateTypeChange(value: string) {
     if (
@@ -152,13 +161,33 @@ export function PayrollFormDrawer(props: {
     <Drawer
       open={open}
       onClose={onClose}
-      side={DRAWER_SIDE.Right}
+      side={isDesktop ? DRAWER_SIDE.Right : DRAWER_SIDE.Bottom}
       title={PAYROLL_DRAWER_TITLE[mode]}
-      panelClassName="w-[min(100%,1080px)]"
-      cardClassName="h-full rounded-r-none p-6 sm:px-8 sm:pt-8 sm:pb-0"
+      titleClassName="min-w-0 flex-1"
+      headerAction={
+        canExport ? (
+          <Button
+            variant={BUTTON_VARIANT.Normal}
+            size={BUTTON_SIZE.Sm}
+            className="h-8 rounded-[10px] border-black/10 bg-white px-3 text-xs capitalize text-black"
+            onClick={() => {
+              exportPayrollNextCsv(savedRows);
+            }}
+          >
+            <IconExportLink className="size-3.5 shrink-0" />
+            Export CSV
+          </Button>
+        ) : null
+      }
+      panelClassName={isDesktop ? "w-[min(100%,1080px)]" : undefined}
+      cardClassName={cn(
+        "p-6 sm:px-8 sm:pt-8 sm:pb-0",
+        isDesktop ? "h-full rounded-r-none" : "w-full max-h-[90vh] rounded-b-none",
+      )}
     >
-      <div className="flex min-h-full flex-col">
-        <div className="min-w-[900px] flex-1 overflow-x-auto pb-6">
+      <div className="flex min-h-0 flex-col">
+        <div className="min-w-0 w-full flex-1 overflow-x-auto pb-6">
+          <div className="min-w-[900px]">
           <div
             className="grid items-center gap-2.5"
             style={{ gridTemplateColumns: PAYROLL_FORM_COLUMNS }}
@@ -225,6 +254,7 @@ export function PayrollFormDrawer(props: {
               <IconPlus className="size-3 shrink-0" />
               Add one
             </button>
+          </div>
           </div>
         </div>
 

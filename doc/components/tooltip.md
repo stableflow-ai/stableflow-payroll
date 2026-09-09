@@ -6,7 +6,7 @@ Hover tooltip. Wraps its children in an `inline-flex` span and portals the panel
 
 ## Panel defaults
 
-`z-index: 1100`, radius 12px, border `#E0E0E0`, background `#FDFDFD`, padding `10px 15px`, shadow `0 0 20px 0 rgba(0,0,0,0.06)`, Montserrat Regular 14px, black. Offset from the trigger is 8px and the panel is centre-aligned on its side.
+`z-index` is `floatingLayerZIndex()` (1100 with no overlay open; otherwise the current top overlay plus 10), radius 12px, border `#E0E0E0`, background `#FDFDFD`, padding `10px 15px`, shadow `0 0 20px 0 rgba(0,0,0,0.06)`, Montserrat Regular 14px, black. Offset from the trigger is 8px and the panel is centre-aligned on its side.
 
 It closes on mouse leave and on any scroll in the capture phase. Nothing renders when `content` is empty.
 

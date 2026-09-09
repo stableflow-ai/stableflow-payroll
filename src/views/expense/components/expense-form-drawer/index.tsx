@@ -8,6 +8,7 @@ import { BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Drawer } from "@/components/ui/drawer/Drawer";
 import { DRAWER_SIDE } from "@/components/ui/drawer/config";
 import { InputNumber } from "@/components/ui/input-number/InputNumber";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import { useIntentsTokensStore } from "@/stores/intents-tokens";
 import { EXPENSE_IMPORT_LIMITS, type ExpenseDraftRow, type ExpenseImportItem } from "@/types/expense";
@@ -17,6 +18,7 @@ import {
   EXPENSE_DRAWER_TITLE,
   EXPENSE_FORM_AMOUNT_MAX_DECIMALS,
   EXPENSE_FORM_COLUMNS,
+  EXPENSE_FORM_DESKTOP_QUERY,
   EXPENSE_FORM_MAX_ROWS,
   EXPENSE_FORM_TITLE_MAX,
 } from "../../config";
@@ -67,6 +69,7 @@ export function ExpenseFormDrawer(props: {
 
   const destRow = rows.find((row) => row.id === destRowId) ?? null;
   const rowsValid = isExpenseFormValid(rows);
+  const isDesktop = useMediaQuery(EXPENSE_FORM_DESKTOP_QUERY);
 
   function patchRow(rowId: string, patch: Parameters<typeof patchExpenseFormRow>[1]) {
     setRows((current) =>
@@ -80,13 +83,17 @@ export function ExpenseFormDrawer(props: {
     <Drawer
       open={open}
       onClose={onClose}
-      side={DRAWER_SIDE.Right}
+      side={isDesktop ? DRAWER_SIDE.Right : DRAWER_SIDE.Bottom}
       title={EXPENSE_DRAWER_TITLE}
-      panelClassName="w-[min(100%,1200px)]"
-      cardClassName="h-full rounded-r-none p-6 sm:px-8 sm:pt-8 sm:pb-0"
+      panelClassName={isDesktop ? "w-[min(100%,1200px)]" : undefined}
+      cardClassName={cn(
+        "p-6 sm:px-8 sm:pt-8 sm:pb-0",
+        isDesktop ? "h-full rounded-r-none" : "w-full max-h-[90vh] rounded-b-none",
+      )}
     >
-      <div className="flex min-h-full flex-col">
-        <div className="min-w-[980px] flex-1 overflow-x-auto pb-6">
+      <div className="flex min-h-0 flex-col">
+        <div className="min-w-0 w-full flex-1 overflow-x-auto pb-6">
+          <div className="min-w-[980px]">
           <div
             className="grid items-center gap-2.5"
             style={{ gridTemplateColumns: EXPENSE_FORM_COLUMNS }}
@@ -154,6 +161,7 @@ export function ExpenseFormDrawer(props: {
               <IconPlus className="size-3 shrink-0" />
               Add one
             </button>
+          </div>
           </div>
         </div>
 

@@ -29,6 +29,23 @@ export function sumPayableNetPay(
     .toFixed();
 }
 
+export function sumPayableVolume(payable: Payable): string {
+  const volumes = payable.items.map((item) => item.volume.trim());
+  if (volumes.every((value) => !value)) {
+    return payable.totalPayout.trim() || "0";
+  }
+  return volumes
+    .reduce((sum, value) => {
+      if (!value) return sum;
+      try {
+        return sum.plus(value);
+      } catch {
+        return sum;
+      }
+    }, new Big(0))
+    .toFixed();
+}
+
 export function buildPayablePayRequest(input: {
   payable: Payable | null;
   originToken: IntentsToken | null;

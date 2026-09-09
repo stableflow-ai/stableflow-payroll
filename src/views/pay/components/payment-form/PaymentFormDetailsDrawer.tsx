@@ -19,7 +19,7 @@ import { AMOUNT_MAX_DECIMALS } from "../../config";
 import { parsePositiveDecimal } from "../../utils";
 import { PayoutRecipientCell } from "../payout-table/PayoutRecipientCell";
 import { PaymentFormCategoryTag } from "./PaymentFormCategoryTag";
-import { sumPayableNetPay } from "./utils";
+import { sumPayableVolume } from "./utils";
 import {
   PAYMENT_FORM_DETAILS_CATEGORY_MUTED_CLASS,
   PAYMENT_FORM_DETAILS_COLUMNS,
@@ -116,7 +116,10 @@ export function PaymentFormDetailsDrawer(props: {
         ) : null
       }
       panelClassName={isDesktop ? "w-[min(100%,820px)]" : undefined}
-      cardClassName={cn("gap-6 p-10", !isDesktop && "w-full max-h-[90vh] rounded-b-none")}
+      cardClassName={cn(
+        "gap-6 p-6 sm:p-10",
+        !isDesktop && "w-full max-h-[90vh] rounded-b-none",
+      )}
     >
       {detail ? (
         <PaymentFormDetailsBody
@@ -142,8 +145,7 @@ function PaymentFormDetailsBody(props: {
   const recipientCount = String(detail.items.length);
   const isPayroll = detail.type === PAYABLE_TYPE.Payroll;
   const nextPayDate = formatDate(detail.paymentDate, DATE_FORMAT.MonthDayYear) || detail.paymentDate || "-";
-  const totalValued = formatAmount(sumPayableNetPay(detail, netPayById), {
-    prefix: "",
+  const totalValued = formatAmount(sumPayableVolume(detail), {
     maxDecimals: AMOUNT_MAX_DECIMALS,
   });
 
@@ -151,7 +153,7 @@ function PaymentFormDetailsBody(props: {
     <div className="flex h-full min-h-0 flex-col gap-6">
       <div
         className={cn(
-          "grid gap-4 rounded-[12px] border border-white bg-[#fdfdfd] px-8 py-4 shadow-[0_0_20px_0_rgba(0,0,0,0.06)]",
+          "grid gap-4 rounded-[12px] border border-white bg-[#fdfdfd] px-4 py-4 shadow-[0_0_20px_0_rgba(0,0,0,0.06)] sm:px-8",
           isPayroll ? "grid-cols-3" : "grid-cols-2"
         )}
       >
@@ -171,66 +173,68 @@ function PaymentFormDetailsBody(props: {
         ) : null}
       </div>
 
-      <div className="min-h-0 flex-1">
-        <div className={cn(DETAILS_GRID, "px-4 pb-2")}>
-          {PAYMENT_FORM_DETAILS_COLUMNS.map((column) => (
-            <p
-              key={column.key}
-              className="font-montserrat text-sm font-medium text-[#aaa]"
-            >
-              {column.label}
-            </p>
-          ))}
-        </div>
-        <div className="flex flex-col gap-2.5">
-          {detail.items.map((row) => {
-            const netPay = effectiveNetPay(row, netPayById);
-            return (
-              <div
-                key={row.id}
-                className={cn(
-                  DETAILS_GRID,
-                  "h-14 rounded-[12px] bg-[#f6f6f6] px-4"
-                )}
+      <div className="min-h-0 min-w-0 flex-1 overflow-x-auto">
+        <div className="min-w-[700px]">
+          <div className={cn(DETAILS_GRID, "px-4 pb-2")}>
+            {PAYMENT_FORM_DETAILS_COLUMNS.map((column) => (
+              <p
+                key={column.key}
+                className="font-montserrat text-sm font-medium text-[#aaa]"
               >
-                <div className="min-w-0">
+                {column.label}
+              </p>
+            ))}
+          </div>
+          <div className="flex flex-col gap-2.5">
+            {detail.items.map((row) => {
+              const netPay = effectiveNetPay(row, netPayById);
+              return (
+                <div
+                  key={row.id}
+                  className={cn(
+                    DETAILS_GRID,
+                    "h-14 rounded-[12px] bg-[#f6f6f6] px-4"
+                  )}
+                >
+                  <div className="min-w-0">
+                    <p className="truncate font-montserrat text-sm font-medium text-black">
+                      {row.name}
+                    </p>
+                    <p className="truncate font-montserrat text-xs font-medium text-[#aaa]">
+                      {row.email}
+                    </p>
+                  </div>
+                  <div className="min-w-0 font-montserrat text-sm font-medium text-black">
+                    <PayoutRecipientCell address={row.address} />
+                  </div>
                   <p className="truncate font-montserrat text-sm font-medium text-black">
-                    {row.name}
+                    {row.symbol} · {chainDisplayName(row.network)}
                   </p>
-                  <p className="truncate font-montserrat text-xs font-medium text-[#aaa]">
-                    {row.email}
-                  </p>
-                </div>
-                <div className="min-w-0 font-montserrat text-sm font-medium text-black">
-                  <PayoutRecipientCell address={row.address} />
-                </div>
-                <p className="truncate font-montserrat text-sm font-medium text-black">
-                  {row.symbol} · {chainDisplayName(row.network)}
-                </p>
-                <p className="font-montserrat text-sm font-medium text-black">
-                  {formatAmount(row.amount, {
-                    prefix: "",
-                    maxDecimals: AMOUNT_MAX_DECIMALS
-                  })}
-                </p>
-                {editing ? (
-                  <InputNumber
-                    value={draft[row.id] ?? ""}
-                    decimals={AMOUNT_MAX_DECIMALS}
-                    onNumberChange={(value) => onDraftChange(row.id, value)}
-                    className="h-9 min-w-0 w-full rounded-[6px] border border-[#e3e3e3] bg-white px-2 font-montserrat text-sm font-medium text-black outline-none"
-                  />
-                ) : (
                   <p className="font-montserrat text-sm font-medium text-black">
-                    {formatAmount(netPay, {
+                    {formatAmount(row.amount, {
                       prefix: "",
                       maxDecimals: AMOUNT_MAX_DECIMALS
                     })}
                   </p>
-                )}
-              </div>
-            );
-          })}
+                  {editing ? (
+                    <InputNumber
+                      value={draft[row.id] ?? ""}
+                      decimals={AMOUNT_MAX_DECIMALS}
+                      onNumberChange={(value) => onDraftChange(row.id, value)}
+                      className="h-9 min-w-0 w-full rounded-[6px] border border-[#e3e3e3] bg-white px-2 font-montserrat text-sm font-medium text-black outline-none"
+                    />
+                  ) : (
+                    <p className="font-montserrat text-sm font-medium text-black">
+                      {formatAmount(netPay, {
+                        prefix: "",
+                        maxDecimals: AMOUNT_MAX_DECIMALS
+                      })}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
     </div>

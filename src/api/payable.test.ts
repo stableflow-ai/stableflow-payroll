@@ -134,6 +134,7 @@ describe("mapPayables", () => {
     expect(list[1]?.key).toEqual({ type: PAYABLE_TYPE.Expense, batchId: 8 });
     expect(list[1]?.items[0]?.netPay).toBe("");
     expect(list[1]?.items[0]?.amount).toBe("0.0123");
+    expect(list[1]?.items[0]?.volume).toBe("0.01229921");
   });
 
   it("reads a wrapped list", () => {
@@ -183,6 +184,7 @@ describe("effectiveNetPay", () => {
       network: "arb",
       symbol: "USDT",
       amount: "0.011",
+      volume: "",
       netPay: "0.011",
       purpose: "",
       status: "pending",
@@ -205,6 +207,7 @@ describe("payableAdjustments", () => {
         network: "arb",
         symbol: "USDT",
         amount: "0.011",
+        volume: "",
         netPay: "0.011",
         purpose: "",
         status: "pending",
@@ -217,6 +220,7 @@ describe("payableAdjustments", () => {
         network: "arb",
         symbol: "USDT",
         amount: "0.0123",
+        volume: "",
         netPay: "",
         purpose: "",
         status: "pending",

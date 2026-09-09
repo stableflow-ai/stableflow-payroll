@@ -8,6 +8,7 @@ import { BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Drawer } from "@/components/ui/drawer/Drawer";
 import { DRAWER_SIDE } from "@/components/ui/drawer/config";
 import { InputNumber } from "@/components/ui/input-number/InputNumber";
+import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import { useIntentsTokensStore } from "@/stores/intents-tokens";
 import { BONUS_IMPORT_LIMITS, type BonusImportItem, type BonusPendingRow } from "@/types/bonus";
@@ -17,6 +18,7 @@ import {
   BONUS_DRAWER_TITLE,
   BONUS_FORM_AMOUNT_MAX_DECIMALS,
   BONUS_FORM_COLUMNS,
+  BONUS_FORM_DESKTOP_QUERY,
   BONUS_FORM_MAX_ROWS,
   BONUS_FORM_TITLE_MAX,
   type BonusDrawerMode,
@@ -69,6 +71,7 @@ export function BonusFormDrawer(props: {
 
   const destRow = rows.find((row) => row.id === destRowId) ?? null;
   const rowsValid = rows.length > 0 && rows.every(isBonusFormRowValid);
+  const isDesktop = useMediaQuery(BONUS_FORM_DESKTOP_QUERY);
 
   function patchRow(rowId: string, patch: Parameters<typeof patchBonusFormRow>[1]) {
     setRows((current) =>
@@ -82,13 +85,17 @@ export function BonusFormDrawer(props: {
     <Drawer
       open={open}
       onClose={onClose}
-      side={DRAWER_SIDE.Right}
+      side={isDesktop ? DRAWER_SIDE.Right : DRAWER_SIDE.Bottom}
       title={BONUS_DRAWER_TITLE[mode]}
-      panelClassName="w-[min(100%,1080px)]"
-      cardClassName="h-full rounded-r-none p-6 sm:px-8 sm:pt-8 sm:pb-0"
+      panelClassName={isDesktop ? "w-[min(100%,1080px)]" : undefined}
+      cardClassName={cn(
+        "p-6 sm:px-8 sm:pt-8 sm:pb-0",
+        isDesktop ? "h-full rounded-r-none" : "w-full max-h-[90vh] rounded-b-none",
+      )}
     >
-      <div className="flex min-h-full flex-col">
-        <div className="min-w-[900px] flex-1 overflow-x-auto pb-6">
+      <div className="flex min-h-0 flex-col">
+        <div className="min-w-0 w-full flex-1 overflow-x-auto pb-6">
+          <div className="min-w-[900px]">
           <div
             className="grid items-center gap-2.5"
             style={{ gridTemplateColumns: BONUS_FORM_COLUMNS }}
@@ -154,6 +161,7 @@ export function BonusFormDrawer(props: {
               <IconPlus className="size-3 shrink-0" />
               Add one
             </button>
+          </div>
           </div>
         </div>
 

@@ -29,6 +29,7 @@ function mapPayableItem(raw: unknown): PayableItem | null {
     network: apiText(row.network),
     symbol: apiText(row.symbol),
     amount: apiText(row.amount),
+    volume: apiText(row.volume),
     netPay: apiText(row.net_pay ?? row.netPay),
     purpose: apiText(row.purpose ?? row.description),
     status: apiText(row.status),

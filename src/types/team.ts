@@ -10,6 +10,8 @@ export interface TeamMember {
   name: string;
   position: string;
   email: string;
+  telegram: string;
+  slack: string;
   wallets: TeamMemberWallets;
 }
 
@@ -17,6 +19,8 @@ export interface TeamMemberWrite {
   name: string;
   position: string;
   email: string;
+  telegram: string;
+  slack: string;
   wallets: TeamMemberWallets;
 }
 

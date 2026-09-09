@@ -1,11 +1,11 @@
 import type { BonusPendingList } from "@/types/bonus";
-import type { PayableKey } from "@/types/payable";
+import type { Payable } from "@/types/payable";
 import { formatAmount } from "@/utils";
 import { PendingBonusTable } from "./PendingBonusTable";
 
 export function PendingBonusPanel(props: {
   list: BonusPendingList;
-  onPayNow: (payable: PayableKey) => void;
+  onPayNow: (form: Payable) => void;
 }) {
   const { list, onPayNow } = props;
 

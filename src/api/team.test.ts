@@ -9,6 +9,8 @@ describe("mapTeamMember", () => {
         name: "Andrew",
         position: "BD",
         email: "andrew@gmail.com",
+        telegram_chat_id: "@andrew",
+        slack_user_id: "andrew",
         evm_address: "0xabc",
         solana_address: "sol",
         near_address: "alice.near",
@@ -19,6 +21,8 @@ describe("mapTeamMember", () => {
       name: "Andrew",
       position: "BD",
       email: "andrew@gmail.com",
+      telegram: "@andrew",
+      slack: "andrew",
       wallets: { evm: "0xabc", solana: "sol", near: "alice.near", tron: "Ttron" },
     });
   });
@@ -44,6 +48,8 @@ describe("mapTeamMembersPage", () => {
           name: "Ada",
           position: "",
           email: "",
+          telegram: "",
+          slack: "",
           wallets: { evm: "", solana: "", near: "", tron: "" },
         },
       ],
@@ -60,8 +66,23 @@ describe("teamMemberWriteBody", () => {
         name: " Ada ",
         position: "",
         email: "  ",
+        telegram: "",
+        slack: "  ",
         wallets: { evm: "0xabc", solana: "", near: "", tron: "" },
       }),
     ).toEqual({ name: "Ada", evm_address: "0xabc" });
+  });
+
+  it("includes telegram and slack when filled", () => {
+    expect(
+      teamMemberWriteBody({
+        name: "Ada",
+        position: "",
+        email: "",
+        telegram: "@ada",
+        slack: "ada",
+        wallets: { evm: "", solana: "", near: "", tron: "" },
+      }),
+    ).toEqual({ name: "Ada", telegram_chat_id: "@ada", slack_user_id: "ada" });
   });
 });

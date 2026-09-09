@@ -20,6 +20,7 @@ export interface PayableItem {
   network: string;
   symbol: string;
   amount: string;
+  volume: string;
   netPay: string;
   purpose: string;
   status: string;
