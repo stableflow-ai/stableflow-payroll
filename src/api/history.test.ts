@@ -6,11 +6,12 @@ import {
   mapHistoryItem,
   mapHistoryListResp,
 } from "./history";
-import { HISTORY_STATUS } from "@/types/history";
+import { HISTORY_STATUS, HISTORY_TYPE } from "@/types/history";
 
 const FILTERS = {
   organizationId: 8,
   q: "0xabc",
+  type: HISTORY_TYPE.Income,
   status: HISTORY_STATUS.Completed,
   sourceNetwork: "eth",
   sourceToken: "USDC",
@@ -40,6 +41,7 @@ describe("historyListQuery", () => {
     ).toEqual({
       organization_id: 8,
       q: "0xabc",
+      type: "income",
       status: "completed",
       source_network: "eth",
       source_symbol: "USDC",
@@ -62,6 +64,7 @@ describe("historyListQuery", () => {
     ).toEqual({
       organization_id: 3,
       q: undefined,
+      type: undefined,
       status: undefined,
       source_network: undefined,
       source_symbol: undefined,
@@ -80,6 +83,7 @@ describe("historyFilterQuery", () => {
     expect(historyFilterQuery(FILTERS)).toEqual({
       organization_id: 8,
       q: "0xabc",
+      type: "income",
       status: "completed",
       source_network: "eth",
       source_symbol: "USDC",
@@ -108,11 +112,13 @@ describe("mapHistoryItem", () => {
         recipient: "0xto",
         tx_hash: "0xtx",
         destination_tx_hash: "0xdtx",
+        type: "Income",
         status: "Completed",
         created_at: "2026-09-01T00:00:00Z",
       }),
     ).toEqual({
       id: "pay-1",
+      type: "income",
       amount: "11000",
       token: "USDT",
       network: "base",
@@ -130,6 +136,12 @@ describe("mapHistoryItem", () => {
 
   it("drops rows without payment_id", () => {
     expect(mapHistoryItem({ source_amount: "1" })).toBeNull();
+  });
+
+  it("maps payout type and ignores unknown type", () => {
+    expect(mapHistoryItem({ payment_id: "pay-2", type: "payout" })?.type).toBe("payout");
+    expect(mapHistoryItem({ payment_id: "pay-3", type: "other" })?.type).toBeNull();
+    expect(mapHistoryItem({ payment_id: "pay-4" })?.type).toBeNull();
   });
 });
 

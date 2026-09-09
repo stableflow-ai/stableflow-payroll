@@ -8,8 +8,16 @@ export const HISTORY_STATUS = {
 
 export type HistoryStatus = (typeof HISTORY_STATUS)[keyof typeof HISTORY_STATUS];
 
+export const HISTORY_TYPE = {
+  Income: "income",
+  Payout: "payout",
+} as const;
+
+export type HistoryType = (typeof HISTORY_TYPE)[keyof typeof HISTORY_TYPE];
+
 export interface HistoryItem {
   id: string;
+  type: HistoryType | null;
   amount: string;
   token: string;
   network: string;
@@ -27,6 +35,7 @@ export interface HistoryItem {
 export interface HistoryFilterQuery {
   organizationId: number;
   q?: string;
+  type?: HistoryType;
   status?: HistoryStatus;
   sourceNetwork?: string;
   sourceToken?: string;

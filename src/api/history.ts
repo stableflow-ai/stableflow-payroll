@@ -1,12 +1,14 @@
 import { PAY_API_PREFIX } from "@/api/config";
 import { apiNumber, apiText, asRecord } from "@/api/map";
 import { http, httpBlob, type HttpQueryValue } from "@/lib/http";
-import type {
-  HistoryExportQuery,
-  HistoryFilterQuery,
-  HistoryItem,
-  HistoryListResp,
-  HistoryQuery,
+import {
+  HISTORY_TYPE,
+  type HistoryExportQuery,
+  type HistoryFilterQuery,
+  type HistoryItem,
+  type HistoryListResp,
+  type HistoryQuery,
+  type HistoryType,
 } from "@/types/history";
 
 const HISTORY_EXPORT_FILENAME = "transaction-history.csv";
@@ -24,6 +26,7 @@ export function historyFilterQuery(
   return {
     organization_id: params.organizationId,
     q: params.q || undefined,
+    type: params.type || undefined,
     status: params.status || undefined,
     source_network: params.sourceNetwork || undefined,
     source_symbol: params.sourceToken || undefined,
@@ -44,6 +47,12 @@ export function historyListQuery(
   };
 }
 
+function mapHistoryType(value: unknown): HistoryType | null {
+  const key = apiText(value).trim().toLowerCase();
+  if (key === HISTORY_TYPE.Income || key === HISTORY_TYPE.Payout) return key;
+  return null;
+}
+
 export function mapHistoryItem(raw: unknown): HistoryItem | null {
   const row = asRecord(raw);
   if (!row) return null;
@@ -51,6 +60,7 @@ export function mapHistoryItem(raw: unknown): HistoryItem | null {
   if (!id) return null;
   return {
     id,
+    type: mapHistoryType(row.type),
     amount: apiText(row.source_amount ?? row.sourceAmount),
     token: apiText(row.source_symbol ?? row.sourceSymbol),
     network: apiText(row.source_network ?? row.sourceNetwork),

@@ -11,11 +11,11 @@ import { SearchInput } from "@/components/ui/search-input/SearchInput";
 import { FIXED_CHAINS } from "@/config/chains";
 import { useExportHistoryMutation, useHistoryQuery } from "@/hooks/use-history-api";
 import useToast from "@/hooks/use-toast";
-import { organizationId } from "@/lib/auth-role";
+import { isUser, organizationId } from "@/lib/auth-role";
 import { PAYOUT_SYMBOLS } from "@/stores/intents-tokens";
 import { useAuthStore } from "@/stores/auth";
-import type { HistoryExportQuery, HistoryQuery, HistoryStatus } from "@/types/history";
-import { HISTORY_STATUS } from "@/types/history";
+import type { HistoryExportQuery, HistoryQuery, HistoryStatus, HistoryType } from "@/types/history";
+import { HISTORY_STATUS, HISTORY_TYPE } from "@/types/history";
 import { HistoryTable } from "./components/history/HistoryTable";
 import {
   HISTORY_FILTER_ALL,
@@ -23,6 +23,8 @@ import {
   HISTORY_SEARCH_DEBOUNCE_MS,
   HISTORY_STATUS_FILTER,
   HISTORY_STATUS_OPTIONS,
+  HISTORY_TYPE_FILTER,
+  HISTORY_TYPE_OPTIONS,
 } from "./components/history/config";
 import { historyOptionalFilter } from "./components/history/utils";
 
@@ -37,6 +39,7 @@ const TOKEN_OPTIONS = [
 ];
 
 const HISTORY_STATUSES = new Set<string>(Object.values(HISTORY_STATUS));
+const HISTORY_TYPES = new Set<string>(Object.values(HISTORY_TYPE));
 
 function useDebouncedValue<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -53,11 +56,19 @@ function historyStatusFilter(value: string): HistoryStatus | undefined {
   return next as HistoryStatus;
 }
 
+function historyTypeFilter(value: string): HistoryType | undefined {
+  const next = historyOptionalFilter(value);
+  if (!next || !HISTORY_TYPES.has(next)) return undefined;
+  return next as HistoryType;
+}
+
 export function TransactionHistoryView() {
   const toast = useToast();
   const user = useAuthStore((state) => state.user);
   const orgId = organizationId(user);
+  const member = isUser(user);
   const [search, setSearch] = useState("");
+  const [type, setType] = useState<string>(HISTORY_TYPE_FILTER.All);
   const [status, setStatus] = useState<string>(HISTORY_STATUS_FILTER.All);
   const [sourceNetwork, setSourceNetwork] = useState<string>(HISTORY_FILTER_ALL);
   const [sourceToken, setSourceToken] = useState<string>(HISTORY_FILTER_ALL);
@@ -74,6 +85,7 @@ export function TransactionHistoryView() {
     return {
       organizationId: orgId,
       q: debouncedSearch.trim() || undefined,
+      type: member ? historyTypeFilter(type) : undefined,
       status: historyStatusFilter(status),
       sourceNetwork: historyOptionalFilter(sourceNetwork),
       sourceToken: historyOptionalFilter(sourceToken),
@@ -86,10 +98,12 @@ export function TransactionHistoryView() {
     debouncedSearch,
     destNetwork,
     destToken,
+    member,
     orgId,
     sourceNetwork,
     sourceToken,
     status,
+    type,
     times.end_time,
     times.start_time,
   ]);
@@ -162,9 +176,29 @@ export function TransactionHistoryView() {
       ) : (
         <HistoryTable
           rows={rows}
+          showType={member}
           empty={query.isLoading ? "Loading transactions…" : "No transactions"}
           toolbar={
-            <div className="mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            <div
+              className={
+                member
+                  ? "mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3"
+                  : "mb-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-5"
+              }
+            >
+              {member ? (
+                <Dropdown
+                  label="Type"
+                  value={type}
+                  onChange={(value) => {
+                    setType(value);
+                    resetPage();
+                  }}
+                  options={[...HISTORY_TYPE_OPTIONS]}
+                  className="min-w-0 w-full"
+                  triggerClassName="w-full"
+                />
+              ) : null}
               <Dropdown
                 label="Source Network"
                 value={sourceNetwork}
