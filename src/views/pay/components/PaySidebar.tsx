@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { IconArrowDown } from "@/components/icons/arrow-down";
+import { IconMore } from "@/components/icons/more";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { HEADER_ACCOUNT_MENU_VARIANT } from "@/components/layout/config";
+import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { useExpenseOpenRequestsCountQuery } from "@/hooks/use-expense-api";
 import { organizationName, userRole } from "@/lib/auth-role";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
+import { useEnabledCategoriesStore } from "@/stores/enabled-categories";
+import { CategoriesDrawer } from "@/views/categories";
 import { CountBadge } from "./CountBadge";
 import {
   isPayNavGroup,
@@ -41,11 +45,30 @@ function LeafLink(props: { item: PayNavLeaf; onNavigate?: () => void }) {
   );
 }
 
+function MoreCategoriesControl(props: { onClick: () => void }) {
+  return (
+    <Tooltip
+      content="More Categories"
+      className="whitespace-nowrap font-medium text-[#606060]"
+    >
+      <button
+        type="button"
+        aria-label="More Categories"
+        onClick={props.onClick}
+        className="inline-flex size-[26px] shrink-0 items-center justify-center rounded-[8px] text-[#AAA] hover:bg-[#F6F6F6]"
+      >
+        <IconMore className="h-[10px] w-[2.5px]" />
+      </button>
+    </Tooltip>
+  );
+}
+
 function OperationsGroup(props: { item: PayNavGroupItem; onNavigate?: () => void }) {
   const { item, onNavigate } = props;
   const { pathname } = useLocation();
   const childActive = item.children.some((child) => isPayNavLeafActive(child, pathname));
   const [open, setOpen] = useState(true);
+  const [categoriesOpen, setCategoriesOpen] = useState(false);
   const Icon = item.icon;
   const expenseRequestCount = useExpenseOpenRequestsCountQuery().data?.count ?? 0;
 
@@ -53,22 +76,33 @@ function OperationsGroup(props: { item: PayNavGroupItem; onNavigate?: () => void
     if (childActive) setOpen(true);
   }, [childActive]);
 
+  const toggleOpen = () => setOpen((current) => !current);
+
   return (
     <div className="flex flex-col gap-1">
-      <button
-        type="button"
-        onClick={() => setOpen((current) => !current)}
-        className={cn(navLinkClass(false), "justify-between")}
-        aria-expanded={open}
-      >
-        <span className="inline-flex min-w-0 items-center gap-2.5">
+      <div className={cn(navLinkClass(false), "justify-between gap-1")}>
+        <button
+          type="button"
+          onClick={toggleOpen}
+          className="inline-flex min-w-0 flex-1 items-center gap-2.5"
+          aria-expanded={open}
+        >
           <Icon className="size-3.5 shrink-0" />
           <span>{item.label}</span>
-        </span>
-        <IconArrowDown
-          className={cn("h-1 w-2.5 shrink-0 text-[#606060] transition-transform", open ? "" : "-rotate-90")}
-        />
-      </button>
+        </button>
+        <MoreCategoriesControl onClick={() => setCategoriesOpen(true)} />
+        <button
+          type="button"
+          onClick={toggleOpen}
+          aria-hidden
+          tabIndex={-1}
+          className="inline-flex shrink-0 items-center"
+        >
+          <IconArrowDown
+            className={cn("h-1 w-2.5 shrink-0 text-[#606060] transition-transform", open ? "" : "-rotate-90")}
+          />
+        </button>
+      </div>
       {open ? (
         <div className="relative flex flex-col gap-1 pl-2">
           <span
@@ -91,6 +125,11 @@ function OperationsGroup(props: { item: PayNavGroupItem; onNavigate?: () => void
           ))}
         </div>
       ) : null}
+      <CategoriesDrawer
+        open={categoriesOpen}
+        onClose={() => setCategoriesOpen(false)}
+        onNavigate={onNavigate}
+      />
     </div>
   );
 }
@@ -98,7 +137,8 @@ function OperationsGroup(props: { item: PayNavGroupItem; onNavigate?: () => void
 export function PayNav(props: { onNavigate?: () => void; className?: string }) {
   const { onNavigate, className } = props;
   const user = useAuthStore((state) => state.user);
-  const items = payNavItemsForRole(userRole(user));
+  const enabledCategoryIds = useEnabledCategoriesStore((state) => state.enabledIds);
+  const items = payNavItemsForRole(userRole(user), enabledCategoryIds);
   return (
     <nav className={cn("flex flex-col gap-1", className)}>
       {items.map((item) =>

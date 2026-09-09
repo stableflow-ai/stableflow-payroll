@@ -18,6 +18,7 @@ import { TransactionHistoryView } from "@/views/pay/TransactionHistoryView";
 import { TeamView } from "@/views/pay/TeamView";
 import { AppLayout } from "@/layouts/AppLayout";
 import { PayLayout } from "@/layouts/PayLayout";
+import { CategoryDashboardView } from "@/views/categories/dashboard-view";
 import { RedirectEmployeeFromAdminPay, RedirectIfAuthed, RequireAuth } from "./guards";
 
 export const router = createBrowserRouter([
@@ -79,6 +80,7 @@ export const router = createBrowserRouter([
                   { path: "/pay/request", element: <RequestPaymentView /> },
                   { path: "/pay/requests", element: <RequestsView /> },
                   { path: "/history", element: <TransactionHistoryView /> },
+                  { path: "/pay/:categoryId", element: <CategoryDashboardView /> },
                 ],
               },
             ],

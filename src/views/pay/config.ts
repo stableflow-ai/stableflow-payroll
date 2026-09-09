@@ -12,6 +12,12 @@ import type { IconProps } from "@/components/icons/types";
 import { AUTH_USER_ROLE, type AuthUserRole } from "@/types/auth";
 import { BONUS_HISTORY_PATH, BONUS_PATH } from "@/views/bonus/config";
 import {
+  CATEGORIES,
+  categoryPath,
+  isCategoryPath,
+  type CategoryId,
+} from "@/views/categories/config";
+import {
   EXPENSE_HISTORY_PATH,
   EXPENSE_PATH,
   EXPENSE_REQUESTS_PATH,
@@ -111,11 +117,37 @@ const EMPLOYEE_REQUEST_NAV: PayNavLeaf = {
 
 const EMPLOYEE_HIDDEN_NAV_IDS = new Set<string>([PAY_NAV_ID.Operations, PAY_NAV_ID.Team]);
 
-export function payNavItemsForRole(role: AuthUserRole): readonly PayNavItem[] {
-  if (role !== AUTH_USER_ROLE.User) return PAY_NAV_ITEMS;
+export function extraOperationsNavLeaves(
+  enabledCategoryIds: readonly CategoryId[],
+): PayNavLeaf[] {
+  const enabled = new Set(enabledCategoryIds);
+  return CATEGORIES.filter((item) => enabled.has(item.id)).map((item) => ({
+    id: item.id,
+    label: item.title,
+    to: categoryPath(item.id),
+  }));
+}
+
+function withEnabledCategories(
+  items: readonly PayNavItem[],
+  enabledCategoryIds: readonly CategoryId[],
+): readonly PayNavItem[] {
+  const extra = extraOperationsNavLeaves(enabledCategoryIds);
+  if (extra.length === 0) return items;
+  return items.map((item) =>
+    isPayNavGroup(item) ? { ...item, children: [...item.children, ...extra] } : item,
+  );
+}
+
+export function payNavItemsForRole(
+  role: AuthUserRole,
+  enabledCategoryIds: readonly CategoryId[] = [],
+): readonly PayNavItem[] {
+  const navItems = withEnabledCategories(PAY_NAV_ITEMS, enabledCategoryIds);
+  if (role !== AUTH_USER_ROLE.User) return navItems;
 
   const items: PayNavItem[] = [];
-  for (const item of PAY_NAV_ITEMS) {
+  for (const item of navItems) {
     if (isPayNavGroup(item) || EMPLOYEE_HIDDEN_NAV_IDS.has(item.id)) continue;
     if (item.id === PAY_NAV_ID.Payment) {
       items.push({ ...item, match: [PAY_PATH] });
@@ -163,6 +195,7 @@ export function isPayShellPath(pathname: string): boolean {
 }
 
 export function isAdminOnlyPayPath(pathname: string): boolean {
+  if (isCategoryPath(pathname)) return true;
   return PAY_ADMIN_ONLY_PATHS.some(
     (path) => pathname === path || pathname.startsWith(`${path}/`),
   );
@@ -191,6 +224,8 @@ export function payTitleForPath(pathname: string, role: AuthUserRole = AUTH_USER
     }
     if (isPayNavLeafActive(item, pathname)) return item.label;
   }
+  const category = CATEGORIES.find((item) => categoryPath(item.id) === pathname);
+  if (category) return category.title;
   return PAY_ROUTE_TITLES[pathname] ?? "Pay";
 }
 

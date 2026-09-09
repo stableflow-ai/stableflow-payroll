@@ -45,7 +45,7 @@ Copy `.env.example` to `.env.local`.
 public/
   logo.svg, logo-white.svg     product logos
   auth/                        auth page decoration (SVG)
-  avatar/, pay/, howitwork/, setting/    page art (PNG / brand SVG)
+  avatar/, pay/, howitwork/, setting/, categories/    page art (PNG / brand SVG)
 src/
   main.tsx                     Buffer/process globals, QueryClientProvider, WalletProvider
   App.tsx                      RouterProvider, ToastContainer, session bootstrap
@@ -59,6 +59,7 @@ src/
     payroll/                   payroll dashboard (Next Payroll / Payroll History / history detail routes)
     expense/                   expense dashboard (open / requests / history routes)
     bonus/                     bonus dashboard (to be paid / history routes)
+    categories/                Operations More Categories drawer and category dashboards
     how-it-works/              public marketing page
   components/
     ui/                        public primitives (see doc/components/README.md)
@@ -111,6 +112,7 @@ src/
 | `consumed-batches.ts` | `persist` | Spent payroll `batchId`s so the same deposit addresses are never broadcast twice |
 | `nearintents-user-session.ts` | no | Near Intents session for confidential receive / withdraw |
 | `google-drive-session.ts` | `persist` (sessionStorage) | Google OAuth token for the Sheets importer |
+| `enabled-categories.ts` | `persist` | Operations extra categories enabled from More Categories |
 
 ## Import paths
 
