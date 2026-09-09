@@ -49,6 +49,26 @@ describe("address validation", () => {
     const a = "0x1111111111111111111111111111111111111111";
     expect(sameAddress(a, a.toUpperCase(), "evm")).toBe(true);
   });
+
+  it("accepts Zcash transparent t1 and t3 addresses", () => {
+    expect(isAddressValid("t1aDV9wRNwVrVJVSoUCUrFpcYSTbcKrc1Dj", "zec")).toBe(true);
+    expect(isAddressValid("t3Z4Y7w5XQvM6nN8pLqRsTuVwXyZaBcDeFg", "zcash")).toBe(true);
+  });
+
+  it("rejects invalid Zcash addresses", () => {
+    expect(isAddressValid("t2notvalid", "zec")).toBe(false);
+    expect(isAddressValid("0x1111111111111111111111111111111111111111", "zec")).toBe(false);
+    expect(isAddressValid(`u1${"a".repeat(50)}`, "zec")).toBe(false);
+    expect(isAddressValid(`zs1${"a".repeat(50)}`, "zec")).toBe(false);
+    expect(validateAddress("zs1short", "zec").isValid).toBe(false);
+    expect(validateAddress(`u1${"a".repeat(50)}`, "zec").error).toBe("Invalid Zcash transparent address");
+  });
+
+  it("treats Zcash addresses as case-sensitive", () => {
+    const a = "t1aDV9wRNwVrVJVSoUCUrFpcYSTbcKrc1Dj";
+    expect(sameAddress(a, a, "zec")).toBe(true);
+    expect(sameAddress(a, a.toUpperCase(), "zec")).toBe(false);
+  });
 });
 
 describe("formatAddress", () => {

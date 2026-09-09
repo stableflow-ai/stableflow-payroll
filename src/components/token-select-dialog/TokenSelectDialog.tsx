@@ -34,29 +34,33 @@ export interface TokenSelectDialogProps {
   allowedBlockchains?: string[] | null;
   lockChainKind?: WalletChainKind | null;
   excludeNative?: boolean;
+  disabledBlockchains?: string[] | null;
+  disabledReason?: string;
   onSelect: (selection: TokenSelectSelection) => void;
 }
 
 function ownerForToken(owners: ChainOwners | null | undefined, token: IntentsToken): string | null {
-  const kind = token.chain.chainKind;
-  if (kind !== "evm" && kind !== "near" && kind !== "solana" && kind !== "tron") return null;
-  return owners?.[kind] ?? null;
+  return owners?.[token.chain.chainKind] ?? null;
 }
 
 function hasAnyOwner(owners: ChainOwners | null | undefined): boolean {
-  return Boolean(owners?.evm || owners?.near || owners?.solana || owners?.tron);
+  return Boolean(owners?.evm || owners?.near || owners?.solana || owners?.tron || owners?.zec);
 }
 
 function defaultChainFilter(
   selected: IntentsToken | undefined,
   lockChainKind: WalletChainKind | null | undefined,
+  disabledBlockchains: string[] | null | undefined,
 ): string {
-  if (selected) {
+  const disabled = new Set((disabledBlockchains ?? []).map((code) => code.toLowerCase()));
+  if (selected && !disabled.has(selected.blockchain.toLowerCase())) {
     return selected.chain.chainKind === "evm" ? EVM_CHAIN_FILTER : selected.blockchain;
   }
   if (lockChainKind && lockChainKind !== "evm") {
     const chain = FIXED_CHAINS.find((item) => item.chainKind === lockChainKind);
-    return chain?.blockchain ?? EVM_CHAIN_FILTER;
+    if (chain && !disabled.has(chain.blockchain.toLowerCase())) {
+      return chain.blockchain;
+    }
   }
   return EVM_CHAIN_FILTER;
 }
@@ -71,6 +75,8 @@ export function TokenSelectDialog({
   allowedBlockchains = null,
   lockChainKind = null,
   excludeNative = false,
+  disabledBlockchains = null,
+  disabledReason,
   onSelect,
 }: TokenSelectDialogProps) {
   const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
@@ -94,8 +100,8 @@ export function TokenSelectDialog({
     void ensureFresh();
     setSearch("");
     setMobileStep("chain");
-    setChainFilter(defaultChainFilter(selected, lockChainKind));
-  }, [open, ensureFresh, selected, lockChainKind]);
+    setChainFilter(defaultChainFilter(selected, lockChainKind, disabledBlockchains));
+  }, [open, ensureFresh, selected, lockChainKind, disabledBlockchains]);
 
   const allowed = useMemo(() => {
     if (!allowedBlockchains || allowedBlockchains.length === 0) return null;
@@ -150,6 +156,8 @@ export function TokenSelectDialog({
   }
 
   function handleSelectToken(token: IntentsToken) {
+    const disabled = new Set((disabledBlockchains ?? []).map((code) => code.toLowerCase()));
+    if (disabled.has(token.blockchain.toLowerCase())) return;
     onSelect({ token });
     onClose();
   }
@@ -171,6 +179,8 @@ export function TokenSelectDialog({
       onSelectFilter={handleSelectFilter}
       tokens={scopedTokens}
       lockChainKind={lockChainKind}
+      disabledBlockchains={disabledBlockchains}
+      disabledReason={disabledReason}
       hideTitle={!isDesktop}
     />
   );

@@ -22,6 +22,8 @@ export function YouPaySection(props: {
   onConnectWallet: () => void;
   onDisconnectWallet?: () => void;
   allowedBlockchains?: string[];
+  disabledBlockchains?: string[] | null;
+  disabledReason?: string;
   amountClassName?: string;
 }) {
   const {
@@ -35,6 +37,8 @@ export function YouPaySection(props: {
     onConnectWallet,
     onDisconnectWallet,
     allowedBlockchains = PAYER_BLOCKCHAINS,
+    disabledBlockchains = null,
+    disabledReason,
     amountClassName,
   } = props;
   const [originDialogOpen, setOriginDialogOpen] = useState(false);
@@ -114,13 +118,12 @@ export function YouPaySection(props: {
         showBalances
         balanceOwners={balanceOwners}
         allowedBlockchains={allowedBlockchains}
+        disabledBlockchains={disabledBlockchains}
+        disabledReason={disabledReason}
         onSelect={({ token }) => {
           onOriginTokenChange(token);
           setOriginDialogOpen(false);
-          const kind = token.chain.chainKind;
-          const owner = kind === "evm" || kind === "near" || kind === "solana" || kind === "tron"
-            ? balanceOwners[kind]
-            : undefined;
+          const owner = balanceOwners[token.chain.chainKind];
           if (owner) void fetchOneBalance(owner, token);
         }}
       />

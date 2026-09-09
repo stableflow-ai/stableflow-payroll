@@ -6,9 +6,10 @@ import { useQuickPayPrefsStore } from "@/stores/quick-pay-prefs";
 
 export function usePayOriginToken(
   allowedBlockchains: string[] | null = PAYER_BLOCKCHAINS,
-  opts?: { excludeNative?: boolean },
+  opts?: { excludeNative?: boolean; excludeBlockchains?: string[] | null },
 ) {
   const excludeNative = Boolean(opts?.excludeNative);
+  const excludeBlockchains = opts?.excludeBlockchains ?? null;
   const savedOriginAssetId = useQuickPayPrefsStore((s) => s.originAssetId);
   const setSavedOriginAssetId = useQuickPayPrefsStore((s) => s.setOriginAssetId);
   const findByAssetId = useIntentsTokensStore((s) => s.findByAssetId);
@@ -29,6 +30,7 @@ export function usePayOriginToken(
       findByChainAndSymbol,
       allowedBlockchains: allowedBlockchains ?? null,
       excludeNative,
+      excludeBlockchains,
     });
   }, [
     prefsHydrated,
@@ -38,6 +40,7 @@ export function usePayOriginToken(
     findByChainAndSymbol,
     allowedBlockchains,
     excludeNative,
+    excludeBlockchains,
   ]);
 
   const setOriginToken = useCallback((token: IntentsToken) => {

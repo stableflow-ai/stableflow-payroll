@@ -20,9 +20,7 @@ const USER_REJECTED_PATTERNS = [
 ];
 
 export function tokenChainKind(token: IntentsToken | null | undefined): ChainKind | null {
-  const kind = token?.chain.chainKind;
-  if (kind === "evm" || kind === "near" || kind === "solana" || kind === "tron") return kind;
-  return null;
+  return token?.chain.chainKind ?? null;
 }
 
 export function receivingAddressError(

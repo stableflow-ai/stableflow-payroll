@@ -8,6 +8,7 @@ import { broadcastBatchPayCallData } from "./broadcast-quick-pay";
 import { broadcastNearActions } from "./near/transfer";
 import { broadcastSerializedSolanaTx } from "./solana/transfer";
 import { broadcastTronCallData, waitForTronSuccess } from "./tron/transfer";
+import { transferNativeZec } from "./zec/transfer";
 
 export async function broadcastBatchPayout(input: {
   token: IntentsToken;
@@ -20,6 +21,7 @@ export async function broadcastBatchPayout(input: {
   if (kind === "tron") return broadcastTron(input);
   if (kind === "near") return broadcastNear(input);
   if (kind === "solana") return broadcastSolana(input);
+  if (kind === "zec") return broadcastZec(input);
   throw new Error("Unsupported batch origin chain");
 }
 
@@ -100,5 +102,23 @@ async function broadcastSolana(input: {
   if (!serialized) throw new Error("Missing batch transaction");
   return broadcastSerializedSolanaTx({
     serializedTransaction: serialized,
+  });
+}
+
+async function broadcastZec(input: {
+  token: IntentsToken;
+  transaction: PayBatchSwapTransaction;
+}): Promise<string> {
+  const outputs = input.transaction.outputs ?? [];
+  if (outputs.length !== 1) {
+    throw new Error("Zcash does not support batch payments yet");
+  }
+  const output = outputs[0];
+  const amountRaw = output.amountRaw.trim();
+  if (!amountRaw) throw new Error("Missing Zcash output amount");
+  return transferNativeZec({
+    to: output.address,
+    amountIn: BigInt(amountRaw),
+    decimals: input.token.decimals,
   });
 }

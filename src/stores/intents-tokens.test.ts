@@ -82,4 +82,38 @@ describe("filterTokens", () => {
       blockchain: "near",
     });
   });
+
+  it("keeps ZEC on zec, sol, and near", () => {
+    const tokens = filterTokens([
+      {
+        assetId: "nep141:zec.omft.near",
+        decimals: 8,
+        blockchain: "zec",
+        symbol: "ZEC",
+        price: 1178.24,
+        contractAddress: null,
+      },
+      {
+        assetId: "1cs_v1:sol:spl:A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
+        decimals: 8,
+        blockchain: "sol",
+        symbol: "ZEC",
+        price: 1178.24,
+        contractAddress: "A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
+      },
+      {
+        assetId: "1cs_v1:near:nep141:zec.omft.near",
+        decimals: 8,
+        blockchain: "near",
+        symbol: "ZEC",
+        price: 1178.24,
+        contractAddress: "zec.omft.near",
+      },
+    ]);
+    expect(tokens.map((token) => token.blockchain)).toEqual(["zec", "sol", "near"]);
+    expect(tokens.every((token) => token.symbol === "ZEC")).toBe(true);
+    expect(isNativeToken(tokens[0])).toBe(true);
+    expect(tokens[1]?.contractAddress).toBe("A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS");
+    expect(tokens[2]?.contractAddress).toBe("zec.omft.near");
+  });
 });

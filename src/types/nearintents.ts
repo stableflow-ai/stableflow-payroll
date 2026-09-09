@@ -1,6 +1,8 @@
 import type { ChainKind, IntentSignedPayload } from "@/wallet";
 
-export const NEARINTENTS_INTENT_STANDARD: Record<ChainKind, "erc191" | "nep413" | "raw_ed25519" | "tip191"> = {
+export type IntentsChainKind = Exclude<ChainKind, "zec">;
+
+export const NEARINTENTS_INTENT_STANDARD: Record<IntentsChainKind, "erc191" | "nep413" | "raw_ed25519" | "tip191"> = {
   evm: "erc191",
   near: "nep413",
   solana: "raw_ed25519",

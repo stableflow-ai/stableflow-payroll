@@ -25,6 +25,7 @@ export function WalletConnectDialog({
     if (selectedKind === "near") return "Connect a NEAR wallet such as Hot Wallet or Meteor.";
     if (selectedKind === "solana") return "Connect Phantom or Solflare.";
     if (selectedKind === "tron") return "Connect TronLink, OKX, or WalletConnect.";
+    if (selectedKind === "zec") return "Connect Noir Wallet.";
     return "Connect an EVM wallet such as MetaMask or OKX.";
   }, [selectedKind]);
 

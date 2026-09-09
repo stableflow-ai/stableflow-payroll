@@ -4,6 +4,7 @@ import { useEvmWallet } from "./evm/adapter";
 import { useNearWallet } from "./near/adapter";
 import { useSolanaWallet } from "./solana/adapter";
 import { useTronWallet } from "./tron/adapter";
+import { useZecWallet } from "./zec/adapter";
 import type { ChainKind, UseWalletResult } from "./types";
 
 function useSyncChainWallet(kind: ChainKind, wallet: UseWalletResult) {
@@ -34,11 +35,13 @@ export function WalletSync() {
   const near = useNearWallet();
   const solana = useSolanaWallet();
   const tron = useTronWallet();
+  const zec = useZecWallet();
 
   useSyncChainWallet("evm", evm);
   useSyncChainWallet("near", near);
   useSyncChainWallet("solana", solana);
   useSyncChainWallet("tron", tron);
+  useSyncChainWallet("zec", zec);
 
   return null;
 }

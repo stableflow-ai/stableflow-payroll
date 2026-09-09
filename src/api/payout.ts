@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api-error";
 import type {
   PayBatchNearAction,
   PayBatchSubmitParam,
+  PayBatchSwapOutput,
   PayBatchSwapTransaction,
   PayrollBatch,
   PayrollBatchPayment,
@@ -109,6 +110,23 @@ function mapPayrollBatchNearAction(raw: unknown): PayBatchNearAction | null {
   };
 }
 
+function mapPayrollBatchOutputs(raw: unknown): PayBatchSwapOutput[] | undefined {
+  if (!Array.isArray(raw)) return undefined;
+  const outputs = raw.flatMap((item) => {
+    const row = asRecord(item);
+    if (!row) return [];
+    const address = apiText(row.address);
+    const amountRaw = apiText(row.amountRaw ?? row.amount_raw);
+    if (!address || !amountRaw) return [];
+    return [{
+      address,
+      amount: apiText(row.amount),
+      amountRaw,
+    }];
+  });
+  return outputs.length ? outputs : undefined;
+}
+
 function mapPayrollBatchTransaction(raw: unknown): PayBatchSwapTransaction | null {
   const row = asRecord(raw);
   if (!row) return null;
@@ -129,6 +147,7 @@ function mapPayrollBatchTransaction(raw: unknown): PayBatchSwapTransaction | nul
     actions: actions?.length ? actions : undefined,
     serializedTransaction: apiText(row.serializedTransaction ?? row.serialized_transaction) || undefined,
     lastValidBlockHeight: apiNumber(row.lastValidBlockHeight ?? row.last_valid_block_height) ?? undefined,
+    outputs: mapPayrollBatchOutputs(row.outputs),
   };
 }
 
@@ -136,6 +155,7 @@ function hasBroadcastableBatchTx(tx: PayBatchSwapTransaction): boolean {
   if (tx.batch_contract.trim() && tx.callData.trim()) return true;
   if (tx.receiverId?.trim() && tx.actions?.length) return true;
   if (tx.serializedTransaction?.trim()) return true;
+  if (tx.outputs && tx.outputs.length > 0) return true;
   return false;
 }
 

@@ -16,6 +16,12 @@ export interface PayBatchNearAction {
   };
 }
 
+export interface PayBatchSwapOutput {
+  address: string;
+  amount: string;
+  amountRaw: string;
+}
+
 export interface PayBatchSwapTransaction {
   approvals: string[] | null;
   callData: string;
@@ -24,6 +30,7 @@ export interface PayBatchSwapTransaction {
   actions?: PayBatchNearAction[];
   serializedTransaction?: string;
   lastValidBlockHeight?: number;
+  outputs?: PayBatchSwapOutput[];
 }
 
 export interface PayBatchSubmitParam {

@@ -267,6 +267,9 @@ export const SPENT_BATCH_MESSAGE = "This quote was already used. Refreshing the 
 export const QUOTE_EXPIRED_MESSAGE = "Quote expired. Refreshing.";
 export const INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE =
   "Insufficient approval. Refreshing the quote.";
+export const ZCASH_BATCH_UNSUPPORTED_MESSAGE =
+  "Zcash does not support batch payments yet";
+export const ZCASH_DISABLED_BLOCKCHAINS = ["zec"];
 
 export const DESCRIPTION_MAX_LENGTH = 200;
 export const PAYMENT_NAME_MAX_LENGTH = 50;

@@ -1,6 +1,6 @@
 /**
  * Chain registry for Stableflow Pay payments.
- * EVM plus Near / Solana / Tron. Token availability still comes from 1Click /v0/tokens.
+ * EVM plus Near / Solana / Tron / Zcash. Token availability still comes from 1Click /v0/tokens.
  */
 
 import { chainLogoUrl } from "@/lib/logo";
@@ -41,6 +41,7 @@ export const FIXED_CHAINS: ChainConfig[] = [
   { blockchain: "near", chainName: "Near", chainKind: "near", logo: chainLogoUrl("near"), payerEnabled: true, batchEnabled: true, txExplorer: "https://nearblocks.io/txns/" },
   { blockchain: "sol", chainName: "Solana", chainKind: "solana", logo: chainLogoUrl("sol"), payerEnabled: true, batchEnabled: true, txExplorer: "https://solscan.io/tx/" },
   { blockchain: "tron", chainName: "Tron", chainKind: "tron", logo: chainLogoUrl("tron"), payerEnabled: true, batchEnabled: true, txExplorer: "https://tronscan.org/#/transaction/" },
+  { blockchain: "zec", chainName: "Zcash", chainKind: "zec", logo: chainLogoUrl("zec"), payerEnabled: true, batchEnabled: true, txExplorer: "https://explorer.zcha.in/transactions/" },
 ];
 
 export const PAYOUT_NETWORKS = new Set(FIXED_CHAINS.map((c) => c.chainName));
@@ -84,6 +85,7 @@ const NETWORK_ALIASES: Record<string, string> = {
   "near protocol": "near",
   trx: "tron",
   "tron network": "tron",
+  zcash: "zec",
 };
 
 export function getChainByBlockchain(blockchain: string): ChainConfig | undefined {
@@ -120,6 +122,7 @@ export const CHAIN_KIND_LEBALS: Record<ChainKind, string> = {
   "near": "Near",
   "solana": "Solana",
   "tron": "Tron",
+  "zec": "Zcash",
 };
 export function chainLabel(kind: ChainKind): string {
   return CHAIN_KIND_LEBALS[kind] || kind;

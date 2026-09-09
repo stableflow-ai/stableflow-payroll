@@ -7,18 +7,24 @@ export function resolvePayOriginToken({
   findByChainAndSymbol,
   allowedBlockchains = null,
   excludeNative = false,
+  excludeBlockchains = null,
 }: {
   savedOriginAssetId: string | null;
   findByAssetId: (assetId: string) => IntentsToken | undefined;
   findByChainAndSymbol: (blockchain: string, symbol: PayoutSymbol) => IntentsToken | undefined;
   allowedBlockchains?: string[] | null;
   excludeNative?: boolean;
+  excludeBlockchains?: string[] | null;
 }): IntentsToken | null {
   const allowed = allowedBlockchains?.length ? new Set(allowedBlockchains) : null;
+  const excluded = excludeBlockchains?.length
+    ? new Set(excludeBlockchains.map((code) => code.toLowerCase()))
+    : null;
 
   function accept(token: IntentsToken | undefined): token is IntentsToken {
     if (!token) return false;
     if (allowed && !allowed.has(token.blockchain)) return false;
+    if (excluded?.has(token.blockchain.toLowerCase())) return false;
     if (excludeNative && isNativeToken(token)) return false;
     return true;
   }

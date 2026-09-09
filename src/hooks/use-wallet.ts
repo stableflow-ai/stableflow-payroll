@@ -45,5 +45,8 @@ export function primaryConnectedAddress(owners: ChainOwners): string | null {
   if (owners.tron && FIXED_CHAIN_KINDS.has("tron")) {
     return owners.tron;
   }
+  if (owners.zec && FIXED_CHAIN_KINDS.has("zec")) {
+    return owners.zec;
+  }
   return null;
 }

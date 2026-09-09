@@ -53,6 +53,8 @@ const CHAIN_LOGO_ALIAS: Record<string, string> = {
   solana: "solana",
   tron: "tron",
   trx: "tron",
+  zec: "zcash",
+  zcash: "zcash",
 };
 
 export function chainLogoUrl(blockchainOrNetwork: string): string {
