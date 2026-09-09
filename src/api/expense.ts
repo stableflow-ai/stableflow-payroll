@@ -46,10 +46,6 @@ function mapExpenseRowAction(value: unknown): ExpenseRowAction {
   return "pay_now";
 }
 
-export function looksLikeExpenseReceipt(value: string): boolean {
-  return /\.(pdf|png|jpe?g|webp|gif|docx?)$/i.test(value.trim());
-}
-
 export function mapExpenseCurrentStats(raw: unknown): ExpenseCurrentStats {
   const row = asRecord(raw) ?? {};
   return {
@@ -148,13 +144,12 @@ export function mapExpenseHistoryRow(raw: unknown, index = 0): ExpenseHistoryRow
     apiText(row.destination_amount ?? row.destinationAmount)
     || apiText(row.amount)
     || "0";
-  const receiptName = looksLikeExpenseReceipt(description) ? description : null;
   return {
     id: String(id),
     name: apiText(row.name),
     purpose: apiText(row.purpose),
-    description: receiptName ? null : description || null,
-    receiptName,
+    description: description || null,
+    receiptName: null,
     expense:
       apiText(row.destination_volume ?? row.destinationVolume)
       || apiText(row.volume)

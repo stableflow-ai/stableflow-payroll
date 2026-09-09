@@ -82,7 +82,7 @@ Split `http://` / `https://` URLs out of free text for linkified copy. `javascri
 | Function | Notes |
 | --- | --- |
 | `isHttpUrl(value)` | `true` only when `URL` parses and the protocol is `http:` or `https:`. |
-| `splitHttpUrls(text)` | Returns `{ type: "text" \| "url"; value: string }[]`. Trailing `),.;!?` after a URL is left as text. |
+| `splitHttpUrls(text)` | Returns `{ type: "text" \| "url"; value: string }[]`. A URL stops at whitespace, a comma, or the next `http(s)` URL. Trailing `),.;!?` after a URL is left as text. |
 
 ## Related helpers outside `@/utils`
 

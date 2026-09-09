@@ -1,6 +1,4 @@
 import { useState } from "react";
-import { looksLikeExpenseReceipt } from "@/api/expense";
-import { IconReceipt } from "@/components/icons/receipt";
 import { IconUp } from "@/components/icons/up";
 import { Button } from "@/components/ui/button/Button";
 import {
@@ -34,25 +32,14 @@ function DescriptionCell({
   if (!text) {
     return <span className="text-black">-</span>;
   }
-  if (looksLikeExpenseReceipt(text)) {
-    return (
-      <span
-        className="flex min-w-0 max-w-full items-center gap-2 font-normal text-[#6284F5]"
-        title={text}
-      >
-        <IconReceipt className="size-3.5 shrink-0" />
-        <span className="truncate">{text}</span>
-      </span>
-    );
-  }
   return (
     <Tooltip
       leaveDelay={150}
       triggerClassName="min-w-0 max-w-full"
-      className="max-w-[320px] whitespace-normal break-words"
+      className="max-w-[320px] whitespace-normal"
       content={<LinkifiedText text={text} onOpenUrl={onOpenUrl} />}
     >
-      <span className="block truncate font-normal text-black">
+      <span className="block min-w-0 truncate font-normal text-black">
         <LinkifiedText text={text} onOpenUrl={onOpenUrl} />
       </span>
     </Tooltip>
@@ -161,6 +148,7 @@ export function RequestsTable(props: {
       </Table>
       <ExternalLinkConfirmDialog
         open={Boolean(pendingUrl)}
+        url={pendingUrl}
         onClose={() => setPendingUrl(null)}
         onConfirm={handleConfirmExternalLink}
       />

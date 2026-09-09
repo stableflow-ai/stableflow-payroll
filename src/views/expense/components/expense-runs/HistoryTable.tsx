@@ -2,7 +2,6 @@ import { IconAlert } from "@/components/icons/alert";
 import { IconCheck2 } from "@/components/icons/check";
 import { IconOutLink } from "@/components/icons/link";
 import { IconPayoutPending } from "@/components/icons/payout-status";
-import { IconReceipt } from "@/components/icons/receipt";
 import {
   Table,
   TableBody,
@@ -25,18 +24,6 @@ import {
 } from "../../config";
 
 function DescriptionCell({ row }: { row: ExpenseHistoryRow }) {
-  if (row.receiptName) {
-    return (
-      <span
-        className="flex min-w-0 max-w-full items-center gap-2 font-normal text-[#6284F5]"
-        title={row.receiptName}
-      >
-        <IconReceipt className="size-3.5 shrink-0" />
-        <span className="truncate">{row.receiptName}</span>
-      </span>
-    );
-  }
-
   return <span className="truncate font-normal text-black">{row.description}</span>;
 }
 

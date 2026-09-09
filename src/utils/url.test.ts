@@ -36,4 +36,22 @@ describe("splitHttpUrls", () => {
       { type: "text", value: "javascript:alert(1)" },
     ]);
   });
+
+  it("splits urls separated by a comma", () => {
+    expect(splitHttpUrls("https://a.example/x.pdf,https://b.example/y.pdf")).toEqual([
+      { type: "url", value: "https://a.example/x.pdf" },
+      { type: "text", value: "," },
+      { type: "url", value: "https://b.example/y.pdf" },
+    ]);
+  });
+
+  it("splits a second url glued after text", () => {
+    expect(
+      splitHttpUrls("https://a.example/x.pdf,notehttps://b.example/y.pdf"),
+    ).toEqual([
+      { type: "url", value: "https://a.example/x.pdf" },
+      { type: "text", value: ",note" },
+      { type: "url", value: "https://b.example/y.pdf" },
+    ]);
+  });
 });

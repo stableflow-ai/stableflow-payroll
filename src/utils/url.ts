@@ -2,7 +2,7 @@ export type LinkifyPart =
   | { type: "text"; value: string }
   | { type: "url"; value: string };
 
-const HTTP_URL_RE = /https?:\/\/[^\s<>"']+/gi;
+const HTTP_URL_RE = /https?:\/\/[^\s<>"'，,]+?(?=https?:\/\/|[\s<>"'，,]|$)/gi;
 const TRAILING_PUNCTUATION_RE = /[),.;!?]+$/;
 
 export function isHttpUrl(value: string): boolean {

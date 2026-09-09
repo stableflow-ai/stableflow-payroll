@@ -1,3 +1,4 @@
+import { IconReceipt } from "@/components/icons/receipt";
 import { splitHttpUrls } from "@/utils";
 
 export function LinkifiedText(props: {
@@ -14,18 +15,23 @@ export function LinkifiedText(props: {
           return <span key={index}>{part.value}</span>;
         }
         return (
-          <button
+          <span
             key={index}
-            type="button"
-            className="cursor-pointer text-[#6284F5] underline"
-            onClick={(event) => {
-              event.preventDefault();
-              event.stopPropagation();
-              onOpenUrl(part.value);
-            }}
+            className="inline-flex max-w-full items-start gap-1 align-middle"
           >
-            {part.value}
-          </button>
+            <IconReceipt className="mt-0.5 size-3.5 shrink-0 text-[#6284F5]" />
+            <button
+              type="button"
+              className="min-w-0 cursor-pointer break-all text-left text-[#6284F5] underline"
+              onClick={(event) => {
+                event.preventDefault();
+                event.stopPropagation();
+                onOpenUrl(part.value);
+              }}
+            >
+              {part.value}
+            </button>
+          </span>
         );
       })}
     </>

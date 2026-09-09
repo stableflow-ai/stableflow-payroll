@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
   expenseImportRequestBody,
-  looksLikeExpenseReceipt,
   mapExpenseCurrentStats,
   mapExpenseHistoryResp,
   mapExpenseHistoryRow,
@@ -150,18 +149,8 @@ describe("mapExpenseOpenRequestsCount", () => {
   });
 });
 
-describe("looksLikeExpenseReceipt", () => {
-  it("treats a filename as a receipt", () => {
-    expect(looksLikeExpenseReceipt("Invoice of conference.pdf")).toBe(true);
-  });
-
-  it("treats plain text as not a receipt", () => {
-    expect(looksLikeExpenseReceipt("Conference Ticket")).toBe(false);
-  });
-});
-
 describe("mapExpenseHistoryRow", () => {
-  it("treats a filename description as a receipt", () => {
+  it("keeps the description as text", () => {
     expect(
       mapExpenseHistoryRow({
         id: 4,
@@ -181,8 +170,8 @@ describe("mapExpenseHistoryRow", () => {
       id: "4",
       name: "Andrew",
       purpose: "Conference Travel",
-      description: null,
-      receiptName: "Invoice of conference.pdf",
+      description: "Invoice of conference.pdf",
+      receiptName: null,
       expense: "800",
       address: "0x253",
       token: "USDC",
