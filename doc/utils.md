@@ -12,16 +12,16 @@ Search here before writing a helper. Feature-specific logic belongs in that feat
 
 ## Address — `src/utils/address.ts`
 
-Validation and formatting for EVM, Near, Solana, Tron, and Zcash. EVM uses viem, Tron uses `TronWeb.isAddress`, Solana checks the base58 alphabet and a 32-byte decode, Near uses near-sdk-js / Nomicon account ID rules (length 2–64, lowercase `a-z` / digits / `.` `-` `_`). Zcash accepts transparent `t1` / `t3` only (rejects `u1` / `zs1`). `detectAddressChainKind` in `src/views/pay/utils.ts` tests Zcash before Solana so a `t1` address is not treated as Solana.
+Validation and formatting for EVM, Near, Solana, Tron, and Zcash. EVM uses viem, Tron uses `TronWeb.isAddress`, Solana checks the base58 alphabet and a 32-byte decode, Near uses near-sdk-js / Nomicon account ID rules (length 2–64, lowercase `a-z` / digits / `.` `-` `_`). Zcash accepts transparent `t1` / `t3` and Unified `u1` (regex, no checksum). Sapling `zs1` is rejected. `detectAddressChainKind` in `src/views/pay/utils.ts` tests Zcash before Solana so a `t1` or `u1` address is not treated as Solana.
 
 | Function | Notes |
 | --- | --- |
 | `resolveChainKind(networkOrKind)` | Normalises `"evm" \| "near" \| "solana" \| "tron" \| "zec"`, the aliases `sol`, `trx`, and `zcash`, and any network name known to `src/config/chains.ts`. Returns `null` when unknown. |
-| `validateAddress(address, chainKind)` | Returns `{ isValid, error? }` with a human-readable English message. Near follows near-sdk-js / Nomicon account ID rules. Zcash requires a transparent `t1` / `t3` address. |
+| `validateAddress(address, chainKind)` | Returns `{ isValid, error? }` with a human-readable English message. Near follows near-sdk-js / Nomicon account ID rules. Zcash accepts a transparent `t1` / `t3` or Unified `u1` address. |
 | `isAddressValid(address, chainKind)` | Boolean shortcut over `validateAddress`. |
 | `normalizeAddress(address, chainKind)` | Checksums EVM addresses, lowercases Near account ids, trims the rest. Returns `null` when invalid. |
 | `sameAddress(a, b, chainKind?)` | Case-insensitive comparison except on Solana, Tron, and Zcash, which are case-sensitive. |
-| `getAddressPlaceholder(chainKind)` | Input placeholder: `0x…`, `alice.near`, `Solana address`, `T…`, `t1…`. |
+| `getAddressPlaceholder(chainKind)` | Input placeholder: `0x…`, `alice.near`, `Solana address`, `T…`, `t1… / u1…`. |
 | `formatAddress(address, prefix = 4, suffix = 5)` | Middle-ellipsis. Short non-`0x` values (Near account ids) are returned unchanged. |
 
 `WalletChainKind` is re-exported here as an alias of `ChainKind` from `src/wallet/types.ts`.

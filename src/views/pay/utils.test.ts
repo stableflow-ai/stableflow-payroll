@@ -26,6 +26,12 @@ describe("detectAddressChainKind", () => {
     expect(detectAddressChainKind("t1aDV9wRNwVrVJVSoUCUrFpcYSTbcKrc1Dj")).toBe("zec");
     expect(detectAddressChainKind("t3Z4Y7w5XQvM6nN8pLqRsTuVwXyZaBcDeFg")).toBe("zec");
   });
+
+  it("classifies a Unified Zcash u1 address before Solana", () => {
+    expect(detectAddressChainKind(
+      "u1cxc6ushfeh7zk497saqxgqms48c0tlxwkxhemrlkljvupnz8qquuxkapfpnhvfeavvmwucl28sy5zqachjd4cmyqgpuuv3glzvzkzjw0w5l67gnrqmrskf7qjpx53fqnh0wdcs5raf9cdsu4mx33xfk4u6crmh47xuwt3vgzss3r67uu",
+    )).toBe("zec");
+  });
 });
 
 describe("formatQuoteErrorMessage", () => {

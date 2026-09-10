@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { formatAddress, isAddressValid, sameAddress, validateAddress } from "./address";
+import { formatAddress, getAddressPlaceholder, isAddressValid, sameAddress, validateAddress } from "./address";
 
 describe("address validation", () => {
   it("accepts checksum EVM addresses", () => {
@@ -55,19 +55,30 @@ describe("address validation", () => {
     expect(isAddressValid("t3Z4Y7w5XQvM6nN8pLqRsTuVwXyZaBcDeFg", "zcash")).toBe(true);
   });
 
+  it("accepts a Unified Zcash u1 address", () => {
+    expect(isAddressValid(
+      "u1cxc6ushfeh7zk497saqxgqms48c0tlxwkxhemrlkljvupnz8qquuxkapfpnhvfeavvmwucl28sy5zqachjd4cmyqgpuuv3glzvzkzjw0w5l67gnrqmrskf7qjpx53fqnh0wdcs5raf9cdsu4mx33xfk4u6crmh47xuwt3vgzss3r67uu",
+      "zec",
+    )).toBe(true);
+  });
+
   it("rejects invalid Zcash addresses", () => {
     expect(isAddressValid("t2notvalid", "zec")).toBe(false);
     expect(isAddressValid("0x1111111111111111111111111111111111111111", "zec")).toBe(false);
     expect(isAddressValid(`u1${"a".repeat(50)}`, "zec")).toBe(false);
     expect(isAddressValid(`zs1${"a".repeat(50)}`, "zec")).toBe(false);
     expect(validateAddress("zs1short", "zec").isValid).toBe(false);
-    expect(validateAddress(`u1${"a".repeat(50)}`, "zec").error).toBe("Invalid Zcash transparent address");
+    expect(validateAddress(`u1${"a".repeat(50)}`, "zec").error).toBe("Invalid Zcash address");
   });
 
   it("treats Zcash addresses as case-sensitive", () => {
     const a = "t1aDV9wRNwVrVJVSoUCUrFpcYSTbcKrc1Dj";
     expect(sameAddress(a, a, "zec")).toBe(true);
     expect(sameAddress(a, a.toUpperCase(), "zec")).toBe(false);
+  });
+
+  it("uses a Zcash placeholder that mentions t1 and u1", () => {
+    expect(getAddressPlaceholder("zec")).toBe("t1… / u1…");
   });
 });
 

@@ -2,7 +2,7 @@
  * Address validation for EVM, Near, Solana, Tron, and Zcash.
  * Near follows near-sdk-js / Nomicon account ID rules.
  * Solana also checks 32-byte base58 decode. Tron uses TronWeb.isAddress.
- * Zcash accepts transparent t1/t3 only (NEAR Intents does not support u1/zs1).
+ * Zcash accepts transparent t1/t3 and Unified u1 (NEAR Intents). Sapling zs1 is rejected.
  */
 
 import { TronWeb } from "tronweb";
@@ -96,11 +96,14 @@ function validateTronAddress(address: string): AddressValidationResult {
   return { isValid: true };
 }
 
+const ZEC_TRANSPARENT_ADDRESS = /^t[13][a-zA-Z0-9]{33,}$/;
+const ZEC_UNIFIED_ADDRESS = /^u1[02-9ac-hj-np-z]{75,}$/;
+
 function validateZecAddress(address: string): AddressValidationResult {
-  if (!/^t[13][a-zA-Z0-9]{33,}$/.test(address)) {
-    return { isValid: false, error: "Invalid Zcash transparent address" };
+  if (ZEC_TRANSPARENT_ADDRESS.test(address) || ZEC_UNIFIED_ADDRESS.test(address)) {
+    return { isValid: true };
   }
-  return { isValid: true };
+  return { isValid: false, error: "Invalid Zcash address" };
 }
 
 export function validateAddress(
@@ -153,7 +156,7 @@ export function getAddressPlaceholder(chainKind: WalletChainKind | string | null
   if (kind === "near") return "alice.near";
   if (kind === "solana") return "Solana address";
   if (kind === "tron") return "T…";
-  if (kind === "zec") return "t1…";
+  if (kind === "zec") return "t1… / u1…";
   return "0x…";
 }
 

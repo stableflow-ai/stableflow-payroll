@@ -1,12 +1,12 @@
 import { Big } from "@/utils";
 import { ZEC_DECIMALS } from "./config";
-import { getBalanceZec } from "./sdk";
+import { zcashWalletAdapter } from "./sdk";
 
 export async function readNativeZecBalance(): Promise<bigint> {
-  const balance = await getBalanceZec();
-  const available = balance.available || "0";
+  const balance = await zcashWalletAdapter.getBalance();
+  const shielded = balance.shielded || "0";
   try {
-    return BigInt(new Big(available).times(new Big(10).pow(ZEC_DECIMALS)).toFixed(0));
+    return BigInt(new Big(shielded).times(new Big(10).pow(ZEC_DECIMALS)).toFixed(0));
   } catch {
     return 0n;
   }

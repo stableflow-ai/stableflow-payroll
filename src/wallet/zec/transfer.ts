@@ -1,6 +1,6 @@
 import { formatUnits } from "viem";
 import { ZEC_DECIMALS, ZEC_SHIELD_FUNDS_MESSAGE } from "./config";
-import { transferZec } from "./sdk";
+import { zcashWalletAdapter } from "./sdk";
 
 export async function transferNativeZec(input: {
   to: string;
@@ -10,7 +10,11 @@ export async function transferNativeZec(input: {
   const decimals = input.decimals ?? ZEC_DECIMALS;
   const amount = formatUnits(input.amountIn, decimals);
   try {
-    return await transferZec({ to: input.to, amount });
+    return await zcashWalletAdapter.signAndSendTransaction({
+      to: input.to,
+      amount,
+      fundingSource: "shielded",
+    });
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error || "");
     if (/shield|funding|insufficient|balance/i.test(msg)) {

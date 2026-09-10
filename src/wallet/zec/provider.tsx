@@ -8,13 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { NOIR_DOWNLOAD_URL } from "./config";
-import {
-  connectZec,
-  disconnectZec,
-  getAccountsZec,
-  getZecWallet,
-  isNoirWalletInstalled,
-} from "./sdk";
+import { zcashWalletAdapter, zecConnectedAddress } from "./sdk";
 
 export interface ZecWalletContextValue {
   account: string | null;
@@ -25,85 +19,74 @@ export interface ZecWalletContextValue {
 
 const ZecWalletContext = createContext<ZecWalletContextValue | null>(null);
 
-function transparentAccount(value: unknown): string | null {
-  if (typeof value === "string" && value.trim()) return value.trim();
-  if (value && typeof value === "object" && "transparent" in value) {
-    const transparent = (value as { transparent?: unknown }).transparent;
-    if (typeof transparent === "string" && transparent.trim()) return transparent.trim();
-  }
-  return null;
-}
-
 export function ZecWalletProvider({ children }: { children: ReactNode }) {
   const [account, setAccount] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(false);
 
-  const connect = useCallback(() => {
-    if (!isNoirWalletInstalled()) {
-      window.open(NOIR_DOWNLOAD_URL, "_blank");
-      return;
-    }
-    setConnecting(true);
-    void connectZec()
-      .then((result) => {
-        setAccount(result.transparent || null);
-      })
-      .catch((error: unknown) => {
-        console.error("[wallet:zec]", error);
-      })
-      .finally(() => {
-        setConnecting(false);
-      });
+  const syncAccount = useCallback(() => {
+    setAccount(zecConnectedAddress());
   }, []);
 
+  const connect = useCallback(() => {
+    setConnecting(true);
+    void (async () => {
+      try {
+        const installed = await zcashWalletAdapter.detect();
+        if (!installed) {
+          window.open(NOIR_DOWNLOAD_URL, "_blank");
+          return;
+        }
+        await zcashWalletAdapter.connect();
+        syncAccount();
+      } catch (error: unknown) {
+        console.error("[wallet:zec]", error);
+      } finally {
+        setConnecting(false);
+      }
+    })();
+  }, [syncAccount]);
+
   const disconnect = useCallback(() => {
-    void disconnectZec().finally(() => {
+    void zcashWalletAdapter.disconnect().finally(() => {
       setAccount(null);
     });
   }, []);
 
   useEffect(() => {
     let cancelled = false;
-    let onAccountsChanged: ((data?: unknown) => void) | null = null;
 
-    const silentReconnect = async () => {
-      if (!isNoirWalletInstalled()) return;
+    const onConnect = () => {
+      if (!cancelled) syncAccount();
+    };
+    const onDisconnect = () => {
+      if (!cancelled) setAccount(null);
+    };
+    const onAccountChanged = () => {
+      if (!cancelled) syncAccount();
+    };
+
+    zcashWalletAdapter.on("connect", onConnect);
+    zcashWalletAdapter.on("disconnect", onDisconnect);
+    zcashWalletAdapter.on("accountChanged", onAccountChanged);
+
+    void (async () => {
       try {
-        const accounts = await getAccountsZec();
-        if (cancelled) return;
-        if (accounts?.transparent) setAccount(accounts.transparent);
+        const installed = await zcashWalletAdapter.detect();
+        if (!installed || cancelled) return;
+        await zcashWalletAdapter.connect({ silent: true });
+        if (!cancelled) syncAccount();
       } catch {
         // not connected
       }
-    };
-
-    void silentReconnect();
-
-    try {
-      const zcash = getZecWallet();
-      onAccountsChanged = (data?: unknown) => {
-        const next = transparentAccount(Array.isArray(data) ? data[0] : data);
-        if (!next) {
-          setAccount(null);
-          return;
-        }
-        setAccount(next);
-      };
-      zcash.on("accountsChanged", onAccountsChanged);
-    } catch {
-      // extension not available
-    }
+    })();
 
     return () => {
       cancelled = true;
-      if (!onAccountsChanged) return;
-      try {
-        getZecWallet().removeListener("accountsChanged", onAccountsChanged);
-      } catch {
-        // ignore
-      }
+      zcashWalletAdapter.off("connect", onConnect);
+      zcashWalletAdapter.off("disconnect", onDisconnect);
+      zcashWalletAdapter.off("accountChanged", onAccountChanged);
     };
-  }, []);
+  }, [syncAccount]);
 
   const value = useMemo<ZecWalletContextValue>(() => ({
     account,
