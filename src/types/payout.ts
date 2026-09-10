@@ -182,6 +182,7 @@ export interface PayrollCreateBatchPaymentParam {
 export interface PayrollBatchPayment extends PayrollPayment {
   batchId: string;
   payDepositAddress: string;
+  destinationVolume: string;
 }
 
 export interface PayrollBatch {

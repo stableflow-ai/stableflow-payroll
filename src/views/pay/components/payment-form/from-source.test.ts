@@ -111,7 +111,7 @@ describe("payrollNextToPayable", () => {
     expect(form).toMatchObject({
       key: { type: PAYABLE_TYPE.Payroll, periodMonth: NEXT.payDate },
       type: PAYABLE_TYPE.Payroll,
-      title: NEXT.payDate,
+      title: "September Payroll",
       totalPayout: "9000",
       totalCount: 2,
       paymentDate: NEXT.payDate,

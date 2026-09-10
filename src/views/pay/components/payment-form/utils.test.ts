@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PAYABLE_TYPE, type Payable } from "@/types/payable";
-import { buildPayablePayRequest, sumPayableNetPay, sumPayableVolume } from "./utils";
+import { buildPayablePayRequest, sumPayableNetPay, sumPayableVolume, sumQuoteDestinationVolume } from "./utils";
 
 const PAYABLE: Payable = {
   key: { type: PAYABLE_TYPE.Payroll, periodMonth: "2026-09" },
@@ -48,7 +48,7 @@ const TOKEN = {
 } as unknown as Parameters<typeof buildPayablePayRequest>[0]["originToken"];
 
 describe("buildPayablePayRequest", () => {
-  it("omits adjustments until a net pay override differs from the list", () => {
+  it("always sends payroll net pay as adjustments", () => {
     expect(
       buildPayablePayRequest({
         payable: PAYABLE,
@@ -59,7 +59,10 @@ describe("buildPayablePayRequest", () => {
         notifyEnabled: false,
         selectedItemIds: [],
       })?.adjustments,
-    ).toBeUndefined();
+    ).toEqual([
+      { item_id: 2, net_pay: "1" },
+      { item_id: 5, net_pay: "1" },
+    ]);
     expect(
       buildPayablePayRequest({
         payable: PAYABLE,
@@ -71,7 +74,10 @@ describe("buildPayablePayRequest", () => {
         selectedItemIds: [],
         netPayById: { 2: "1", 5: "" },
       })?.adjustments,
-    ).toBeUndefined();
+    ).toEqual([
+      { item_id: 2, net_pay: "1" },
+      { item_id: 5, net_pay: "1" },
+    ]);
     expect(
       buildPayablePayRequest({
         payable: PAYABLE,
@@ -83,7 +89,49 @@ describe("buildPayablePayRequest", () => {
         selectedItemIds: [],
         netPayById: { 2: "1.25" },
       })?.adjustments,
-    ).toEqual([{ item_id: 2, net_pay: "1.25" }]);
+    ).toEqual([
+      { item_id: 2, net_pay: "1.25" },
+      { item_id: 5, net_pay: "1" },
+    ]);
+  });
+
+  it("omits adjustments for expense and bonus", () => {
+    const expense: Payable = {
+      ...PAYABLE,
+      key: { type: PAYABLE_TYPE.Expense, batchId: 8 },
+      type: PAYABLE_TYPE.Expense,
+      batchId: 8,
+      periodMonth: "",
+    };
+    expect(
+      buildPayablePayRequest({
+        payable: expense,
+        originToken: TOKEN,
+        payer: "0xpayer",
+        organizationId: 8,
+        timezone: "UTC",
+        notifyEnabled: false,
+        selectedItemIds: [],
+        netPayById: { 2: "1.25" },
+      })?.adjustments,
+    ).toBeUndefined();
+    const bonus: Payable = {
+      ...expense,
+      key: { type: PAYABLE_TYPE.Bonus, batchId: 8 },
+      type: PAYABLE_TYPE.Bonus,
+    };
+    expect(
+      buildPayablePayRequest({
+        payable: bonus,
+        originToken: TOKEN,
+        payer: "0xpayer",
+        organizationId: 8,
+        timezone: "UTC",
+        notifyEnabled: false,
+        selectedItemIds: [],
+        netPayById: { 2: "1.25" },
+      })?.adjustments,
+    ).toBeUndefined();
   });
 
   it("adds notification only when notify is on", () => {
@@ -201,5 +249,17 @@ describe("buildPayablePayRequest operations", () => {
       batchId: 46,
     });
     expect(request && "adjustments" in request ? request.adjustments : undefined).toBeUndefined();
+  });
+});
+
+describe("sumQuoteDestinationVolume", () => {
+  it("sums destination_volume from quote payments", () => {
+    expect(
+      sumQuoteDestinationVolume([
+        { destinationVolume: "99.97460000" },
+        { destinationVolume: "2.47321000" },
+      ]),
+    ).toBe("102.44781");
+    expect(sumQuoteDestinationVolume([{ destinationVolume: "" }])).toBe("0");
   });
 });

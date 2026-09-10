@@ -232,7 +232,7 @@ export async function updatePayrollSalaries(params: PayrollUpdateParam): Promise
   });
 }
 
-function payrollHistoryTitle(month: string): string {
+export function payrollHistoryTitle(month: string): string {
   const text = month.trim();
   if (!text) return "Payroll";
   const yearMonth = text.match(/^(\d{4})-(\d{1,2})/);

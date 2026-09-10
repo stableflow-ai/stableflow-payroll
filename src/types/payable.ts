@@ -168,3 +168,22 @@ export function payableAdjustments(
   }
   return adjustments.length ? adjustments : undefined;
 }
+
+/** Every payroll row's current net pay. Empty or non-positive values are skipped. */
+export function payablePayrollAdjustments(
+  items: readonly PayableItem[],
+  overrides: Record<number, string>,
+): PayablePayAdjustment[] | undefined {
+  const adjustments: PayablePayAdjustment[] = [];
+  for (const item of items) {
+    const netPay = effectiveNetPay(item, overrides).trim();
+    if (!netPay) continue;
+    try {
+      if (new Big(netPay).lte(0)) continue;
+    } catch {
+      continue;
+    }
+    adjustments.push({ item_id: item.id, net_pay: netPay });
+  }
+  return adjustments.length ? adjustments : undefined;
+}

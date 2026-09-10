@@ -169,6 +169,7 @@ export function mapPayrollBatchPayment(raw: unknown): PayrollBatchPayment {
     ...mapPayrollPayment(raw),
     batchId: apiText(row.batch_id ?? row.batchId),
     payDepositAddress: apiText(row.pay_deposit_address ?? row.payDepositAddress),
+    destinationVolume: apiText(row.destination_volume ?? row.destinationVolume),
   };
 }
 

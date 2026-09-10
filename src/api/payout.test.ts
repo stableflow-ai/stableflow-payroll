@@ -97,6 +97,29 @@ describe("mapPayrollBatch transaction outputs", () => {
     expect(isPayrollBatchBroadcastable(mapped)).toBe(true);
   });
 
+  it("maps destination_volume on batch payments", () => {
+    const mapped = mapPayrollBatch({
+      quote_id: "quote_pFQtR2UfmZn4SXbGlyJPx",
+      payments: [
+        {
+          payment_id: "payroll_n7Wf6N0BC6axneO9rPm7Y",
+          destination_volume: "99.97460000",
+          destination_amount: "100",
+        },
+        {
+          payment_id: "payroll_ZGm5aytxPGfrtN34mBQa0",
+          destinationVolume: "2.47321000",
+          destination_amount: "0.001",
+        },
+      ],
+      transaction: { callData: "0xabc", batch_contract: "0xcontract" },
+    });
+    expect(mapped.payments.map((row) => row.destinationVolume)).toEqual([
+      "99.97460000",
+      "2.47321000",
+    ]);
+  });
+
   it("is not broadcastable when callData and outputs are both empty", () => {
     const mapped = mapPayrollBatch({
       transaction: { callData: "", batch_contract: "" },

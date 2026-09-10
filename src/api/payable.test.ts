@@ -15,6 +15,7 @@ import {
   findPayable,
   parsePayableKey,
   payableAdjustments,
+  payablePayrollAdjustments,
   payableKeyId,
   PAYABLE_NOTIFICATION_ALL,
   payableNotification,
@@ -268,6 +269,54 @@ describe("payableAdjustments", () => {
   });
 });
 
+describe("payablePayrollAdjustments", () => {
+  it("sends every row's current net pay", () => {
+    const items = [
+      {
+        id: 1,
+        name: "Emily",
+        email: "",
+        address: "0x1",
+        network: "arb",
+        symbol: "USDT",
+        amount: "0.011",
+        volume: "",
+        netPay: "0.011",
+        purpose: "",
+        status: "pending",
+      },
+      {
+        id: 8,
+        name: "Jimmy",
+        email: "",
+        address: "0x2",
+        network: "arb",
+        symbol: "USDT",
+        amount: "0.0123",
+        volume: "",
+        netPay: "",
+        purpose: "",
+        status: "pending",
+      },
+    ];
+    expect(payablePayrollAdjustments(items, {})).toEqual([
+      { item_id: 1, net_pay: "0.011" },
+      { item_id: 8, net_pay: "0.0123" },
+    ]);
+    expect(payablePayrollAdjustments(items, { 1: "0.0110" })).toEqual([
+      { item_id: 1, net_pay: "0.0110" },
+      { item_id: 8, net_pay: "0.0123" },
+    ]);
+    expect(payablePayrollAdjustments(items, { 1: "0.01" })).toEqual([
+      { item_id: 1, net_pay: "0.01" },
+      { item_id: 8, net_pay: "0.0123" },
+    ]);
+    expect(payablePayrollAdjustments(items, { 8: "0" })).toEqual([
+      { item_id: 1, net_pay: "0.011" },
+    ]);
+  });
+});
+
 describe("payablePayBody", () => {
   it("includes timezone on payroll and omits it on expense", () => {
     expect(
@@ -332,7 +381,7 @@ describe("payablePayBody", () => {
     ).toBeUndefined();
   });
 
-  it("copies a non-empty adjustments list onto every pay body", () => {
+  it("copies a non-empty adjustments list onto payroll only", () => {
     const adjustments = [
       { item_id: 2, net_pay: "1.25" },
       { item_id: 5, net_pay: "1" },
@@ -359,7 +408,7 @@ describe("payablePayBody", () => {
         source_symbol: "USDC",
         adjustments,
       }).adjustments,
-    ).toEqual(adjustments);
+    ).toBeUndefined();
     expect(
       payablePayBody({
         type: PAYABLE_TYPE.Bonus,

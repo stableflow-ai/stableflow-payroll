@@ -1,13 +1,13 @@
 import {
   PAYABLE_TYPE,
-  isOperationPayableType,
   effectiveNetPay,
-  payableAdjustments,
   payableNotification,
+  payablePayrollAdjustments,
   type Payable,
   type PayablePayRequest,
 } from "@/types/payable";
 import { isBatchOriginToken } from "../../batch-utils";
+import type { PayrollBatchPayment } from "@/types/payout";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import { Big } from "@/utils";
 
@@ -47,6 +47,22 @@ export function sumPayableVolume(payable: Payable): string {
     .toFixed();
 }
 
+export function sumQuoteDestinationVolume(
+  payments: readonly Pick<PayrollBatchPayment, "destinationVolume">[],
+): string {
+  return payments
+    .reduce((sum, payment) => {
+      const value = payment.destinationVolume.trim();
+      if (!value) return sum;
+      try {
+        return sum.plus(value);
+      } catch {
+        return sum;
+      }
+    }, new Big(0))
+    .toFixed();
+}
+
 export function buildPayablePayRequest(input: {
   payable: Payable | null;
   originToken: IntentsToken | null;
@@ -72,9 +88,10 @@ export function buildPayablePayRequest(input: {
   const notification = notifyEnabled
     ? payableNotification(selectedItemIds, payableItemIds(payable))
     : undefined;
-  const adjustments = isOperationPayableType(payable.type)
-    ? undefined
-    : payableAdjustments(payable.items, netPayById);
+  const adjustments =
+    payable.type === PAYABLE_TYPE.Payroll
+      ? payablePayrollAdjustments(payable.items, netPayById)
+      : undefined;
   const base = {
     organization_id: organizationId,
     payer,

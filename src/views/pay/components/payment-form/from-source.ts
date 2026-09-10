@@ -1,3 +1,4 @@
+import { payrollHistoryTitle } from "@/api/payroll";
 import type { BonusPendingItem } from "@/types/bonus";
 import type { ExpenseOpenBatch } from "@/types/expense";
 import type { OperationOpenBatch } from "@/types/operation";
@@ -44,7 +45,7 @@ export function payrollNextToPayable(run: PayrollNextRun): Payable | null {
   return {
     key: { type: PAYABLE_TYPE.Payroll, periodMonth },
     type: PAYABLE_TYPE.Payroll,
-    title: periodMonth,
+    title: payrollHistoryTitle(periodMonth),
     totalPayout: run.totalPayout,
     totalCount: run.recipients,
     paymentDate: periodMonth,

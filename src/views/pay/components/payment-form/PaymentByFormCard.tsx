@@ -45,7 +45,7 @@ import { NotifyRecipientBar } from "../NotifyRecipientBar";
 import { NotifyRecipientsDrawer } from "./NotifyRecipientsDrawer";
 import { PaymentFormDetailsDrawer } from "./PaymentFormDetailsDrawer";
 import { PaymentFormSelect } from "./PaymentFormSelect";
-import { buildPayablePayRequest, payableItemIds, sumPayableVolume } from "./utils";
+import { buildPayablePayRequest, payableItemIds, sumQuoteDestinationVolume } from "./utils";
 
 class BalanceGateError extends Error {
   constructor(message: string) {
@@ -201,9 +201,12 @@ export function PaymentByFormCard(props: {
   const estCostLabel = youPayQuoted && originToken
     ? `${formatAmount(batch!.totalSourceAmount, { prefix: "", maxDecimals: 6 })} ${originToken.symbol}`
     : "-";
-  const totalValuedLabel = detail
-    ? formatAmount(sumPayableVolume(detail), { maxDecimals: AMOUNT_MAX_DECIMALS })
-    : "$0";
+  const totalValuedAmount = youPayQuoted
+    ? sumQuoteDestinationVolume(batch!.payments)
+    : "0";
+  const totalValuedLabel = formatAmount(totalValuedAmount, {
+    maxDecimals: AMOUNT_MAX_DECIMALS,
+  });
   const emailCount = detail?.items.length ?? 0;
 
   const settleMutation = useMutation({
@@ -374,7 +377,7 @@ export function PaymentByFormCard(props: {
         <p
           className={cn(
             "mt-2 font-montserrat text-[26px] font-medium text-black",
-            !detail && "opacity-30",
+            !youPayQuoted && "opacity-30",
           )}
         >
           {totalValuedLabel}
@@ -458,6 +461,7 @@ export function PaymentByFormCard(props: {
         onClose={() => setDetailsOpen(false)}
         detail={detail}
         netPayById={netPayById}
+        totalVolume={totalValuedAmount}
         onSaveNetPay={setNetPayById}
       />
 

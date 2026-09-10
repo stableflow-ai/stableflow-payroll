@@ -19,7 +19,6 @@ import { AMOUNT_MAX_DECIMALS } from "../../config";
 import { parsePositiveDecimal } from "../../utils";
 import { PayoutRecipientCell } from "../payout-table/PayoutRecipientCell";
 import { PaymentFormCategoryTag } from "./PaymentFormCategoryTag";
-import { sumPayableVolume } from "./utils";
 import {
   PAYMENT_FORM_DETAILS_CATEGORY_MUTED_CLASS,
   PAYMENT_FORM_DETAILS_COLUMNS,
@@ -35,9 +34,10 @@ export function PaymentFormDetailsDrawer(props: {
   onClose: () => void;
   detail: Payable | null;
   netPayById: Record<number, string>;
+  totalVolume: string;
   onSaveNetPay: (next: Record<number, string>) => void;
 }) {
-  const { open, onClose, detail, netPayById, onSaveNetPay } = props;
+  const { open, onClose, detail, netPayById, totalVolume, onSaveNetPay } = props;
   const isDesktop = useMediaQuery(PAYMENT_FORM_DETAILS_DESKTOP_QUERY);
   const toast = useToast();
   const [editing, setEditing] = useState(false);
@@ -125,6 +125,7 @@ export function PaymentFormDetailsDrawer(props: {
         <PaymentFormDetailsBody
           detail={detail}
           netPayById={netPayById}
+          totalVolume={totalVolume}
           editing={editing}
           draft={draft}
           onDraftChange={(id, value) => setDraft((prev) => ({ ...prev, [id]: value }))}
@@ -137,15 +138,16 @@ export function PaymentFormDetailsDrawer(props: {
 function PaymentFormDetailsBody(props: {
   detail: Payable;
   netPayById: Record<number, string>;
+  totalVolume: string;
   editing: boolean;
   draft: Record<number, string>;
   onDraftChange: (id: number, value: string) => void;
 }) {
-  const { detail, netPayById, editing, draft, onDraftChange } = props;
+  const { detail, netPayById, totalVolume, editing, draft, onDraftChange } = props;
   const recipientCount = String(detail.items.length);
   const isPayroll = detail.type === PAYABLE_TYPE.Payroll;
   const nextPayDate = formatDate(detail.paymentDate, DATE_FORMAT.MonthDayYear) || detail.paymentDate || "-";
-  const totalValued = formatAmount(sumPayableVolume(detail), {
+  const totalValued = formatAmount(totalVolume, {
     maxDecimals: AMOUNT_MAX_DECIMALS,
   });
 

@@ -186,7 +186,6 @@ export function payablePayBody(request: PayablePayRequest): Record<string, unkno
     body.category = request.type;
     return body;
   }
-  if (adjustments?.length) body.adjustments = adjustments;
   return body;
 }
 
@@ -198,7 +197,7 @@ export async function payPayable(request: PayablePayRequest): Promise<PayrollBat
   if (!("batchId" in request)) {
     return payOperationBatch(payablePayBody(request));
   }
-  const { type, batchId, ...body } = request;
+  const { type, batchId, adjustments: _adjustments, ...body } = request;
   if (type === PAYABLE_TYPE.Expense) {
     return payExpenseBatch(batchId, body);
   }
