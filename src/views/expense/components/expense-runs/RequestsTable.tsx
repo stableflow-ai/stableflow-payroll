@@ -9,7 +9,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/Table";
-import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { chainDisplayName } from "@/config/chains";
 import { formatAmount } from "@/utils";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";
@@ -18,33 +17,8 @@ import {
   REQUEST_PAYMENTS_TABLE_COLUMNS,
   EXPENSE_ROW_ACTION,
 } from "../../config";
+import { DescriptionCell } from "./DescriptionCell";
 import { ExternalLinkConfirmDialog } from "./ExternalLinkConfirmDialog";
-import { LinkifiedText } from "./LinkifiedText";
-
-function DescriptionCell({
-  value,
-  onOpenUrl,
-}: {
-  value: string;
-  onOpenUrl: (url: string) => void;
-}) {
-  const text = value.trim();
-  if (!text) {
-    return <span className="text-black">-</span>;
-  }
-  return (
-    <Tooltip
-      leaveDelay={150}
-      triggerClassName="min-w-0 max-w-full"
-      className="max-w-[320px] whitespace-normal"
-      content={<LinkifiedText text={text} onOpenUrl={onOpenUrl} />}
-    >
-      <span className="block min-w-0 truncate font-normal text-black">
-        <LinkifiedText text={text} onOpenUrl={onOpenUrl} />
-      </span>
-    </Tooltip>
-  );
-}
 
 function RowAction(props: {
   action: ExpenseOpenRow["action"];
