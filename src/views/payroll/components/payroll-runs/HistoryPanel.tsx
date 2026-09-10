@@ -8,15 +8,12 @@ import {
 } from "@/components/icons/payout-status";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_VARIANT } from "@/components/ui/button/config";
-import { getPayrollHistoryDetail } from "@/api/payroll";
+import { usePayrollHistoryDetailExportMutation } from "@/hooks/use-payroll-api";
 import useToast from "@/hooks/use-toast";
-import { organizationId } from "@/lib/auth-role";
 import { cn } from "@/lib/utils";
-import { useAuthStore } from "@/stores/auth";
 import type { PayrollHistoryRun } from "@/types/payroll";
-import { DATE_FORMAT, browserTimeZone, formatAmount, formatDate } from "@/utils";
+import { DATE_FORMAT, formatAmount, formatDate } from "@/utils";
 import { PAYROLL_RUN_STATUS, type PayrollRunStatus } from "../../config";
-import { exportPayrollHistoryMonthCsv } from "../../utils";
 
 function statusTone(status: PayrollRunStatus) {
   if (status === PAYROLL_RUN_STATUS.Failed) {
@@ -154,8 +151,7 @@ export function HistoryPanel(props: {
     onViewDetails,
   } = props;
   const toast = useToast();
-  const user = useAuthStore((state) => state.user);
-  const orgId = organizationId(user);
+  const exportMutation = usePayrollHistoryDetailExportMutation();
   const [exportingId, setExportingId] = useState<string | null>(null);
   const sentinelRef = useRef<HTMLDivElement>(null);
 
@@ -174,19 +170,10 @@ export function HistoryPanel(props: {
   }, [hasMore, loadingMore, onLoadMore, items.length]);
 
   async function handleExport(run: PayrollHistoryRun) {
-    if (!orgId) {
-      toast.fail({ title: "Organization is missing" });
-      return;
-    }
     if (exportingId) return;
     setExportingId(run.id);
     try {
-      const detail = await getPayrollHistoryDetail({
-        organizationId: orgId,
-        timezone: browserTimeZone(),
-        executionId: run.id,
-      });
-      exportPayrollHistoryMonthCsv(detail.title || run.title, detail.rows);
+      await exportMutation.mutateAsync(run.id);
     } catch (error) {
       toast.fail({
         title:

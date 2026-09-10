@@ -227,7 +227,7 @@ Recent payouts have no `page` in the contract, only `limit` (max 100). `usePayro
 
 `GET /salaries/history/{execution_id}` returns the same summary plus `list` (`PayrollOperationExecutionItem`). Rows map `recipient` → address, `destination_symbol` / `destination_network` → payout preference, `amount` / `net_pay`, `status` (`completed` → `paid`), and `destination_tx_hash`. Failed count is counted from loaded `failed` rows. The item has no email field; that line is omitted when empty.
 
-`GET /salaries/history/{execution_id}/export` downloads that run's CSV. The history detail drawer **Export CSV** button calls it with the same `organization_id` and browser IANA `timezone` as the detail query. Filename comes from `Content-Disposition`, falling back to `payroll-history-detail.csv`.
+`GET /salaries/history/{execution_id}/export` downloads that run's CSV. The history card export next to **View Details** and the history detail drawer **Export CSV** button both call it with the same `organization_id` and browser IANA `timezone` as the detail query. Filename comes from `Content-Disposition`, falling back to `payroll-history-detail.csv`.
 
 `GET /salaries/history/export` downloads the payroll history CSV. The Payroll History tab **Export CSV** button calls it with `organization_id` and the browser IANA `timezone`. Filename comes from `Content-Disposition`, falling back to `payroll-history.csv`.
 
