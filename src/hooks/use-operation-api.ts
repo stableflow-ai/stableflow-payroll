@@ -209,7 +209,13 @@ export function useUpdateOrganizationOperationStatusMutation() {
       }
       return updateOrganizationOperationStatus(orgId, params.operationId, params.status);
     },
-    onSuccess: () => invalidateOperations(queryClient),
+    onSuccess: () => {
+      void queryClient.cancelQueries({ queryKey: queryKeys.operation.all });
+      if (orgId == null) return;
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.operation.catalog(orgId),
+      });
+    },
   });
 }
 

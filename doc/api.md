@@ -313,7 +313,7 @@ Recent payouts have no `page` in the contract, only `limit` (max 100). `useBonus
 
 `organization_id` comes from `AuthUser.organization.id`. List queries stay disabled until both the token and organization id are present. Catalog is admin-only (`enabled: token && organizationId && isAdmin`). Payroll / Expense / Bonus are not catalog rows.
 
-Catalog rows map `id`, `category`, `name`, `icon`, `description`, `added`, `status`. Mappers read snake/camel through `asRecord` / `apiText` / `apiNumber`. Unknown `category` values are kept. Sidebar leaves are `added && status === "active"`. Add is `POST /organizations/{id}/operations` when `added` is false. After that, enable/disable is `POST .../operations/{operation_id}` with `status: "active" | "disabled"`. Mutations invalidate `queryKeys.operation.all`.
+Catalog rows map `id`, `category`, `name`, `icon`, `description`, `added`, `status`. Mappers read snake/camel through `asRecord` / `apiText` / `apiNumber`. Unknown `category` values are kept. Sidebar leaves are `added && status === "active"`. Add is `POST /organizations/{id}/operations` when `added` is false. After that, enable/disable is `POST .../operations/{operation_id}` with `status: "active" | "disabled"`. Add and import invalidate `queryKeys.operation.all`. A status update cancels in-flight operation queries and invalidates only the catalog; turning off the category currently on screen `replace`s to `/`.
 
 `period` is `day` \| `week` \| `month`. Current stats map `total_payout` → Total Payment and `payouts` → Number of payments. Change strings such as `+10%` become numbers; blank / `-` map to `null`.
 
