@@ -1,9 +1,11 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api-error";
+import * as httpModule from "@/lib/http";
 import {
   mapPayable,
   mapPayablePayResponse,
   mapPayables,
+  payPayable,
   payablePayBody,
 } from "./payable";
 import {
@@ -26,6 +28,7 @@ describe("payableKeyId", () => {
     );
     expect(payableKeyId({ type: PAYABLE_TYPE.Expense, batchId: 12 })).toBe("expense:12");
     expect(payableKeyId({ type: PAYABLE_TYPE.Bonus, batchId: 3 })).toBe("bonus:3");
+    expect(payableKeyId({ type: "office", batchId: 46 })).toBe("office:46");
   });
 });
 
@@ -37,14 +40,15 @@ describe("parsePayableKey", () => {
     });
     expect(parsePayableKey("expense:8")).toEqual({ type: PAYABLE_TYPE.Expense, batchId: 8 });
     expect(parsePayableKey("bonus:0")).toEqual({ type: PAYABLE_TYPE.Bonus, batchId: 0 });
+    expect(parsePayableKey("office:46")).toEqual({ type: "office", batchId: 46 });
     expect(parsePayableKey("payroll:")).toBeNull();
     expect(parsePayableKey("expense:12.5")).toBeNull();
-    expect(parsePayableKey("invoice:1")).toBeNull();
+    expect(parsePayableKey("invoice:1")).toEqual({ type: "invoice", batchId: 1 });
   });
 });
 
 describe("mapPayables", () => {
-  it("keeps payroll/expense/bonus and drops unknown types", () => {
+  it("keeps payroll/expense/bonus and dynamic operation types", () => {
     const list = mapPayables([
       {
         type: "payroll",
@@ -79,6 +83,7 @@ describe("mapPayables", () => {
     expect(list.map((row) => payableKeyId(row.key))).toEqual([
       "payroll:2026-09",
       "expense:9",
+      "invoice:1",
     ]);
     expect(list[0]?.items[0]?.email).toBe("andrew@gmail.com");
     expect(list[1]?.items[0]?.email).toBe("");
@@ -171,6 +176,34 @@ describe("mapPayable", () => {
     expect(payable?.totalPayout).toBe("8000");
     expect(payable?.items[0]?.netPay).toBe("8000");
     expect(payable?.key).toEqual({ type: PAYABLE_TYPE.Bonus, batchId: 7 });
+  });
+
+  it("maps a dynamic operation payable", () => {
+    const payable = mapPayable({
+      type: "office",
+      batch_id: 46,
+      title: "hahahaha",
+      total_payout: "0.99971300",
+      total_count: 1,
+      list: [
+        {
+          id: 58,
+          batch_id: 46,
+          name: "Jimmygu",
+          email: "jimmygujh@gmail.com",
+          address: "0x635fa4477c7f9681a4ac88fa6147f441114e8655",
+          amount: "1",
+          volume: "0.99971300",
+          status: "pending",
+          symbol: "USDT",
+          network: "arb",
+        },
+      ],
+    });
+    expect(payable?.key).toEqual({ type: "office", batchId: 46 });
+    expect(payable?.type).toBe("office");
+    expect(payable?.items[0]?.email).toBe("jimmygujh@gmail.com");
+    expect(payable?.items[0]?.volume).toBe("0.99971300");
   });
 });
 
@@ -338,6 +371,24 @@ describe("payablePayBody", () => {
         adjustments: [],
       }).adjustments,
     ).toBeUndefined();
+    expect(
+      payablePayBody({
+        type: "office",
+        batchId: 46,
+        organization_id: 3,
+        payer: "0xpayer",
+        source_network: "arb",
+        source_symbol: "USDT",
+        adjustments: [{ item_id: 58, net_pay: "1" }],
+      }),
+    ).toEqual({
+      organization_id: 3,
+      payer: "0xpayer",
+      source_network: "arb",
+      source_symbol: "USDT",
+      batch_id: 46,
+      category: "office",
+    });
   });
 });
 
@@ -404,6 +455,55 @@ describe("mapPayablePayResponse", () => {
     } catch (error) {
       expect(error).toMatchObject({ code: "NO_BATCH_TX" });
     }
+  });
+});
+
+describe("payPayable", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("quotes dynamic operations at POST /operations/pay/quote", async () => {
+    const spy = vi.spyOn(httpModule, "http").mockResolvedValue({
+      quote_id: "q-op",
+      batch: {
+        batch_id: "b-op",
+        deadline: "2026-09-08T00:00:00Z",
+        payer: "0xpayer",
+        source_network: "arb",
+        source_symbol: "USDT",
+        total_source_amount: "1",
+        total_source_amount_raw: "1000000",
+        transaction: {
+          callData: "0xabc",
+          batch_contract: "0xcontract",
+        },
+      },
+    });
+    const quoted = await payPayable({
+      type: "office",
+      batchId: 46,
+      organization_id: 3,
+      payer: "0xpayer",
+      source_network: "arb",
+      source_symbol: "USDT",
+      adjustments: [{ item_id: 58, net_pay: "1" }],
+    });
+    expect(quoted.quoteId).toBe("q-op");
+    expect(spy).toHaveBeenCalledWith(
+      "/v1/payroll/operations/pay/quote",
+      expect.objectContaining({
+        method: "POST",
+        body: {
+          organization_id: 3,
+          payer: "0xpayer",
+          source_network: "arb",
+          source_symbol: "USDT",
+          batch_id: 46,
+          category: "office",
+        },
+      }),
+    );
   });
 });
 

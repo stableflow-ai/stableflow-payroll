@@ -11,6 +11,7 @@ import { Drawer } from "@/components/ui/drawer/Drawer";
 import { DRAWER_SIDE } from "@/components/ui/drawer/config";
 import { useBatchPayoutCommitQueue } from "@/hooks/use-batch-payout-commit-queue";
 import { useExpenseOpenRequestsCountQuery } from "@/hooks/use-expense-api";
+import { useOperationCatalogQuery } from "@/hooks/use-operation-api";
 import { isUser, organizationName, userRole } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { PaymentModeTabs } from "@/views/pay/components/PaymentModeTabs";
@@ -29,6 +30,7 @@ export interface PayLayoutOutletContext {
 export function PayLayout() {
   useBatchPayoutCommitQueue();
   useExpenseOpenRequestsCountQuery();
+  const catalogQuery = useOperationCatalogQuery();
   const { pathname } = useLocation();
   const user = useAuthStore((state) => state.user);
   const [headerExtra, setHeaderExtraState] = useState<ReactNode>(null);
@@ -74,7 +76,14 @@ export function PayLayout() {
             <RequestPaymentTabs />
           ) : (
             <h1 className="font-montserrat text-[20px] font-medium text-black">
-              {payTitleForPath(pathname, userRole(user))}
+              {payTitleForPath(
+                pathname,
+                userRole(user),
+                (catalogQuery.data ?? []).map((item) => ({
+                  category: item.category,
+                  name: item.name,
+                })),
+              )}
             </h1>
           )}
           <div className="flex items-center gap-3">

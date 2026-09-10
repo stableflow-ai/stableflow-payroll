@@ -6,10 +6,11 @@ import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { HEADER_ACCOUNT_MENU_VARIANT } from "@/components/layout/config";
 import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { useExpenseOpenRequestsCountQuery } from "@/hooks/use-expense-api";
+import { useOperationCatalogQuery } from "@/hooks/use-operation-api";
 import { organizationName, userRole } from "@/lib/auth-role";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
-import { useEnabledCategoriesStore } from "@/stores/enabled-categories";
+import { isOperationNavEnabled } from "@/types/operation";
 import { CategoriesDrawer } from "@/views/categories";
 import { CountBadge } from "./CountBadge";
 import {
@@ -137,8 +138,11 @@ function OperationsGroup(props: { item: PayNavGroupItem; onNavigate?: () => void
 export function PayNav(props: { onNavigate?: () => void; className?: string }) {
   const { onNavigate, className } = props;
   const user = useAuthStore((state) => state.user);
-  const enabledCategoryIds = useEnabledCategoriesStore((state) => state.enabledIds);
-  const items = payNavItemsForRole(userRole(user), enabledCategoryIds);
+  const catalogQuery = useOperationCatalogQuery();
+  const catalog = (catalogQuery.data ?? [])
+    .filter(isOperationNavEnabled)
+    .map((item) => ({ category: item.category, name: item.name }));
+  const items = payNavItemsForRole(userRole(user), catalog);
   return (
     <nav className={cn("flex flex-col gap-1", className)}>
       {items.map((item) =>

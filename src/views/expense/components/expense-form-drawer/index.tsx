@@ -37,10 +37,20 @@ export function ExpenseFormDrawer(props: {
   open: boolean;
   initialRows?: ExpenseDraftRow[];
   saving?: boolean;
+  title?: string;
+  titleLabel?: string;
   onClose: () => void;
   onSave: (payload: { title: string; items: ExpenseImportItem[] }) => void | Promise<void>;
 }) {
-  const { open, initialRows, saving = false, onClose, onSave } = props;
+  const {
+    open,
+    initialRows,
+    saving = false,
+    title: drawerTitle = EXPENSE_DRAWER_TITLE,
+    titleLabel = "Expense Title",
+    onClose,
+    onSave,
+  } = props;
   const tokens = useIntentsTokensStore((state) => state.tokens);
   const findByChainAndSymbol = useIntentsTokensStore((state) => state.findByChainAndSymbol);
   const [title, setTitle] = useState("");
@@ -84,7 +94,7 @@ export function ExpenseFormDrawer(props: {
       open={open}
       onClose={onClose}
       side={isDesktop ? DRAWER_SIDE.Right : DRAWER_SIDE.Bottom}
-      title={EXPENSE_DRAWER_TITLE}
+      title={drawerTitle}
       panelClassName={isDesktop ? "w-[min(100%,1200px)]" : undefined}
       cardClassName={cn(
         "p-6 sm:px-8 sm:pt-8 sm:pb-0",
@@ -99,7 +109,7 @@ export function ExpenseFormDrawer(props: {
             style={{ gridTemplateColumns: EXPENSE_FORM_COLUMNS }}
           >
             <p className="whitespace-nowrap font-montserrat text-sm font-medium text-[#606060]">
-              Expense Title
+              {titleLabel}
             </p>
             <input
               value={title}

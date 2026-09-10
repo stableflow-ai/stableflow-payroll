@@ -75,6 +75,25 @@ export const queryKeys = {
     open: (organizationId: number) => [...queryKeys.bonus.all, "open", organizationId] as const,
     history: (organizationId: number) => [...queryKeys.bonus.all, "history", organizationId] as const,
   },
+  operation: {
+    all: ["operation"] as const,
+    catalog: (organizationId: number) => [...queryKeys.operation.all, "catalog", organizationId] as const,
+    current: (organizationId: number, category: string, timezone: string) =>
+      [...queryKeys.operation.all, "current", organizationId, category, timezone] as const,
+    totalPayout: (
+      organizationId: number,
+      category: string,
+      period: string,
+      timezone: string,
+    ) =>
+      [...queryKeys.operation.all, "total-payout", organizationId, category, period, timezone] as const,
+    recent: (organizationId: number, category: string) =>
+      [...queryKeys.operation.all, "recent", organizationId, category] as const,
+    open: (organizationId: number, category: string) =>
+      [...queryKeys.operation.all, "open", organizationId, category] as const,
+    history: (organizationId: number, category: string, params: unknown) =>
+      [...queryKeys.operation.all, "history", organizationId, category, params] as const,
+  },
   organization: {
     all: ["organization"] as const,
     detail: (id: number) => [...queryKeys.organization.all, "detail", id] as const,

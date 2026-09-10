@@ -5,6 +5,7 @@ import { ApiError } from "@/lib/api-error";
 import { http } from "@/lib/http";
 import {
   PAYABLE_TYPE,
+  isOperationPayableType,
   type Payable,
   type PayableItem,
   type PayablePayBaseParam,
@@ -13,8 +14,6 @@ import {
   type PayrollPayParam,
 } from "@/types/payable";
 import type { PayrollBatch } from "@/types/payout";
-
-const PAYABLE_TYPES = new Set<string>(Object.values(PAYABLE_TYPE));
 
 function mapPayableItem(raw: unknown): PayableItem | null {
   const row = asRecord(raw);
@@ -45,7 +44,7 @@ function payableKeyFromRow(
     if (!periodMonth) return null;
     return { type: PAYABLE_TYPE.Payroll, periodMonth };
   }
-  if (batchId == null) return null;
+  if (!type || batchId == null) return null;
   return { type, batchId };
 }
 
@@ -53,11 +52,10 @@ export function mapPayable(raw: unknown): Payable | null {
   const row = asRecord(raw);
   if (!row) return null;
   const type = apiText(row.type).trim();
-  if (!PAYABLE_TYPES.has(type)) return null;
-  const payableType = type as PayableType;
+  if (!type) return null;
   const periodMonth = apiText(row.period_month ?? row.periodMonth).trim();
   const batchId = apiNumber(row.batch_id ?? row.batchId);
-  const key = payableKeyFromRow(payableType, periodMonth, batchId);
+  const key = payableKeyFromRow(type, periodMonth, batchId);
   if (!key) return null;
   const items = Array.isArray(row.list)
     ? row.list.flatMap((item) => {
@@ -67,7 +65,7 @@ export function mapPayable(raw: unknown): Payable | null {
     : [];
   return {
     key,
-    type: payableType,
+    type,
     title: apiText(row.title),
     totalPayout: apiText(row.total_payout ?? row.totalPayout),
     totalCount: apiNumber(row.total_count ?? row.totalCount) ?? items.length,
@@ -156,6 +154,17 @@ export async function payBonusBatch(
   );
 }
 
+export async function payOperationBatch(
+  body: Record<string, unknown>,
+): Promise<PayrollBatch> {
+  return mapPayablePayResponse(
+    await http<unknown>(`${PAY_API_PREFIX}/operations/pay/quote`, {
+      method: "POST",
+      body,
+    }),
+  );
+}
+
 export function payablePayBody(request: PayablePayRequest): Record<string, unknown> {
   const { organization_id, payer, source_network, source_symbol, notification, adjustments } =
     request;
@@ -166,23 +175,36 @@ export function payablePayBody(request: PayablePayRequest): Record<string, unkno
     source_symbol,
   };
   if (notification) body.notification = notification;
-  if (adjustments?.length) body.adjustments = adjustments;
-  if (request.type === PAYABLE_TYPE.Payroll) {
+  if (request.type === PAYABLE_TYPE.Payroll && "period_month" in request) {
+    if (adjustments?.length) body.adjustments = adjustments;
     body.period_month = request.period_month;
     body.timezone = request.timezone;
+    return body;
   }
+  if (isOperationPayableType(request.type) && "batchId" in request) {
+    body.batch_id = request.batchId;
+    body.category = request.type;
+    return body;
+  }
+  if (adjustments?.length) body.adjustments = adjustments;
   return body;
 }
 
 export async function payPayable(request: PayablePayRequest): Promise<PayrollBatch> {
-  if (request.type === PAYABLE_TYPE.Payroll) {
+  if (request.type === PAYABLE_TYPE.Payroll && "period_month" in request) {
     const { type: _type, ...body } = request;
     return payPayrollSalaries(body);
+  }
+  if (!("batchId" in request)) {
+    return payOperationBatch(payablePayBody(request));
   }
   const { type, batchId, ...body } = request;
   if (type === PAYABLE_TYPE.Expense) {
     return payExpenseBatch(batchId, body);
   }
-  return payBonusBatch(batchId, body);
+  if (type === PAYABLE_TYPE.Bonus) {
+    return payBonusBatch(batchId, body);
+  }
+  return payOperationBatch(payablePayBody(request));
 }
 

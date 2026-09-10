@@ -112,7 +112,6 @@ src/
 | `consumed-batches.ts` | `persist` | Spent payroll `batchId`s so the same deposit addresses are never broadcast twice |
 | `nearintents-user-session.ts` | no | Near Intents session for confidential receive / withdraw |
 | `google-drive-session.ts` | `persist` (sessionStorage) | Google OAuth token for the Sheets importer |
-| `enabled-categories.ts` | `persist` | Operations extra categories enabled from More Categories |
 
 ## Import paths
 

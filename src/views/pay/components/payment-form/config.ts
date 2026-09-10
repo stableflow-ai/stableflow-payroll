@@ -1,14 +1,21 @@
 import type { ComponentType } from "react";
-import { IconBonus, IconPayroll, IconReimbursement } from "@/components/icons";
+import { IconBonus, IconOperations, IconPayroll, IconReimbursement } from "@/components/icons";
 import type { IconProps } from "@/components/icons/types";
-import { PAYABLE_TYPE, type PayableType } from "@/types/payable";
+import { OPERATION_CATEGORY } from "@/types/operation";
+import { PAYABLE_TYPE } from "@/types/payable";
 
 export const PAYMENT_FORM_CATEGORY = PAYABLE_TYPE;
 
-export const PAYMENT_FORM_CATEGORY_UI: Record<
-  PayableType,
-  { label: string; className: string; Icon: ComponentType<IconProps> }
-> = {
+export type PaymentFormCategoryUi = {
+  label: string;
+  className: string;
+  Icon: ComponentType<IconProps>;
+};
+
+const OPERATION_TAG_CLASS =
+  "border-[#8b7cf6] bg-[rgba(139,124,246,0.2)] text-[#6f5ef0]";
+
+export const PAYMENT_FORM_CATEGORY_UI: Record<string, PaymentFormCategoryUi> = {
   [PAYABLE_TYPE.Payroll]: {
     label: "Payroll",
     className: "border-[#6284f5] bg-[rgba(98,132,245,0.2)] text-[#6284f5]",
@@ -24,6 +31,42 @@ export const PAYMENT_FORM_CATEGORY_UI: Record<
     className: "border-[#fbbc05] bg-[rgba(251,188,5,0.2)] text-[#fbbc05]",
     Icon: IconBonus,
   },
+  [OPERATION_CATEGORY.Office]: {
+    label: "Office",
+    className: OPERATION_TAG_CLASS,
+    Icon: IconOperations,
+  },
+  [OPERATION_CATEGORY.Procurement]: {
+    label: "Procurement",
+    className: OPERATION_TAG_CLASS,
+    Icon: IconOperations,
+  },
+  [OPERATION_CATEGORY.Outsourcing]: {
+    label: "Outsourcing",
+    className: OPERATION_TAG_CLASS,
+    Icon: IconOperations,
+  },
+  [OPERATION_CATEGORY.KolMkt]: {
+    label: "KOL&MKT",
+    className: OPERATION_TAG_CLASS,
+    Icon: IconOperations,
+  },
+  [OPERATION_CATEGORY.Grants]: {
+    label: "Grants",
+    className: OPERATION_TAG_CLASS,
+    Icon: IconOperations,
+  },
+  [OPERATION_CATEGORY.OtcTreasury]: {
+    label: "OTC",
+    className: OPERATION_TAG_CLASS,
+    Icon: IconOperations,
+  },
+};
+
+export const PAYMENT_FORM_CATEGORY_FALLBACK: PaymentFormCategoryUi = {
+  label: "Operations",
+  className: OPERATION_TAG_CLASS,
+  Icon: IconOperations,
 };
 
 export const PAYMENT_FORM_DETAILS_DESKTOP_QUERY = "(min-width: 768px)";

@@ -1,24 +1,49 @@
+import {
+  isOperationNavEnabled,
+  type OperationCatalogItem,
+} from "@/types/operation";
+
 export const CATEGORIES_DRAWER_DESKTOP_QUERY = "(min-width: 768px)";
 
 export const CATEGORY_ID = {
-  OfficeOperation: "office-operation",
+  Office: "office",
   Procurement: "procurement",
   Outsourcing: "outsourcing",
-  KolMkt: "kol-mkt",
-  GrantsEcosystem: "grants-ecosystem",
-  OtcTreasury: "otc-treasury"
+  KolMkt: "kolmkt",
+  Grants: "grants",
+  OtcTreasury: "otctreasury",
 } as const;
 
 export type CategoryId = (typeof CATEGORY_ID)[keyof typeof CATEGORY_ID];
 
+export const PAY_RESERVED_CATEGORY_SEGMENTS = new Set([
+  "form",
+  "result",
+  "payroll",
+  "expense",
+  "bonus",
+  "request",
+  "requests",
+]);
+
 export type CategoryItem = {
-  id: CategoryId;
+  operationId: number;
+  category: string;
   title: string;
   description: string;
   iconSrc: string;
   previewSrc: string;
   templateSrc?: string;
-  enabled: boolean;
+  added: boolean;
+  status: string;
+};
+
+export type CategoryLocalArt = {
+  title: string;
+  description: string;
+  iconSrc: string;
+  previewSrc: string;
+  templateSrc?: string;
 };
 
 export const CATEGORY_DASHBOARD_TAB = {
@@ -98,8 +123,8 @@ export type CategoryDashboardConfig = {
 export const CATEGORY_DASHBOARD_GROUPED_COLUMNS =
   "minmax(0,1.4fr) minmax(0,1.3fr) minmax(0,0.8fr) minmax(0,1.3fr) minmax(0,1.1fr) minmax(0,0.7fr)";
 
-export const CATEGORY_DASHBOARD_BY_ID: Partial<Record<CategoryId, CategoryDashboardConfig>> = {
-  [CATEGORY_ID.OfficeOperation]: {
+export const CATEGORY_DASHBOARD_BY_ID: Partial<Record<string, CategoryDashboardConfig>> = {
+  [CATEGORY_ID.Office]: {
     samplePayment: {
       payFor: "September office rent",
       address: "xxxxx...xxxx",
@@ -157,7 +182,7 @@ export const CATEGORY_DASHBOARD_BY_ID: Partial<Record<CategoryId, CategoryDashbo
     },
     chartHighlightLabel: "Jul",
   },
-  [CATEGORY_ID.GrantsEcosystem]: {
+  [CATEGORY_ID.Grants]: {
     groupedPayment: {
       payFor: "Community Grant",
       accountCount: 3,
@@ -200,72 +225,93 @@ export const CATEGORY_DASHBOARD_BY_ID: Partial<Record<CategoryId, CategoryDashbo
   },
 };
 
-export const CATEGORIES: readonly CategoryItem[] = [
-  {
-    id: CATEGORY_ID.OfficeOperation,
+export const CATEGORY_LOCAL_ART: Record<string, CategoryLocalArt> = {
+  [CATEGORY_ID.Office]: {
     title: "Office Operation",
     description:
       "Recurring basic operating expenses for team.\nOffice rent, utilities, Internet, etc.",
     iconSrc: "/categories/office-operation.svg",
     previewSrc: "/categories/preview-office-operation.png",
-    enabled: true
   },
-  {
-    id: CATEGORY_ID.Procurement,
+  [CATEGORY_ID.Procurement]: {
     title: "Procurement",
     description:
       "Payment for purchase of raw materials, operating supplies and merchandise inventory",
     iconSrc: "/categories/procurement.svg",
     previewSrc: "/categories/preview-procurement.png",
-    enabled: false
   },
-  {
-    id: CATEGORY_ID.Outsourcing,
+  [CATEGORY_ID.Outsourcing]: {
     title: "Outsourcing",
     description:
       "Technology outsourcing, labor outsourcing, processing fees, etc.",
     iconSrc: "/categories/outsourcing.svg",
     previewSrc: "/categories/preview-outsourcing.png",
-    enabled: false
   },
-  {
-    id: CATEGORY_ID.KolMkt,
+  [CATEGORY_ID.KolMkt]: {
     title: "KOL&MKT",
     description: "KOL and marketing fees",
     iconSrc: "/categories/kol-mkt.svg",
     previewSrc: "/categories/preview-kol-mkt.png",
-    enabled: false
   },
-  {
-    id: CATEGORY_ID.GrantsEcosystem,
+  [CATEGORY_ID.Grants]: {
     title: "Grants & Ecosystem",
     description: "Funding, partnerships and grants.",
     iconSrc: "/categories/grants-ecosystem.svg",
     previewSrc: "/categories/preview-grants-ecosystem.png",
-    enabled: false
   },
-  {
-    id: CATEGORY_ID.OtcTreasury,
+  [CATEGORY_ID.OtcTreasury]: {
     title: "OTC & Treasury",
     description: "Asset rebalancing and OTC settlement.",
     iconSrc: "/categories/otc-treasury.svg",
     previewSrc: "/categories/preview-otc-treasury.png",
-    enabled: false
-  }
-];
+  },
+};
 
-export const DEFAULT_ENABLED_CATEGORY_IDS: readonly CategoryId[] = CATEGORIES.filter(
-  (item) => item.enabled,
-).map((item) => item.id);
+export const DEFAULT_CATEGORY_DASHBOARD: CategoryDashboardConfig = {
+  samplePayment: {
+    payFor: "Payment",
+    address: "xxxxx...xxxx",
+    payout: "USDC · xxx",
+    amount: "xxx",
+  },
+};
 
-export function categoryPath(id: CategoryId): string {
-  return `/pay/${id}`;
+export function categoryPath(category: string): string {
+  return `/pay/${category}`;
 }
 
-export function isCategoryId(value: string): value is CategoryId {
-  return CATEGORIES.some((item) => item.id === value);
+export function categoryHistoryPath(category: string): string {
+  return `/pay/${category}/history`;
+}
+
+export function payCategoryFromPath(pathname: string): string | null {
+  if (!pathname.startsWith("/pay/")) return null;
+  const rest = pathname.slice("/pay/".length);
+  const segment = rest.split("/")[0] ?? "";
+  if (!segment || PAY_RESERVED_CATEGORY_SEGMENTS.has(segment)) return null;
+  if (rest !== segment && rest !== `${segment}/history`) return null;
+  return segment;
 }
 
 export function isCategoryPath(pathname: string): boolean {
-  return CATEGORIES.some((item) => categoryPath(item.id) === pathname);
+  return payCategoryFromPath(pathname) != null;
+}
+
+export function catalogToCategoryItem(item: OperationCatalogItem): CategoryItem {
+  const local = CATEGORY_LOCAL_ART[item.category];
+  return {
+    operationId: item.id,
+    category: item.category,
+    title: item.name.trim() || local?.title || item.category,
+    description: item.description.trim() || local?.description || "",
+    iconSrc: item.icon.trim() || local?.iconSrc || "",
+    previewSrc: local?.previewSrc ?? "",
+    templateSrc: local?.templateSrc,
+    added: item.added,
+    status: item.status,
+  };
+}
+
+export function isCategoryNavEnabled(item: CategoryItem): boolean {
+  return isOperationNavEnabled(item);
 }

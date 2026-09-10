@@ -8,6 +8,7 @@ import {
   expenseBatchToPayable,
   findExpenseOpenBatch,
   openMemberItemId,
+  operationBatchToPayable,
   payrollNextToPayable,
 } from "./from-source";
 
@@ -215,6 +216,26 @@ describe("bonusItemToPayable", () => {
 
   it("returns null when batchId is missing", () => {
     expect(bonusItemToPayable({ ...BONUS_ITEM, batchId: 0 })).toBeNull();
+  });
+});
+
+describe("operationBatchToPayable", () => {
+  it("maps an open operation batch with the category type", () => {
+    const form = operationBatchToPayable(EXPENSE_BATCH, "office");
+    expect(form).toMatchObject({
+      key: { type: "office", batchId: 12 },
+      type: "office",
+      title: "Conference",
+      totalPayout: "1253.02",
+      totalCount: 2,
+      batchId: 12,
+    });
+    expect(form?.items.map((item) => item.id)).toEqual([7, 8]);
+  });
+
+  it("returns null without a category or batch id", () => {
+    expect(operationBatchToPayable(EXPENSE_BATCH, " ")).toBeNull();
+    expect(operationBatchToPayable({ ...EXPENSE_BATCH, batchId: 0 }, "office")).toBeNull();
   });
 });
 

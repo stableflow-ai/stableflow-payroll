@@ -195,10 +195,11 @@ The checkout returns to the `success_url` we send (`{origin}/pay/result`) only a
 | POST | `/v1/payroll/salaries/pay/quote` | yes | `PayrollPayParam` | `PayrollBatch` | `payPayrollSalaries` | `usePayablePayQuery` |
 | POST | `/v1/payroll/expenses/{batch_id}/pay/quote` | yes | `PayablePayBaseParam` | `PayrollBatch` | `payExpenseBatch` | `usePayablePayQuery` |
 | POST | `/v1/payroll/bonuses/{batch_id}/pay/quote` | yes | `PayablePayBaseParam` | `PayrollBatch` | `payBonusBatch` | `usePayablePayQuery` |
+| POST | `/v1/payroll/operations/pay/quote` | yes | `PayablePayBaseParam` + `batch_id` + `category` | `PayrollBatch` | `payOperationBatch` | `usePayablePayQuery` |
 
-`organization_id` is session `user.organization.id`. `timezone` is `browserTimeZone()`. Rows whose `type` is not `payroll` / `expense` / `bonus` are dropped. Payroll keys use `period_month`; expense and bonus keys use `batch_id`. `list[].email` is mapped when present. `PaymentByFormCard` on `/pay/form` loads this list. Pay Now (`PaymentByFormDialog`) skips it and quotes from a `Payable` assembled from `salaries/next`, `expenses/open`, `expenses/open/requests`, or `bonuses/open`.
+`organization_id` is session `user.organization.id`. `timezone` is `browserTimeZone()`. Rows with an empty `type` are dropped. `payroll` keys use `period_month`; expense, bonus, and Operations keys use `batch_id` (Operations `type` is the catalog `category`, e.g. `office`). `list[].email` is mapped when present. `PaymentByFormCard` on `/pay/form` loads this list. Pay Now (`PaymentByFormDialog`) skips it and quotes from a `Payable` assembled from `salaries/next`, `expenses/open`, `expenses/open/requests`, `bonuses/open`, or `operations/open`.
 
-The three quote routes return `{ quote_id, batch }` (`quote_id` is a sibling of `batch`). The mapper reads `quote_id` and `batch` through `mapPayrollBatch` and throws `ApiError(..., "NO_QUOTE_ID")` or `ApiError(..., "NO_BATCH_TX")` when either is missing. `transaction.outputs` (`address`, `amount`, `amountRaw` / `amount_raw`) counts as broadcastable when `callData` is empty, so a native Zcash quote can be sent. `PaymentByFormCard` posts quote as `usePayablePayQuery` (`staleTime: 0`, `gcTime: 0`, no placeholder); Send uses `markBatchConsumed` then `broadcastBatchPayout` (Zcash: Noir `sendTransaction` to `outputs[0]`), then `enqueueBatchPayoutCommit({ quoteId, txHash })`. Expired or consumed quotes refetch quote. After EVM approve, if on-chain allowance is still below the quoted amount (`Insufficient approval amount`), Send toasts and POSTs quote again so the backend can rebuild `approvals` calldata; the payer clicks Send Payment once more. Optional `notification` is `"all"` when every item is selected, otherwise a comma-separated list of `item_id`s (`"1,5"`). `adjustments` is `{ item_id, net_pay }[]` only for rows whose saved net pay differs from list `net_pay` (or `amount` when `net_pay` is missing) and is omitted when nothing changed. Both fields are part of the quote query key. `payablePayBody` copies a non-empty `notification` string and `adjustments` array onto all three quote bodies. `/pay/payroll` Pay Now seeds `PaymentByFormCard` `initialNetPayById` from Next Payroll Net Pay so those overrides enter the quote as `adjustments`.
+The quote routes return `{ quote_id, batch }` (`quote_id` is a sibling of `batch`). The mapper reads `quote_id` and `batch` through `mapPayrollBatch` and throws `ApiError(..., "NO_QUOTE_ID")` or `ApiError(..., "NO_BATCH_TX")` when either is missing. `transaction.outputs` (`address`, `amount`, `amountRaw` / `amount_raw`) counts as broadcastable when `callData` is empty, so a native Zcash quote can be sent. `PaymentByFormCard` posts quote as `usePayablePayQuery` (`staleTime: 0`, `gcTime: 0`, no placeholder); Send uses `markBatchConsumed` then `broadcastBatchPayout` (Zcash: Noir `sendTransaction` to `outputs[0]`), then `enqueueBatchPayoutCommit({ quoteId, txHash })`. Expired or consumed quotes refetch quote. After EVM approve, if on-chain allowance is still below the quoted amount (`Insufficient approval amount`), Send toasts and POSTs quote again so the backend can rebuild `approvals` calldata; the payer clicks Send Payment once more. Optional `notification` is `"all"` when every item is selected, otherwise a comma-separated list of `item_id`s (`"1,5"`). `adjustments` is `{ item_id, net_pay }[]` only for payroll / expense / bonus rows whose saved net pay differs from list `net_pay` (or `amount` when `net_pay` is missing) and is omitted when nothing changed. Operations quote bodies never include `adjustments`. Both fields are part of the quote query key. `payablePayBody` copies a non-empty `notification` string onto every quote body and copies `adjustments` onto payroll / expense / bonus only. Operations bodies send `batch_id` and `category` (= payable `type`) and omit `period_month` / `timezone`. `/pay/payroll` Pay Now seeds `PaymentByFormCard` `initialNetPayById` from Next Payroll Net Pay so those overrides enter the quote as `adjustments`.
 
 ### Payroll salaries — `src/api/payroll.ts`, `src/types/payroll.ts`, `src/hooks/use-payroll-api.ts`
 
@@ -295,6 +296,33 @@ Recent payouts have no `page` in the contract, only `limit` (max 100). `useBonus
 
 `POST /bonuses/import` saves a draft open bonus. **Add Bonus** and **Import CSV** both open the Add Bonus drawer first (CSV / Google Sheets is parsed locally, same as payroll); **Save** posts this route. Body is `organization_id`, `title` (≤ 100), and `items` (`name` ≤ 50, `address` ≤ 128, `amount`, `network` ≤ 32, `symbol` ≤ 32, optional `email` ≤ 100 / `purpose` ≤ 100 / `description` ≤ 5000). CSV columns are `recipient,email,amount,token,network,memo`; `memo` maps to `description`. Empty optional fields are omitted. Success returns `{ batch_id, count }` and invalidates the bonus query namespace.
 
+### Operations — `src/api/operation.ts`, `src/types/operation.ts`, `src/hooks/use-operation-api.ts`
+
+| Method | Path | Auth | Query / Body | Data | API | Hook |
+| --- | --- | --- | --- | --- | --- | --- |
+| GET | `/v1/payroll/operations` | yes | `organization_id` | `OperationCatalogItem[]` | `getOperationCatalog` | `useOperationCatalogQuery` |
+| POST | `/v1/payroll/organizations/{id}/operations` | yes | `{ operation_id }` | `OperationCatalogItem` | `addOrganizationOperation` | `useAddOrganizationOperationMutation` |
+| POST | `/v1/payroll/organizations/{id}/operations/{operation_id}` | yes | `{ status }` | `OperationCatalogItem` | `updateOrganizationOperationStatus` | `useUpdateOrganizationOperationStatusMutation` |
+| GET | `/v1/payroll/operations/current` | yes | `organization_id`, `category`, `timezone` | `OperationCurrentStats` | `getOperationCurrentStats` | `useOperationCurrentStatsQuery` |
+| GET | `/v1/payroll/operations/total-payout` | yes | `organization_id`, `category`, `period`, `timezone` | `OperationTotalPayoutPoint[]` | `getOperationTotalPayout` | `useOperationTotalPayoutQuery` |
+| GET | `/v1/payroll/operations/recent` | yes | `organization_id`, `category`, `limit` | `OperationRecentPayout[]` | `getOperationRecentPayouts` | `useOperationRecentPayoutsInfiniteQuery` |
+| GET | `/v1/payroll/operations/open` | yes | `organization_id`, `category` | `OperationOpenList` | `getOperationOpen` | `useOperationOpenQuery` |
+| GET | `/v1/payroll/operations/history` | yes | `organization_id`, `category`, `page`, `pageSize`, `start_time?`, `end_time?` | `OperationHistoryResp` | `getOperationHistory` | `useOperationHistoryInfiniteQuery` |
+| GET | `/v1/payroll/operations/history/export` | yes | `organization_id`, `category`, `start_time?`, `end_time?` | CSV file | `exportOperationHistory` | `useOperationHistoryExportMutation` |
+| POST | `/v1/payroll/operations/import` | yes | body: `organization_id`, `category`, `title`, `items` | `OperationImportResp` | `importOperations` | `useOperationImportMutation` |
+
+`organization_id` comes from `AuthUser.organization.id`. List queries stay disabled until both the token and organization id are present. Catalog is admin-only (`enabled: token && organizationId && isAdmin`). Payroll / Expense / Bonus are not catalog rows.
+
+Catalog rows map `id`, `category`, `name`, `icon`, `description`, `added`, `status`. Mappers read snake/camel through `asRecord` / `apiText` / `apiNumber`. Unknown `category` values are kept. Sidebar leaves are `added && status === "active"`. Add is `POST /organizations/{id}/operations` when `added` is false. After that, enable/disable is `POST .../operations/{operation_id}` with `status: "active" | "disabled"`. Mutations invalidate `queryKeys.operation.all`.
+
+`period` is `day` \| `week` \| `month`. Current stats map `total_payout` → Total Payment and `payouts` → Number of payments. Change strings such as `+10%` become numbers; blank / `-` map to `null`.
+
+Recent / open / history reuse the expense list shapes. Recent infinite query requests `limit = page * 10` (max 100) and polls every 30s while any loaded row is `pending`. History has no `search`. Export uses the same date filters without pagination. Filename comes from `Content-Disposition`, falling back to `operation-history.csv`.
+
+`POST /operations/import` saves a draft open batch. **Add Payment** and **Import CSV** open the expense-style drawer first; **Save** posts this route with `category`. CSV columns match expense: `recipient,email,amount,token,network,memo`. Success invalidates the operation query namespace.
+
+Pay Now quotes through `payPayable` → `POST /v1/payroll/operations/pay/quote` (see Payment by form). Commit success also invalidates `queryKeys.operation.all`. Execution toast View goes to `/pay/{category}/history`.
+
 ### Payout submit and executions — `src/api/payout.ts`, `src/types/payout.ts`
 
 | Method | Path | Auth | Body / Query | Data | API | Hook |
@@ -303,7 +331,7 @@ Recent payouts have no `page` in the contract, only `limit` (max 100). `useBonus
 | POST | `/v1/payroll/payouts/retry` | yes | `PayrollPayoutRetryParam` | `PayrollPayment` | `retryPayrollPayout` | `useRetryPayrollPayoutMutation` |
 | GET | `/v1/payroll/executions/{execution_id}` | yes | `organization_id` | `PayrollExecution` | `getPayrollExecution` | `usePayoutExecutionPoll` |
 
-Payment by form signs and broadcasts the payable quote, then `enqueueBatchPayoutCommit` stores `{ quoteId, txHash, title, type }`. `useBatchPayoutCommitQueue` (mounted in `PayLayout`) retries `POST /payouts/submit` with exponential backoff from 5s and drops the item once the server accepts it. Submit returns `execution_id`. The layout then polls `GET /executions/{execution_id}` every 5s without blocking the pay form. Only the latest execution is polled. Progress is an `info` toast (`{processed} / {total} Transactions are in progress...` plus View). Newly terminal list items toast `completed` / `failed` / `expired`. View goes to the matching history list and stops polling. `finished: true` changes the copy to `{processed} / {total} Transactions completed`, keeps the toast 3s, then closes it, and invalidates that type's recent + history queries.
+Payment by form signs and broadcasts the payable quote, then `enqueueBatchPayoutCommit` stores `{ quoteId, txHash, title, type }`. `useBatchPayoutCommitQueue` (mounted in `PayLayout`) retries `POST /payouts/submit` with exponential backoff from 5s and drops the item once the server accepts it. Submit returns `execution_id`. The layout then polls `GET /executions/{execution_id}` every 5s without blocking the pay form. Only the latest execution is polled. Progress is an `info` toast (`{processed} / {total} Transactions are in progress...` plus View). Newly terminal list items toast `completed` / `failed` / `expired`. View goes to the matching history list (`/pay/payroll/history`, `/pay/expense/history`, `/pay/bonus/history`, or `/pay/{category}/history`) and stops polling. `finished: true` changes the copy to `{processed} / {total} Transactions completed`, keeps the toast 3s, then closes it, and invalidates that type's recent + history queries (Operations also invalidates `queryKeys.operation.all` on commit).
 
 ### Recipients — `src/api/recipient.ts`, `src/types/recipient.ts`, `src/hooks/use-recipient-api.ts`
 
@@ -355,7 +383,7 @@ All four pass `envelope: false`. They are called from `src/lib/confidential/` fo
 | `src/lib/query-client.ts` | `queryClient` (30s `staleTime`, 1 retry, no refetch on focus) |
 | `src/api/config.ts` | `PAY_API_PREFIX`, `NEARINTENTS_API_PREFIX` |
 | `src/api/query-keys.ts` | `queryKeys` factory |
-| `src/api/payable.ts` | Payables list and salaries/expense/bonus quote |
+| `src/api/payable.ts` | Payables list and salaries / expense / bonus / operations quote |
 | `src/api/payout.ts` | Hosted checkout create/get, payout submit, executions, payroll-batch mapping |
 | `src/api/map.ts` | `asRecord`, `apiText`, `apiNumber` |
 | `src/api/overview.ts` | Member overview stats and payout chart |
@@ -363,3 +391,4 @@ All four pass `envelope: false`. They are called from `src/lib/confidential/` fo
 | `src/api/payroll.ts` | Payroll salaries current / total-payout / recent / next / history |
 | `src/api/expense.ts` | Expense current / total-payout / recent / open / open requests / history / history export / import |
 | `src/api/bonus.ts` | Bonus current / total-payout / recent / open / history / history export / import |
+| `src/api/operation.ts` | Operations catalog, add / status, current / total-payout / recent / open / history / import |

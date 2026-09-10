@@ -1,5 +1,6 @@
 import type { BonusPendingItem } from "@/types/bonus";
 import type { ExpenseOpenBatch } from "@/types/expense";
+import type { OperationOpenBatch } from "@/types/operation";
 import { PAYABLE_TYPE, type Payable, type PayableItem } from "@/types/payable";
 import type { PayrollNextRun } from "@/types/payroll";
 
@@ -115,6 +116,43 @@ export function bonusItemToPayable(item: BonusPendingItem): Payable | null {
     paymentDate: "",
     periodMonth: "",
     batchId: item.batchId,
+    items,
+  };
+}
+
+export function operationBatchToPayable(
+  batch: OperationOpenBatch,
+  category: string,
+): Payable | null {
+  const type = category.trim();
+  if (!type || batch.batchId <= 0) return null;
+  const items: PayableItem[] = [];
+  for (const member of batch.members) {
+    const id = openMemberItemId(member.id, batch.batchId);
+    if (id == null) continue;
+    items.push({
+      id,
+      name: member.name,
+      email: "",
+      address: member.address,
+      network: member.network,
+      symbol: member.token,
+      amount: member.amount,
+      volume: member.expense,
+      netPay: "",
+      purpose: member.purpose,
+      status: "",
+    });
+  }
+  return {
+    key: { type, batchId: batch.batchId },
+    type,
+    title: batch.title,
+    totalPayout: batch.volume,
+    totalCount: batch.count,
+    paymentDate: "",
+    periodMonth: "",
+    batchId: batch.batchId,
     items,
   };
 }

@@ -52,7 +52,8 @@ describe("executionHistoryPath", () => {
     expect(executionHistoryPath("salary")).toBe(PAYROLL_HISTORY_PATH);
     expect(executionHistoryPath("expense")).toBe(EXPENSE_HISTORY_PATH);
     expect(executionHistoryPath("bonus")).toBe(BONUS_HISTORY_PATH);
-    expect(executionHistoryPath("other")).toBe(HISTORY_PATH);
+    expect(executionHistoryPath("office")).toBe("/pay/office/history");
+    expect(executionHistoryPath("")).toBe(HISTORY_PATH);
   });
 });
 
@@ -118,6 +119,10 @@ describe("payoutStatusQueryKeys", () => {
       ["bonus", "recent"],
       ["bonus", "history"],
     ]);
-    expect(payoutStatusQueryKeys("other")).toEqual([]);
+    expect(payoutStatusQueryKeys("office")).toEqual([
+      ["operation", "recent"],
+      ["operation", "history"],
+    ]);
+    expect(payoutStatusQueryKeys("")).toEqual([]);
   });
 });

@@ -6,11 +6,26 @@ export const PAYABLE_TYPE = {
   Bonus: "bonus",
 } as const;
 
-export type PayableType = (typeof PAYABLE_TYPE)[keyof typeof PAYABLE_TYPE];
+export type StaticPayableType = (typeof PAYABLE_TYPE)[keyof typeof PAYABLE_TYPE];
+
+/** Payroll / expense / bonus, or a dynamic operation category such as `office`. */
+export type PayableType = string;
+
+export function isStaticPayableType(type: string): type is StaticPayableType {
+  return (
+    type === PAYABLE_TYPE.Payroll
+    || type === PAYABLE_TYPE.Expense
+    || type === PAYABLE_TYPE.Bonus
+  );
+}
+
+export function isOperationPayableType(type: string): boolean {
+  return Boolean(type.trim()) && !isStaticPayableType(type);
+}
 
 export type PayableKey =
   | { type: typeof PAYABLE_TYPE.Payroll; periodMonth: string }
-  | { type: typeof PAYABLE_TYPE.Expense | typeof PAYABLE_TYPE.Bonus; batchId: number };
+  | { type: string; batchId: number };
 
 export interface PayableItem {
   id: number;
@@ -59,11 +74,14 @@ export interface PayrollPayParam extends PayablePayBaseParam {
 
 export type PayablePayRequest =
   | ({ type: typeof PAYABLE_TYPE.Payroll } & PayrollPayParam)
-  | ({ type: typeof PAYABLE_TYPE.Expense | typeof PAYABLE_TYPE.Bonus; batchId: number } & PayablePayBaseParam);
+  | ({ type: string; batchId: number } & PayablePayBaseParam);
 
 export function payableKeyId(key: PayableKey): string {
-  if (key.type === PAYABLE_TYPE.Payroll) return `${PAYABLE_TYPE.Payroll}:${key.periodMonth}`;
-  return `${key.type}:${key.batchId}`;
+  if (key.type === PAYABLE_TYPE.Payroll && "periodMonth" in key) {
+    return `${PAYABLE_TYPE.Payroll}:${key.periodMonth}`;
+  }
+  if ("batchId" in key) return `${key.type}:${key.batchId}`;
+  return `${key.type}:`;
 }
 
 export function parsePayableKey(id: string): PayableKey | null {
@@ -76,11 +94,8 @@ export function parsePayableKey(id: string): PayableKey | null {
   if (type === PAYABLE_TYPE.Payroll) {
     return { type: PAYABLE_TYPE.Payroll, periodMonth: rest };
   }
-  if (type === PAYABLE_TYPE.Expense || type === PAYABLE_TYPE.Bonus) {
-    if (!/^-?\d+$/.test(rest)) return null;
-    return { type, batchId: Number(rest) };
-  }
-  return null;
+  if (!/^-?\d+$/.test(rest)) return null;
+  return { type, batchId: Number(rest) };
 }
 
 export function findPayable(

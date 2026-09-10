@@ -176,3 +176,30 @@ describe("sumPayableNetPay", () => {
     expect(sumPayableNetPay(expense, {})).toBe("0.0233");
   });
 });
+
+describe("buildPayablePayRequest operations", () => {
+  it("quotes operations with category and omits adjustments", () => {
+    const payable: Payable = {
+      ...PAYABLE,
+      key: { type: "office", batchId: 46 },
+      type: "office",
+      batchId: 46,
+      periodMonth: "",
+    };
+    const request = buildPayablePayRequest({
+      payable,
+      originToken: TOKEN,
+      payer: "0xpayer",
+      organizationId: 8,
+      timezone: "UTC",
+      notifyEnabled: false,
+      selectedItemIds: [],
+      netPayById: { 2: "1.25" },
+    });
+    expect(request).toMatchObject({
+      type: "office",
+      batchId: 46,
+    });
+    expect(request && "adjustments" in request ? request.adjustments : undefined).toBeUndefined();
+  });
+});

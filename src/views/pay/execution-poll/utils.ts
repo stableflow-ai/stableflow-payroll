@@ -3,9 +3,10 @@ import {
   PAYROLL_EXECUTION_ITEM_STATUS,
   type PayrollExecutionItem,
 } from "@/types/payout";
-import { PAYABLE_TYPE } from "@/types/payable";
+import { isOperationPayableType, PAYABLE_TYPE } from "@/types/payable";
 import { formatAddress } from "@/utils";
 import { BONUS_HISTORY_PATH } from "@/views/bonus/config";
+import { categoryHistoryPath } from "@/views/categories/config";
 import { EXPENSE_HISTORY_PATH } from "@/views/expense/config";
 import { HISTORY_PATH } from "@/views/pay/config";
 import { PAYROLL_HISTORY_PATH } from "@/views/payroll/config";
@@ -27,6 +28,7 @@ export function executionHistoryPath(type: string): string {
   }
   if (normalized === PAYABLE_TYPE.Expense) return EXPENSE_HISTORY_PATH;
   if (normalized === PAYABLE_TYPE.Bonus) return BONUS_HISTORY_PATH;
+  if (isOperationPayableType(normalized)) return categoryHistoryPath(normalized);
   return HISTORY_PATH;
 }
 
@@ -115,6 +117,12 @@ export function payoutStatusQueryKeys(type: string): Array<readonly unknown[]> {
     return [
       [...queryKeys.bonus.all, "recent"],
       [...queryKeys.bonus.all, "history"],
+    ];
+  }
+  if (isOperationPayableType(normalized)) {
+    return [
+      [...queryKeys.operation.all, "recent"],
+      [...queryKeys.operation.all, "history"],
     ];
   }
   return [];

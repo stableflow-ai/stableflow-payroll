@@ -12,10 +12,10 @@ import type { IconProps } from "@/components/icons/types";
 import { AUTH_USER_ROLE, type AuthUserRole } from "@/types/auth";
 import { BONUS_HISTORY_PATH, BONUS_PATH } from "@/views/bonus/config";
 import {
-  CATEGORIES,
+  categoryHistoryPath,
   categoryPath,
   isCategoryPath,
-  type CategoryId,
+  payCategoryFromPath,
 } from "@/views/categories/config";
 import {
   EXPENSE_HISTORY_PATH,
@@ -118,21 +118,24 @@ const EMPLOYEE_REQUEST_NAV: PayNavLeaf = {
 const EMPLOYEE_HIDDEN_NAV_IDS = new Set<string>([PAY_NAV_ID.Operations, PAY_NAV_ID.Team]);
 
 export function extraOperationsNavLeaves(
-  enabledCategoryIds: readonly CategoryId[],
+  catalog: readonly { category: string; name: string }[],
 ): PayNavLeaf[] {
-  const enabled = new Set(enabledCategoryIds);
-  return CATEGORIES.filter((item) => enabled.has(item.id)).map((item) => ({
-    id: item.id,
-    label: item.title,
-    to: categoryPath(item.id),
-  }));
+  return catalog.map((item) => {
+    const to = categoryPath(item.category);
+    return {
+      id: item.category,
+      label: item.name,
+      to,
+      match: [to, categoryHistoryPath(item.category)],
+    };
+  });
 }
 
 function withEnabledCategories(
   items: readonly PayNavItem[],
-  enabledCategoryIds: readonly CategoryId[],
+  catalog: readonly { category: string; name: string }[],
 ): readonly PayNavItem[] {
-  const extra = extraOperationsNavLeaves(enabledCategoryIds);
+  const extra = extraOperationsNavLeaves(catalog);
   if (extra.length === 0) return items;
   return items.map((item) =>
     isPayNavGroup(item) ? { ...item, children: [...item.children, ...extra] } : item,
@@ -141,9 +144,9 @@ function withEnabledCategories(
 
 export function payNavItemsForRole(
   role: AuthUserRole,
-  enabledCategoryIds: readonly CategoryId[] = [],
+  catalog: readonly { category: string; name: string }[] = [],
 ): readonly PayNavItem[] {
-  const navItems = withEnabledCategories(PAY_NAV_ITEMS, enabledCategoryIds);
+  const navItems = withEnabledCategories(PAY_NAV_ITEMS, catalog);
   if (role !== AUTH_USER_ROLE.User) return navItems;
 
   const items: PayNavItem[] = [];
@@ -215,8 +218,12 @@ export function isPayNavLeafActive(item: PayNavLeaf, pathname: string): boolean 
   });
 }
 
-export function payTitleForPath(pathname: string, role: AuthUserRole = AUTH_USER_ROLE.Admin): string {
-  for (const item of payNavItemsForRole(role)) {
+export function payTitleForPath(
+  pathname: string,
+  role: AuthUserRole = AUTH_USER_ROLE.Admin,
+  catalog: readonly { category: string; name: string }[] = [],
+): string {
+  for (const item of payNavItemsForRole(role, catalog)) {
     if (isPayNavGroup(item)) {
       const child = item.children.find((row) => isPayNavLeafActive(row, pathname));
       if (child) return child.label;
@@ -224,8 +231,12 @@ export function payTitleForPath(pathname: string, role: AuthUserRole = AUTH_USER
     }
     if (isPayNavLeafActive(item, pathname)) return item.label;
   }
-  const category = CATEGORIES.find((item) => categoryPath(item.id) === pathname);
-  if (category) return category.title;
+  const category = payCategoryFromPath(pathname);
+  if (category) {
+    const named = catalog.find((item) => item.category === category)?.name.trim();
+    if (named) return named;
+    return category;
+  }
   return PAY_ROUTE_TITLES[pathname] ?? "Pay";
 }
 

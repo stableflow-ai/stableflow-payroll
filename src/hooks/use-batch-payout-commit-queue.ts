@@ -19,6 +19,7 @@ export function useBatchPayoutCommitQueue() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.payroll.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.expense.all });
       void queryClient.invalidateQueries({ queryKey: queryKeys.bonus.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.operation.all });
     });
   }, [queryClient]);
 }

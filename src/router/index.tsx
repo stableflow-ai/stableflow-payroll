@@ -81,6 +81,7 @@ export const router = createBrowserRouter([
                   { path: "/pay/requests", element: <RequestsView /> },
                   { path: "/history", element: <TransactionHistoryView /> },
                   { path: "/pay/:categoryId", element: <CategoryDashboardView /> },
+                  { path: "/pay/:categoryId/history", element: <CategoryDashboardView /> },
                 ],
               },
             ],

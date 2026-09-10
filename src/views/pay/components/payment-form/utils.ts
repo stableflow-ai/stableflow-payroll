@@ -1,5 +1,6 @@
 import {
   PAYABLE_TYPE,
+  isOperationPayableType,
   effectiveNetPay,
   payableAdjustments,
   payableNotification,
@@ -71,7 +72,9 @@ export function buildPayablePayRequest(input: {
   const notification = notifyEnabled
     ? payableNotification(selectedItemIds, payableItemIds(payable))
     : undefined;
-  const adjustments = payableAdjustments(payable.items, netPayById);
+  const adjustments = isOperationPayableType(payable.type)
+    ? undefined
+    : payableAdjustments(payable.items, netPayById);
   const base = {
     organization_id: organizationId,
     payer,
@@ -89,6 +92,7 @@ export function buildPayablePayRequest(input: {
       ...base,
     };
   }
+  if (!payable.batchId) return null;
   return {
     type: payable.type,
     batchId: payable.batchId,

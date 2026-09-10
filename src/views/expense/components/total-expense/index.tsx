@@ -54,6 +54,7 @@ export function TotalExpenseChart(props: {
   points: ExpenseChartPoint[];
   loading?: boolean;
   error?: string | null;
+  heading?: string;
 }) {
   const {
     range,
@@ -63,6 +64,7 @@ export function TotalExpenseChart(props: {
     points,
     loading = false,
     error = null,
+    heading = "Total expense",
   } = props;
   const isEmpty = !loading && points.every((point) => point.value === 0);
   const yTicks = chartYTicks(Math.max(0, ...points.map((point) => point.value)), 3);
@@ -73,7 +75,7 @@ export function TotalExpenseChart(props: {
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <h2 className="font-montserrat text-base font-medium capitalize text-black">
-            Total expense
+            {heading}
           </h2>
           <p className="mt-2 flex flex-wrap items-baseline gap-1.5">
             <span

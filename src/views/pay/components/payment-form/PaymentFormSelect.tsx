@@ -1,5 +1,6 @@
 import { IconCheck } from "@/components/icons";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
+import { useOperationCatalogQuery } from "@/hooks/use-operation-api";
 import { formatAmount } from "@/utils";
 import { payableKeyId, type Payable } from "@/types/payable";
 import { PaymentFormCategoryTag } from "./PaymentFormCategoryTag";
@@ -7,11 +8,12 @@ import { PaymentFormCategoryTag } from "./PaymentFormCategoryTag";
 function PaymentFormOptionRow(props: {
   form: Payable;
   selected: boolean;
+  categoryLabel?: string;
 }) {
-  const { form, selected } = props;
+  const { form, selected, categoryLabel } = props;
   return (
     <span className="flex w-full min-w-0 items-center gap-2">
-      <PaymentFormCategoryTag category={form.type} />
+      <PaymentFormCategoryTag category={form.type} label={categoryLabel} />
       <span className="min-w-0 flex-1 truncate font-montserrat text-sm font-medium text-black">
         {form.title}
       </span>
@@ -33,6 +35,10 @@ export function PaymentFormSelect(props: {
   loading?: boolean;
 }) {
   const { forms, value, onChange, disabled = false, loading = false } = props;
+  const catalogQuery = useOperationCatalogQuery();
+  const nameByCategory = new Map(
+    (catalogQuery.data ?? []).map((item) => [item.category, item.name] as const),
+  );
   return (
     <Dropdown
       value={value || undefined}
@@ -51,7 +57,13 @@ export function PaymentFormSelect(props: {
       renderOption={(option, selected) => {
         const form = forms.find((row) => payableKeyId(row.key) === option.value);
         if (!form) return option.label;
-        return <PaymentFormOptionRow form={form} selected={selected} />;
+        return (
+          <PaymentFormOptionRow
+            form={form}
+            selected={selected}
+            categoryLabel={nameByCategory.get(form.type)}
+          />
+        );
       }}
     />
   );

@@ -1,14 +1,17 @@
 import { useEffect } from "react";
 import { useOutletContext } from "react-router-dom";
 import type { PayLayoutOutletContext } from "@/layouts/PayLayout";
-import { useEnabledCategoriesStore } from "@/stores/enabled-categories";
-import type { CategoryItem } from "../config";
+import useToast from "@/hooks/use-toast";
+import { CategoryIcon } from "./category-icon";
 import { CategoryTemplatePreview } from "./category-template-preview";
+import type { CategoryItem } from "../config";
+import { useToggleOperationCategory } from "../use-toggle-operation";
 
 export function CategoryAddPage(props: { item: CategoryItem }) {
   const { item } = props;
   const { setHeaderExtra } = useOutletContext<PayLayoutOutletContext>();
-  const setEnabled = useEnabledCategoriesStore((state) => state.setEnabled);
+  const toast = useToast();
+  const { setEnabled, busy } = useToggleOperationCategory();
 
   useEffect(() => {
     setHeaderExtra(null);
@@ -18,9 +21,7 @@ export function CategoryAddPage(props: { item: CategoryItem }) {
   return (
     <div className="flex flex-col gap-5">
       <div className="flex items-start gap-2.5">
-        <span className="size-8 shrink-0 overflow-clip">
-          <img src={item.iconSrc} alt="" className="size-8" />
-        </span>
+        <CategoryIcon category={item.category} src={item.iconSrc} />
         <div className="min-w-0 pt-1">
           <p className="font-montserrat text-base font-semibold capitalize text-black">
             Add {item.title} to Operations
@@ -30,7 +31,17 @@ export function CategoryAddPage(props: { item: CategoryItem }) {
           </p>
         </div>
       </div>
-      <CategoryTemplatePreview item={item} onAdd={() => setEnabled(item.id, true)} />
+      <CategoryTemplatePreview
+        item={item}
+        onAdd={() => {
+          if (busy) return;
+          void setEnabled(item, true).catch((error: unknown) => {
+            toast.fail({
+              title: error instanceof Error ? error.message : "Could not add category",
+            });
+          });
+        }}
+      />
     </div>
   );
 }
