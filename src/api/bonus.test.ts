@@ -175,6 +175,7 @@ describe("mapBonusHistoryItem", () => {
       totalPayout: "200",
       memberCount: 1,
       executedAt: "2026-08-01T00:00:00Z",
+      recipient: "",
     });
   });
 

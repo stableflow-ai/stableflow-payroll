@@ -56,6 +56,7 @@ const EXPENSE_BATCH: ExpenseOpenBatch = {
       receiptName: "a.pdf",
       expense: "800",
       address: "0xa",
+      email: "a@x.com",
       token: "USDC",
       network: "eth",
       amount: "800",
@@ -69,6 +70,7 @@ const EXPENSE_BATCH: ExpenseOpenBatch = {
       receiptName: "",
       expense: "453.02",
       address: "0xb",
+      email: "",
       token: "USDT",
       network: "arb",
       amount: "453.02",
@@ -174,11 +176,12 @@ describe("expenseBatchToPayable", () => {
     expect(form?.items[0]).toMatchObject({
       volume: "800",
       purpose: "Travel",
-      email: "",
+      email: "a@x.com",
       netPay: "",
       symbol: "USDC",
       network: "eth",
     });
+    expect(form?.items[1]?.email).toBe("");
   });
 
   it("returns null when batchId is missing", () => {
@@ -231,6 +234,7 @@ describe("operationBatchToPayable", () => {
       batchId: 12,
     });
     expect(form?.items.map((item) => item.id)).toEqual([7, 8]);
+    expect(form?.items.map((item) => item.email)).toEqual(["a@x.com", ""]);
   });
 
   it("returns null without a category or batch id", () => {

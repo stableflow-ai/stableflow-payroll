@@ -97,6 +97,7 @@ export function mapExpenseOpenRow(raw: unknown, index = 0, batchId = 0): Expense
     id: batchId > 0 ? `${batchId}-${id}` : String(id),
     batchId,
     name: apiText(row.name),
+    email: apiText(row.email),
     purpose: apiText(row.purpose),
     receiptName: apiText(row.description),
     expense: apiText(row.volume) || amount,

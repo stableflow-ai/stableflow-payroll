@@ -60,6 +60,7 @@ export interface ExpenseOpenRow {
   id: string;
   batchId: number;
   name: string;
+  email: string;
   purpose: string;
   receiptName: string;
   expense: string;

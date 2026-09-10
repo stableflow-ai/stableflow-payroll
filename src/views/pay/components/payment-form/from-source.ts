@@ -64,7 +64,7 @@ export function expenseBatchToPayable(batch: ExpenseOpenBatch): Payable | null {
     items.push({
       id,
       name: member.name,
-      email: "",
+      email: member.email,
       address: member.address,
       network: member.network,
       symbol: member.token,
@@ -134,7 +134,7 @@ export function operationBatchToPayable(
     items.push({
       id,
       name: member.name,
-      email: "",
+      email: member.email,
       address: member.address,
       network: member.network,
       symbol: member.token,
