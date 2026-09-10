@@ -9,7 +9,6 @@ import {
   getOperationRecentPayouts,
   getOperationTotalPayout,
   importOperations,
-  updateOrganizationOperationStatus,
 } from "@/api/operation";
 import { queryKeys } from "@/api/query-keys";
 import { isUser, organizationId } from "@/lib/auth-role";
@@ -186,36 +185,13 @@ export function useAddOrganizationOperationMutation() {
   const queryClient = useQueryClient();
   const { organizationId: orgId } = useOperationQueryContext();
   return useMutation({
-    mutationFn: (operationId: number) => {
+    mutationFn: (params: { operationId: number; enable: boolean; }) => {
       if (orgId == null) {
         return Promise.reject(new Error("Organization is missing"));
       }
-      return addOrganizationOperation(orgId, operationId);
+      return addOrganizationOperation(orgId, params.operationId, params.enable);
     },
     onSuccess: () => invalidateOperations(queryClient),
-  });
-}
-
-export function useUpdateOrganizationOperationStatusMutation() {
-  const queryClient = useQueryClient();
-  const { organizationId: orgId } = useOperationQueryContext();
-  return useMutation({
-    mutationFn: (params: {
-      operationId: number;
-      status: typeof OPERATION_STATUS.Active | typeof OPERATION_STATUS.Disabled;
-    }) => {
-      if (orgId == null) {
-        return Promise.reject(new Error("Organization is missing"));
-      }
-      return updateOrganizationOperationStatus(orgId, params.operationId, params.status);
-    },
-    onSuccess: () => {
-      void queryClient.cancelQueries({ queryKey: queryKeys.operation.all });
-      if (orgId == null) return;
-      void queryClient.invalidateQueries({
-        queryKey: queryKeys.operation.catalog(orgId),
-      });
-    },
   });
 }
 

@@ -1,7 +1,6 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   useAddOrganizationOperationMutation,
-  useUpdateOrganizationOperationStatusMutation,
 } from "@/hooks/use-operation-api";
 import { OPERATION_STATUS } from "@/types/operation";
 import type { CategoryItem } from "./config";
@@ -11,26 +10,21 @@ export function useToggleOperationCategory() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const addMutation = useAddOrganizationOperationMutation();
-  const statusMutation = useUpdateOrganizationOperationStatusMutation();
-  const busy = addMutation.isPending || statusMutation.isPending;
+  const busy = addMutation.isPending;
 
   async function setEnabled(item: CategoryItem, enabled: boolean) {
     if (enabled) {
       if (isCategoryNavEnabled(item)) return;
-      if (!item.added) {
-        await addMutation.mutateAsync(item.operationId);
-        return;
-      }
-      await statusMutation.mutateAsync({
+      await addMutation.mutateAsync({
         operationId: item.operationId,
-        status: OPERATION_STATUS.Active,
+        enable: true,
       });
       return;
     }
     if (!item.added || item.status === OPERATION_STATUS.Disabled) return;
-    await statusMutation.mutateAsync({
+    await addMutation.mutateAsync({
       operationId: item.operationId,
-      status: OPERATION_STATUS.Disabled,
+      enable: false,
     });
     if (payCategoryFromPath(pathname) === item.category) {
       navigate("/", { replace: true });

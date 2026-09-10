@@ -91,13 +91,14 @@ export async function getOperationCatalog(
 export async function addOrganizationOperation(
   organizationId: number,
   operationId: number,
+  enable: boolean,
 ): Promise<OperationCatalogItem> {
   const mapped = mapOperationCatalogItem(
     await http<unknown>(
       `${PAY_API_PREFIX}/organizations/${encodeURIComponent(String(organizationId))}/operations`,
       {
         method: "POST",
-        body: { operation_id: operationId },
+        body: { operation_id: operationId, enable },
       },
     ),
   );
@@ -110,33 +111,6 @@ export async function addOrganizationOperation(
       description: "",
       added: true,
       status: OPERATION_STATUS.Active,
-    }
-  );
-}
-
-export async function updateOrganizationOperationStatus(
-  organizationId: number,
-  operationId: number,
-  status: typeof OPERATION_STATUS.Active | typeof OPERATION_STATUS.Disabled,
-): Promise<OperationCatalogItem> {
-  const mapped = mapOperationCatalogItem(
-    await http<unknown>(
-      `${PAY_API_PREFIX}/organizations/${encodeURIComponent(String(organizationId))}/operations/${encodeURIComponent(String(operationId))}`,
-      {
-        method: "POST",
-        body: { status },
-      },
-    ),
-  );
-  return (
-    mapped ?? {
-      id: operationId,
-      category: "",
-      name: "",
-      icon: "",
-      description: "",
-      added: true,
-      status,
     }
   );
 }
