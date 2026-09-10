@@ -172,6 +172,7 @@ export function mapBonusHistoryItem(raw: unknown, index = 0): BonusHistoryItem {
       apiText(row.paid_at ?? row.paidAt)
       || apiText(row.submitted_at ?? row.submittedAt)
       || apiText(row.created_at ?? row.createdAt),
+    recipient: apiText(row.recipient),
   };
 }
 

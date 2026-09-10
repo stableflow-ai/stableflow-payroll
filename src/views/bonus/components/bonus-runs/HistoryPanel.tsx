@@ -1,7 +1,9 @@
 import { useEffect, useRef } from "react";
 import { IconLoading } from "@/components/icons/loading";
 import type { BonusHistoryItem } from "@/types/bonus";
-import { DATE_FORMAT, formatAmount, formatDate } from "@/utils";
+import { DATE_FORMAT, formatAddress, formatAmount, formatDate } from "@/utils";
+import { IconCopy } from "@/components/icons";
+import useToast from "@/hooks/use-toast";
 
 export function HistoryPanel(props: {
   items: BonusHistoryItem[];
@@ -11,6 +13,7 @@ export function HistoryPanel(props: {
 }) {
   const { items, loadingMore = false, hasMore = false, onLoadMore } = props;
   const sentinelRef = useRef<HTMLDivElement>(null);
+  const toast = useToast();
 
   useEffect(() => {
     if (!hasMore || loadingMore || !onLoadMore) return;
@@ -34,6 +37,13 @@ export function HistoryPanel(props: {
     );
   }
 
+  function copyToClipboard(text: string) {
+    navigator.clipboard.writeText(text);
+    toast.success({
+      title: "Copied",
+    });
+  }
+
   return (
     <div className="flex flex-col gap-5">
       {items.map((item) => (
@@ -55,10 +65,16 @@ export function HistoryPanel(props: {
             </div>
             <div>
               <p className="font-montserrat text-sm font-medium text-[#aaa]">
-                Members
+                Address
               </p>
-              <p className="mt-2 font-montserrat text-sm font-medium text-black">
-                {item.memberCount}
+              <p className="mt-2 font-montserrat text-sm font-medium text-black flex items-center gap-2">
+                {formatAddress(item.recipient)}
+                <button
+                  type="button"
+                  onClick={() => copyToClipboard(item.recipient)}
+                >
+                  <IconCopy className="size-3 text-[#909090]" />
+                </button>
               </p>
             </div>
             <div>

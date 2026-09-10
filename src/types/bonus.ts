@@ -103,6 +103,7 @@ export interface BonusHistoryItem {
   totalPayout: string;
   memberCount: number;
   executedAt: string;
+  recipient: string;
 }
 
 export interface BonusHistoryQuery {
