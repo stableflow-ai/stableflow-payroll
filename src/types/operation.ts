@@ -136,6 +136,7 @@ export interface OperationPayQuoteParam {
   batch_id: number;
   category: string;
   payer: string;
+  refundTo: string;
   source_network: string;
   source_symbol: string;
   notification?: string;

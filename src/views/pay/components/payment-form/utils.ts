@@ -85,6 +85,7 @@ export function buildPayablePayRequest(input: {
   payable: Payable | null;
   originToken: IntentsToken | null;
   payer: string | null;
+  refundTo: string | null;
   organizationId: number | null;
   timezone: string;
   notifyEnabled: boolean;
@@ -95,13 +96,14 @@ export function buildPayablePayRequest(input: {
     payable,
     originToken,
     payer,
+    refundTo,
     organizationId,
     timezone,
     notifyEnabled,
     selectedItemIds,
     netPayById = {},
   } = input;
-  if (!payable || !originToken || !payer || organizationId == null) return null;
+  if (!payable || !originToken || !payer || !refundTo || organizationId == null) return null;
   if (!isBatchOriginToken(originToken)) return null;
   const notification = notifyEnabled
     ? payableNotification(selectedItemIds, payableItemIds(payable))
@@ -113,6 +115,7 @@ export function buildPayablePayRequest(input: {
   const base = {
     organization_id: organizationId,
     payer,
+    refundTo,
     source_network: originToken.blockchain,
     source_symbol: originToken.symbol,
     ...(notification ? { notification } : {}),

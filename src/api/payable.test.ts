@@ -324,6 +324,7 @@ describe("payablePayBody", () => {
         type: PAYABLE_TYPE.Payroll,
         organization_id: 3,
         payer: "0xpayer",
+        refundTo: "0xrefund",
         period_month: "2026-09",
         timezone: "Asia/Shanghai",
         source_network: "eth",
@@ -332,6 +333,7 @@ describe("payablePayBody", () => {
     ).toEqual({
       organization_id: 3,
       payer: "0xpayer",
+      refundTo: "0xrefund",
       source_network: "eth",
       source_symbol: "USDC",
       period_month: "2026-09",
@@ -343,14 +345,17 @@ describe("payablePayBody", () => {
         batchId: 9,
         organization_id: 3,
         payer: "0xpayer",
+        refundTo: "0xrefund",
         source_network: "eth",
         source_symbol: "USDC",
       }),
     ).toEqual({
       organization_id: 3,
       payer: "0xpayer",
+      refundTo: "0xrefund",
       source_network: "eth",
       source_symbol: "USDC",
+      batch_id: 9,
     });
   });
 
@@ -363,6 +368,7 @@ describe("payablePayBody", () => {
         batchId: 2,
         organization_id: 1,
         payer: "near.payer",
+        refundTo: "near.refund",
         source_network: "near",
         source_symbol: "USDT",
         notification: "1,3",
@@ -375,6 +381,7 @@ describe("payablePayBody", () => {
         batchId: 2,
         organization_id: 1,
         payer: "near.payer",
+        refundTo: "near.refund",
         source_network: "near",
         source_symbol: "USDT",
       }).notification,
@@ -391,6 +398,7 @@ describe("payablePayBody", () => {
         type: PAYABLE_TYPE.Payroll,
         organization_id: 3,
         payer: "0xpayer",
+        refundTo: "0xrefund",
         period_month: "2026-09",
         timezone: "UTC",
         source_network: "eth",
@@ -404,6 +412,7 @@ describe("payablePayBody", () => {
         batchId: 9,
         organization_id: 3,
         payer: "0xpayer",
+        refundTo: "0xrefund",
         source_network: "eth",
         source_symbol: "USDC",
         adjustments,
@@ -415,6 +424,7 @@ describe("payablePayBody", () => {
         batchId: 2,
         organization_id: 1,
         payer: "near.payer",
+        refundTo: "near.refund",
         source_network: "near",
         source_symbol: "USDT",
         adjustments: [],
@@ -426,6 +436,7 @@ describe("payablePayBody", () => {
         batchId: 46,
         organization_id: 3,
         payer: "0xpayer",
+        refundTo: "0xrefund",
         source_network: "arb",
         source_symbol: "USDT",
         adjustments: [{ item_id: 58, net_pay: "1" }],
@@ -433,6 +444,7 @@ describe("payablePayBody", () => {
     ).toEqual({
       organization_id: 3,
       payer: "0xpayer",
+      refundTo: "0xrefund",
       source_network: "arb",
       source_symbol: "USDT",
       batch_id: 46,
@@ -555,6 +567,7 @@ describe("payPayable", () => {
       batchId: 46,
       organization_id: 3,
       payer: "0xpayer",
+      refundTo: "0xrefund",
       source_network: "arb",
       source_symbol: "USDT",
       adjustments: [{ item_id: 58, net_pay: "1" }],
@@ -568,10 +581,97 @@ describe("payPayable", () => {
         body: {
           organization_id: 3,
           payer: "0xpayer",
+          refundTo: "0xrefund",
           source_network: "arb",
           source_symbol: "USDT",
           batch_id: 46,
           category: "office",
+        },
+      }),
+    );
+  });
+
+  it("quotes expense at POST /expenses/pay/quote with batch_id in the body", async () => {
+    const spy = vi.spyOn(httpModule, "http").mockResolvedValue({
+      quote_id: "q-ex",
+      batch: {
+        batch_id: "b-ex",
+        deadline: "2026-09-08T00:00:00Z",
+        payer: "0xpayer",
+        source_network: "eth",
+        source_symbol: "USDC",
+        total_source_amount: "1",
+        total_source_amount_raw: "1000000",
+        transaction: {
+          callData: "0xabc",
+          batch_contract: "0xcontract",
+        },
+      },
+    });
+    const quoted = await payPayable({
+      type: PAYABLE_TYPE.Expense,
+      batchId: 9,
+      organization_id: 3,
+      payer: "0xpayer",
+      refundTo: "0xrefund",
+      source_network: "eth",
+      source_symbol: "USDC",
+    });
+    expect(quoted.quoteId).toBe("q-ex");
+    expect(spy).toHaveBeenCalledWith(
+      "/v1/payroll/expenses/pay/quote",
+      expect.objectContaining({
+        method: "POST",
+        body: {
+          organization_id: 3,
+          payer: "0xpayer",
+          refundTo: "0xrefund",
+          source_network: "eth",
+          source_symbol: "USDC",
+          batch_id: 9,
+        },
+      }),
+    );
+  });
+
+  it("quotes bonus at POST /bonuses/pay/quote with batch_id in the body", async () => {
+    const spy = vi.spyOn(httpModule, "http").mockResolvedValue({
+      quote_id: "q-bo",
+      batch: {
+        batch_id: "b-bo",
+        deadline: "2026-09-08T00:00:00Z",
+        payer: "near.payer",
+        source_network: "near",
+        source_symbol: "USDT",
+        total_source_amount: "1",
+        total_source_amount_raw: "1000000",
+        transaction: {
+          callData: "0xabc",
+          batch_contract: "0xcontract",
+        },
+      },
+    });
+    const quoted = await payPayable({
+      type: PAYABLE_TYPE.Bonus,
+      batchId: 2,
+      organization_id: 1,
+      payer: "near.payer",
+      refundTo: "near.refund",
+      source_network: "near",
+      source_symbol: "USDT",
+    });
+    expect(quoted.quoteId).toBe("q-bo");
+    expect(spy).toHaveBeenCalledWith(
+      "/v1/payroll/bonuses/pay/quote",
+      expect.objectContaining({
+        method: "POST",
+        body: {
+          organization_id: 1,
+          payer: "near.payer",
+          refundTo: "near.refund",
+          source_network: "near",
+          source_symbol: "USDT",
+          batch_id: 2,
         },
       }),
     );

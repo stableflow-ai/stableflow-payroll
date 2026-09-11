@@ -54,6 +54,7 @@ describe("buildPayablePayRequest", () => {
         payable: PAYABLE,
         originToken: TOKEN,
         payer: "0xpayer",
+        refundTo: "0xpayer",
         organizationId: 8,
         timezone: "UTC",
         notifyEnabled: false,
@@ -68,6 +69,7 @@ describe("buildPayablePayRequest", () => {
         payable: PAYABLE,
         originToken: TOKEN,
         payer: "0xpayer",
+        refundTo: "0xpayer",
         organizationId: 8,
         timezone: "UTC",
         notifyEnabled: false,
@@ -83,6 +85,7 @@ describe("buildPayablePayRequest", () => {
         payable: PAYABLE,
         originToken: TOKEN,
         payer: "0xpayer",
+        refundTo: "0xpayer",
         organizationId: 8,
         timezone: "UTC",
         notifyEnabled: false,
@@ -108,6 +111,7 @@ describe("buildPayablePayRequest", () => {
         payable: expense,
         originToken: TOKEN,
         payer: "0xpayer",
+        refundTo: "0xpayer",
         organizationId: 8,
         timezone: "UTC",
         notifyEnabled: false,
@@ -125,6 +129,7 @@ describe("buildPayablePayRequest", () => {
         payable: bonus,
         originToken: TOKEN,
         payer: "0xpayer",
+        refundTo: "0xpayer",
         organizationId: 8,
         timezone: "UTC",
         notifyEnabled: false,
@@ -140,6 +145,7 @@ describe("buildPayablePayRequest", () => {
         payable: PAYABLE,
         originToken: TOKEN,
         payer: "0xpayer",
+        refundTo: "0xpayer",
         organizationId: 8,
         timezone: "UTC",
         notifyEnabled: false,
@@ -155,6 +161,7 @@ describe("buildPayablePayRequest", () => {
         payable: PAYABLE,
         originToken: TOKEN,
         payer: "0xpayer",
+        refundTo: "0xpayer",
         organizationId: 8,
         timezone: "UTC",
         notifyEnabled: false,
@@ -166,6 +173,7 @@ describe("buildPayablePayRequest", () => {
         payable: PAYABLE,
         originToken: TOKEN,
         payer: "0xpayer",
+        refundTo: "0xpayer",
         organizationId: 8,
         timezone: "UTC",
         notifyEnabled: true,
@@ -177,6 +185,7 @@ describe("buildPayablePayRequest", () => {
         payable: PAYABLE,
         originToken: TOKEN,
         payer: "0xpayer",
+        refundTo: "0xpayer",
         organizationId: 8,
         timezone: "UTC",
         notifyEnabled: true,
@@ -238,6 +247,7 @@ describe("buildPayablePayRequest operations", () => {
       payable,
       originToken: TOKEN,
       payer: "0xpayer",
+      refundTo: "0xpayer",
       organizationId: 8,
       timezone: "UTC",
       notifyEnabled: false,
@@ -249,6 +259,25 @@ describe("buildPayablePayRequest operations", () => {
       batchId: 46,
     });
     expect(request && "adjustments" in request ? request.adjustments : undefined).toBeUndefined();
+    expect(request).toMatchObject({
+      payer: "0xpayer",
+      refundTo: "0xpayer",
+    });
+  });
+
+  it("returns null when refundTo is missing", () => {
+    expect(
+      buildPayablePayRequest({
+        payable: PAYABLE,
+        originToken: TOKEN,
+        payer: "0xpayer",
+        refundTo: null,
+        organizationId: 8,
+        timezone: "UTC",
+        notifyEnabled: false,
+        selectedItemIds: [],
+      }),
+    ).toBeNull();
   });
 });
 

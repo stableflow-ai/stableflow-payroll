@@ -61,6 +61,7 @@ export interface PayablePayAdjustment {
 export interface PayablePayBaseParam {
   organization_id: number;
   payer: string;
+  refundTo: string;
   source_network: string;
   source_symbol: string;
   notification?: string;

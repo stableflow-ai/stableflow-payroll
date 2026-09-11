@@ -22,6 +22,7 @@ import { formatAmount, browserTimeZone } from "@/utils";
 import { cn } from "@/lib/utils";
 import { broadcastBatchPayout } from "@/wallet/broadcast-batch-payout";
 import { INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE } from "@/wallet/config";
+import { ZCASH_TRANSPARENT_REFUND_MESSAGE } from "@/wallet/zec/config";
 import type { ChainKind } from "@/wallet";
 import {
   findPayable,
@@ -149,6 +150,11 @@ export function PaymentByFormCard(props: {
   const paymentWallet = usePaymentWallet(originKind);
   const wallet = paymentWallet.wallet;
   const connectedAddress = paymentWallet.connectedAddress;
+  const quotePayer = paymentWallet.quotePayer;
+  const quoteRefundTo = paymentWallet.quoteRefundTo;
+  const zecQuoteBlocked = originKind === "zec"
+    && Boolean(connectedAddress)
+    && (!quotePayer || !quoteRefundTo);
 
   useEffect(() => {
     setNotifyEnabled(false);
@@ -166,7 +172,8 @@ export function PaymentByFormCard(props: {
       buildPayablePayRequest({
         payable: detail,
         originToken,
-        payer: connectedAddress,
+        payer: quotePayer,
+        refundTo: quoteRefundTo,
         organizationId: orgId,
         timezone,
         notifyEnabled,
@@ -176,7 +183,8 @@ export function PaymentByFormCard(props: {
     [
       detail,
       originToken,
-      connectedAddress,
+      quotePayer,
+      quoteRefundTo,
       orgId,
       timezone,
       notifyEnabled,
@@ -210,9 +218,11 @@ export function PaymentByFormCard(props: {
     quoteQuery.isPlaceholderData
     || (quoteQuery.isPending && quoteQuery.isFetching)
   );
-  const quoteError = quoteQuery.isError
-    ? formatQuoteErrorMessage(quoteQuery.error, 2)
-    : null;
+  const quoteError = zecQuoteBlocked
+    ? ZCASH_TRANSPARENT_REFUND_MESSAGE
+    : quoteQuery.isError
+      ? formatQuoteErrorMessage(quoteQuery.error, 2)
+      : null;
   const quoting = Boolean(payBody) && (quoteStale || quoteQuery.isFetching) && !quoteError;
   const sourceAmount = quote ? payableQuoteSourceAmount(quote) : "0";
   const youPayQuoted = Boolean(quote);

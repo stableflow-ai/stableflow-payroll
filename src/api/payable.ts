@@ -8,7 +8,6 @@ import {
   isOperationPayableType,
   type Payable,
   type PayableItem,
-  type PayablePayBaseParam,
   type PayablePayRequest,
   type PayableType,
   type PayrollPayParam,
@@ -160,32 +159,24 @@ export async function payPayrollSalaries(body: PayrollPayParam): Promise<Payable
 }
 
 export async function payExpenseBatch(
-  batchId: number,
-  body: PayablePayBaseParam,
+  body: Record<string, unknown>,
 ): Promise<PayablePayQuote> {
   return mapPayablePayResponse(
-    await http<unknown>(
-      `${PAY_API_PREFIX}/expenses/${encodeURIComponent(String(batchId))}/pay/quote`,
-      {
-        method: "POST",
-        body,
-      },
-    ),
+    await http<unknown>(`${PAY_API_PREFIX}/expenses/pay/quote`, {
+      method: "POST",
+      body,
+    }),
   );
 }
 
 export async function payBonusBatch(
-  batchId: number,
-  body: PayablePayBaseParam,
+  body: Record<string, unknown>,
 ): Promise<PayablePayQuote> {
   return mapPayablePayResponse(
-    await http<unknown>(
-      `${PAY_API_PREFIX}/bonuses/${encodeURIComponent(String(batchId))}/pay/quote`,
-      {
-        method: "POST",
-        body,
-      },
-    ),
+    await http<unknown>(`${PAY_API_PREFIX}/bonuses/pay/quote`, {
+      method: "POST",
+      body,
+    }),
   );
 }
 
@@ -201,11 +192,19 @@ export async function payOperationBatch(
 }
 
 export function payablePayBody(request: PayablePayRequest): Record<string, unknown> {
-  const { organization_id, payer, source_network, source_symbol, notification, adjustments } =
-    request;
+  const {
+    organization_id,
+    payer,
+    refundTo,
+    source_network,
+    source_symbol,
+    notification,
+    adjustments,
+  } = request;
   const body: Record<string, unknown> = {
     organization_id,
     payer,
+    refundTo,
     source_network,
     source_symbol,
   };
@@ -216,9 +215,11 @@ export function payablePayBody(request: PayablePayRequest): Record<string, unkno
     body.timezone = request.timezone;
     return body;
   }
-  if (isOperationPayableType(request.type) && "batchId" in request) {
+  if ("batchId" in request) {
     body.batch_id = request.batchId;
-    body.category = request.type;
+    if (isOperationPayableType(request.type)) {
+      body.category = request.type;
+    }
     return body;
   }
   return body;
@@ -229,15 +230,11 @@ export async function payPayable(request: PayablePayRequest): Promise<PayablePay
     const { type: _type, ...body } = request;
     return payPayrollSalaries(body);
   }
-  if (!("batchId" in request)) {
-    return payOperationBatch(payablePayBody(request));
+  if (request.type === PAYABLE_TYPE.Expense && "batchId" in request) {
+    return payExpenseBatch(payablePayBody(request));
   }
-  const { type, batchId, adjustments: _adjustments, ...body } = request;
-  if (type === PAYABLE_TYPE.Expense) {
-    return payExpenseBatch(batchId, body);
-  }
-  if (type === PAYABLE_TYPE.Bonus) {
-    return payBonusBatch(batchId, body);
+  if (request.type === PAYABLE_TYPE.Bonus && "batchId" in request) {
+    return payBonusBatch(payablePayBody(request));
   }
   return payOperationBatch(payablePayBody(request));
 }
