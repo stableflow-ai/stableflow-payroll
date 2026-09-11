@@ -1,7 +1,8 @@
 /**
- * A batch quote may only be paid once. 1Click does not refund a second
- * transfer to the same deposit addresses, so a consumed `batchId` must never
- * be broadcast against again — the payer has to take a fresh batch instead.
+ * A quote batch may only be paid once. 1Click does not refund a second
+ * transfer to the same deposit addresses, so a consumed `quote_batch_id`
+ * must never be broadcast against again — the payer has to take a fresh
+ * quote instead.
  */
 
 import { create } from "zustand";

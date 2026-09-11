@@ -7,7 +7,7 @@ import {
   type PayablePayRequest,
 } from "@/types/payable";
 import { isBatchOriginToken } from "../../batch-utils";
-import type { PayrollBatchPayment } from "@/types/payout";
+import type { PayablePayQuote, PayrollBatchPayment } from "@/types/payout";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import { Big } from "@/utils";
 
@@ -53,6 +53,24 @@ export function sumQuoteDestinationVolume(
   return payments
     .reduce((sum, payment) => {
       const value = payment.destinationVolume.trim();
+      if (!value) return sum;
+      try {
+        return sum.plus(value);
+      } catch {
+        return sum;
+      }
+    }, new Big(0))
+    .toFixed();
+}
+
+export function payableQuotePayments(quote: PayablePayQuote): PayrollBatchPayment[] {
+  return quote.batches.flatMap((row) => row.batch.payments);
+}
+
+export function payableQuoteSourceAmount(quote: PayablePayQuote): string {
+  return quote.batches
+    .reduce((sum, row) => {
+      const value = row.batch.totalSourceAmount.trim();
       if (!value) return sum;
       try {
         return sum.plus(value);

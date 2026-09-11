@@ -25,6 +25,7 @@ export function YouPaySection(props: {
   disabledBlockchains?: string[] | null;
   disabledReason?: string;
   amountClassName?: string;
+  tokenSelectDisabled?: boolean;
 }) {
   const {
     amountDisplay,
@@ -40,6 +41,7 @@ export function YouPaySection(props: {
     disabledBlockchains = null,
     disabledReason,
     amountClassName,
+    tokenSelectDisabled = false,
   } = props;
   const [originDialogOpen, setOriginDialogOpen] = useState(false);
   const balanceOwners = useConnectedWallets();
@@ -93,7 +95,11 @@ export function YouPaySection(props: {
         <p className={cn("min-w-0 break-all font-montserrat text-base font-medium text-black", amountClassName)}>
           {amountDisplay}
         </p>
-        <TokenSelectButton token={originToken} onClick={() => setOriginDialogOpen(true)} />
+        <TokenSelectButton
+          token={originToken}
+          disabled={tokenSelectDisabled}
+          onClick={() => setOriginDialogOpen(true)}
+        />
       </div>
       <p className="mt-1 font-space-grotesk text-xs">
         <span className="text-[#9fa7ba]">Balance: </span>

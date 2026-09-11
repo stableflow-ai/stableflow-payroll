@@ -16,7 +16,7 @@ export const BONUS_DRAWER_TITLE = {
   [BONUS_DRAWER_MODE.Edit]: "Edit Bonus",
 } as const;
 
-export const BONUS_FORM_MAX_ROWS = 50;
+export const BONUS_FORM_MAX_ROWS = 500;
 export const BONUS_FORM_AMOUNT_MAX_DECIMALS = 6;
 export const BONUS_FORM_TITLE_MAX = BONUS_IMPORT_LIMITS.title;
 export const BONUS_FORM_COLUMNS =

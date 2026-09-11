@@ -62,7 +62,7 @@ export function payrollPayDayLabel(day: number): string {
   return `Every next month ${payrollDayOrdinal(day)}`;
 }
 
-export const PAYROLL_FORM_MAX_ROWS = 50;
+export const PAYROLL_FORM_MAX_ROWS = 500;
 export const PAYROLL_FORM_AMOUNT_MAX_DECIMALS = 6;
 export const PAYROLL_FORM_COLUMNS =
   "minmax(110px,126px) minmax(0,1fr) minmax(140px,180px) 184px 99px 38px";

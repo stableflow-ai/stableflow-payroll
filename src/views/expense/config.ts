@@ -69,7 +69,7 @@ export const HISTORY_EXPENSE_TABLE_COLUMNS =
 
 export const EXPENSE_DRAWER_TITLE = "Add Expense";
 export const EXPENSE_FORM_DESKTOP_QUERY = "(min-width: 768px)";
-export const EXPENSE_FORM_MAX_ROWS = 50;
+export const EXPENSE_FORM_MAX_ROWS = 500;
 export const EXPENSE_FORM_AMOUNT_MAX_DECIMALS = 6;
 export const EXPENSE_FORM_TITLE_MAX = EXPENSE_IMPORT_LIMITS.title;
 export const EXPENSE_FORM_COLUMNS =

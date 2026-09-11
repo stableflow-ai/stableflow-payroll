@@ -52,6 +52,20 @@ describe("parsePayrollImportRows", () => {
       truncated: false,
     });
   });
+
+  it("truncates when over the max row count", () => {
+    const { rows, truncated } = parsePayrollImportRows(
+      [
+        ["recipient", "email", "amount", "token", "network", "memo"],
+        ["0x1", "a@x.com", "1", "USDC", "eth", ""],
+        ["0x2", "b@x.com", "1", "USDC", "eth", ""],
+        ["0x3", "c@x.com", "1", "USDC", "eth", ""],
+      ],
+      2,
+    );
+    expect(truncated).toBe(true);
+    expect(rows).toHaveLength(2);
+  });
 });
 
 describe("fallbackPayrollImportName", () => {

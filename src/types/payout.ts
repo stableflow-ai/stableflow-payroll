@@ -35,6 +35,7 @@ export interface PayBatchSwapTransaction {
 
 export interface PayBatchSubmitParam {
   quote_id: string;
+  quote_batch_id: string;
   tx_hash: string;
 }
 
@@ -198,4 +199,14 @@ export interface PayrollBatch {
   totalSourceAmountRaw: string;
   transaction: PayBatchSwapTransaction;
   payments: PayrollBatchPayment[];
+}
+
+export interface PayablePayQuoteBatch {
+  quoteBatchId: string;
+  batch: PayrollBatch;
+}
+
+export interface PayablePayQuote {
+  quoteId: string;
+  batches: PayablePayQuoteBatch[];
 }

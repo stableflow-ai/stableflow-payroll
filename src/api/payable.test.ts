@@ -459,8 +459,27 @@ describe("mapPayablePayResponse", () => {
   it("reads quote_id beside batch", () => {
     const mapped = mapPayablePayResponse({ quote_id: "q-1", batch });
     expect(mapped.quoteId).toBe("q-1");
-    expect(mapped.batchId).toBe("b1");
-    expect(mapped.transaction.callData).toBe("0xabc");
+    expect(mapped.batches).toHaveLength(1);
+    expect(mapped.batches[0]?.quoteBatchId).toBe("b1");
+    expect(mapped.batches[0]?.batch.batchId).toBe("b1");
+    expect(mapped.batches[0]?.batch.transaction.callData).toBe("0xabc");
+  });
+
+  it("reads quote_id beside batches", () => {
+    const mapped = mapPayablePayResponse({
+      quote_id: "q-2",
+      batches: [
+        { quote_batch_id: "qbatch-1", batch },
+        {
+          quote_batch_id: "qbatch-2",
+          batch: { ...batch, batch_id: "b2", total_source_amount: "5" },
+        },
+      ],
+    });
+    expect(mapped.quoteId).toBe("q-2");
+    expect(mapped.batches.map((row) => row.quoteBatchId)).toEqual(["qbatch-1", "qbatch-2"]);
+    expect(mapped.batches[0]?.batch.quoteId).toBe("q-2");
+    expect(mapped.batches[1]?.batch.totalSourceAmount).toBe("5");
   });
 
   it("throws when quote_id is missing", () => {
@@ -491,7 +510,9 @@ describe("mapPayablePayResponse", () => {
       },
     });
     expect(mapped.quoteId).toBe("q-zec");
-    expect(mapped.transaction.outputs?.[0]?.address).toBe("t1aDV9wRNwVrVJVSoUCUrFpcYSTbcKrc1Dj");
+    expect(mapped.batches[0]?.batch.transaction.outputs?.[0]?.address).toBe(
+      "t1aDV9wRNwVrVJVSoUCUrFpcYSTbcKrc1Dj",
+    );
   });
 
   it("throws NO_BATCH_TX when the quote has no broadcastable transaction", () => {
@@ -539,6 +560,7 @@ describe("payPayable", () => {
       adjustments: [{ item_id: 58, net_pay: "1" }],
     });
     expect(quoted.quoteId).toBe("q-op");
+    expect(quoted.batches[0]?.quoteBatchId).toBe("b-op");
     expect(spy).toHaveBeenCalledWith(
       "/v1/payroll/operations/pay/quote",
       expect.objectContaining({

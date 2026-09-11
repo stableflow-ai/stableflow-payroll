@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { PAYABLE_TYPE, type Payable } from "@/types/payable";
-import { buildPayablePayRequest, sumPayableNetPay, sumPayableVolume, sumQuoteDestinationVolume } from "./utils";
+import { buildPayablePayRequest, payableQuoteSourceAmount, sumPayableNetPay, sumPayableVolume, sumQuoteDestinationVolume } from "./utils";
 
 const PAYABLE: Payable = {
   key: { type: PAYABLE_TYPE.Payroll, periodMonth: "2026-09" },
@@ -261,5 +261,25 @@ describe("sumQuoteDestinationVolume", () => {
       ]),
     ).toBe("102.44781");
     expect(sumQuoteDestinationVolume([{ destinationVolume: "" }])).toBe("0");
+  });
+});
+
+describe("payableQuoteSourceAmount", () => {
+  it("sums total_source_amount across quote batches", () => {
+    expect(
+      payableQuoteSourceAmount({
+        quoteId: "q-1",
+        batches: [
+          {
+            quoteBatchId: "qbatch-1",
+            batch: { totalSourceAmount: "18000" } as never,
+          },
+          {
+            quoteBatchId: "qbatch-2",
+            batch: { totalSourceAmount: "17001.235" } as never,
+          },
+        ],
+      }),
+    ).toBe("35001.235");
   });
 });

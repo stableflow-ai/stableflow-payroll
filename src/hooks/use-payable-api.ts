@@ -21,6 +21,7 @@ export function usePayablesQuery(options?: { enabled?: boolean }) {
 /**
  * `POST .../salaries/pay/quote` or `.../{batch_id}/pay/quote` — quote + on-chain data.
  * `notification` and `adjustments` are part of the key so a change re-quotes.
+ * The mapped value is `{ quoteId, batches }`.
  */
 export function usePayablePayQuery(body: PayablePayRequest | null) {
   return useQuery({

@@ -36,8 +36,9 @@ export function PaymentFormDetailsDrawer(props: {
   netPayById: Record<number, string>;
   totalVolume: string;
   onSaveNetPay: (next: Record<number, string>) => void;
+  canEdit?: boolean;
 }) {
-  const { open, onClose, detail, netPayById, totalVolume, onSaveNetPay } = props;
+  const { open, onClose, detail, netPayById, totalVolume, onSaveNetPay, canEdit = true } = props;
   const isDesktop = useMediaQuery(PAYMENT_FORM_DETAILS_DESKTOP_QUERY);
   const toast = useToast();
   const [editing, setEditing] = useState(false);
@@ -103,7 +104,7 @@ export function PaymentFormDetailsDrawer(props: {
       }
       titleClassName="flex min-w-0 flex-1 items-center gap-2"
       headerAction={
-        detail?.type === PAYABLE_TYPE.Payroll ? (
+        canEdit && detail?.type === PAYABLE_TYPE.Payroll ? (
           <div className="ml-auto">
             <Button
               size="sm"

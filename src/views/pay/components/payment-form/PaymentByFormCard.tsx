@@ -43,9 +43,17 @@ import { formatQuoteErrorMessage } from "../../utils";
 import { YouPaySection } from "../YouPaySection";
 import { NotifyRecipientBar } from "../NotifyRecipientBar";
 import { NotifyRecipientsDrawer } from "./NotifyRecipientsDrawer";
+import { PaymentFormBatchRows } from "./PaymentFormBatchRows";
 import { PaymentFormDetailsDrawer } from "./PaymentFormDetailsDrawer";
 import { PaymentFormSelect } from "./PaymentFormSelect";
-import { buildPayablePayRequest, payableItemIds, sumQuoteDestinationVolume } from "./utils";
+import { batchPayoutCommitTitle } from "./config";
+import {
+  buildPayablePayRequest,
+  payableItemIds,
+  payableQuotePayments,
+  payableQuoteSourceAmount,
+  sumQuoteDestinationVolume,
+} from "./utils";
 
 class BalanceGateError extends Error {
   constructor(message: string) {
@@ -85,6 +93,8 @@ export function PaymentByFormCard(props: {
         : "",
   );
   const [phase, setPhase] = useState<"idle" | "sending" | "done">("idle");
+  const [sendingQuoteBatchId, setSendingQuoteBatchId] = useState<string | null>(null);
+  const [paidQuoteBatchIds, setPaidQuoteBatchIds] = useState<Set<string>>(() => new Set());
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [notifyEnabled, setNotifyEnabled] = useState(false);
   const [notifyOpen, setNotifyOpen] = useState(false);
@@ -94,6 +104,8 @@ export function PaymentByFormCard(props: {
   );
   const initialNetPayRef = useRef(initialNetPayById);
   initialNetPayRef.current = initialNetPayById;
+  const paidQuoteBatchIdsRef = useRef(paidQuoteBatchIds);
+  paidQuoteBatchIdsRef.current = paidQuoteBatchIds;
   const refreshedForBatchId = useRef("");
 
   useEffect(() => {
@@ -144,6 +156,9 @@ export function PaymentByFormCard(props: {
     setDetailsOpen(false);
     setSelectedItemIds(new Set());
     setNetPayById(initialNetPayRef.current ?? {});
+    setPaidQuoteBatchIds(new Set());
+    setSendingQuoteBatchId(null);
+    setPhase("idle");
   }, [selectedId]);
 
   const payBody = useMemo(
@@ -170,39 +185,45 @@ export function PaymentByFormCard(props: {
     ],
   );
 
-  const batchQuery = usePayablePayQuery(payBody);
-  const batch = payBody ? batchQuery.data : undefined;
-  const batchId = batch?.batchId ?? "";
-  const batchConsumed = useConsumedBatchesStore(
-    (state) => Boolean(batchId) && state.items.some((item) => item.batchId === batchId),
-  );
-  const refetchBatch = batchQuery.refetch;
+  const quoteQuery = usePayablePayQuery(payBody);
+  const quote = payBody ? quoteQuery.data : undefined;
+  const batches = quote?.batches ?? [];
+  const isSplit = batches.length > 1;
+  const firstQuoteBatchId = batches[0]?.quoteBatchId ?? "";
+  const paymentStarted = paidQuoteBatchIds.size > 0;
+  const formKey = detail ? payableKeyId(detail.key) : "";
+  const consumedItems = useConsumedBatchesStore((state) => state.items);
+  const firstBatchConsumed = Boolean(firstQuoteBatchId)
+    && consumedItems.some((item) => item.batchId === firstQuoteBatchId);
+  const refetchQuote = quoteQuery.refetch;
 
   useEffect(() => {
-    if (!batchConsumed || !batchId) return;
+    if (isSplit || paymentStarted) return;
+    if (!firstBatchConsumed || !firstQuoteBatchId) return;
     if (phase === "sending" || phase === "done") return;
-    if (refreshedForBatchId.current === batchId) return;
-    refreshedForBatchId.current = batchId;
-    void refetchBatch();
-  }, [batchConsumed, batchId, phase, refetchBatch]);
+    if (refreshedForBatchId.current === firstQuoteBatchId) return;
+    refreshedForBatchId.current = firstQuoteBatchId;
+    void refetchQuote();
+  }, [firstBatchConsumed, firstQuoteBatchId, isSplit, paymentStarted, phase, refetchQuote]);
 
   const quoteStale = Boolean(payBody) && (
-    batchQuery.isPlaceholderData
-    || (batchQuery.isPending && batchQuery.isFetching)
+    quoteQuery.isPlaceholderData
+    || (quoteQuery.isPending && quoteQuery.isFetching)
   );
-  const quoteError = batchQuery.isError
-    ? formatQuoteErrorMessage(batchQuery.error, 2)
+  const quoteError = quoteQuery.isError
+    ? formatQuoteErrorMessage(quoteQuery.error, 2)
     : null;
-  const quoting = Boolean(payBody) && (quoteStale || batchQuery.isFetching) && !quoteError;
-  const youPayQuoted = Boolean(batch?.totalSourceAmount);
+  const quoting = Boolean(payBody) && (quoteStale || quoteQuery.isFetching) && !quoteError;
+  const sourceAmount = quote ? payableQuoteSourceAmount(quote) : "0";
+  const youPayQuoted = Boolean(quote);
   const youPayAmount = youPayQuoted
-    ? formatAmount(batch!.totalSourceAmount, { prefix: "", maxDecimals: 6 })
+    ? formatAmount(sourceAmount, { prefix: "", maxDecimals: 6 })
     : "0";
   const estCostLabel = youPayQuoted && originToken
-    ? `${formatAmount(batch!.totalSourceAmount, { prefix: "", maxDecimals: 6 })} ${originToken.symbol}`
+    ? `${formatAmount(sourceAmount, { prefix: "", maxDecimals: 6 })} ${originToken.symbol}`
     : "-";
   const totalValuedAmount = youPayQuoted
-    ? sumQuoteDestinationVolume(batch!.payments)
+    ? sumQuoteDestinationVolume(payableQuotePayments(quote!))
     : "0";
   const totalValuedLabel = formatAmount(totalValuedAmount, {
     maxDecimals: AMOUNT_MAX_DECIMALS,
@@ -210,8 +231,10 @@ export function PaymentByFormCard(props: {
   const emailCount = detail?.items.length ?? 0;
 
   const settleMutation = useMutation({
-    mutationFn: async () => {
-      if (!originToken || !payBody || !batch || !connectedAddress) {
+    mutationFn: async (quoteBatchId: string) => {
+      const quoted = batches.find((row) => row.quoteBatchId === quoteBatchId);
+      const batch = quoted?.batch;
+      if (!originToken || !payBody || !quote || !batch || !connectedAddress) {
         throw new Error("Missing payment inputs");
       }
       if (!wallet.isConnected || !wallet.account?.address) {
@@ -228,12 +251,12 @@ export function PaymentByFormCard(props: {
       }
       if (isPayrollBatchExpired(batch.deadline)) {
         toast.fail({ title: QUOTE_EXPIRED_MESSAGE });
-        void refetchBatch();
+        if (!paymentStarted) void refetchQuote();
         throw new BalanceGateError(QUOTE_EXPIRED_MESSAGE);
       }
-      if (isBatchConsumed(batch.batchId)) {
+      if (isBatchConsumed(quoteBatchId)) {
         toast.fail({ title: SPENT_BATCH_MESSAGE });
-        void refetchBatch();
+        if (!isSplit && !paymentStarted) void refetchQuote();
         throw new BalanceGateError(SPENT_BATCH_MESSAGE);
       }
       const payer = wallet.account.address;
@@ -251,8 +274,11 @@ export function PaymentByFormCard(props: {
       if (!tx) {
         throw new Error("Missing batch transaction");
       }
+      const batchIndex = batches.findIndex((row) => row.quoteBatchId === quoteBatchId) + 1;
       setPhase("sending");
-      markBatchConsumed(batch.batchId);
+      setSendingQuoteBatchId(quoteBatchId);
+      setNotifyOpen(false);
+      markBatchConsumed(quoteBatchId);
       let txHash: string;
       try {
         txHash = await broadcastBatchPayout({
@@ -267,30 +293,45 @@ export function PaymentByFormCard(props: {
           && error.message === INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE
         ) {
           toast.fail({ title: INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE });
-          void refetchBatch();
+          if (!paymentStarted) void refetchQuote();
           throw new BalanceGateError(INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE);
         }
         throw error;
       }
       enqueueBatchPayoutCommit({
-        quoteId: batch.quoteId,
+        quoteId: quote.quoteId,
+        quoteBatchId,
         txHash,
-        title: detail?.title ?? "",
+        title: batchPayoutCommitTitle(detail?.title ?? "", batchIndex, batches.length),
         type: detail?.type ?? "",
+        formKey,
       });
+      return quoteBatchId;
     },
-    onSuccess: () => {
+    onSuccess: (quoteBatchId) => {
+      const next = new Set(paidQuoteBatchIdsRef.current);
+      next.add(quoteBatchId);
+      setPaidQuoteBatchIds(next);
+      setSendingQuoteBatchId(null);
+      const remaining = batches.filter((row) => !next.has(row.quoteBatchId));
+      if (remaining.length > 0) {
+        setNotifyOpen(false);
+        setPhase("idle");
+        return;
+      }
       setPhase("done");
       void queryClient.removeQueries({ queryKey: [...queryKeys.payable.all, "pay"] });
       if (!formLocked) setPickedId("");
       setDetailsOpen(false);
       setNotifyOpen(false);
       setNetPayById({});
+      setPaidQuoteBatchIds(new Set());
       setPhase("idle");
       onSettled?.();
     },
     onError: (error) => {
       setPhase("idle");
+      setSendingQuoteBatchId(null);
       if (error instanceof BalanceGateError) return;
       toast.fail({ title: formatQuoteErrorMessage(error, 2) });
     },
@@ -299,23 +340,35 @@ export function PaymentByFormCard(props: {
   const sending = settleMutation.isPending || phase === "sending";
   const formPicked = Boolean(selectedId);
   const formSelected = Boolean(selectedId && detail);
-  const canSend = Boolean(
+  const quoteReady = Boolean(quote && !quoteStale && !quoteError);
+  const canSendSingle = Boolean(
     formSelected
     && isBatchOriginToken(originToken)
     && payBody
-    && batch
-    && !quoteStale
-    && !quoteError
-    && !batchConsumed
-    && !sending,
+    && quoteReady
+    && firstQuoteBatchId
+    && !firstBatchConsumed
+    && !sending
+    && !paidQuoteBatchIds.has(firstQuoteBatchId),
+  );
+  const splitPayDisabled = Boolean(
+    !formSelected
+    || !isBatchOriginToken(originToken)
+    || !payBody
+    || !quoteReady
+    || sending
+    || quoting
+    || formsFetching,
   );
 
-  function handleSend() {
+  function handleSend(quoteBatchId?: string) {
     if (!connectedAddress) {
       paymentWallet.connectWallet();
       return;
     }
-    void settleMutation.mutateAsync();
+    const target = quoteBatchId || firstQuoteBatchId;
+    if (!target) return;
+    void settleMutation.mutateAsync(target);
   }
 
   function handleNotifyEnabled(next: boolean) {
@@ -343,6 +396,8 @@ export function PaymentByFormCard(props: {
     }
   }
 
+  const notifyBusy = formPicked && (formsFetching || quoting || sending || paymentStarted);
+
   return (
     <>
       <div>
@@ -352,10 +407,10 @@ export function PaymentByFormCard(props: {
             forms={lockedForms}
             value={selectedId}
             onChange={(id) => {
-              if (formLocked) return;
+              if (formLocked || paymentStarted) return;
               setPickedId(id);
             }}
-            disabled={formLocked}
+            disabled={formLocked || paymentStarted}
             loading={formsLoading}
           />
         </div>
@@ -392,12 +447,13 @@ export function PaymentByFormCard(props: {
           amountClassName={youPayQuoted ? undefined : "opacity-30"}
           originToken={originToken}
           onOriginTokenChange={setOriginToken}
+          tokenSelectDisabled={paymentStarted}
           walletAddress={connectedAddress}
           walletConnected={wallet.isConnected}
           walletIcon={originKind === "evm" ? paymentWallet.walletInfo.icon : wallet.account?.icon}
           connecting={wallet.isConnecting}
           onConnectWallet={() => paymentWallet.connectWallet()}
-          onDisconnectWallet={() => paymentWallet.disconnect()}
+          onDisconnectWallet={paymentStarted ? undefined : () => paymentWallet.disconnect()}
           allowedBlockchains={BATCH_BLOCKCHAINS}
           disabledBlockchains={zcashBatchDisabled ? ZCASH_DISABLED_BLOCKCHAINS : null}
           disabledReason={zcashBatchDisabled ? ZCASH_BATCH_UNSUPPORTED_MESSAGE : undefined}
@@ -419,16 +475,14 @@ export function PaymentByFormCard(props: {
       <NotifyRecipientBar
         className="mt-6"
         enabled={notifyEnabled}
-        disabled={!formSelected || (formPicked && (formsFetching || quoting || sending))}
+        disabled={!formSelected || notifyBusy}
         onEnabledChange={handleNotifyEnabled}
       >
         <button
           type="button"
           className="inline-flex items-center gap-[7px] text-[#06F]"
           onClick={() => {
-            if ((formPicked && (formsFetching || quoting || sending))) {
-              return;
-            }
+            if (notifyBusy) return;
             if (detail && selectedItemIds.size === 0) {
               setSelectedItemIds(new Set(payableItemIds(detail)));
             }
@@ -446,15 +500,25 @@ export function PaymentByFormCard(props: {
         <p className="mt-2 font-montserrat text-sm text-danger">{quoteError}</p>
       ) : null}
 
-      <Button
-        size="xl"
-        className="mt-8 w-full"
-        loading={formPicked && (formsFetching || quoting || sending)}
-        disabled={!canSend}
-        onClick={handleSend}
-      >
-        {formPicked ? "Send Payment" : "Select Category"}
-      </Button>
+      {isSplit ? (
+        <PaymentFormBatchRows
+          batches={batches}
+          sendingQuoteBatchId={sendingQuoteBatchId}
+          paidQuoteBatchIds={paidQuoteBatchIds}
+          payDisabled={splitPayDisabled}
+          onPay={(quoteBatchId) => handleSend(quoteBatchId)}
+        />
+      ) : (
+        <Button
+          size="xl"
+          className="mt-8 w-full"
+          loading={formPicked && (formsFetching || quoting || sending)}
+          disabled={!canSendSingle}
+          onClick={() => handleSend()}
+        >
+          {formPicked ? "Send Payment" : "Select Category"}
+        </Button>
+      )}
 
       <PaymentFormDetailsDrawer
         open={detailsOpen}
@@ -462,6 +526,7 @@ export function PaymentByFormCard(props: {
         detail={detail}
         netPayById={netPayById}
         totalVolume={totalValuedAmount}
+        canEdit={!paymentStarted}
         onSaveNetPay={setNetPayById}
       />
 

@@ -87,3 +87,38 @@ export const PAYMENT_FORM_DETAILS_COLUMNS = [
   { key: "amount", label: "Amount" },
   { key: "netPay", label: "Net Pay" },
 ] as const;
+
+export const BATCH_PAYMENT_MAX_ITEMS = 50;
+
+export const BATCH_PAYMENT_ROW_PREFIX = "Batch Payment";
+
+const BATCH_COUNT_WORDS: Record<number, string> = {
+  2: "two",
+  3: "three",
+  4: "four",
+  5: "five",
+  6: "six",
+  7: "seven",
+  8: "eight",
+  9: "nine",
+  10: "ten",
+};
+
+export function batchSplitBannerText(batchCount: number): string {
+  const count = BATCH_COUNT_WORDS[batchCount] ?? String(batchCount);
+  return `A batch payment can support up to ${BATCH_PAYMENT_MAX_ITEMS} transactions, and this payment will be divided into ${count} payments`;
+}
+
+export function batchPaymentRowLabel(index: number): string {
+  return `${BATCH_PAYMENT_ROW_PREFIX} ${index}`;
+}
+
+export function batchPayoutCommitTitle(
+  formTitle: string,
+  batchIndex: number,
+  batchCount: number,
+): string {
+  const title = formTitle.trim() || "Payment";
+  if (batchCount <= 1) return title;
+  return `${title}_Batch Payment ${batchIndex}`;
+}

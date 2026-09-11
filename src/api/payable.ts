@@ -13,7 +13,7 @@ import {
   type PayableType,
   type PayrollPayParam,
 } from "@/types/payable";
-import type { PayrollBatch } from "@/types/payout";
+import type { PayablePayQuote, PayablePayQuoteBatch } from "@/types/payout";
 
 function mapPayableItem(raw: unknown): PayableItem | null {
   const row = asRecord(raw);
@@ -105,20 +105,55 @@ export async function getPayables(
   );
 }
 
-export function mapPayablePayResponse(raw: unknown): PayrollBatch {
+function mapPayablePayQuoteBatch(
+  raw: unknown,
+  quoteId: string,
+): PayablePayQuoteBatch | null {
+  const row = asRecord(raw);
+  if (!row) return null;
+  const nested = row.batch ?? row;
+  const batch = mapPayrollBatch(nested);
+  const quoteBatchId =
+    apiText(row.quote_batch_id ?? row.quoteBatchId)
+    || batch.batchId
+    || quoteId;
+  if (!quoteBatchId || !isPayrollBatchBroadcastable(batch)) return null;
+  return {
+    quoteBatchId,
+    batch: { ...batch, quoteId },
+  };
+}
+
+export function mapPayablePayResponse(raw: unknown): PayablePayQuote {
   const row = asRecord(raw) ?? {};
   const quoteId = apiText(row.quote_id ?? row.quoteId);
   if (!quoteId) {
     throw new ApiError("Quote id is missing from the response", 502, "NO_QUOTE_ID");
   }
-  const batch = mapPayrollBatch(row.batch ?? raw);
-  if (!isPayrollBatchBroadcastable(batch)) {
+  const rawBatches = Array.isArray(row.batches) ? row.batches : null;
+  const batches: PayablePayQuoteBatch[] = [];
+  if (rawBatches) {
+    for (const item of rawBatches) {
+      const mapped = mapPayablePayQuoteBatch(item, quoteId);
+      if (!mapped) {
+        throw new ApiError("Batch transaction is missing from the response", 502, "NO_BATCH_TX");
+      }
+      batches.push(mapped);
+    }
+  } else {
+    const mapped = mapPayablePayQuoteBatch(row.batch ?? raw, quoteId);
+    if (!mapped) {
+      throw new ApiError("Batch transaction is missing from the response", 502, "NO_BATCH_TX");
+    }
+    batches.push(mapped);
+  }
+  if (!batches.length) {
     throw new ApiError("Batch transaction is missing from the response", 502, "NO_BATCH_TX");
   }
-  return { ...batch, quoteId };
+  return { quoteId, batches };
 }
 
-export async function payPayrollSalaries(body: PayrollPayParam): Promise<PayrollBatch> {
+export async function payPayrollSalaries(body: PayrollPayParam): Promise<PayablePayQuote> {
   return mapPayablePayResponse(
     await http<unknown>(`${PAY_API_PREFIX}/salaries/pay/quote`, { method: "POST", body }),
   );
@@ -127,7 +162,7 @@ export async function payPayrollSalaries(body: PayrollPayParam): Promise<Payroll
 export async function payExpenseBatch(
   batchId: number,
   body: PayablePayBaseParam,
-): Promise<PayrollBatch> {
+): Promise<PayablePayQuote> {
   return mapPayablePayResponse(
     await http<unknown>(
       `${PAY_API_PREFIX}/expenses/${encodeURIComponent(String(batchId))}/pay/quote`,
@@ -142,7 +177,7 @@ export async function payExpenseBatch(
 export async function payBonusBatch(
   batchId: number,
   body: PayablePayBaseParam,
-): Promise<PayrollBatch> {
+): Promise<PayablePayQuote> {
   return mapPayablePayResponse(
     await http<unknown>(
       `${PAY_API_PREFIX}/bonuses/${encodeURIComponent(String(batchId))}/pay/quote`,
@@ -156,7 +191,7 @@ export async function payBonusBatch(
 
 export async function payOperationBatch(
   body: Record<string, unknown>,
-): Promise<PayrollBatch> {
+): Promise<PayablePayQuote> {
   return mapPayablePayResponse(
     await http<unknown>(`${PAY_API_PREFIX}/operations/pay/quote`, {
       method: "POST",
@@ -189,7 +224,7 @@ export function payablePayBody(request: PayablePayRequest): Record<string, unkno
   return body;
 }
 
-export async function payPayable(request: PayablePayRequest): Promise<PayrollBatch> {
+export async function payPayable(request: PayablePayRequest): Promise<PayablePayQuote> {
   if (request.type === PAYABLE_TYPE.Payroll && "period_month" in request) {
     const { type: _type, ...body } = request;
     return payPayrollSalaries(body);

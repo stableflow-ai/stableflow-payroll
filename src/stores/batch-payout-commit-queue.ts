@@ -1,15 +1,17 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
-const STORAGE_KEY = "stableflow-pay:batch-payout-commit-queue:v2";
+const STORAGE_KEY = "stableflow-pay:batch-payout-commit-queue:v3";
 const BASE_RETRY_MS = 5_000;
 
 export interface BatchPayoutCommitItem {
   id: string;
   quoteId: string;
+  quoteBatchId: string;
   txHash: string;
   title: string;
   type: string;
+  formKey: string;
   createdAt: number;
 }
 
@@ -17,6 +19,7 @@ export interface BatchPayoutCommitSuccess {
   executionId: number;
   title: string;
   type: string;
+  formKey: string;
 }
 
 interface BatchPayoutCommitQueueState {
@@ -91,13 +94,18 @@ async function processCommit(id: string, item: BatchPayoutCommitItem, retryCount
 
   try {
     const { batchSubmit } = await import("@/api/payout");
-    const submitted = await batchSubmit({ quote_id: item.quoteId, tx_hash: item.txHash });
+    const submitted = await batchSubmit({
+      quote_id: item.quoteId,
+      quote_batch_id: item.quoteBatchId,
+      tx_hash: item.txHash,
+    });
     useBatchPayoutCommitQueueStore.getState().remove(id);
     clearTaskMeta(id);
     notifySuccessListeners({
       executionId: submitted.executionId,
       title: item.title,
       type: item.type,
+      formKey: item.formKey,
     });
   } catch {
     taskMetaMap.set(id, {
@@ -116,7 +124,10 @@ export const useBatchPayoutCommitQueueStore = create(
         set((state) => {
           if (
             state.queue.some(
-              (row) => row.id === item.id || row.txHash === item.txHash || row.quoteId === item.quoteId,
+              (row) =>
+                row.id === item.id
+                || row.txHash === item.txHash
+                || (item.quoteBatchId && row.quoteBatchId === item.quoteBatchId),
             )
           ) {
             return state;
@@ -141,17 +152,21 @@ export const useBatchPayoutCommitQueueStore = create(
 
 export function enqueueBatchPayoutCommit(input: {
   quoteId: string;
+  quoteBatchId: string;
   txHash: string;
   title: string;
   type: string;
+  formKey: string;
 }): string {
   const id = crypto.randomUUID();
   const item: BatchPayoutCommitItem = {
     id,
     quoteId: input.quoteId,
+    quoteBatchId: input.quoteBatchId,
     txHash: input.txHash,
     title: input.title,
     type: input.type,
+    formKey: input.formKey,
     createdAt: Date.now(),
   };
   useBatchPayoutCommitQueueStore.getState().enqueue(item);
