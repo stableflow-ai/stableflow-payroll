@@ -62,6 +62,7 @@ export interface BonusPendingMember {
   purpose: string;
   description: string;
   amount: string;
+  volume: string;
   token: string;
 }
 

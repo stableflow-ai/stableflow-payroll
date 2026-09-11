@@ -80,6 +80,7 @@ describe("mapBonusOpenItem", () => {
             purpose: "Q3",
             description: "Project wrap",
             amount: "200",
+            volume: "210",
             symbol: "USDC",
             status: "open",
           },
@@ -109,6 +110,7 @@ describe("mapBonusOpenItem", () => {
           purpose: "Q3",
           description: "Project wrap",
           amount: "200",
+          volume: "210",
           token: "USDC",
         },
         {
@@ -119,6 +121,7 @@ describe("mapBonusOpenItem", () => {
           purpose: "",
           description: "",
           amount: "200",
+          volume: "200",
           token: "USDC",
         },
       ],

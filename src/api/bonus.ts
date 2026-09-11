@@ -91,6 +91,7 @@ export function mapBonusOpenMember(
 ): BonusPendingMember {
   const row = asRecord(raw) ?? {};
   const id = apiNumber(row.id) ?? index + 1;
+  const amount = apiText(row.amount) || "0";
   return {
     id: batchId != null ? `${batchId}-${id}` : String(id),
     name: apiText(row.name),
@@ -98,7 +99,8 @@ export function mapBonusOpenMember(
     email: apiText(row.email),
     purpose: apiText(row.purpose),
     description: apiText(row.description),
-    amount: apiText(row.amount) || "0",
+    amount,
+    volume: apiText(row.volume) || amount,
     token: apiText(row.symbol),
   };
 }

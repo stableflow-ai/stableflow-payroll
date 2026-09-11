@@ -112,7 +112,13 @@ function BonusItemBlock(props: {
           />
         </TableCell>
         <TableCell className="font-medium text-black">
-          {formatAmount(item.amount, { showDust: true })}
+          {isGroup
+            ? formatAmount(item.amount, { showDust: true })
+            : formatBonusTokenAmount(
+                sole?.amount ?? "0",
+                sole?.token ?? "",
+                sole?.volume ?? sole?.amount ?? "0",
+              )}
         </TableCell>
         <TableCell>
           {!isGroup && sole?.address ? (
@@ -147,7 +153,7 @@ function BonusItemBlock(props: {
                 <DescriptionCell value={member.description} onOpenUrl={onOpenUrl} />
               </TableCell>
               <TableCell className="font-medium text-black">
-                {formatBonusTokenAmount(member.amount, member.token)}
+                {formatBonusTokenAmount(member.amount, member.token, member.volume)}
               </TableCell>
               <TableCell>
                 <PayoutRecipientCell address={member.address} prefix={5} suffix={5} />

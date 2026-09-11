@@ -2,7 +2,7 @@ import { format, isValid } from "date-fns";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import { normalizeSymbol } from "@/stores/intents-tokens";
 import type { WalletChainKind } from "@/utils";
-import { DATE_FORMAT, formatAddress, formatDate } from "@/utils";
+import { DATE_FORMAT, formatAddress, formatAmount, formatDate } from "@/utils";
 import {
   amountError,
   detectAddressKind,
@@ -93,10 +93,11 @@ export function bonusEmailError(value: string): string | null {
   return isValidEmail(trimmed) ? null : "Enter a valid email";
 }
 
-export function formatBonusTokenAmount(amount: string, token: string) {
-  const trimmed = amount.trim();
-  if (!token) return trimmed || "0";
-  return `${trimmed || "0"} ${token}`;
+export function formatBonusTokenAmount(amount: string, token: string, volume: string) {
+  const qty = formatAmount(amount, { prefix: "", showDust: true });
+  const usd = formatAmount(volume, { showDust: true });
+  const tokenPart = token ? `${qty} ${token}` : qty;
+  return `${tokenPart} (${usd})`;
 }
 
 export function createEmptyBonusFormRow(): BonusFormRow {

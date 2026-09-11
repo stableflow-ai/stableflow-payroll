@@ -95,6 +95,7 @@ const BONUS_ITEM: BonusPendingItem = {
       purpose: "",
       description: "",
       amount: "200",
+      volume: "200",
       token: "USDC",
     },
   ],
