@@ -31,15 +31,12 @@ export function AuthShell({
   return (
     <main className="flex min-h-svh flex-col md:flex-row">
       <aside
-        className="relative flex w-full shrink-0 flex-col overflow-hidden px-6 py-8 md:w-[min(870px,57.5%)] md:min-h-svh md:px-16 md:py-14 lg:px-20"
+        className={cn(
+          "relative flex w-full shrink-0 flex-col overflow-hidden px-6 py-8 md:w-[min(870px,57.5%)] md:min-h-svh md:px-16 md:py-14 lg:px-20",
+          "bg-[url('/auth/brand-mark-vector.svg')] bg-no-repeat bg-[position:left_center] bg-[length:694px_auto]",
+        )}
         style={{ backgroundColor: AUTH_BRAND_BG }}
       >
-        <img
-          src="/auth/brand-mark-vector.svg"
-          alt=""
-          aria-hidden
-          className="pointer-events-none absolute top-[12%] left-[-45%] h-auto w-[min(120%,760px)] max-w-none select-none md:left-[-52%] md:top-[10%]"
-        />
 
         <div className="relative z-10 flex min-h-0 flex-1 flex-col">
           <img
