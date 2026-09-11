@@ -5,6 +5,7 @@ import {
   categoryPath,
   isCategoryNavEnabled,
   isCategoryPath,
+  operationImportCsvFilename,
   payCategoryFromPath,
 } from "./config";
 
@@ -20,6 +21,8 @@ describe("payCategoryFromPath", () => {
     expect(isCategoryPath("/pay/expense")).toBe(false);
     expect(categoryPath("office")).toBe("/pay/office");
     expect(categoryHistoryPath("office")).toBe("/pay/office/history");
+    expect(operationImportCsvFilename("office")).toBe("office-import-template.csv");
+    expect(operationImportCsvFilename("kolmkt")).toBe("kolmkt-import-template.csv");
   });
 });
 

@@ -23,16 +23,7 @@ import {
 } from "../../config";
 import { parsePayrollImportRows } from "../../utils";
 import { ImportCsvMenu, type ImportCsvSource } from "@/views/pay/components/import-csv/ImportCsvMenu";
-
-function downloadTemplate() {
-  const blob = new Blob([IMPORT_CSV_TEMPLATE], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = IMPORT_CSV_TEMPLATE_FILENAME;
-  link.click();
-  URL.revokeObjectURL(url);
-}
+import { downloadImportCsvTemplate } from "@/views/pay/components/import-csv/download-template";
 
 export function CreatePayrollEmpty(props: {
   onAddPayroll: () => void;
@@ -165,7 +156,7 @@ export function CreatePayrollEmpty(props: {
         <Button
           variant={BUTTON_VARIANT.Normal}
           className="h-10 w-full rounded-[10px] border-black/10 px-4 text-sm text-black sm:w-auto sm:min-w-[193px]"
-          onClick={downloadTemplate}
+          onClick={() => downloadImportCsvTemplate(IMPORT_CSV_TEMPLATE, IMPORT_CSV_TEMPLATE_FILENAME)}
         >
           <IconDownload className="size-3.5 shrink-0" />
           Download Template

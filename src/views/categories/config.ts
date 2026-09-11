@@ -81,6 +81,10 @@ export const CATEGORY_CHART_RANGE_OPTIONS = [
 
 export const CATEGORY_IMPORT_CSV_TEMPLATE_FILENAME = "category-import-template.csv";
 
+export function operationImportCsvFilename(category: string): string {
+  return `${category}-import-template.csv`;
+}
+
 export const CATEGORY_DASHBOARD_CHART_POINTS = [
   { label: "Mar", value: 0 },
   { label: "Apr", value: 0 },

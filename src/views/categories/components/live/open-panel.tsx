@@ -27,7 +27,12 @@ export function OperationOpenPanel(props: {
 
   if (list.batches.length === 0) {
     return (
-      <CreateOperationEmpty onAdd={onAdd} onImported={onImported} busy={busy} />
+      <CreateOperationEmpty
+        category={category}
+        onAdd={onAdd}
+        onImported={onImported}
+        busy={busy}
+      />
     );
   }
 

@@ -54,8 +54,28 @@ export async function openSpreadsheetPicker(): Promise<PickedSpreadsheet> {
       })
       .build();
 
-    picker.setVisible(true);
+    showPickerWithoutPageJump(picker);
   });
+}
+
+function showPickerWithoutPageJump(picker: { setVisible: (visible: boolean) => void }): void {
+  const x = window.scrollX;
+  const y = window.scrollY;
+  const root = document.documentElement;
+  const previousOverflow = root.style.overflow;
+  root.style.overflow = "hidden";
+
+  const restoreScroll = () => {
+    window.scrollTo(x, y);
+  };
+
+  picker.setVisible(true);
+  restoreScroll();
+  requestAnimationFrame(restoreScroll);
+  window.setTimeout(() => {
+    restoreScroll();
+    root.style.overflow = previousOverflow;
+  }, 50);
 }
 
 export function isGooglePickerCancelled(error: unknown): boolean {

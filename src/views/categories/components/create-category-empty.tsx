@@ -15,6 +15,7 @@ import { parseCsvFile } from "@/lib/import/csv";
 import { cn } from "@/lib/utils";
 import { SelectSheetDialog } from "@/views/pay/components/batch/SelectSheetDialog";
 import { ImportCsvMenu, type ImportCsvSource } from "@/views/pay/components/import-csv/ImportCsvMenu";
+import { downloadImportCsvTemplate } from "@/views/pay/components/import-csv/download-template";
 import {
   IMPORT_CSV_ACCEPT,
   IMPORT_CSV_TEMPLATE,
@@ -23,16 +24,6 @@ import {
   CATEGORIES_DRAWER_DESKTOP_QUERY,
   CATEGORY_IMPORT_CSV_TEMPLATE_FILENAME,
 } from "../config";
-
-function downloadTemplate() {
-  const blob = new Blob([IMPORT_CSV_TEMPLATE], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = CATEGORY_IMPORT_CSV_TEMPLATE_FILENAME;
-  link.click();
-  URL.revokeObjectURL(url);
-}
 
 function importedRowCount(values: string[][]): number {
   return values.filter((row) => row.some((cell) => cell.trim() !== "")).length;
@@ -157,7 +148,7 @@ export function CreateCategoryEmpty() {
         <Button
           variant={BUTTON_VARIANT.Normal}
           className="h-10 w-full rounded-[10px] border-black/10 px-4 text-sm text-black sm:w-auto sm:min-w-[193px]"
-          onClick={downloadTemplate}
+          onClick={() => downloadImportCsvTemplate(IMPORT_CSV_TEMPLATE, CATEGORY_IMPORT_CSV_TEMPLATE_FILENAME)}
         >
           <IconDownload className="size-3.5 shrink-0" />
           Download Template

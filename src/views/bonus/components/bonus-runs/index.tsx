@@ -8,10 +8,13 @@ import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
 import type { BonusHistoryItem, BonusPendingList, BonusPendingRow } from "@/types/bonus";
 import type { Payable } from "@/types/payable";
+import { DownloadCsvTemplateButton } from "@/views/pay/components/import-csv/DownloadCsvTemplateButton";
 import {
   BONUS_HISTORY_PATH,
   BONUS_PATH,
   BONUS_TAB,
+  IMPORT_CSV_TEMPLATE,
+  IMPORT_CSV_TEMPLATE_FILENAME,
   type BonusTab,
 } from "../../config";
 import { BonusImportCsvButton } from "./BonusImportCsvButton";
@@ -101,6 +104,11 @@ export function BonusRunsCard(props: {
         </div>
         {showPendingToolbar ? (
           <div className="flex items-center gap-2 pb-1">
+            <DownloadCsvTemplateButton
+              content={IMPORT_CSV_TEMPLATE}
+              filename={IMPORT_CSV_TEMPLATE_FILENAME}
+              disabled={importBusy}
+            />
             <BonusImportCsvButton
               onImported={onImported}
               busy={importBusy}

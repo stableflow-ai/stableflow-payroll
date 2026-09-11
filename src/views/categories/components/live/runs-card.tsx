@@ -9,7 +9,9 @@ import { cn } from "@/lib/utils";
 import type { OperationDraftRow, OperationOpenList } from "@/types/operation";
 import type { Payable } from "@/types/payable";
 import { ExpenseImportCsvButton } from "@/views/expense/components/expense-runs/ExpenseImportCsvButton";
-import { categoryHistoryPath, categoryPath } from "../../config";
+import { IMPORT_CSV_TEMPLATE } from "@/views/expense/config";
+import { DownloadCsvTemplateButton } from "@/views/pay/components/import-csv/DownloadCsvTemplateButton";
+import { categoryHistoryPath, categoryPath, operationImportCsvFilename } from "../../config";
 import { OPERATION_TAB, type OperationTab } from "../../live-config";
 import { OperationHistoryPanel } from "./history-panel";
 import { OperationOpenPanel } from "./open-panel";
@@ -79,6 +81,11 @@ export function OperationRunsCard(props: {
         </div>
         {showToolbar ? (
           <div className="flex items-center gap-2 pb-1">
+            <DownloadCsvTemplateButton
+              content={IMPORT_CSV_TEMPLATE}
+              filename={operationImportCsvFilename(category)}
+              disabled={importBusy}
+            />
             <ExpenseImportCsvButton
               onImported={onImported}
               busy={importBusy}

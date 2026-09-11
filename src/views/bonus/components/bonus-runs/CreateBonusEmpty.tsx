@@ -2,19 +2,10 @@ import { IconDownload } from "@/components/icons/download";
 import { IconPlus } from "@/components/icons/plus";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_VARIANT } from "@/components/ui/button/config";
+import { downloadImportCsvTemplate } from "@/views/pay/components/import-csv/download-template";
 import type { BonusPendingRow } from "@/types/bonus";
 import { IMPORT_CSV_TEMPLATE, IMPORT_CSV_TEMPLATE_FILENAME } from "../../config";
 import { BonusImportCsvButton } from "./BonusImportCsvButton";
-
-function downloadTemplate() {
-  const blob = new Blob([IMPORT_CSV_TEMPLATE], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = IMPORT_CSV_TEMPLATE_FILENAME;
-  link.click();
-  URL.revokeObjectURL(url);
-}
 
 export function CreateBonusEmpty(props: {
   onAddBonus: () => void;
@@ -32,7 +23,7 @@ export function CreateBonusEmpty(props: {
         <Button
           variant={BUTTON_VARIANT.Normal}
           className="h-10 w-full rounded-[10px] border-black/10 px-4 text-sm text-black sm:w-auto sm:min-w-[193px]"
-          onClick={downloadTemplate}
+          onClick={() => downloadImportCsvTemplate(IMPORT_CSV_TEMPLATE, IMPORT_CSV_TEMPLATE_FILENAME)}
         >
           <IconDownload className="size-3.5 shrink-0" />
           Download Template

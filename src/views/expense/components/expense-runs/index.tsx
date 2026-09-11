@@ -10,11 +10,14 @@ import { cn } from "@/lib/utils";
 import type { ExpenseDraftRow, ExpenseOpenList } from "@/types/expense";
 import type { Payable } from "@/types/payable";
 import { CountBadge } from "@/views/pay/components/CountBadge";
+import { DownloadCsvTemplateButton } from "@/views/pay/components/import-csv/DownloadCsvTemplateButton";
 import {
   EXPENSE_HISTORY_PATH,
   EXPENSE_PATH,
   EXPENSE_REQUESTS_PATH,
   EXPENSE_TAB,
+  IMPORT_CSV_TEMPLATE,
+  IMPORT_CSV_TEMPLATE_FILENAME,
   type ExpenseTab,
 } from "../../config";
 import { ExpenseImportCsvButton } from "./ExpenseImportCsvButton";
@@ -95,6 +98,11 @@ export function ExpenseRunsCard(props: {
         </div>
         {showToolbar ? (
           <div className="flex items-center gap-2 pb-1">
+            <DownloadCsvTemplateButton
+              content={IMPORT_CSV_TEMPLATE}
+              filename={IMPORT_CSV_TEMPLATE_FILENAME}
+              disabled={importBusy}
+            />
             <ExpenseImportCsvButton
               onImported={onImported}
               busy={importBusy}
