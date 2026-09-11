@@ -59,6 +59,8 @@ export interface BonusPendingMember {
   name: string;
   address: string;
   email: string;
+  purpose: string;
+  description: string;
   amount: string;
   token: string;
 }

@@ -92,6 +92,8 @@ const BONUS_ITEM: BonusPendingItem = {
       name: "Carol",
       address: "0xc",
       email: "c@x.com",
+      purpose: "",
+      description: "",
       amount: "200",
       token: "USDC",
     },

@@ -96,6 +96,8 @@ export function mapBonusOpenMember(
     name: apiText(row.name),
     address: apiText(row.address),
     email: apiText(row.email),
+    purpose: apiText(row.purpose),
+    description: apiText(row.description),
     amount: apiText(row.amount) || "0",
     token: apiText(row.symbol),
   };

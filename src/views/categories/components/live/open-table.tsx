@@ -15,9 +15,12 @@ import { cn } from "@/lib/utils";
 import type { OperationOpenBatch } from "@/types/operation";
 import type { Payable } from "@/types/payable";
 import { formatAmount } from "@/utils";
+import { DescriptionCell } from "@/views/expense/components/expense-runs/DescriptionCell";
+import { ExternalLinkConfirmDialog } from "@/views/expense/components/expense-runs/ExternalLinkConfirmDialog";
+import { PlainTextCell } from "@/views/expense/components/expense-runs/PlainTextCell";
+import { EXPENSE_ROW_ACTION, OPEN_EXPENSE_TABLE_COLUMNS } from "@/views/expense/config";
 import { operationBatchToPayable } from "@/views/pay/components/payment-form/from-source";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";
-import { EXPENSE_ROW_ACTION, OPEN_EXPENSE_TABLE_COLUMNS } from "@/views/expense/config";
 
 function payoutPreference(token: string, network: string): string {
   if (!token && !network) return "-";
@@ -65,8 +68,9 @@ function OperationBatchBlock(props: {
   batch: OperationOpenBatch;
   category: string;
   onPayNow: (form: Payable) => void;
+  onOpenUrl: (url: string) => void;
 }) {
-  const { batch, category, onPayNow } = props;
+  const { batch, category, onPayNow, onOpenUrl } = props;
   const isGroup = batch.members.length > 1;
   const [expanded, setExpanded] = useState(false);
   const sole = batch.members[0];
@@ -74,7 +78,7 @@ function OperationBatchBlock(props: {
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-[12px] bg-[#f6f6f6]",
+        "min-w-min w-full overflow-hidden rounded-[12px] bg-[#f6f6f6]",
         isGroup && expanded && "border border-[#d9d9d9]",
       )}
     >
@@ -103,6 +107,15 @@ function OperationBatchBlock(props: {
           )}
         </TableCell>
         <TableCell>
+          <PlainTextCell grouped={isGroup} value={sole?.purpose} />
+        </TableCell>
+        <TableCell>
+          <DescriptionCell
+            value={isGroup ? "" : sole?.receiptName ?? ""}
+            onOpenUrl={onOpenUrl}
+          />
+        </TableCell>
+        <TableCell>
           {isGroup ? (
             <span className="font-medium text-black">-</span>
           ) : sole?.address ? (
@@ -110,6 +123,9 @@ function OperationBatchBlock(props: {
           ) : (
             "-"
           )}
+        </TableCell>
+        <TableCell>
+          <PlainTextCell grouped={isGroup} value={sole?.email} />
         </TableCell>
         <TableCell className="font-medium text-black">
           {isGroup ? "-" : payoutPreference(sole?.token ?? "", sole?.network ?? "")}
@@ -139,11 +155,20 @@ function OperationBatchBlock(props: {
               <TableCell className="first:pl-4" />
               <TableCell className="font-medium text-black">{member.name}</TableCell>
               <TableCell>
+                <PlainTextCell grouped={false} value={member.purpose} />
+              </TableCell>
+              <TableCell>
+                <DescriptionCell value={member.receiptName} onOpenUrl={onOpenUrl} />
+              </TableCell>
+              <TableCell>
                 {member.address ? (
                   <PayoutRecipientCell address={member.address} />
                 ) : (
                   "-"
                 )}
+              </TableCell>
+              <TableCell>
+                <PlainTextCell grouped={false} value={member.email} />
               </TableCell>
               <TableCell className="font-medium text-black">
                 {payoutPreference(member.token, member.network)}
@@ -166,29 +191,49 @@ export function OperationOpenTable(props: {
   onPayNow: (form: Payable) => void;
 }) {
   const { batches, category, onPayNow } = props;
+  const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+
+  function handleConfirmExternalLink() {
+    if (!pendingUrl) return;
+    window.open(pendingUrl, "_blank", "noopener,noreferrer");
+    setPendingUrl(null);
+  }
+
   return (
-    <Table
-      columns={OPEN_EXPENSE_TABLE_COLUMNS}
-      className="border-0 bg-transparent p-0 shadow-none"
-    >
-      <TableHeader className="border-b-0 bg-transparent">
-        <TableHead className="first:pl-4">Title</TableHead>
-        <TableHead>Name</TableHead>
-        <TableHead>Address</TableHead>
-        <TableHead>Payout Preference</TableHead>
-        <TableHead>Amount</TableHead>
-        <TableHead className="last:pr-4" />
-      </TableHeader>
-      <TableBody className="mt-1 flex flex-col gap-4">
-        {batches.map((batch) => (
-          <OperationBatchBlock
-            key={batch.batchId || batch.title}
-            batch={batch}
-            category={category}
-            onPayNow={onPayNow}
-          />
-        ))}
-      </TableBody>
-    </Table>
+    <>
+      <Table
+        columns={OPEN_EXPENSE_TABLE_COLUMNS}
+        className="border-0 bg-transparent p-0 shadow-none"
+      >
+        <TableHeader className="border-b-0 bg-transparent">
+          <TableHead className="first:pl-4">Title</TableHead>
+          <TableHead>Name</TableHead>
+          <TableHead>Purpose</TableHead>
+          <TableHead>Description</TableHead>
+          <TableHead>Address</TableHead>
+          <TableHead>Email</TableHead>
+          <TableHead>Payout Preference</TableHead>
+          <TableHead>Amount</TableHead>
+          <TableHead className="last:pr-4" />
+        </TableHeader>
+        <TableBody className="mt-1 flex min-w-min flex-col gap-4">
+          {batches.map((batch) => (
+            <OperationBatchBlock
+              key={batch.batchId || batch.title}
+              batch={batch}
+              category={category}
+              onPayNow={onPayNow}
+              onOpenUrl={setPendingUrl}
+            />
+          ))}
+        </TableBody>
+      </Table>
+      <ExternalLinkConfirmDialog
+        open={Boolean(pendingUrl)}
+        url={pendingUrl}
+        onClose={() => setPendingUrl(null)}
+        onConfirm={handleConfirmExternalLink}
+      />
+    </>
   );
 }

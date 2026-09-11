@@ -249,7 +249,7 @@ function GroupedPaymentsTable(props: { group: CategoryDashboardGroupedPayment })
       <TableBody>
         <div
           className={cn(
-            "overflow-hidden rounded-[12px] bg-[#f6f6f6]",
+            "min-w-min w-full overflow-hidden rounded-[12px] bg-[#f6f6f6]",
             expanded && "border border-[#d9d9d9]",
           )}
         >
