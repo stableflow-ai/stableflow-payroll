@@ -1,4 +1,5 @@
 import { formatUnits } from "viem";
+import { assertNativeZecSpendable } from "./balance";
 import { ZEC_DECIMALS, ZEC_SHIELD_FUNDS_MESSAGE } from "./config";
 import { zcashWalletAdapter } from "./sdk";
 
@@ -8,6 +9,7 @@ export async function transferNativeZec(input: {
   decimals?: number;
 }): Promise<string> {
   const decimals = input.decimals ?? ZEC_DECIMALS;
+  await assertNativeZecSpendable(input.amountIn);
   const amount = formatUnits(input.amountIn, decimals);
   try {
     return await zcashWalletAdapter.signAndSendTransaction({

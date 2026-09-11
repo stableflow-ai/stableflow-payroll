@@ -22,6 +22,7 @@ import { formatAmount, browserTimeZone } from "@/utils";
 import { cn } from "@/lib/utils";
 import { broadcastBatchPayout } from "@/wallet/broadcast-batch-payout";
 import { INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE } from "@/wallet/config";
+import { assertNativeZecSpendable, zecSpendableGateMessage } from "@/wallet/zec/balance";
 import { ZCASH_TRANSPARENT_REFUND_MESSAGE } from "@/wallet/zec/config";
 import type { ChainKind } from "@/wallet";
 import {
@@ -271,14 +272,26 @@ export function PaymentByFormCard(props: {
       }
       const payer = wallet.account.address;
       const amountIn = BigInt(batch.totalSourceAmountRaw || "0");
-      const balance = await fetchOneBalance(payer, originToken);
-      if (!balance || balance.status !== "success" || balance.raw == null) {
-        toast.fail({ title: "Could not read wallet balance" });
-        throw new BalanceGateError("Could not read wallet balance");
-      }
-      if (balance.raw < amountIn && import.meta.env.VITE_VIRIFY_BALANCE !== "false") {
-        toast.fail({ title: "Insufficient balance" });
-        throw new BalanceGateError("Insufficient balance");
+      if (import.meta.env.VITE_VIRIFY_BALANCE !== "false") {
+        if (originKind === "zec") {
+          try {
+            await assertNativeZecSpendable(amountIn);
+          } catch (error) {
+            const title = zecSpendableGateMessage(error);
+            toast.fail({ title });
+            throw new BalanceGateError(title);
+          }
+        } else {
+          const balance = await fetchOneBalance(payer, originToken);
+          if (!balance || balance.status !== "success" || balance.raw == null) {
+            toast.fail({ title: "Could not read wallet balance" });
+            throw new BalanceGateError("Could not read wallet balance");
+          }
+          if (balance.raw < amountIn) {
+            toast.fail({ title: "Insufficient balance" });
+            throw new BalanceGateError("Insufficient balance");
+          }
+        }
       }
       const tx = batch.transaction;
       if (!tx) {
