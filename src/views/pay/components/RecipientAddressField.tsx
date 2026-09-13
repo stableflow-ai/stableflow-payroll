@@ -21,7 +21,9 @@ export function RecipientAddressField(props: {
       </p>
       <div className="mt-2 flex items-center gap-3">
         <div className="flex h-10 min-w-0 flex-1 items-center rounded-[8px] border border-[#ebebeb] bg-white pr-2 pl-3">
-          <IconSearch className="mr-2 size-3.5 shrink-0 text-[#909090]" />
+          {matched ? null : (
+            <IconSearch className="mr-2 size-3.5 shrink-0 text-[#909090]" />
+          )}
           {matched ? (
             <span className="mr-2 inline-flex h-[30px] shrink-0 items-center gap-1.5 rounded-[8px] border border-black/10 bg-white px-1.5">
               <RecipientAvatar name={matched.name} address={matched.wallet} className="size-5 text-[10px]" />

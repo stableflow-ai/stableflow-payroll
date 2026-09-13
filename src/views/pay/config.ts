@@ -4,7 +4,7 @@ import {
   IconOperations,
   IconOverview,
   IconPayment,
-  IconRequest,
+  IconExpense,
   IconSetting,
   IconTeam,
 } from "@/components/icons";
@@ -109,9 +109,9 @@ export const PAY_REQUESTS_PATH = "/pay/requests";
 
 const EMPLOYEE_REQUEST_NAV: PayNavLeaf = {
   id: PAY_NAV_ID.RequestPayment,
-  label: "Request Payment",
+  label: "Expenses",
   to: PAY_REQUEST_PATH,
-  icon: IconRequest,
+  icon: IconExpense,
   match: [PAY_REQUEST_PATH, PAY_REQUESTS_PATH],
 };
 

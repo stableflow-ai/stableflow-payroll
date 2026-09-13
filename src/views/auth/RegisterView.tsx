@@ -138,6 +138,7 @@ export function RegisterView() {
             type="submit"
             size="xl"
             loading={registerMutation.isPending}
+            disabled={Boolean(createOrganizationFormError(organizationName, logoUrl))}
             className="mt-auto w-full"
           >
             Create Organization
@@ -202,7 +203,12 @@ export function RegisterView() {
           maxLength={INVITE_CODE_MAX_LENGTH}
         />
 
-        <Button type="submit" size="lg" className="mt-6 w-full">
+        <Button
+          type="submit"
+          size="lg"
+          disabled={Boolean(registerFormError(name, email, password, confirmPassword, inviteCode))}
+          className="mt-6 w-full"
+        >
           Continue
         </Button>
 

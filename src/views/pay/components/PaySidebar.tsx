@@ -105,7 +105,7 @@ function OperationsGroup(props: { item: PayNavGroupItem; onNavigate?: () => void
         </button>
       </div>
       {open ? (
-        <div className="relative flex flex-col gap-1 pl-2">
+        <div className="relative flex flex-col gap-1 pl-4">
           <span
             aria-hidden
             className="absolute top-1 bottom-1 left-[14px] w-px bg-black/10"

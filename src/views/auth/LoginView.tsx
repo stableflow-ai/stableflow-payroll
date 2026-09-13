@@ -92,6 +92,7 @@ export function LoginView() {
           type="submit"
           size="lg"
           loading={loginMutation.isPending}
+          disabled={Boolean(loginFormError(email, password))}
           className="mt-6 w-full"
         >
           Sign in

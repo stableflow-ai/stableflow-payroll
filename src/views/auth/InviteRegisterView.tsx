@@ -264,6 +264,12 @@ export function InviteRegisterView() {
             type="submit"
             size="xl"
             loading={registerMutation.isPending}
+            disabled={Boolean(
+              memberProfileError(
+                { name, position, email: email.trim(), telegram, slack, wallets: { evm, solana, near, tron } },
+                settings,
+              ),
+            )}
             className="mt-8 w-full"
           >
             Continue
@@ -319,7 +325,12 @@ export function InviteRegisterView() {
           maxLength={PASSWORD_MAX_LENGTH}
         />
 
-        <Button type="submit" size="lg" className="mt-6 w-full">
+        <Button
+          type="submit"
+          size="lg"
+          disabled={Boolean(inviteSignUpFormError(email, password, confirmPassword))}
+          className="mt-6 w-full"
+        >
           Sign up
         </Button>
 
