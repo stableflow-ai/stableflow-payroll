@@ -4,6 +4,11 @@ const LOGIN_PATH = "/login";
 const REGISTER_PATH = "/register";
 export const CREATE_ORGANIZATION_PATH = "/register/organization";
 export const INVITE_PATH_PREFIX = "/invite";
+export const AUTH_GOOGLE_PATH_PREFIX = "/auth/google";
+
+function isAuthBouncePath(decoded: string, path: string): boolean {
+  return decoded === path || decoded.startsWith(`${path}?`) || decoded.startsWith(`${path}/`);
+}
 
 export function safeReturnTo(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -15,30 +20,11 @@ export function safeReturnTo(value: string | null | undefined): string | null {
   }
   if (!decoded.startsWith("/")) return null;
   if (decoded.startsWith("//")) return null;
-  if (decoded === LOGIN_PATH || decoded.startsWith(`${LOGIN_PATH}?`) || decoded.startsWith(`${LOGIN_PATH}/`)) {
-    return null;
-  }
-  if (
-    decoded === REGISTER_PATH
-    || decoded.startsWith(`${REGISTER_PATH}?`)
-    || decoded.startsWith(`${REGISTER_PATH}/`)
-  ) {
-    return null;
-  }
-  if (
-    decoded === CREATE_ORGANIZATION_PATH
-    || decoded.startsWith(`${CREATE_ORGANIZATION_PATH}?`)
-    || decoded.startsWith(`${CREATE_ORGANIZATION_PATH}/`)
-  ) {
-    return null;
-  }
-  if (
-    decoded === INVITE_PATH_PREFIX
-    || decoded.startsWith(`${INVITE_PATH_PREFIX}?`)
-    || decoded.startsWith(`${INVITE_PATH_PREFIX}/`)
-  ) {
-    return null;
-  }
+  if (isAuthBouncePath(decoded, LOGIN_PATH)) return null;
+  if (isAuthBouncePath(decoded, REGISTER_PATH)) return null;
+  if (isAuthBouncePath(decoded, CREATE_ORGANIZATION_PATH)) return null;
+  if (isAuthBouncePath(decoded, INVITE_PATH_PREFIX)) return null;
+  if (isAuthBouncePath(decoded, AUTH_GOOGLE_PATH_PREFIX)) return null;
   return decoded;
 }
 

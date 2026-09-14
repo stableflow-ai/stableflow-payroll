@@ -25,6 +25,7 @@ import {
   passwordRuleError,
 } from "./config";
 import { postAuthPath, registerPathWithReturnTo, returnToFromSearch } from "./return-to";
+import { GoogleSignInSection } from "./components/GoogleSignInSection";
 
 const LOGIN_FIELDS = ["email", "password"] as const;
 
@@ -110,6 +111,8 @@ export function LoginView() {
         >
           Sign in
         </Button>
+
+        <GoogleSignInSection returnTo={returnTo} />
 
         <p className={`block ${AUTH_LINK_CLASS}`}>
           New to Pay. Stableflow?{" "}

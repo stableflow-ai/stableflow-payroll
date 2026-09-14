@@ -1,6 +1,6 @@
 # Project Structure
 
-Stableflow Pay is a Vite 8 + React 19 single-page app. Wallet providers for EVM, Near, Solana, Tron, and Zcash (Noir) are wired. The authenticated shell is a 220px Pay sidebar plus a content column; the released surface is Auth, `/` (Overview), `/pay/*`, `/team`, `/history`, and `/setting` (including `/setting/slack/callback`).
+Stableflow Pay is a Vite 8 + React 19 single-page app. Wallet providers for EVM, Near, Solana, Tron, and Zcash (Noir) are wired. The authenticated shell is a 220px Pay sidebar plus a content column; the released surface is Auth (`/login`, `/register`, `/invite/:orgId`, `/auth/google/bind`, `/register/google`, `/invite/:orgId/google`), `/` (Overview), `/pay/*`, `/team`, `/history`, and `/setting` (including `/setting/slack/callback`).
 
 Product areas, routes, and constraints: [product.md](product.md).
 
@@ -36,7 +36,7 @@ Copy `.env.example` to `.env.local`.
 | `VITE_WALLETCONNECT_PROJECT_ID` | for wallets | Shared by RainbowKit, the Near selector, and the Tron WalletConnect adapter. |
 | `VITE_RPC_PROXY_HOST`, `VITE_RPC_SECRET_KEY` | optional | HMAC-signed RPC proxy used by `src/lib/rpc/`. |
 | `VITE_AMOUNT_MAX_DECIMALS` | optional | Fractional digits for amount inputs (not on-chain token decimals). |
-| `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_API_KEY`, `VITE_GOOGLE_APP_ID` | for Sheets import | Google Identity + Picker + Sheets API. |
+| `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_API_KEY`, `VITE_GOOGLE_APP_ID` | for Sheets import; client id also for Google sign-in | Google Identity + Picker + Sheets API. Sign-in only needs `VITE_GOOGLE_CLIENT_ID`. |
 | `VITE_VIRIFY_BALANCE` | optional | Set to `"false"` to skip the pre-broadcast balance gate in Payment by form. Not in `.env.example`; development escape hatch only. |
 
 ## Directory map
@@ -112,6 +112,7 @@ src/
 | `consumed-batches.ts` | `persist` | Spent payroll `batchId`s so the same deposit addresses are never broadcast twice |
 | `nearintents-user-session.ts` | no | Near Intents session for confidential receive / withdraw |
 | `google-drive-session.ts` | `persist` (sessionStorage) | Google OAuth token for the Sheets importer |
+| `google-auth-pending.ts` | `persist` (sessionStorage) | Google `id_token` + profile while binding or registering after code 10008 |
 
 ## Import paths
 

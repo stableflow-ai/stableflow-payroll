@@ -8,6 +8,7 @@ import {
   AUTH_FORM_CLASS,
   AUTH_INPUT_CLASS,
   AUTH_LABEL_CLASS,
+  GOOGLE_UNREGISTERED_CODE,
 } from "./config";
 
 export function AuthBetaBanner() {
@@ -189,6 +190,10 @@ export function authErrorMessage(error: unknown, fallback = "Something went wron
   if (error instanceof ApiError) return error.message;
   if (error instanceof Error && error.message) return error.message;
   return fallback;
+}
+
+export function isGoogleUnregisteredError(error: unknown): boolean {
+  return error instanceof ApiError && error.code === GOOGLE_UNREGISTERED_CODE;
 }
 
 export { AUTH_COMPACT_INPUT_CLASS, AUTH_FORM_CLASS };

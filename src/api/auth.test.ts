@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { mapAuthSession, mapAuthUser, registerUserBody, updateMemberProfileBody } from "./auth";
+import { mapAuthSession, mapAuthUser, googleRegisterRequestBody, googleRegisterUserBody, registerUserBody, updateMemberProfileBody } from "./auth";
 import { AUTH_USER_ROLE } from "@/types/auth";
 import { ApiError } from "@/lib/api-error";
 
@@ -127,6 +127,47 @@ describe("mapAuthSession", () => {
 
   it("throws when token is missing", () => {
     expect(() => mapAuthSession({ user: { id: 1, email: "a@b.c", name: "Ada" } })).toThrow(ApiError);
+  });
+});
+
+describe("googleRegisterRequestBody", () => {
+  it("omits empty organization logo and trims fields", () => {
+    expect(
+      googleRegisterRequestBody({
+        idToken: "id.jwt",
+        name: " Ada ",
+        inviteCode: " abc ",
+        organization: { name: " Eureka ", logo: "  " },
+      }),
+    ).toEqual({
+      id_token: "id.jwt",
+      inviteCode: "abc",
+      name: "Ada",
+      organization: { name: "Eureka" },
+    });
+  });
+});
+
+describe("googleRegisterUserBody", () => {
+  it("omits empty optional fields and uses telegram_chat_id", () => {
+    expect(
+      googleRegisterUserBody({
+        orgId: "org_abc",
+        idToken: "id.jwt",
+        name: "Ada",
+        position: "  ",
+        evmAddress: "0xabc",
+        solanaAddress: "",
+        telegram: "@ada",
+        slack: "  ",
+      }),
+    ).toEqual({
+      org_id: "org_abc",
+      id_token: "id.jwt",
+      name: "Ada",
+      evm_address: "0xabc",
+      telegram_chat_id: "@ada",
+    });
   });
 });
 

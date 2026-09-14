@@ -4,6 +4,7 @@ export const GOOGLE_DRIVE_FILE_SCOPE = "https://www.googleapis.com/auth/drive.fi
 export const SHEETS_API_BASE = "https://sheets.googleapis.com/v4";
 export const TOKEN_EXPIRY_SKEW_MS = 60_000;
 export const GOOGLE_DRIVE_TOKEN_STORAGE_KEY = "stableflow-pay.google-drive-session";
+export const GOOGLE_AUTH_PENDING_STORAGE_KEY = "stableflow-pay.google-auth-pending";
 export const GOOGLE_OAUTH_PROMPT_NONE = "";
 export const GOOGLE_OAUTH_PROMPT_SELECT_ACCOUNT = "select_account";
 
@@ -13,4 +14,8 @@ export const GOOGLE_APP_ID = import.meta.env.VITE_GOOGLE_APP_ID ?? "";
 
 export function isGoogleImportConfigured(): boolean {
   return Boolean(GOOGLE_CLIENT_ID && GOOGLE_API_KEY && GOOGLE_APP_ID);
+}
+
+export function isGoogleSignInConfigured(): boolean {
+  return Boolean(GOOGLE_CLIENT_ID);
 }

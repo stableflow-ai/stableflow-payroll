@@ -1,6 +1,10 @@
 /**
  * Auth mutations and profile query.
  *   POST /v1/payroll/auth/login
+ *   POST /v1/payroll/auth/google/login
+ *   POST /v1/payroll/auth/google/bind
+ *   POST /v1/payroll/auth/google/bind/code
+ *   POST /v1/payroll/auth/google/register
  *   POST /v1/payroll/auth/register
  *   POST /v1/payroll/change-password
  *   POST /v1/payroll/reset-password
@@ -17,9 +21,13 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   changePassword,
   getProfile,
+  googleBind,
+  googleLogin,
+  googleRegister,
   login,
   register,
   resetPassword,
+  sendGoogleBindCode,
   sendResetPasswordCode,
   updateMemberProfile,
   updateProfile,
@@ -84,6 +92,42 @@ export function useLoginMutation() {
   const applySession = useAuthStore((state) => state.applySession);
   return useMutation({
     mutationFn: login,
+    onSuccess: (session) => {
+      applySession(session.token, session.user);
+    },
+  });
+}
+
+export function useGoogleLoginMutation() {
+  const applySession = useAuthStore((state) => state.applySession);
+  return useMutation({
+    mutationFn: googleLogin,
+    onSuccess: (session) => {
+      applySession(session.token, session.user);
+    },
+  });
+}
+
+export function useGoogleBindMutation() {
+  const applySession = useAuthStore((state) => state.applySession);
+  return useMutation({
+    mutationFn: googleBind,
+    onSuccess: (session) => {
+      applySession(session.token, session.user);
+    },
+  });
+}
+
+export function useSendGoogleBindCodeMutation() {
+  return useMutation({
+    mutationFn: sendGoogleBindCode,
+  });
+}
+
+export function useGoogleRegisterMutation() {
+  const applySession = useAuthStore((state) => state.applySession);
+  return useMutation({
+    mutationFn: googleRegister,
     onSuccess: (session) => {
       applySession(session.token, session.user);
     },

@@ -20,6 +20,12 @@ export const AUTH_LINK_CLASS =
 
 export const AUTH_LINK_ACCENT_CLASS = "text-[#3f8afb] hover:text-[#3f8afb]/90";
 
+export const GOOGLE_UNREGISTERED_CODE = "10008";
+export const GOOGLE_BIND_PATH = "/auth/google/bind";
+export const GOOGLE_REGISTER_PATH = "/register/google";
+export const GOOGLE_INVITE_REGISTER_PATH = (orgId: string) =>
+  `/invite/${encodeURIComponent(orgId)}/google`;
+
 export const INVITE_STEP = {
   SignUp: 1,
   Profile: 2,
@@ -202,4 +208,21 @@ export function inviteRegisterFormError(
   confirmPassword: string,
 ): string | null {
   return nameRuleError(name) ?? inviteSignUpFormError(email, password, confirmPassword);
+}
+
+export function googleBindFormError(email: string, code: string): string | null {
+  return emailRuleError(email) ?? codeRuleError(code);
+}
+
+export function googleAdminRegisterFormError(
+  name: string,
+  inviteCode: string,
+  organizationName: string,
+  logoUrl: string,
+): string | null {
+  return (
+    nameRuleError(name) ??
+    inviteCodeRuleError(inviteCode) ??
+    createOrganizationFormError(organizationName, logoUrl)
+  );
 }

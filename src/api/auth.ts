@@ -12,6 +12,11 @@ import {
   type LoginBody,
   type RegisterBody,
   type RegisterUserBody,
+  type GoogleBindBody,
+  type GoogleBindCodeBody,
+  type GoogleLoginBody,
+  type GoogleRegisterBody,
+  type GoogleRegisterUserBody,
   type ResetPasswordBody,
   type ResetPasswordCodeBody,
   type UpdateMemberProfileBody,
@@ -97,6 +102,91 @@ export async function login(body: LoginBody) {
     await http<unknown>(`${PAY_API_PREFIX}/auth/login`, {
       method: "POST",
       body,
+      auth: false,
+    }),
+  );
+}
+
+export async function googleLogin(body: GoogleLoginBody) {
+  return mapAuthSession(
+    await http<unknown>(`${PAY_API_PREFIX}/auth/google/login`, {
+      method: "POST",
+      body: { id_token: body.idToken },
+      auth: false,
+    }),
+  );
+}
+
+export async function googleBind(body: GoogleBindBody) {
+  return mapAuthSession(
+    await http<unknown>(`${PAY_API_PREFIX}/auth/google/bind`, {
+      method: "POST",
+      body: {
+        id_token: body.idToken,
+        email: body.email,
+        code: body.code,
+      },
+      auth: false,
+    }),
+  );
+}
+
+export function sendGoogleBindCode(body: GoogleBindCodeBody) {
+  return http<void>(`${PAY_API_PREFIX}/auth/google/bind/code`, {
+    method: "POST",
+    body,
+    auth: false,
+  });
+}
+
+export function googleRegisterRequestBody(body: GoogleRegisterBody) {
+  const logo = body.organization.logo?.trim();
+  return {
+    id_token: body.idToken,
+    inviteCode: body.inviteCode.trim(),
+    name: body.name.trim(),
+    organization: logo
+      ? { name: body.organization.name.trim(), logo }
+      : { name: body.organization.name.trim() },
+  };
+}
+
+export async function googleRegister(body: GoogleRegisterBody) {
+  return mapAuthSession(
+    await http<unknown>(`${PAY_API_PREFIX}/auth/google/register`, {
+      method: "POST",
+      body: googleRegisterRequestBody(body),
+      auth: false,
+    }),
+  );
+}
+
+export function googleRegisterUserBody(body: GoogleRegisterUserBody): Record<string, string> {
+  const payload: Record<string, string> = {
+    org_id: body.orgId,
+    id_token: body.idToken,
+    name: body.name,
+  };
+  const optional: Array<[string, string | undefined]> = [
+    ["position", omitEmpty(body.position)],
+    ["evm_address", omitEmpty(body.evmAddress)],
+    ["solana_address", omitEmpty(body.solanaAddress)],
+    ["near_address", omitEmpty(body.nearAddress)],
+    ["tron_address", omitEmpty(body.tronAddress)],
+    ["telegram_chat_id", omitEmpty(body.telegram)],
+    ["slack_user_id", omitEmpty(body.slack)],
+  ];
+  for (const [key, value] of optional) {
+    if (value) payload[key] = value;
+  }
+  return payload;
+}
+
+export async function googleRegisterUser(body: GoogleRegisterUserBody) {
+  return mapAuthSession(
+    await http<unknown>(`${PAY_API_PREFIX}/auth/google/register/user`, {
+      method: "POST",
+      body: googleRegisterUserBody(body),
       auth: false,
     }),
   );

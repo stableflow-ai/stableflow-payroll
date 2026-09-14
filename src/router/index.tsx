@@ -2,6 +2,9 @@ import { createBrowserRouter, Navigate } from "react-router-dom";
 import { LoginView } from "@/views/auth/LoginView";
 import { RegisterView } from "@/views/auth/RegisterView";
 import { InviteRegisterView } from "@/views/auth/InviteRegisterView";
+import { GoogleBindView } from "@/views/auth/GoogleBindView";
+import { GoogleRegisterView } from "@/views/auth/GoogleRegisterView";
+import { GoogleInviteRegisterView } from "@/views/auth/GoogleInviteRegisterView";
 import { HowItWorksView } from "@/views/how-it-works/HowItWorksView";
 import { PayrollView } from "@/views/payroll";
 import { ExpenseView } from "@/views/expense";
@@ -43,6 +46,30 @@ export const router = createBrowserRouter([
     element: (
       <RedirectIfAuthed>
         <InviteRegisterView />
+      </RedirectIfAuthed>
+    ),
+  },
+  {
+    path: "/auth/google/bind",
+    element: (
+      <RedirectIfAuthed>
+        <GoogleBindView />
+      </RedirectIfAuthed>
+    ),
+  },
+  {
+    path: "/register/google",
+    element: (
+      <RedirectIfAuthed>
+        <GoogleRegisterView />
+      </RedirectIfAuthed>
+    ),
+  },
+  {
+    path: "/invite/:orgId/google",
+    element: (
+      <RedirectIfAuthed>
+        <GoogleInviteRegisterView />
       </RedirectIfAuthed>
     ),
   },

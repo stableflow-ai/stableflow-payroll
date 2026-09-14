@@ -56,3 +56,22 @@ export function loadGoogleScripts(): Promise<void> {
   }
   return scriptsPromise;
 }
+
+let identityPromise: Promise<void> | null = null;
+
+export function loadGoogleIdentityScript(): Promise<void> {
+  if (window.google?.accounts?.id) return Promise.resolve();
+  if (!identityPromise) {
+    identityPromise = injectScript(GSI_SCRIPT_SRC)
+      .then(() => {
+        if (!window.google?.accounts?.id) {
+          throw new Error("Google Identity Services failed to load");
+        }
+      })
+      .catch((error) => {
+        identityPromise = null;
+        throw error;
+      });
+  }
+  return identityPromise;
+}

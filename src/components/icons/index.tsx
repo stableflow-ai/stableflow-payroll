@@ -30,6 +30,7 @@ export * from "./delete";
 export * from "./plus";
 export * from "./cloud";
 export * from "./swap";
+export * from "./google";
 export * from "./guard";
 export * from "./copy";
 export * from "./up";

@@ -21,6 +21,8 @@ describe("safeReturnTo", () => {
     expect(safeReturnTo("/register?x=1")).toBeNull();
     expect(safeReturnTo("/register/organization")).toBeNull();
     expect(safeReturnTo("/invite/abc")).toBeNull();
+    expect(safeReturnTo("/auth/google/bind")).toBeNull();
+    expect(safeReturnTo("/register/google")).toBeNull();
     expect(safeReturnTo("")).toBeNull();
   });
 });

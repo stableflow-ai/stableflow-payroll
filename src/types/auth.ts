@@ -53,6 +53,40 @@ export interface LoginBody {
   password: string;
 }
 
+export interface GoogleLoginBody {
+  idToken: string;
+}
+
+export interface GoogleBindBody {
+  idToken: string;
+  email: string;
+  code: string;
+}
+
+export interface GoogleBindCodeBody {
+  email: string;
+}
+
+export interface GoogleRegisterBody {
+  idToken: string;
+  name: string;
+  inviteCode: string;
+  organization: RegisterOrganizationBody;
+}
+
+export interface GoogleRegisterUserBody {
+  orgId: string;
+  idToken: string;
+  name: string;
+  position?: string;
+  evmAddress?: string;
+  solanaAddress?: string;
+  nearAddress?: string;
+  tronAddress?: string;
+  telegram?: string;
+  slack?: string;
+}
+
 export interface RegisterOrganizationBody {
   name: string;
   logo?: string;
