@@ -20,7 +20,7 @@ export function PaymentFormBatchRows(props: {
           {batchSplitBannerText(batches.length)}
         </p>
       </div>
-      <div className="mt-6 flex flex-col gap-[22px]">
+      <div className="mt-6 flex flex-col gap-2">
         {batches.map((row, index) => {
           const paid = paidQuoteBatchIds.has(row.quoteBatchId);
           const paying = sendingQuoteBatchId === row.quoteBatchId;
@@ -31,7 +31,7 @@ export function PaymentFormBatchRows(props: {
           const symbol = row.batch.sourceSymbol.trim();
           const label = paid ? "Processing..." : paying ? "Paying..." : "Pay Now";
           return (
-            <div key={row.quoteBatchId} className="flex items-center gap-3">
+            <div key={row.quoteBatchId} className="flex items-center gap-3 border-b border-[#e5e5e5] last:border-b-0 pb-2 last:pb-0">
               <p className="font-montserrat text-sm font-medium text-[#606060]">
                 {batchPaymentRowLabel(index + 1)}
               </p>
@@ -39,8 +39,8 @@ export function PaymentFormBatchRows(props: {
                 {symbol ? `${amount} ${symbol}` : amount}
               </p>
               <Button
-                size="lg"
-                className="h-[50px] w-[164px] shrink-0"
+                size="md"
+                className="h-[50px] px-3 shrink-0 !text-sm"
                 disabled={payDisabled || paid || paying}
                 onClick={() => onPay(row.quoteBatchId)}
               >
