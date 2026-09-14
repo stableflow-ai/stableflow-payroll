@@ -525,11 +525,7 @@ export function payrollHistoryRunStub(executionId: string): PayrollHistoryRun {
   };
 }
 
-export function payrollExecutionItemId(id: string): number | null {
-  const parsed = Number(id);
-  if (!Number.isInteger(parsed) || parsed <= 0) return null;
-  return parsed;
-}
+export { payoutExecutionItemId as payrollExecutionItemId } from "@/views/pay/payout-retry";
 
 export function sanitizeDownloadBasename(value: string, fallback: string): string {
   const cleaned = value

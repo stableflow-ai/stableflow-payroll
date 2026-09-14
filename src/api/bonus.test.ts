@@ -62,6 +62,10 @@ describe("mapBonusRecentPayout", () => {
       status: "paid",
     });
   });
+
+  it("keeps expired distinct from failed", () => {
+    expect(mapBonusRecentPayout({ id: 2, status: "expired" }).status).toBe("expired");
+  });
 });
 
 describe("mapBonusOpenItem", () => {
@@ -170,36 +174,65 @@ describe("mapBonusOpenList", () => {
 });
 
 describe("mapBonusHistoryItem", () => {
-  it("maps volume and paid time", () => {
+  it("maps volume, paid time, and item fields", () => {
     expect(
       mapBonusHistoryItem({
         id: 4,
         name: "Andrew",
+        purpose: "Q3 Bonus",
         destination_volume: "200",
+        recipient: "0xabc",
+        destination_symbol: "USDC",
+        destination_network: "near",
+        destination_amount: "200",
         paid_at: "2026-08-01T00:00:00Z",
+        status: "completed",
       }),
     ).toEqual({
       id: "4",
-      title: "Andrew",
-      totalPayout: "200",
-      memberCount: 1,
-      executedAt: "2026-08-01T00:00:00Z",
-      recipient: "",
+      name: "Andrew",
+      purpose: "Q3 Bonus",
+      description: null,
+      receiptName: null,
+      expense: "200",
+      address: "0xabc",
+      token: "USDC",
+      network: "near",
+      amount: "200",
+      status: "paid",
+      txHash: null,
+      paidAt: "2026-08-01T00:00:00Z",
     });
   });
 
-  it("falls back to purpose and created_at", () => {
+  it("falls back to amount and created_at and keeps expired", () => {
     expect(
       mapBonusHistoryItem({
         id: 5,
         purpose: "Q3 Bonus",
         amount: "540",
         created_at: "2026-07-01T00:00:00Z",
+        status: "expired",
       }),
     ).toMatchObject({
-      title: "Q3 Bonus",
-      totalPayout: "540",
-      executedAt: "2026-07-01T00:00:00Z",
+      id: "5",
+      purpose: "Q3 Bonus",
+      expense: "540",
+      amount: "540",
+      paidAt: "2026-07-01T00:00:00Z",
+      status: "expired",
+    });
+  });
+
+  it("does not fall back to execution_id when item id is missing", () => {
+    expect(
+      mapBonusHistoryItem({
+        execution_id: 99,
+        status: "failed",
+      }, 2),
+    ).toMatchObject({
+      id: "row-2",
+      status: "failed",
     });
   });
 });
@@ -215,7 +248,7 @@ describe("mapBonusHistoryResp", () => {
     ).toMatchObject({
       total: 2,
       totalPage: 1,
-      list: [{ id: "1", title: "Andrew" }, { id: "2", title: "Hannah" }],
+      list: [{ id: "1", name: "Andrew" }, { id: "2", name: "Hannah" }],
     });
   });
 });

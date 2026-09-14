@@ -36,7 +36,7 @@ export interface BonusChartPoint {
   highlighted?: boolean;
 }
 
-export type BonusPayoutStatus = "pending" | "failed" | "paid";
+export type BonusPayoutStatus = "pending" | "failed" | "expired" | "paid";
 
 export interface BonusRecentPayout {
   id: string;
@@ -102,11 +102,18 @@ export interface BonusPendingRow {
 
 export interface BonusHistoryItem {
   id: string;
-  title: string;
-  totalPayout: string;
-  memberCount: number;
-  executedAt: string;
-  recipient: string;
+  name: string;
+  purpose: string;
+  description: string | null;
+  receiptName: string | null;
+  expense: string;
+  address: string;
+  token: string;
+  network: string;
+  amount: string;
+  status: BonusPayoutStatus;
+  txHash: string | null;
+  paidAt: string;
 }
 
 export interface BonusHistoryQuery {

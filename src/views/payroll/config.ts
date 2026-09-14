@@ -101,6 +101,7 @@ export const PAYROLL_HISTORY_PAGE_SIZE = 10;
 export const PAYROLL_PAYOUT_STATUS = {
   Pending: "pending",
   Failed: "failed",
+  Expired: "expired",
   Paid: "paid",
 } as const;
 
@@ -142,11 +143,8 @@ export const PAYROLL_HISTORY_DETAIL_GRID =
   "grid min-w-[760px] grid-cols-[1.3fr_1.2fr_1.1fr_0.7fr_0.7fr_0.9fr] items-center gap-x-3";
 
 export const PAYROLL_HISTORY_DETAIL_PAID_CLASS = "text-[#769400]";
-export const PAYROLL_HISTORY_DETAIL_FAILED_CLASS = "text-danger";
 export const PAYROLL_HISTORY_DETAIL_DELTA_UP_CLASS = "text-[#94ba00]";
 export const PAYROLL_HISTORY_DETAIL_DELTA_DOWN_CLASS = "text-danger";
-export const PAYROLL_HISTORY_DETAIL_FAILED_COPY =
-  "This payment transaction has failed";
 
 export const IMPORT_CSV_ACCEPT = ".csv,text/csv";
 export const IMPORT_CSV_TEMPLATE_FILENAME = "payroll-import-template.csv";

@@ -38,7 +38,7 @@ export interface ExpenseChartPoint {
   highlighted?: boolean;
 }
 
-export type ExpensePayoutStatus = "pending" | "failed" | "paid";
+export type ExpensePayoutStatus = "pending" | "failed" | "expired" | "paid";
 
 export interface ExpenseRecentPayout {
   id: string;

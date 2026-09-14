@@ -19,12 +19,16 @@ import {
 
 function statusLabel(status: ExpensePayoutStatus) {
   if (status === EXPENSE_PAYOUT_STATUS.Failed) return "Failed";
+  if (status === EXPENSE_PAYOUT_STATUS.Expired) return "Expired";
   if (status === EXPENSE_PAYOUT_STATUS.Paid) return "Paid";
   return "Pending";
 }
 
 function StatusMark({ status }: { status: ExpensePayoutStatus }) {
-  if (status === EXPENSE_PAYOUT_STATUS.Failed) {
+  if (
+    status === EXPENSE_PAYOUT_STATUS.Failed
+    || status === EXPENSE_PAYOUT_STATUS.Expired
+  ) {
     return (
       <span
         className={cn(
@@ -51,7 +55,10 @@ function StatusMark({ status }: { status: ExpensePayoutStatus }) {
 }
 
 function statusClass(status: ExpensePayoutStatus) {
-  if (status === EXPENSE_PAYOUT_STATUS.Failed) {
+  if (
+    status === EXPENSE_PAYOUT_STATUS.Failed
+    || status === EXPENSE_PAYOUT_STATUS.Expired
+  ) {
     return EXPENSE_STATUS_FAILED_CLASS;
   }
   if (status === EXPENSE_PAYOUT_STATUS.Paid) {

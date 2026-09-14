@@ -12,8 +12,8 @@ import {
   useExpenseHistoryInfiniteQuery,
 } from "@/hooks/use-expense-api";
 import useToast from "@/hooks/use-toast";
-import { EXPENSE_SEARCH_DEBOUNCE_MS } from "../../config";
 import { HistoryTable } from "./HistoryTable";
+import { EXPENSE_HISTORY_PATH, EXPENSE_SEARCH_DEBOUNCE_MS } from "../../config";
 
 function useDebouncedValue<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -117,7 +117,7 @@ export function HistoryPanel() {
         </div>
       ) : (
         <div className="mt-5">
-          <HistoryTable rows={items} />
+          <HistoryTable rows={items} successPath={EXPENSE_HISTORY_PATH} />
           {hasMore ? <div ref={sentinelRef} className="h-4 shrink-0" aria-hidden /> : null}
           {loadingMore ? (
             <div className="flex items-center justify-center py-3">

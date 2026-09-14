@@ -49,6 +49,7 @@ export const BONUS_HISTORY_PAGE_SIZE = 10;
 export const BONUS_PAYOUT_STATUS = {
   Pending: "pending",
   Failed: "failed",
+  Expired: "expired",
   Paid: "paid",
 } as const;
 

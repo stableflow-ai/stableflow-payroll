@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { IconAlert } from "@/components/icons/alert";
 import { IconCheck2 } from "@/components/icons/check";
 import { IconOutLink } from "@/components/icons/link";
 import { IconPayoutPending } from "@/components/icons/payout-status";
@@ -12,13 +11,18 @@ import {
   TableRow,
 } from "@/components/ui/table/Table";
 import { chainDisplayName, txExplorerUrl } from "@/config/chains";
+import { useRetryPayoutItem } from "@/hooks/use-single-payout-api";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/utils";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";
+import { PayoutRetryStatus } from "@/views/pay/components/PayoutRetryStatus";
+import {
+  isPayoutRetryStatus,
+  payoutExecutionItemId,
+} from "@/views/pay/payout-retry";
 import type { ExpenseHistoryRow } from "@/types/expense";
 import {
   HISTORY_EXPENSE_TABLE_COLUMNS,
-  EXPENSE_HISTORY_FAILED_CLASS,
   EXPENSE_HISTORY_PAID_CLASS,
   EXPENSE_PAYOUT_STATUS,
   EXPENSE_STATUS_PENDING_CLASS,
@@ -26,25 +30,27 @@ import {
 import { DescriptionCell } from "./DescriptionCell";
 import { ExternalLinkConfirmDialog } from "./ExternalLinkConfirmDialog";
 
-function StatusCell({ row }: { row: ExpenseHistoryRow }) {
-  if (row.status === EXPENSE_PAYOUT_STATUS.Failed) {
+function StatusCell(props: {
+  row: ExpenseHistoryRow;
+  payAgainLoading: boolean;
+  onPayAgain: () => void;
+}) {
+  const { row, payAgainLoading, onPayAgain } = props;
+  if (isPayoutRetryStatus(row.status)) {
     return (
-      <span
-        className={cn(
-          "inline-flex h-[26px] items-center gap-1 rounded-[15px] border border-[rgba(255,83,83,0.5)] bg-white px-2",
-          EXPENSE_HISTORY_FAILED_CLASS,
-        )}
-      >
-        <IconAlert className="h-2.5 w-1 shrink-0" />
-        Failed
-      </span>
+      <PayoutRetryStatus
+        status={row.status}
+        canRetry={payoutExecutionItemId(row.id) != null}
+        loading={payAgainLoading}
+        onPayAgain={onPayAgain}
+      />
     );
   }
 
   if (row.status !== EXPENSE_PAYOUT_STATUS.Paid) {
     return (
       <span className={cn("inline-flex items-center gap-1.5", EXPENSE_STATUS_PENDING_CLASS)}>
-        <IconPayoutPending className="size-4 shrink-0" />
+        <IconPayoutPending className="size-5 shrink-0 animate-spin" />
         Pending
       </span>
     );
@@ -73,8 +79,20 @@ function StatusCell({ row }: { row: ExpenseHistoryRow }) {
   );
 }
 
-export function HistoryTable({ rows }: { rows: ExpenseHistoryRow[] }) {
+export function HistoryTable(props: {
+  rows: ExpenseHistoryRow[];
+  successPath: string;
+  amountLabel?: string;
+  descriptionLabel?: string;
+}) {
+  const {
+    rows,
+    successPath,
+    amountLabel = "Expense",
+    descriptionLabel = "Description / Receipt",
+  } = props;
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
+  const { retryItem, retryingId } = useRetryPayoutItem();
 
   function handleConfirmExternalLink() {
     if (!pendingUrl) return;
@@ -91,8 +109,8 @@ export function HistoryTable({ rows }: { rows: ExpenseHistoryRow[] }) {
         <TableHeader className="border-b-0 bg-transparent">
           <TableHead className="first:pl-4">Name</TableHead>
           <TableHead>Purpose</TableHead>
-          <TableHead className="normal-case">Description / Receipt</TableHead>
-          <TableHead>Expense</TableHead>
+          <TableHead className="normal-case">{descriptionLabel}</TableHead>
+          <TableHead>{amountLabel}</TableHead>
           <TableHead>Address</TableHead>
           <TableHead>Payout Preference</TableHead>
           <TableHead>Amount</TableHead>
@@ -121,7 +139,13 @@ export function HistoryTable({ rows }: { rows: ExpenseHistoryRow[] }) {
               </TableCell>
               <TableCell>{formatAmount(row.amount, { prefix: "", showDust: true })}</TableCell>
               <TableCell className="last:pr-4">
-                <StatusCell row={row} />
+                <StatusCell
+                  row={row}
+                  payAgainLoading={retryingId === row.id}
+                  onPayAgain={() => {
+                    void retryItem(row.id, successPath);
+                  }}
+                />
               </TableCell>
             </TableRow>
           ))}

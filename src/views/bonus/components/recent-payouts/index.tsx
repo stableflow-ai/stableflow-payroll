@@ -21,12 +21,16 @@ import {
 
 function statusLabel(status: BonusPayoutStatus) {
   if (status === BONUS_PAYOUT_STATUS.Failed) return "Failed";
+  if (status === BONUS_PAYOUT_STATUS.Expired) return "Expired";
   if (status === BONUS_PAYOUT_STATUS.Paid) return "Paid";
   return "Pending";
 }
 
 function StatusMark({ status }: { status: BonusPayoutStatus }) {
-  if (status === BONUS_PAYOUT_STATUS.Failed) {
+  if (
+    status === BONUS_PAYOUT_STATUS.Failed
+    || status === BONUS_PAYOUT_STATUS.Expired
+  ) {
     return <IconPayoutFailed className={cn("size-[26px]", BONUS_STATUS_FAILED_CLASS)} />;
   }
   if (status === BONUS_PAYOUT_STATUS.Paid) {
@@ -36,7 +40,12 @@ function StatusMark({ status }: { status: BonusPayoutStatus }) {
 }
 
 function statusClass(status: BonusPayoutStatus) {
-  if (status === BONUS_PAYOUT_STATUS.Failed) return BONUS_STATUS_FAILED_CLASS;
+  if (
+    status === BONUS_PAYOUT_STATUS.Failed
+    || status === BONUS_PAYOUT_STATUS.Expired
+  ) {
+    return BONUS_STATUS_FAILED_CLASS;
+  }
   if (status === BONUS_PAYOUT_STATUS.Paid) return BONUS_STATUS_PAID_CLASS;
   return "text-[#06f]";
 }

@@ -40,7 +40,8 @@ function parseChangePercent(value: unknown): number | null {
 function mapPayrollPayoutStatus(value: unknown): PayrollRecentPayoutStatus {
   const key = apiText(value).toLowerCase();
   if (key === "completed" || key === "complete" || key === "paid") return "paid";
-  if (key === "failed" || key === "expired") return "failed";
+  if (key === "failed") return "failed";
+  if (key === "expired") return "expired";
   return "pending";
 }
 

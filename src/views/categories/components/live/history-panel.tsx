@@ -12,6 +12,7 @@ import {
 } from "@/hooks/use-operation-api";
 import useToast from "@/hooks/use-toast";
 import { HistoryTable } from "@/views/expense/components/expense-runs/HistoryTable";
+import { categoryHistoryPath } from "../../config";
 
 function queryErrorMessage(error: unknown, fallback: string) {
   return error instanceof Error ? error.message : fallback;
@@ -94,7 +95,7 @@ export function OperationHistoryPanel(props: { category: string }) {
         </div>
       ) : (
         <div className="mt-5">
-          <HistoryTable rows={items} />
+          <HistoryTable rows={items} successPath={categoryHistoryPath(category)} />
           {hasMore ? <div ref={sentinelRef} className="h-4 shrink-0" aria-hidden /> : null}
           {loadingMore ? (
             <div className="flex items-center justify-center py-3">

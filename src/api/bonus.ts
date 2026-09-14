@@ -35,7 +35,8 @@ function parseChangePercent(value: unknown): number | null {
 function mapBonusPayoutStatus(value: unknown): BonusPayoutStatus {
   const key = apiText(value).toLowerCase();
   if (key === "completed" || key === "complete" || key === "paid") return "paid";
-  if (key === "failed" || key === "expired") return "failed";
+  if (key === "failed") return "failed";
+  if (key === "expired") return "expired";
   return "pending";
 }
 
@@ -160,23 +161,37 @@ export function mapBonusOpenList(raw: unknown): BonusPendingList {
 
 export function mapBonusHistoryItem(raw: unknown, index = 0): BonusHistoryItem {
   const row = asRecord(raw) ?? {};
-  const id = apiNumber(row.id) ?? apiNumber(row.execution_id ?? row.executionId) ?? index + 1;
-  const title = apiText(row.name) || apiText(row.purpose) || "Bonus";
+  const id =
+    apiNumber(row.execution_item_id ?? row.executionItemId)
+    ?? apiNumber(row.id);
+  const description = apiText(row.description).trim();
+  const amount =
+    apiText(row.destination_amount ?? row.destinationAmount)
+    || apiText(row.amount)
+    || "0";
   return {
-    id: String(id),
-    title,
-    totalPayout:
+    id: id != null ? String(id) : `row-${index}`,
+    name: apiText(row.name),
+    purpose: apiText(row.purpose),
+    description: description || null,
+    receiptName: null,
+    expense:
       apiText(row.destination_volume ?? row.destinationVolume)
       || apiText(row.volume)
-      || apiText(row.destination_amount ?? row.destinationAmount)
-      || apiText(row.amount)
-      || "0",
-    memberCount: 1,
-    executedAt:
+      || amount,
+    address: apiText(row.recipient) || apiText(row.address),
+    token: apiText(row.destination_symbol ?? row.destinationSymbol) || apiText(row.symbol),
+    network: apiText(row.destination_network ?? row.destinationNetwork) || apiText(row.network),
+    amount,
+    status: mapBonusPayoutStatus(row.status),
+    txHash:
+      apiText(row.destination_tx_hash ?? row.destinationTxHash)
+      || apiText(row.tx_hash ?? row.txHash)
+      || null,
+    paidAt:
       apiText(row.paid_at ?? row.paidAt)
       || apiText(row.submitted_at ?? row.submittedAt)
       || apiText(row.created_at ?? row.createdAt),
-    recipient: apiText(row.recipient),
   };
 }
 

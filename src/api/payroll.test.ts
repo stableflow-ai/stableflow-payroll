@@ -66,6 +66,11 @@ describe("mapPayrollRecentPayout", () => {
       status: "paid",
     });
   });
+
+  it("keeps expired distinct from failed", () => {
+    expect(mapPayrollRecentPayout({ id: 2, status: "expired" }).status).toBe("expired");
+    expect(mapPayrollRecentPayout({ id: 3, status: "failed" }).status).toBe("failed");
+  });
 });
 
 describe("mapPayrollHistoryRun", () => {
@@ -156,6 +161,10 @@ describe("mapPayrollHistoryDetailRow", () => {
       status: "paid",
       txHash: "0xhash",
     });
+  });
+
+  it("keeps expired distinct from failed", () => {
+    expect(mapPayrollHistoryDetailRow({ id: 2, status: "expired" }).status).toBe("expired");
   });
 });
 

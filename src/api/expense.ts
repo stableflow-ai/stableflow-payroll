@@ -36,7 +36,8 @@ function parseChangePercent(value: unknown): number | null {
 function mapExpensePayoutStatus(value: unknown): ExpensePayoutStatus {
   const key = apiText(value).toLowerCase();
   if (key === "completed" || key === "complete" || key === "paid") return "paid";
-  if (key === "failed" || key === "expired") return "failed";
+  if (key === "failed") return "failed";
+  if (key === "expired") return "expired";
   return "pending";
 }
 
@@ -139,14 +140,16 @@ export function mapExpenseOpenList(raw: unknown): ExpenseOpenList {
 
 export function mapExpenseHistoryRow(raw: unknown, index = 0): ExpenseHistoryRow {
   const row = asRecord(raw) ?? {};
-  const id = apiNumber(row.id) ?? apiNumber(row.execution_id ?? row.executionId) ?? index + 1;
+  const id =
+    apiNumber(row.execution_item_id ?? row.executionItemId)
+    ?? apiNumber(row.id);
   const description = apiText(row.description).trim();
   const amount =
     apiText(row.destination_amount ?? row.destinationAmount)
     || apiText(row.amount)
     || "0";
   return {
-    id: String(id),
+    id: id != null ? String(id) : `row-${index}`,
     name: apiText(row.name),
     purpose: apiText(row.purpose),
     description: description || null,

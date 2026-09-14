@@ -67,6 +67,10 @@ describe("mapExpenseRecentPayout", () => {
       status: "paid",
     });
   });
+
+  it("keeps expired distinct from failed", () => {
+    expect(mapExpenseRecentPayout({ id: 2, status: "expired" }).status).toBe("expired");
+  });
 });
 
 describe("mapExpenseOpenRow", () => {
@@ -200,6 +204,31 @@ describe("mapExpenseHistoryRow", () => {
       description: "Conference Ticket",
       receiptName: null,
       expense: "252.02",
+      status: "failed",
+    });
+  });
+
+  it("maps expired without using execution_id as the row id", () => {
+    expect(
+      mapExpenseHistoryRow({
+        execution_id: 99,
+        execution_item_id: 12,
+        status: "expired",
+      }),
+    ).toMatchObject({
+      id: "12",
+      status: "expired",
+    });
+  });
+
+  it("does not fall back to execution_id when item id is missing", () => {
+    expect(
+      mapExpenseHistoryRow({
+        execution_id: 99,
+        status: "failed",
+      }, 3),
+    ).toMatchObject({
+      id: "row-3",
       status: "failed",
     });
   });

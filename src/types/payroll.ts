@@ -21,7 +21,7 @@ export interface PayrollTotalPayoutPoint {
   volume: string;
 }
 
-export type PayrollRecentPayoutStatus = "pending" | "failed" | "paid";
+export type PayrollRecentPayoutStatus = "pending" | "failed" | "expired" | "paid";
 
 export interface PayrollRecentPayout {
   id: string;

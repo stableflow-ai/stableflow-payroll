@@ -21,12 +21,16 @@ import {
 
 function statusLabel(status: PayrollPayoutStatus) {
   if (status === PAYROLL_PAYOUT_STATUS.Failed) return "Failed";
+  if (status === PAYROLL_PAYOUT_STATUS.Expired) return "Expired";
   if (status === PAYROLL_PAYOUT_STATUS.Paid) return "Paid";
   return "Pending";
 }
 
 function StatusMark({ status }: { status: PayrollPayoutStatus }) {
-  if (status === PAYROLL_PAYOUT_STATUS.Failed) {
+  if (
+    status === PAYROLL_PAYOUT_STATUS.Failed
+    || status === PAYROLL_PAYOUT_STATUS.Expired
+  ) {
     return <IconPayoutFailed className={cn("size-[26px]", PAYROLL_STATUS_FAILED_CLASS)} />;
   }
   if (status === PAYROLL_PAYOUT_STATUS.Paid) {
@@ -36,7 +40,12 @@ function StatusMark({ status }: { status: PayrollPayoutStatus }) {
 }
 
 function statusClass(status: PayrollPayoutStatus) {
-  if (status === PAYROLL_PAYOUT_STATUS.Failed) return PAYROLL_STATUS_FAILED_CLASS;
+  if (
+    status === PAYROLL_PAYOUT_STATUS.Failed
+    || status === PAYROLL_PAYOUT_STATUS.Expired
+  ) {
+    return PAYROLL_STATUS_FAILED_CLASS;
+  }
   if (status === PAYROLL_PAYOUT_STATUS.Paid) return PAYROLL_STATUS_PAID_CLASS;
   return "text-[#06f]";
 }
