@@ -56,6 +56,12 @@ interface ExecutionToastMeta {
   dismissing: boolean;
 }
 
+interface ItemToast {
+  kind: "success" | "fail";
+  title: string;
+  text: string;
+}
+
 export function usePayoutExecutionPoll() {
   const toastApi = useToast();
   const navigate = useNavigate();
@@ -72,6 +78,7 @@ export function usePayoutExecutionPoll() {
   const queryClientRef = useRef(queryClient);
   queryClientRef.current = queryClient;
   const metaRef = useRef(new Map<number, ExecutionToastMeta>());
+  const itemToastRef = useRef<ToastHandle | null>(null);
 
   useEffect(() => {
     function dismissOne(executionId: number, dismissToast: boolean) {
@@ -84,6 +91,11 @@ export function usePayoutExecutionPoll() {
       setActive((prev) => prev.filter((row) => row.executionId !== executionId));
     }
 
+    function dismissItemToast() {
+      itemToastRef.current?.dismiss();
+      itemToastRef.current = null;
+    }
+
     function dismissAll(dismissToasts: boolean) {
       for (const [executionId, meta] of metaRef.current) {
         if (dismissToasts) {
@@ -92,6 +104,7 @@ export function usePayoutExecutionPoll() {
         }
         metaRef.current.delete(executionId);
       }
+      if (dismissToasts) dismissItemToast();
       setActive([]);
     }
 
@@ -148,6 +161,7 @@ export function usePayoutExecutionPoll() {
 
   useEffect(() => {
     const finishedIds: number[] = [];
+    let latestItem: ItemToast | null = null;
     for (let index = 0; index < active.length; index += 1) {
       const row = active[index];
       const data = queries[index]?.data;
@@ -163,12 +177,7 @@ export function usePayoutExecutionPoll() {
         const kind = executionItemToastKind(item.status);
         const text = executionItemToastText(item.status);
         if (!kind || !text) continue;
-        const toastTitle = executionItemToastTitle(item);
-        if (kind === "success") {
-          toastRef.current.success({ title: toastTitle, text });
-        } else {
-          toastRef.current.fail({ title: toastTitle, text });
-        }
+        latestItem = { kind, title: executionItemToastTitle(item), text };
       }
 
       meta.toast.update({
@@ -190,7 +199,26 @@ export function usePayoutExecutionPoll() {
         finishedIds.push(row.executionId);
       }
     }
+    if (latestItem) replaceItemToast(toastRef.current, itemToastRef, latestItem);
     if (!finishedIds.length) return;
     setActive((prev) => prev.filter((row) => !finishedIds.includes(row.executionId)));
   }, [active, queries]);
+}
+
+function replaceItemToast(
+  toastApi: ReturnType<typeof useToast>,
+  itemToastRef: { current: ToastHandle | null },
+  item: ItemToast,
+) {
+  itemToastRef.current?.dismiss();
+  const shown: { handle: ToastHandle | null } = { handle: null };
+  const params = {
+    title: item.title,
+    text: item.text,
+    onClose: () => {
+      if (itemToastRef.current === shown.handle) itemToastRef.current = null;
+    },
+  };
+  shown.handle = item.kind === "success" ? toastApi.success(params) : toastApi.fail(params);
+  itemToastRef.current = shown.handle;
 }
