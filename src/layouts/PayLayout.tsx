@@ -3,6 +3,7 @@ import { Outlet, useLocation } from "react-router-dom";
 import { IconMenu } from "@/components/icons";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { HeaderWalletCapsule } from "@/components/layout/HeaderWalletCapsule";
+import { PayFooter } from "@/components/layout/PayFooter";
 import {
   HEADER_ACCOUNT_MENU_VARIANT,
   HEADER_ACCOUNT_TRIGGER_LABEL,
@@ -44,8 +45,8 @@ export function PayLayout() {
   const orgName = organizationName(user) ?? "";
 
   return (
-    <div className="flex flex-col lg:min-h-svh lg:flex-row">
-      <div className="flex items-center gap-3 border-b border-black/10 px-2 py-3 md:px-5 lg:hidden">
+    <div className="flex h-svh flex-col overflow-hidden lg:flex-row">
+      <div className="flex shrink-0 items-center gap-3 border-b border-black/10 px-2 py-3 md:px-5 lg:hidden">
         <a href="/" className="shrink-0">
           <img src="/logo.svg" alt="Stableflow Pay" className="h-[30px] w-auto" />
         </a>
@@ -70,8 +71,8 @@ export function PayLayout() {
         </div>
       </div>
       <PaySidebar />
-      <div className="min-w-0 flex-1">
-        <div className="relative flex h-[65px] items-center justify-between gap-3 border-b border-black/10 px-2 md:px-5 lg:px-[26px]">
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden">
+        <div className="relative flex h-[65px] shrink-0 items-center justify-between gap-3 border-b border-black/10 px-2 md:px-5 lg:px-[26px]">
           {showRequestTabs ? (
             <RequestPaymentTabs />
           ) : (
@@ -93,7 +94,7 @@ export function PayLayout() {
             </div>
           </div>
         </div>
-        <div className="px-2 py-5 md:px-5 lg:px-[26px]">
+        <div className="min-h-0 flex-1 overflow-y-auto px-2 py-5 md:px-5 lg:px-[26px]">
           {showModeTabs ? (
             <div className="mb-4">
               <PaymentModeTabs />
@@ -101,6 +102,7 @@ export function PayLayout() {
           ) : null}
           <Outlet context={{ setHeaderExtra } satisfies PayLayoutOutletContext} />
         </div>
+        <PayFooter />
       </div>
       <Drawer
         open={menuOpen}

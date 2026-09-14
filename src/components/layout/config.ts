@@ -24,6 +24,9 @@ export const HEADER_NAV_ITEMS = [
   { label: "Pay", to: "/pay" },
 ] as const;
 
+export const HOW_IT_WORKS_PATH = "/howitworks";
+export const STABLEFLOW_ABOUT_URL = "https://app.stableflow.ai/about";
+
 export const HEADER_CHAIN_LOGO: Record<ChainKind, string> = {
   evm: "ethereum",
   near: "near",
