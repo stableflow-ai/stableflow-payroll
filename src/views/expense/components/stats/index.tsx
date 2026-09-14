@@ -92,14 +92,14 @@ export function StatsCard(props: StatsCardProps) {
             hintTone={changeTone(totalChangePercent)}
           />
           <StatColumn
-            label="Number of Expensed"
+            label="Number of Processed"
             value={String(expensedCount)}
             hint="from last month"
             hintValue={formatChange(expensedChangePercent)}
             hintTone={changeTone(expensedChangePercent)}
           />
           <StatColumn
-            label="Number of Expenses"
+            label="Total Number of Expenses"
             value={String(expenseCount)}
             hint="from last month"
             hintValue={formatChange(expenseChangePercent)}

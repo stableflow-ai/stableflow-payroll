@@ -11,6 +11,7 @@ import type {
   PayrollRecipientRow
 } from "@/types/payroll";
 import { NavLink } from "react-router-dom";
+import { HISTORY_TAB_ANCHOR_ID } from "@/views/pay/history-tab";
 import { PAYROLL_HISTORY_PATH, PAYROLL_PATH, PAYROLL_TAB, type PayrollTab } from "../../config";
 import { CreatePayrollEmpty } from "./CreatePayrollEmpty";
 import { HistoryPanel } from "./HistoryPanel";
@@ -95,7 +96,7 @@ export function PayrollRunsCard(props: {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div id={HISTORY_TAB_ANCHOR_ID} className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-end gap-8">
           <TabLink to={PAYROLL_PATH}>Next Payroll</TabLink>
           <TabLink to={PAYROLL_HISTORY_PATH} end={false}>

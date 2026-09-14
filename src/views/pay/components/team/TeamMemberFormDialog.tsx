@@ -106,7 +106,7 @@ export function TeamMemberFormDialog(props: {
   }
 
   return (
-    <Dialog open={open} onClose={onClose} title={isEdit ? "Edit" : "Add"}>
+    <Dialog open={open} onClose={onClose} title={isEdit ? "Edit Member" : "Add Member"}>
       <Field label="Name">
         <input
           className={cn(FIELD_CLASS, "border-[#e3e3e3] text-black")}
@@ -135,7 +135,7 @@ export function TeamMemberFormDialog(props: {
       ) : null}
       {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Solana) ? (
         <WalletField
-          label="Solana Wallet Address"
+          label="SOLANA Wallet Address"
           optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Solana)}
           value={solana}
           error={solanaError}
@@ -144,7 +144,7 @@ export function TeamMemberFormDialog(props: {
       ) : null}
       {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Near) ? (
         <WalletField
-          label="Near Wallet Address"
+          label="NEAR Wallet Address"
           optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Near)}
           value={near}
           error={nearError}
@@ -153,7 +153,7 @@ export function TeamMemberFormDialog(props: {
       ) : null}
       {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Tron) ? (
         <WalletField
-          label="Tron Wallet Address"
+          label="TRON Wallet Address"
           optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Tron)}
           value={tron}
           error={tronError}

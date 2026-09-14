@@ -8,7 +8,7 @@ import { chainLabel, FIXED_CHAIN_KINDS } from "@/config/chains";
 export function WalletConnectDialog({
   onClose,
   title = "Payment wallet",
-  description = `${FIXED_CHAIN_KINDS.size > 1 ? "Connect a wallet per chain. " + Array.from(FIXED_CHAIN_KINDS.values()).map((option) => option.chainKindLabel).join(", ") + " can stay connected at the same time. " : ""}The connected wallet is used when you send payouts.`,
+  description = `${FIXED_CHAIN_KINDS.size > 1 ? "Connect a wallet per chain. " + Array.from(FIXED_CHAIN_KINDS.values()).map((option) => option.chainKindLabel.toUpperCase()).join(", ") + " can stay connected at the same time. " : ""}The connected wallet is used when you send payouts.`,
   preferredKind = "evm",
 }: {
   onClose: () => void;
@@ -85,7 +85,7 @@ export function WalletConnectDialog({
                           : "border-black/15 bg-white text-black hover:bg-black/5",
                       )}
                     >
-                      {option.chainKindLabel}
+                      {option.chainKindLabel.toUpperCase()}
                       {isConnected ? <span className="ml-1 size-1.5 rounded-full bg-current opacity-70" /> : null}
                     </button>
                   );
@@ -98,7 +98,7 @@ export function WalletConnectDialog({
             <>
               <div className="rounded-[16px] border border-black/10 bg-[#f6f6f6] p-4">
                 <p className="font-montserrat text-[14px] font-medium text-black">
-                  Connected {chainLabel(selectedKind)} wallet
+                  Connected {chainLabel(selectedKind).toUpperCase()} wallet
                 </p>
                 <p className="mt-3 break-all font-montserrat text-[14px] text-black">
                   {address}

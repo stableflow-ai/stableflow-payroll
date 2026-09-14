@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import type { BonusHistoryItem, BonusPendingList, BonusPendingRow } from "@/types/bonus";
 import type { Payable } from "@/types/payable";
 import { DownloadCsvTemplateButton } from "@/views/pay/components/import-csv/DownloadCsvTemplateButton";
+import { HISTORY_TAB_ANCHOR_ID } from "@/views/pay/history-tab";
 import {
   BONUS_HISTORY_PATH,
   BONUS_PATH,
@@ -97,7 +98,7 @@ export function BonusRunsCard(props: {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div id={HISTORY_TAB_ANCHOR_ID} className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-end gap-8">
           <TabLink to={BONUS_PATH}>Bonuses to be Paid</TabLink>
           <TabLink to={BONUS_HISTORY_PATH}>Bonus History</TabLink>

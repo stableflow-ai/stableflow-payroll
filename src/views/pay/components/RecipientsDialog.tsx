@@ -63,7 +63,7 @@ export function RecipientsDialog(props: {
         manageable ? (
           <Button size="sm" className="gap-1.5 px-3" onClick={onAdd}>
             <IconPlus className="size-3 text-white" />
-            Add
+            Add Recipient
           </Button>
         ) : undefined
       }

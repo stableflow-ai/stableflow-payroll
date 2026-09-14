@@ -15,6 +15,7 @@ import { useAuthStore } from "@/stores/auth";
 import type { BonusImportItem, BonusPendingRow } from "@/types/bonus";
 import type { Payable } from "@/types/payable";
 import { PaymentByFormDialog } from "@/views/pay/components/payment-form/PaymentByFormDialog";
+import { openHistoryTab } from "@/views/pay/history-tab";
 import { BonusFormDrawer } from "./components/bonus-form-drawer";
 import { BonusRunsCard } from "./components/bonus-runs";
 import { RecentPayoutsCard } from "./components/recent-payouts";
@@ -173,7 +174,7 @@ export function BonusView() {
             if (!recent.hasNextPage || recent.isFetchingNextPage) return;
             void recent.fetchNextPage();
           }}
-          onOpenHistory={() => navigate(BONUS_HISTORY_PATH)}
+          onOpenHistory={() => openHistoryTab(navigate, BONUS_HISTORY_PATH)}
         />
       </div>
       <BonusRunsCard

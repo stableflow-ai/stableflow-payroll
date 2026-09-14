@@ -55,7 +55,7 @@ export function ContactFormDialog(props: {
   }
 
   return (
-    <Dialog open={open} onClose={onClose} title={isEdit ? "Edit" : "Add"} cardClassName="w-full md:w-[500px]">
+    <Dialog open={open} onClose={onClose} title={isEdit ? "Edit Contact" : "Add Contact"} cardClassName="w-full md:w-[500px]">
       <label className="block">
         <span className="font-montserrat text-sm font-medium text-[#606060]">Name</span>
         <input
@@ -82,7 +82,7 @@ export function ContactFormDialog(props: {
       </label>
       {error ? <p className="mt-3 font-montserrat text-sm text-danger">{error}</p> : null}
       <Button size="lg" className="mt-8 w-full" onClick={handleSubmit}>
-        {isEdit ? "Edit" : "Add"}
+        {isEdit ? "Edit Contact" : "Add Contact"}
       </Button>
     </Dialog>
   );

@@ -44,7 +44,7 @@ function ControlCallout() {
               className="h-[50px] w-[43px] object-contain"
             />
             <p className="font-montserrat text-[12px] leading-normal text-black">
-              Stableflow Pay executes confidentialy
+              Stableflow Pay executes confidentially
             </p>
           </div>
 

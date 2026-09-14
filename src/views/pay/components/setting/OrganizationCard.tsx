@@ -78,7 +78,7 @@ export function OrganizationCard(props: {
       </label>
       <label className="mt-6 block">
         <span className="font-montserrat text-sm font-medium text-[#606060]">Logo URL</span>
-        <span className="ml-2 font-montserrat text-xs font-normal text-[#909090]">Optional</span>
+        <span className="ml-2 font-montserrat text-xs font-normal text-[#909090]">(optional)</span>
         <input
           className={`${FIELD_CLASS} mt-2`}
           value={logoUrl}

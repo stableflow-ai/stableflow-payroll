@@ -115,7 +115,7 @@ export function InviteProfileFields(props: {
       {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Solana) ? (
         <InviteField
           id="profile-solana"
-          label="Solana Wallet Address"
+          label="SOLANA Wallet Address"
           optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Solana)}
           value={values.solana}
           onChange={(value) => {
@@ -127,7 +127,7 @@ export function InviteProfileFields(props: {
             shown.solana
               ? requiredValueError(
                 values.solana,
-                "Solana wallet address",
+                "SOLANA wallet address",
                 isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Solana),
               ) ?? walletFieldError(values.solana, "solana")
               : null
@@ -137,7 +137,7 @@ export function InviteProfileFields(props: {
       {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Near) ? (
         <InviteField
           id="profile-near"
-          label="Near Wallet Address"
+          label="NEAR Wallet Address"
           optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Near)}
           value={values.near}
           onChange={(value) => {
@@ -149,7 +149,7 @@ export function InviteProfileFields(props: {
             shown.near
               ? requiredValueError(
                 values.near,
-                "Near wallet address",
+                "NEAR wallet address",
                 isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Near),
               ) ?? walletFieldError(values.near, "near")
               : null
@@ -159,7 +159,7 @@ export function InviteProfileFields(props: {
       {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Tron) ? (
         <InviteField
           id="profile-tron"
-          label="Tron Wallet Address"
+          label="TRON Wallet Address"
           optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Tron)}
           value={values.tron}
           onChange={(value) => {
@@ -171,7 +171,7 @@ export function InviteProfileFields(props: {
             shown.tron
               ? requiredValueError(
                 values.tron,
-                "Tron wallet address",
+                "TRON wallet address",
                 isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Tron),
               ) ?? walletFieldError(values.tron, "tron")
               : null

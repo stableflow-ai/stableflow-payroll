@@ -11,6 +11,7 @@ import type { ExpenseDraftRow, ExpenseOpenList } from "@/types/expense";
 import type { Payable } from "@/types/payable";
 import { CountBadge } from "@/views/pay/components/CountBadge";
 import { DownloadCsvTemplateButton } from "@/views/pay/components/import-csv/DownloadCsvTemplateButton";
+import { HISTORY_TAB_ANCHOR_ID } from "@/views/pay/history-tab";
 import {
   EXPENSE_HISTORY_PATH,
   EXPENSE_PATH,
@@ -88,7 +89,7 @@ export function ExpenseRunsCard(props: {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div id={HISTORY_TAB_ANCHOR_ID} className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-end gap-8">
           <TabLink to={EXPENSE_PATH}>Open Expense</TabLink>
           <TabLink to={EXPENSE_REQUESTS_PATH} count={requestCount}>

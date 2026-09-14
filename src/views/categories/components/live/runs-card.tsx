@@ -11,6 +11,7 @@ import type { Payable } from "@/types/payable";
 import { ExpenseImportCsvButton } from "@/views/expense/components/expense-runs/ExpenseImportCsvButton";
 import { IMPORT_CSV_TEMPLATE } from "@/views/expense/config";
 import { DownloadCsvTemplateButton } from "@/views/pay/components/import-csv/DownloadCsvTemplateButton";
+import { HISTORY_TAB_ANCHOR_ID } from "@/views/pay/history-tab";
 import { categoryHistoryPath, categoryPath, operationImportCsvFilename } from "../../config";
 import { OPERATION_TAB, type OperationTab } from "../../live-config";
 import { OperationHistoryPanel } from "./history-panel";
@@ -74,7 +75,7 @@ export function OperationRunsCard(props: {
 
   return (
     <div>
-      <div className="flex flex-wrap items-end justify-between gap-3">
+      <div id={HISTORY_TAB_ANCHOR_ID} className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-end gap-8">
           <TabLink to={categoryPath(category)}>Payments</TabLink>
           <TabLink to={categoryHistoryPath(category)}>Payout History</TabLink>

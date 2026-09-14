@@ -17,6 +17,7 @@ import { TotalExpenseChart } from "@/views/expense/components/total-expense";
 import { EXPENSE_PAYOUT_STATUS } from "@/views/expense/config";
 import { mapExpenseChartSeries } from "@/views/expense/utils";
 import { PaymentByFormDialog } from "@/views/pay/components/payment-form/PaymentByFormDialog";
+import { openHistoryTab } from "@/views/pay/history-tab";
 import { categoryHistoryPath, categoryPath, type CategoryItem } from "../config";
 import { OPERATION_TAB } from "../live-config";
 import { OperationRunsCard } from "./live/runs-card";
@@ -141,7 +142,7 @@ export function CategoryPage(props: { item: CategoryItem }) {
             if (!recent.hasNextPage || recent.isFetchingNextPage) return;
             void recent.fetchNextPage();
           }}
-          onOpenHistory={() => navigate(categoryHistoryPath(category))}
+          onOpenHistory={() => openHistoryTab(navigate, categoryHistoryPath(category))}
         />
       </div>
       <OperationRunsCard

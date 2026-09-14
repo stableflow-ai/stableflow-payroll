@@ -19,7 +19,7 @@ export function CreateOperationEmpty(props: {
   return (
     <div className="flex min-h-[360px] flex-col items-center justify-center px-4 py-16">
       <p className="font-montserrat text-base font-semibold text-black">
-        Starts with Create a Payment
+        Start by Creating a Payment
       </p>
       <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:flex-wrap sm:justify-center">
         <Button

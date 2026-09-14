@@ -12,6 +12,7 @@ import { useAuthStore } from "@/stores/auth";
 import type { ExpenseDraftRow, ExpenseImportItem } from "@/types/expense";
 import type { Payable } from "@/types/payable";
 import { PaymentByFormDialog } from "@/views/pay/components/payment-form/PaymentByFormDialog";
+import { openHistoryTab } from "@/views/pay/history-tab";
 import { RecentPayoutsCard } from "./components/recent-payouts";
 import { ExpenseRunsCard } from "./components/expense-runs";
 import { ExpenseFormDrawer } from "./components/expense-form-drawer";
@@ -152,7 +153,7 @@ export function ExpenseView() {
             if (!recent.hasNextPage || recent.isFetchingNextPage) return;
             void recent.fetchNextPage();
           }}
-          onOpenHistory={() => navigate(EXPENSE_HISTORY_PATH)}
+          onOpenHistory={() => openHistoryTab(navigate, EXPENSE_HISTORY_PATH)}
         />
       </div>
       <ExpenseRunsCard

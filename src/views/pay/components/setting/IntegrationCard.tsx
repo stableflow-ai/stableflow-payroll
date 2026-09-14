@@ -164,19 +164,19 @@ export function IntegrationCard() {
               onChange={() => undefined}
             />
             <IntegrationChannelCard
-              title="Solana Address"
+              title="SOLANA Address"
               config={draft.solana}
               saving={pendingKeys.has(INTEGRATION_FIELD.Solana)}
               onChange={(next) => void persist(INTEGRATION_FIELD.Solana, next)}
             />
             <IntegrationChannelCard
-              title="Near Address"
+              title="NEAR Address"
               config={draft.near}
               saving={pendingKeys.has(INTEGRATION_FIELD.Near)}
               onChange={(next) => void persist(INTEGRATION_FIELD.Near, next)}
             />
             <IntegrationChannelCard
-              title="Tron Address"
+              title="TRON Address"
               config={draft.tron}
               saving={pendingKeys.has(INTEGRATION_FIELD.Tron)}
               onChange={(next) => void persist(INTEGRATION_FIELD.Tron, next)}

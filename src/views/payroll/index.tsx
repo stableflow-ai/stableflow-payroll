@@ -16,6 +16,7 @@ import { useAuthStore } from "@/stores/auth";
 import type { Payable } from "@/types/payable";
 import { PaymentByFormDialog } from "@/views/pay/components/payment-form/PaymentByFormDialog";
 import { payrollNextToPayable } from "@/views/pay/components/payment-form/from-source";
+import { openHistoryTab } from "@/views/pay/history-tab";
 import {
   PAYROLL_CHART_RANGE,
   PAYROLL_DRAWER_MODE,
@@ -226,7 +227,7 @@ export function PayrollView() {
             if (!recent.hasNextPage || recent.isFetchingNextPage) return;
             void recent.fetchNextPage();
           }}
-          onOpenHistory={() => navigate(PAYROLL_HISTORY_PATH)}
+          onOpenHistory={() => openHistoryTab(navigate, PAYROLL_HISTORY_PATH)}
         />
       </div>
       <PayrollRunsCard

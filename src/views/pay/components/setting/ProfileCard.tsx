@@ -199,7 +199,7 @@ export function ProfileCard() {
           </ProfileField>
           {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Solana) ? (
             <ProfileField
-              label="Solana Wallet Address"
+              label="SOLANA Wallet Address"
               optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Solana)}
             >
               <input
@@ -211,7 +211,7 @@ export function ProfileCard() {
           ) : null}
           {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Near) ? (
             <ProfileField
-              label="Near Wallet Address"
+              label="NEAR Wallet Address"
               optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Near)}
             >
               <input
@@ -223,7 +223,7 @@ export function ProfileCard() {
           ) : null}
           {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Tron) ? (
             <ProfileField
-              label="Tron Wallet Address"
+              label="TRON Wallet Address"
               optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Tron)}
             >
               <input
