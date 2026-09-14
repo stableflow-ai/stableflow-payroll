@@ -11,7 +11,7 @@ Product areas, routes, and constraints: [product.md](product.md).
 - **State:** Zustand (cross-page client state), TanStack Query (server cache). The JWT session goes through `src/lib/auth-session.ts`; nothing else touches `localStorage` / `sessionStorage`.
 - **Routing:** `react-router-dom` 7 (`createBrowserRouter`)
 - **Wallets:** RainbowKit + wagmi + viem (EVM), `@near-wallet-selector` (Near), `@solana/wallet-adapter` (Solana), `@tronweb3/tronwallet-adapters` (Tron), `@rhea-finance/zcash-wallet-adapter` (Zcash / Noir). Solana send is HTTP-only (the HMAC proxy has no WebSocket): unsigned transactions refresh `recentBlockhash` locally, stay on the RPC that issued it, and rebroadcast until confirmed or the blockhash expires.
-- **Other:** `motion` (animation), `recharts` (charts), `react-toastify` (toasts), `date-fns` (dates), `big.js` (amounts), `papaparse` (CSV)
+- **Other:** `motion` (animation), `recharts` (charts), `react-toastify` (toasts), `date-fns` (dates), `big.js` (amounts), `papaparse` (CSV), `exceljs` (Excel import templates)
 - **Tests:** Vitest (`src/**/*.test.ts`, `environment: "node"`). There is no ESLint or Prettier config; `pnpm check` and `pnpm test` are the quality gate.
 - **Path alias:** `@/` → `src/`
 

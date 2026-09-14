@@ -79,10 +79,10 @@ export const CATEGORY_CHART_RANGE_OPTIONS = [
   { value: CATEGORY_CHART_RANGE.Month, label: "Monthly" },
 ] as const;
 
-export const CATEGORY_IMPORT_CSV_TEMPLATE_FILENAME = "category-import-template.csv";
+export const CATEGORY_IMPORT_CSV_TEMPLATE_FILENAME = "category-import-template.xlsx";
 
 export function operationImportCsvFilename(category: string): string {
-  return `${category}-import-template.csv`;
+  return `${category}-import-template.xlsx`;
 }
 
 export const CATEGORY_DASHBOARD_CHART_POINTS = [

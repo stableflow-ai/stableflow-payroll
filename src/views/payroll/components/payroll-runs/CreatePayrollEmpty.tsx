@@ -11,7 +11,7 @@ import { isGoogleImportConfigured } from "@/lib/google/config";
 import { isGooglePickerCancelled, openSpreadsheetPicker } from "@/lib/google/picker";
 import { listSheetTitles, readSheetValues } from "@/lib/google/sheets";
 import { isGoogleAuthCancelled, getDriveFileToken } from "@/lib/google/token-client";
-import { parseCsvFile } from "@/lib/import/csv";
+import { isImportSpreadsheetFile, parseImportFile } from "@/lib/import/xlsx";
 import { cn } from "@/lib/utils";
 import type { PayrollRecipientRow } from "@/types/payroll";
 import { SelectSheetDialog } from "@/views/pay/components/batch/SelectSheetDialog";
@@ -78,14 +78,13 @@ export function CreatePayrollEmpty(props: {
 
   async function handleCsvFile(file: File | undefined) {
     if (!file || locked) return;
-    const name = file.name.toLowerCase();
-    if (!name.endsWith(".csv") && file.type !== "text/csv") {
-      toast.fail({ title: "Please upload a CSV file" });
+    if (!isImportSpreadsheetFile(file)) {
+      toast.fail({ title: "Please upload a CSV or Excel file" });
       return;
     }
     setImportBusy(true);
     try {
-      const values = await parseCsvFile(file);
+      const values = await parseImportFile(file);
       applyValues(values);
     } catch {
       toast.fail({ title: "Could not parse the file" });
@@ -156,7 +155,7 @@ export function CreatePayrollEmpty(props: {
         <Button
           variant={BUTTON_VARIANT.Normal}
           className="h-10 w-full rounded-[10px] border-black/10 px-4 text-sm text-black sm:w-auto sm:min-w-[193px]"
-          onClick={() => downloadImportCsvTemplate(IMPORT_CSV_TEMPLATE, IMPORT_CSV_TEMPLATE_FILENAME)}
+          onClick={() => void downloadImportCsvTemplate(IMPORT_CSV_TEMPLATE, IMPORT_CSV_TEMPLATE_FILENAME)}
         >
           <IconDownload className="size-3.5 shrink-0" />
           Download Template

@@ -25,7 +25,7 @@ Rules for humans and agents working in this repository. Anything committed to `s
 - Put a helper in `src/utils/` only if it is generally reusable across features. Feature-specific helpers belong in that feature's `utils.ts` (for example `src/views/pay/utils.ts`, `src/views/pay/batch-utils.ts`).
 - Split files by purpose and re-export from `src/utils/index.ts`.
 - After adding or changing a public util, update [utils.md](utils.md).
-- `cn()` stays in `src/lib/utils.ts` (shadcn alias). HTTP, RPC clients, logo helpers, CSV import, Google integration, and confidential-payment helpers stay in `src/lib/`.
+- `cn()` stays in `src/lib/utils.ts` (shadcn alias). HTTP, RPC clients, logo helpers, CSV / Excel import, Google integration, and confidential-payment helpers stay in `src/lib/`.
 
 ## Styling
 

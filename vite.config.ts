@@ -89,6 +89,7 @@ export default defineConfig({
       "stream-browserify",
       "util",
       "events",
+      "exceljs",
       "@solana/web3.js",
       "@solana/spl-token",
     ],

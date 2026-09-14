@@ -75,8 +75,8 @@ export const BONUS_STATUS_PAID_CLASS = "text-[#84A20F]";
 export const PENDING_BONUS_TABLE_COLUMNS =
   "minmax(140px,1.2fr) minmax(88px,0.7fr) minmax(120px,1fr) minmax(160px,1.4fr) minmax(160px,1.3fr) minmax(140px,1.1fr) minmax(140px,1fr) minmax(120px,0.9fr)";
 
-export const IMPORT_CSV_ACCEPT = ".csv,text/csv";
-export const IMPORT_CSV_TEMPLATE_FILENAME = "bonus-import-template.csv";
+export { IMPORT_CSV_ACCEPT } from "@/lib/import/config";
+export const IMPORT_CSV_TEMPLATE_FILENAME = "bonus-import-template.xlsx";
 export const IMPORT_CSV_TEMPLATE = [
   "recipient,email,amount,token,network,memo",
   "0x557be3f47a45499385f60cd64e2ff455e42a3311,alice@example.com,100,USDC,eth,bonus",

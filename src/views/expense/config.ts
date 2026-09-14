@@ -75,8 +75,8 @@ export const EXPENSE_FORM_TITLE_MAX = EXPENSE_IMPORT_LIMITS.title;
 export const EXPENSE_FORM_COLUMNS =
   "minmax(110px,126px) minmax(110px,140px) minmax(140px,180px) minmax(0,1fr) minmax(120px,160px) 184px 99px 38px";
 
-export const IMPORT_CSV_ACCEPT = ".csv,text/csv";
-export const IMPORT_CSV_TEMPLATE_FILENAME = "expense-import-template.csv";
+export { IMPORT_CSV_ACCEPT } from "@/lib/import/config";
+export const IMPORT_CSV_TEMPLATE_FILENAME = "expense-import-template.xlsx";
 export const IMPORT_CSV_TEMPLATE = [
   "name,recipient,email,amount,token,network,purpose,description",
   "Andrew,0x557be3f47a45499385f60cd64e2ff455e42a3311,alice@example.com,800,USDC,eth,Conference Travel,Invoice of conference.pdf",

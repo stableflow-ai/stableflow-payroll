@@ -314,8 +314,8 @@ export const PAY_REQUEST_MODE = {
 } as const;
 
 export const IMPORT_MAX_ROWS = 500;
-export const IMPORT_CSV_ACCEPT = ".csv,text/csv";
-export const IMPORT_CSV_TEMPLATE_FILENAME = "payout-import-template.csv";
+export { IMPORT_CSV_ACCEPT } from "@/lib/import/config";
+export const IMPORT_CSV_TEMPLATE_FILENAME = "payout-import-template.xlsx";
 export const IMPORT_CSV_TEMPLATE = [
   "recipient,email,amount,token,network,memo",
   "0x557be3f47a45499385f60cd64e2ff455e42a3311,alice@example.com,100,USDC,eth,payroll",

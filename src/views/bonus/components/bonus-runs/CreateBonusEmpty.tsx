@@ -23,7 +23,7 @@ export function CreateBonusEmpty(props: {
         <Button
           variant={BUTTON_VARIANT.Normal}
           className="h-10 w-full rounded-[10px] border-black/10 px-4 text-sm text-black sm:w-auto sm:min-w-[193px]"
-          onClick={() => downloadImportCsvTemplate(IMPORT_CSV_TEMPLATE, IMPORT_CSV_TEMPLATE_FILENAME)}
+          onClick={() => void downloadImportCsvTemplate(IMPORT_CSV_TEMPLATE, IMPORT_CSV_TEMPLATE_FILENAME)}
         >
           <IconDownload className="size-3.5 shrink-0" />
           Download Template

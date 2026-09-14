@@ -146,8 +146,8 @@ export const PAYROLL_HISTORY_DETAIL_PAID_CLASS = "text-[#769400]";
 export const PAYROLL_HISTORY_DETAIL_DELTA_UP_CLASS = "text-[#94ba00]";
 export const PAYROLL_HISTORY_DETAIL_DELTA_DOWN_CLASS = "text-danger";
 
-export const IMPORT_CSV_ACCEPT = ".csv,text/csv";
-export const IMPORT_CSV_TEMPLATE_FILENAME = "payroll-import-template.csv";
+export { IMPORT_CSV_ACCEPT } from "@/lib/import/config";
+export const IMPORT_CSV_TEMPLATE_FILENAME = "payroll-import-template.xlsx";
 export const PAYROLL_NEXT_EXPORT_FILENAME = "next-payroll.csv";
 export const PAYROLL_NEXT_EXPORT_COLUMNS = [
   "name",

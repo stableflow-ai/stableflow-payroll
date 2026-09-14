@@ -9,7 +9,7 @@ import { isGoogleImportConfigured } from "@/lib/google/config";
 import { isGooglePickerCancelled, openSpreadsheetPicker } from "@/lib/google/picker";
 import { listSheetTitles, readSheetValues } from "@/lib/google/sheets";
 import { isGoogleAuthCancelled, getDriveFileToken } from "@/lib/google/token-client";
-import { parseCsvFile } from "@/lib/import/csv";
+import { isImportSpreadsheetFile, parseImportFile } from "@/lib/import/xlsx";
 import { cn } from "@/lib/utils";
 import type { BonusPendingRow } from "@/types/bonus";
 import { SelectSheetDialog } from "@/views/pay/components/batch/SelectSheetDialog";
@@ -80,14 +80,13 @@ export function BonusImportCsvButton(props: {
 
   async function handleCsvFile(file: File | undefined) {
     if (!file || locked) return;
-    const name = file.name.toLowerCase();
-    if (!name.endsWith(".csv") && file.type !== "text/csv") {
-      toast.fail({ title: "Please upload a CSV file" });
+    if (!isImportSpreadsheetFile(file)) {
+      toast.fail({ title: "Please upload a CSV or Excel file" });
       return;
     }
     setImportBusy(true);
     try {
-      const values = await parseCsvFile(file);
+      const values = await parseImportFile(file);
       applyValues(values);
     } catch {
       toast.fail({ title: "Could not parse the file" });

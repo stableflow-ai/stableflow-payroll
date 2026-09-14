@@ -21,8 +21,8 @@ describe("payCategoryFromPath", () => {
     expect(isCategoryPath("/pay/expense")).toBe(false);
     expect(categoryPath("office")).toBe("/pay/office");
     expect(categoryHistoryPath("office")).toBe("/pay/office/history");
-    expect(operationImportCsvFilename("office")).toBe("office-import-template.csv");
-    expect(operationImportCsvFilename("kolmkt")).toBe("kolmkt-import-template.csv");
+    expect(operationImportCsvFilename("office")).toBe("office-import-template.xlsx");
+    expect(operationImportCsvFilename("kolmkt")).toBe("kolmkt-import-template.xlsx");
   });
 });
 

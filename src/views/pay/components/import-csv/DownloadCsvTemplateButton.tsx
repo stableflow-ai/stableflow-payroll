@@ -21,7 +21,7 @@ export function DownloadCsvTemplateButton(props: {
         "h-9 w-9 rounded-[10px] border-black/10 px-0 text-black",
         className,
       )}
-      onClick={() => downloadImportCsvTemplate(content, filename)}
+      onClick={() => void downloadImportCsvTemplate(content, filename)}
       title="Download Template"
     >
       <IconDownload className="size-3.5 shrink-0" />

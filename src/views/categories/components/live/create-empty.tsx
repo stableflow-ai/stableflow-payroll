@@ -26,7 +26,7 @@ export function CreateOperationEmpty(props: {
           variant={BUTTON_VARIANT.Normal}
           className="h-10 w-full rounded-[10px] border-black/10 px-4 text-sm text-black sm:w-auto sm:min-w-[193px]"
           onClick={() =>
-            downloadImportCsvTemplate(IMPORT_CSV_TEMPLATE, operationImportCsvFilename(category))
+            void downloadImportCsvTemplate(IMPORT_CSV_TEMPLATE, operationImportCsvFilename(category))
           }
         >
           <IconDownload className="size-3.5 shrink-0" />

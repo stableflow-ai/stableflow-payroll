@@ -29,7 +29,7 @@ export function parseMarkdownPipeTable(text: string): string[][] | null {
   return rows.length > 0 ? rows : null;
 }
 
-function normalizeParsedRows(data: string[][]): string[][] {
+export function normalizeParsedRows(data: string[][]): string[][] {
   return data
     .map((row) => row.map((cell) => String(cell ?? "").trim()))
     .filter((row) => row.some((cell) => cell !== ""));
