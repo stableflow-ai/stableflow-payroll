@@ -131,7 +131,7 @@ export function registerUserBody(body: RegisterUserBody): Record<string, string>
     ["near_address", omitEmpty(body.nearAddress)],
     ["tron_address", omitEmpty(body.tronAddress)],
     ["telegram", omitEmpty(body.telegram)],
-    ["slack", omitEmpty(body.slack)],
+    ["slack_user_id", omitEmpty(body.slack)],
   ];
   for (const [key, value] of optional) {
     if (value) payload[key] = value;
