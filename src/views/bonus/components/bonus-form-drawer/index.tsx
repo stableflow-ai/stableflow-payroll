@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { IconAlertCircle } from "@/components/icons/alert";
 import { IconDelete } from "@/components/icons/delete";
 import { IconPlus } from "@/components/icons/plus";
 import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
@@ -14,6 +13,8 @@ import { useIntentsTokensStore } from "@/stores/intents-tokens";
 import { BONUS_IMPORT_LIMITS, type BonusImportItem, type BonusPendingRow } from "@/types/bonus";
 import { amountError } from "@/views/pay/batch-utils";
 import { BatchTokenTrigger } from "@/views/pay/components/batch/BatchTokenTrigger";
+import { DrawerFormField, DrawerFormFooter } from "@/views/pay/components/drawer-form-field";
+import { firstDrawerFormError } from "@/views/pay/form-drawer-utils";
 import {
   BONUS_DRAWER_TITLE,
   BONUS_FORM_AMOUNT_MAX_DECIMALS,
@@ -28,7 +29,7 @@ import {
   createEmptyBonusFormRow,
   formRowFromPending,
   formRowsToImportPayload,
-  isBonusFormRowValid,
+  isBonusFormValid,
   patchBonusFormRow,
   refillBonusFormTokens,
   type BonusFormRow,
@@ -46,7 +47,6 @@ export function BonusFormDrawer(props: {
   const tokens = useIntentsTokensStore((state) => state.tokens);
   const findByChainAndSymbol = useIntentsTokensStore((state) => state.findByChainAndSymbol);
   const [title, setTitle] = useState("");
-  const [titleInvalid, setTitleInvalid] = useState(false);
   const [rows, setRows] = useState<BonusFormRow[]>(() => [createEmptyBonusFormRow()]);
   const [destRowId, setDestRowId] = useState<string | null>(null);
 
@@ -56,7 +56,6 @@ export function BonusFormDrawer(props: {
       return;
     }
     setTitle("");
-    setTitleInvalid(false);
     setRows(
       initialRows && initialRows.length > 0
         ? initialRows.map((row) => formRowFromPending(row, findByChainAndSymbol))
@@ -70,7 +69,9 @@ export function BonusFormDrawer(props: {
   }, [open, tokens, findByChainAndSymbol]);
 
   const destRow = rows.find((row) => row.id === destRowId) ?? null;
-  const rowsValid = rows.length > 0 && rows.every(isBonusFormRowValid);
+  const canSave = isBonusFormValid(rows, title);
+  const titleInvalid = !title.trim();
+  const firstError = firstDrawerFormError({ titleLabel: "Bonus Title", title, rows });
   const isDesktop = useMediaQuery(BONUS_FORM_DESKTOP_QUERY);
 
   function patchRow(rowId: string, patch: Parameters<typeof patchBonusFormRow>[1]) {
@@ -103,21 +104,15 @@ export function BonusFormDrawer(props: {
             <p className="whitespace-nowrap font-montserrat text-sm font-medium text-[#606060]">
               Bonus Title
             </p>
-            <input
-              value={title}
-              maxLength={BONUS_FORM_TITLE_MAX}
-              onChange={(event) => {
-                setTitle(event.target.value);
-                if (titleInvalid) setTitleInvalid(false);
-              }}
-              placeholder="Title"
-              className={cn(
-                "col-span-5 h-9 min-w-0 w-full rounded-[6px] border bg-white px-3 font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
-                titleInvalid
-                  ? "border-[#FF5656] text-[#FF5656]"
-                  : "border-[#e3e3e3] text-black",
-              )}
-            />
+            <DrawerFormField invalid={titleInvalid} className="col-span-5 w-full bg-white">
+              <input
+                value={title}
+                maxLength={BONUS_FORM_TITLE_MAX}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Title"
+                className="min-w-0 flex-1 bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30"
+              />
+            </DrawerFormField>
           </div>
 
           <div className="mt-[30px] border-t border-black/10 pt-5">
@@ -165,7 +160,7 @@ export function BonusFormDrawer(props: {
           </div>
         </div>
 
-        <div className="sticky bottom-0 -mx-6 flex justify-end gap-4 border-t border-black/10 bg-[#FDFDFD] px-6 py-5 sm:-mx-8 sm:px-8">
+        <DrawerFormFooter error={canSave ? null : firstError}>
           <Button
             variant={BUTTON_VARIANT.Normal}
             className="h-10 w-[152px] rounded-[10px] border-[#e3e3e3] text-base text-[#606060]"
@@ -176,19 +171,15 @@ export function BonusFormDrawer(props: {
           </Button>
           <Button
             className="h-10 w-[160px] rounded-[10px] text-base"
-            disabled={!rowsValid || saving}
+            disabled={!canSave || saving}
             onClick={() => {
-              if (!rowsValid || saving) return;
-              if (!title.trim()) {
-                setTitleInvalid(true);
-                return;
-              }
+              if (!canSave || saving) return;
               void onSave(formRowsToImportPayload(rows, title));
             }}
           >
             Save
           </Button>
-        </div>
+        </DrawerFormFooter>
       </div>
 
       <TokenSelectDialog
@@ -231,57 +222,35 @@ function BonusFormRowFields(props: {
         maxLength={BONUS_IMPORT_LIMITS.name}
         className="h-9 min-w-0 rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-2.5 font-montserrat text-sm font-medium text-black outline-none placeholder:text-black/30"
       />
-      <span
-        className={cn(
-          "flex h-9 min-w-0 items-center gap-2 rounded-[6px] border bg-[#f6f6f6] px-3",
-          addressInvalid ? "border-[#FF5656]" : "border-[#e3e3e3]",
-        )}
-      >
+      <DrawerFormField invalid={addressInvalid} className="bg-[#f6f6f6]">
         <input
           value={row.address}
           onChange={(event) => onPatch({ address: event.target.value })}
           placeholder="Wallet address"
           maxLength={BONUS_IMPORT_LIMITS.address}
-          className={cn(
-            "min-w-0 flex-1 bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
-            addressInvalid ? "text-[#FF5656]" : "text-black",
-          )}
+          className="min-w-0 flex-1 bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30"
         />
-        {addressInvalid ? (
-          <span className="size-3 shrink-0 overflow-clip text-[#FF5656]">
-            <IconAlertCircle className="size-3" />
-          </span>
-        ) : null}
-      </span>
-      <input
-        type="email"
-        value={row.email}
-        onChange={(event) => onPatch({ email: event.target.value })}
-        placeholder="Email"
-        maxLength={BONUS_IMPORT_LIMITS.email}
-        className={cn(
-          "h-9 min-w-0 rounded-[6px] border bg-[#f6f6f6] px-2.5 font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
-          emailInvalid ? "border-[#FF5656] text-[#FF5656]" : "border-[#e3e3e3] text-black",
-        )}
-      />
+      </DrawerFormField>
+      <DrawerFormField invalid={emailInvalid} className="bg-[#f6f6f6]">
+        <input
+          type="email"
+          value={row.email}
+          onChange={(event) => onPatch({ email: event.target.value })}
+          placeholder="Email"
+          maxLength={BONUS_IMPORT_LIMITS.email}
+          className="min-w-0 flex-1 bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30"
+        />
+      </DrawerFormField>
       <BatchTokenTrigger token={row.token} showLogo onClick={onOpenToken} />
-      <span
-        className={cn(
-          "flex h-9 items-center rounded-[6px] border bg-[#f6f6f6] px-3",
-          amountInvalid ? "border-[#ff5656]" : "border-[#e3e3e3]",
-        )}
-      >
+      <DrawerFormField invalid={amountInvalid} className="bg-[#f6f6f6]">
         <InputNumber
           value={row.amount}
           decimals={BONUS_FORM_AMOUNT_MAX_DECIMALS}
           onNumberChange={(value) => onPatch({ amount: value })}
           placeholder="0"
-          className={cn(
-            "min-w-0 w-full bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
-            amountInvalid ? "text-[#ff5656]" : "text-black",
-          )}
+          className="min-w-0 w-full bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30"
         />
-      </span>
+      </DrawerFormField>
       <button
         type="button"
         aria-label="Remove row"

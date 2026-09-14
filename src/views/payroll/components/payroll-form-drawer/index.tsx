@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { IconAlertCircle } from "@/components/icons/alert";
 import { IconDelete } from "@/components/icons/delete";
 import { IconExportLink } from "@/components/icons/link";
 import { IconPlus } from "@/components/icons/plus";
@@ -20,6 +19,8 @@ import {
 import { useIntentsTokensStore } from "@/stores/intents-tokens";
 import { amountError } from "@/views/pay/batch-utils";
 import { BatchTokenTrigger } from "@/views/pay/components/batch/BatchTokenTrigger";
+import { DrawerFormField, DrawerFormFooter } from "@/views/pay/components/drawer-form-field";
+import { firstDrawerFormError } from "@/views/pay/form-drawer-utils";
 import type { PayrollNextRun, PayrollRecipientRow } from "@/mocks/payroll";
 import {
   PAYROLL_DRAWER_MODE,
@@ -118,6 +119,7 @@ export function PayrollFormDrawer(props: {
 
   const destRow = rows.find((row) => row.id === destRowId) ?? null;
   const canSave = isPayrollFormValid(rows);
+  const firstError = firstDrawerFormError({ rows });
   const isDesktop = useMediaQuery(PAYROLL_HISTORY_DETAIL_DESKTOP_QUERY);
   const savedRows = initialRows ?? [];
   const canExport =
@@ -258,7 +260,7 @@ export function PayrollFormDrawer(props: {
           </div>
         </div>
 
-        <div className="sticky bottom-0 -mx-6 flex justify-end gap-4 border-t border-black/10 bg-[#FDFDFD] px-6 py-5 sm:-mx-8 sm:px-8">
+        <DrawerFormFooter error={canSave ? null : firstError}>
           <Button
             variant={BUTTON_VARIANT.Normal}
             className="h-10 w-[152px] rounded-[10px] border-[#e3e3e3] text-base text-[#606060]"
@@ -282,7 +284,7 @@ export function PayrollFormDrawer(props: {
           >
             Save
           </Button>
-        </div>
+        </DrawerFormFooter>
       </div>
 
       <PayrollPayDayPickerDialog
@@ -373,57 +375,33 @@ function PayrollFormRowFields(props: {
         placeholder="Name"
         className="h-9 min-w-0 rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-2.5 font-montserrat text-sm font-medium text-black outline-none placeholder:text-black/30"
       />
-      <span
-        className={cn(
-          "flex h-9 min-w-0 items-center gap-2 rounded-[6px] border bg-[#f6f6f6] px-3",
-          addressInvalid ? "border-[#FF5656]" : "border-[#e3e3e3]"
-        )}
-      >
+      <DrawerFormField invalid={addressInvalid} className="bg-[#f6f6f6]">
         <input
           value={row.address}
           onChange={(event) => onPatch({ address: event.target.value })}
           placeholder="Wallet address"
-          className={cn(
-            "min-w-0 flex-1 bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
-            addressInvalid ? "text-[#FF5656]" : "text-black"
-          )}
+          className="min-w-0 flex-1 bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30"
         />
-        {addressInvalid ? (
-          <span className="size-3 shrink-0 overflow-clip text-[#FF5656]">
-            <IconAlertCircle className="size-3" />
-          </span>
-        ) : null}
-      </span>
-      <input
-        type="email"
-        value={row.email}
-        onChange={(event) => onPatch({ email: event.target.value })}
-        placeholder="Email"
-        className={cn(
-          "h-9 min-w-0 rounded-[6px] border bg-[#f6f6f6] px-2.5 font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
-          emailInvalid
-            ? "border-[#FF5656] text-[#FF5656]"
-            : "border-[#e3e3e3] text-black"
-        )}
-      />
+      </DrawerFormField>
+      <DrawerFormField invalid={emailInvalid} className="bg-[#f6f6f6]">
+        <input
+          type="email"
+          value={row.email}
+          onChange={(event) => onPatch({ email: event.target.value })}
+          placeholder="Email"
+          className="min-w-0 flex-1 bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30"
+        />
+      </DrawerFormField>
       <BatchTokenTrigger token={row.token} showLogo onClick={onOpenToken} />
-      <span
-        className={cn(
-          "flex h-9 items-center rounded-[6px] border bg-[#f6f6f6] px-3",
-          amountInvalid ? "border-[#ff5656]" : "border-[#e3e3e3]"
-        )}
-      >
+      <DrawerFormField invalid={amountInvalid} className="bg-[#f6f6f6]">
         <InputNumber
           value={row.amount}
           decimals={PAYROLL_FORM_AMOUNT_MAX_DECIMALS}
           onNumberChange={(value) => onPatch({ amount: value })}
           placeholder="0"
-          className={cn(
-            "min-w-0 w-full bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
-            amountInvalid ? "text-[#ff5656]" : "text-black"
-          )}
+          className="min-w-0 w-full bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30"
         />
-      </span>
+      </DrawerFormField>
       <button
         type="button"
         aria-label="Remove row"

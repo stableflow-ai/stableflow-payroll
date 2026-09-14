@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { IconAlertCircle } from "@/components/icons/alert";
 import { IconDelete } from "@/components/icons/delete";
 import { IconPlus } from "@/components/icons/plus";
 import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
@@ -14,6 +13,8 @@ import { useIntentsTokensStore } from "@/stores/intents-tokens";
 import { EXPENSE_IMPORT_LIMITS, type ExpenseDraftRow, type ExpenseImportItem } from "@/types/expense";
 import { amountError } from "@/views/pay/batch-utils";
 import { BatchTokenTrigger } from "@/views/pay/components/batch/BatchTokenTrigger";
+import { DrawerFormField, DrawerFormFooter } from "@/views/pay/components/drawer-form-field";
+import { firstDrawerFormError } from "@/views/pay/form-drawer-utils";
 import {
   EXPENSE_DRAWER_TITLE,
   EXPENSE_FORM_AMOUNT_MAX_DECIMALS,
@@ -54,7 +55,6 @@ export function ExpenseFormDrawer(props: {
   const tokens = useIntentsTokensStore((state) => state.tokens);
   const findByChainAndSymbol = useIntentsTokensStore((state) => state.findByChainAndSymbol);
   const [title, setTitle] = useState("");
-  const [titleInvalid, setTitleInvalid] = useState(false);
   const [rows, setRows] = useState<ExpenseFormRow[]>(() => [createEmptyExpenseFormRow()]);
   const [destRowId, setDestRowId] = useState<string | null>(null);
 
@@ -64,7 +64,6 @@ export function ExpenseFormDrawer(props: {
       return;
     }
     setTitle("");
-    setTitleInvalid(false);
     setRows(
       initialRows && initialRows.length > 0
         ? initialRows.map((row) => formRowFromDraft(row, findByChainAndSymbol))
@@ -78,7 +77,9 @@ export function ExpenseFormDrawer(props: {
   }, [open, tokens, findByChainAndSymbol]);
 
   const destRow = rows.find((row) => row.id === destRowId) ?? null;
-  const rowsValid = isExpenseFormValid(rows);
+  const canSave = Boolean(title.trim()) && isExpenseFormValid(rows);
+  const titleInvalid = !title.trim();
+  const firstError = firstDrawerFormError({ titleLabel, title, rows });
   const isDesktop = useMediaQuery(EXPENSE_FORM_DESKTOP_QUERY);
 
   function patchRow(rowId: string, patch: Parameters<typeof patchExpenseFormRow>[1]) {
@@ -111,21 +112,15 @@ export function ExpenseFormDrawer(props: {
             <p className="whitespace-nowrap font-montserrat text-sm font-medium text-[#606060]">
               {titleLabel}
             </p>
-            <input
-              value={title}
-              maxLength={EXPENSE_FORM_TITLE_MAX}
-              onChange={(event) => {
-                setTitle(event.target.value);
-                if (titleInvalid) setTitleInvalid(false);
-              }}
-              placeholder="Title"
-              className={cn(
-                "col-span-7 h-9 min-w-0 w-full rounded-[6px] border bg-white px-3 font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
-                titleInvalid
-                  ? "border-[#FF5656] text-[#FF5656]"
-                  : "border-[#e3e3e3] text-black",
-              )}
-            />
+            <DrawerFormField invalid={titleInvalid} className="col-span-7 w-full bg-white">
+              <input
+                value={title}
+                maxLength={EXPENSE_FORM_TITLE_MAX}
+                onChange={(event) => setTitle(event.target.value)}
+                placeholder="Title"
+                className="min-w-0 flex-1 bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30"
+              />
+            </DrawerFormField>
           </div>
 
           <div className="mt-[30px] border-t border-black/10 pt-5">
@@ -175,7 +170,7 @@ export function ExpenseFormDrawer(props: {
           </div>
         </div>
 
-        <div className="sticky bottom-0 -mx-6 flex justify-end gap-4 border-t border-black/10 bg-[#FDFDFD] px-6 py-5 sm:-mx-8 sm:px-8">
+        <DrawerFormFooter error={canSave ? null : firstError}>
           <Button
             variant={BUTTON_VARIANT.Normal}
             className="h-10 w-[152px] rounded-[10px] border-[#e3e3e3] text-base text-[#606060]"
@@ -186,20 +181,15 @@ export function ExpenseFormDrawer(props: {
           </Button>
           <Button
             className="h-10 w-[160px] rounded-[10px] text-base"
-            disabled={saving}
+            disabled={!canSave || saving}
             onClick={() => {
-              if (saving) return;
-              if (!title.trim()) {
-                setTitleInvalid(true);
-                return;
-              }
-              if (!rowsValid) return;
+              if (!canSave || saving) return;
               void onSave(formRowsToImportPayload(rows, title));
             }}
           >
             Save
           </Button>
-        </div>
+        </DrawerFormFooter>
       </div>
 
       <TokenSelectDialog
@@ -256,57 +246,35 @@ function ExpenseFormRowFields(props: {
         maxLength={EXPENSE_IMPORT_LIMITS.description}
         className="h-9 min-w-0 rounded-[6px] border border-[#e3e3e3] bg-[#f6f6f6] px-2.5 font-montserrat text-sm font-medium text-black outline-none placeholder:text-black/30"
       />
-      <span
-        className={cn(
-          "flex h-9 min-w-0 items-center gap-2 rounded-[6px] border bg-[#f6f6f6] px-3",
-          addressInvalid ? "border-[#FF5656]" : "border-[#e3e3e3]",
-        )}
-      >
+      <DrawerFormField invalid={addressInvalid} className="bg-[#f6f6f6]">
         <input
           value={row.address}
           onChange={(event) => onPatch({ address: event.target.value })}
           placeholder="Wallet address"
           maxLength={EXPENSE_IMPORT_LIMITS.address}
-          className={cn(
-            "min-w-0 flex-1 bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
-            addressInvalid ? "text-[#FF5656]" : "text-black",
-          )}
+          className="min-w-0 flex-1 bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30"
         />
-        {addressInvalid ? (
-          <span className="size-3 shrink-0 overflow-clip text-[#FF5656]">
-            <IconAlertCircle className="size-3" />
-          </span>
-        ) : null}
-      </span>
-      <input
-        type="email"
-        value={row.email}
-        onChange={(event) => onPatch({ email: event.target.value })}
-        placeholder="Email"
-        maxLength={EXPENSE_IMPORT_LIMITS.email}
-        className={cn(
-          "h-9 min-w-0 rounded-[6px] border bg-[#f6f6f6] px-2.5 font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
-          emailInvalid ? "border-[#FF5656] text-[#FF5656]" : "border-[#e3e3e3] text-black",
-        )}
-      />
+      </DrawerFormField>
+      <DrawerFormField invalid={emailInvalid} className="bg-[#f6f6f6]">
+        <input
+          type="email"
+          value={row.email}
+          onChange={(event) => onPatch({ email: event.target.value })}
+          placeholder="Email"
+          maxLength={EXPENSE_IMPORT_LIMITS.email}
+          className="min-w-0 flex-1 bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30"
+        />
+      </DrawerFormField>
       <BatchTokenTrigger token={row.token} showLogo onClick={onOpenToken} />
-      <span
-        className={cn(
-          "flex h-9 items-center rounded-[6px] border bg-[#f6f6f6] px-3",
-          amountInvalid ? "border-[#ff5656]" : "border-[#e3e3e3]",
-        )}
-      >
+      <DrawerFormField invalid={amountInvalid} className="bg-[#f6f6f6]">
         <InputNumber
           value={row.amount}
           decimals={EXPENSE_FORM_AMOUNT_MAX_DECIMALS}
           onNumberChange={(value) => onPatch({ amount: value })}
           placeholder="0"
-          className={cn(
-            "min-w-0 w-full bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30",
-            amountInvalid ? "text-[#ff5656]" : "text-black",
-          )}
+          className="min-w-0 w-full bg-transparent font-montserrat text-sm font-medium outline-none placeholder:text-black/30"
         />
-      </span>
+      </DrawerFormField>
       <button
         type="button"
         aria-label="Remove row"
