@@ -137,7 +137,7 @@ export function InviteProfileFields(props: {
       {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Near) ? (
         <InviteField
           id="profile-near"
-          label="NEAR Wallet Address"
+          label="Near Wallet Address"
           optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Near)}
           value={values.near}
           onChange={(value) => {
@@ -149,7 +149,7 @@ export function InviteProfileFields(props: {
             shown.near
               ? requiredValueError(
                 values.near,
-                "NEAR wallet address",
+                "Near wallet address",
                 isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Near),
               ) ?? walletFieldError(values.near, "near")
               : null

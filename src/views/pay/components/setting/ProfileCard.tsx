@@ -211,7 +211,7 @@ export function ProfileCard() {
           ) : null}
           {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Near) ? (
             <ProfileField
-              label="NEAR Wallet Address"
+              label="Near Wallet Address"
               optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Near)}
             >
               <input

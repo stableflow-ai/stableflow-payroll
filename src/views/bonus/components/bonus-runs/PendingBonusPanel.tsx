@@ -13,15 +13,15 @@ export function PendingBonusPanel(props: {
     <div className="flex flex-col gap-5">
       <div className="grid grid-cols-2 gap-8 sm:gap-16">
         <div>
-          <p className="font-montserrat text-sm font-medium capitalize text-[#606060]">
-            Bonuses to be paid
+          <p className="font-montserrat text-sm font-medium text-[#606060]">
+            Bonuses to be Paid
           </p>
           <p className="mt-1.5 font-montserrat text-[20px] font-semibold capitalize text-black">
             {formatAmount(list.totalAmount)}
           </p>
         </div>
         <div>
-          <p className="font-montserrat text-sm font-medium capitalize text-[#606060]">
+          <p className="font-montserrat text-sm font-medium text-[#606060]">
             Members
           </p>
           <p className="mt-1.5 font-montserrat text-[20px] font-semibold capitalize text-black">

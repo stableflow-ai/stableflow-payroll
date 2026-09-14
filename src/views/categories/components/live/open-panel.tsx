@@ -40,7 +40,7 @@ export function OperationOpenPanel(props: {
     <div className="flex flex-col">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:max-w-[760px]">
         <div>
-          <p className="font-montserrat text-sm font-medium text-[#606060]">Open payments</p>
+          <p className="font-montserrat text-sm font-medium text-[#606060]">Open Payments</p>
           <p className="mt-1.5 font-montserrat text-[20px] font-semibold capitalize text-black">
             <span>{total.whole}</span>
             {total.fraction ? (
@@ -49,8 +49,8 @@ export function OperationOpenPanel(props: {
           </p>
         </div>
         <div>
-          <p className="font-montserrat text-sm font-medium capitalize text-[#606060]">
-            Number of payments
+          <p className="font-montserrat text-sm font-medium text-[#606060]">
+            Number of Payments
           </p>
           <p className="mt-1.5 font-montserrat text-[20px] font-semibold capitalize text-black">
             {list.count}

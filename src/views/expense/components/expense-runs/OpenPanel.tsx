@@ -39,7 +39,7 @@ export function OpenPanel(props: {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:max-w-[760px]">
         <div>
           <p className="font-montserrat text-sm font-medium text-[#606060]">
-            Open expense
+            Open Expense
           </p>
           <p className="mt-1.5 font-montserrat text-[20px] font-semibold capitalize text-black">
             <span>{total.whole}</span>
@@ -49,8 +49,8 @@ export function OpenPanel(props: {
           </p>
         </div>
         <div>
-          <p className="font-montserrat text-sm font-medium capitalize text-[#606060]">
-            Number of expenses
+          <p className="font-montserrat text-sm font-medium text-[#606060]">
+            Number of Expenses
           </p>
           <p className="mt-1.5 font-montserrat text-[20px] font-semibold capitalize text-black">
             {list.count}

@@ -21,7 +21,7 @@ function OptionIcon({ icon }: { icon: "cloud" | "google" }) {
   if (icon === "google") {
     return (
       <img
-        src="/payroll/google-docs.png"
+        src="/payroll/google-docs.svg"
         alt=""
         className="size-4 shrink-0 rounded-[4px] object-cover"
       />

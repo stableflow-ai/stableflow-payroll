@@ -142,7 +142,7 @@ export function PaymentsCard(props: {
     <Card className="flex min-h-[540px] flex-col">
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
         <section>
-          <h2 className="font-montserrat text-base font-medium capitalize text-black">
+          <h2 className="font-montserrat text-base font-medium text-black">
             Total Payment
           </h2>
           <p className="mt-2 font-montserrat text-[26px] font-medium text-black">
@@ -150,7 +150,7 @@ export function PaymentsCard(props: {
           </p>
         </section>
         <section>
-          <h2 className="font-montserrat text-base font-medium capitalize text-black">
+          <h2 className="font-montserrat text-base font-medium text-black">
             Number of Payments
           </h2>
           <div className="mt-2 flex flex-wrap items-baseline gap-2">

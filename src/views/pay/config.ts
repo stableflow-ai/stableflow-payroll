@@ -174,7 +174,7 @@ export const PAY_EMPLOYEE_ONLY_PATHS = [PAY_REQUEST_PATH, PAY_REQUESTS_PATH] as 
 
 export const PAY_MODE_TABS = [
   { label: "Single Payment", to: PAY_PATH },
-  { label: "Payment by form", to: PAY_FORM_PATH },
+  { label: "Payment by Form", to: PAY_FORM_PATH },
 ] as const;
 
 export const PAY_REQUEST_TABS = [

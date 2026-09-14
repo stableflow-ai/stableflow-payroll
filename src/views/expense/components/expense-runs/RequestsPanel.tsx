@@ -54,7 +54,7 @@ export function RequestsPanel(props: { onPayNow: (form: Payable) => void }) {
       <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:max-w-[760px]">
         <div>
           <p className="font-montserrat text-sm font-medium text-[#606060]">
-            Request to pay
+            Request to Pay
           </p>
           <p className="mt-1.5 font-montserrat text-[20px] font-semibold capitalize text-black">
             <span>{total.whole}</span>
@@ -64,7 +64,7 @@ export function RequestsPanel(props: { onPayNow: (form: Payable) => void }) {
           </p>
         </div>
         <div>
-          <p className="font-montserrat text-sm font-medium capitalize text-[#606060]">
+          <p className="font-montserrat text-sm font-medium text-[#606060]">
             Number of Requests
           </p>
           <p className="mt-1.5 font-montserrat text-[20px] font-semibold capitalize text-black">

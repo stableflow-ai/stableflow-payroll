@@ -90,7 +90,7 @@ export function ExpenseRunsCard(props: {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-end gap-8">
-          <TabLink to={EXPENSE_PATH}>Open expense</TabLink>
+          <TabLink to={EXPENSE_PATH}>Open Expense</TabLink>
           <TabLink to={EXPENSE_REQUESTS_PATH} count={requestCount}>
             Request Payments
           </TabLink>

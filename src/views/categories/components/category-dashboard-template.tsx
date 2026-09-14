@@ -102,7 +102,7 @@ function StatsRow() {
   return (
     <Card className="grid grid-cols-1 gap-8 px-10 py-[22px] sm:grid-cols-2">
       <StatColumn label="Total Payment" value="$0" />
-      <StatColumn label="Number of payments" value="0" />
+      <StatColumn label="Number of Payments" value="0" />
     </Card>
   );
 }

@@ -110,17 +110,8 @@ export function WalletConnectDialog({
               <div className="flex flex-col gap-2 sm:flex-row">
                 <button
                   type="button"
-                  onClick={() => {
-                    wallet.connect();
-                  }}
-                  className="inline-flex h-12 flex-1 items-center justify-center rounded-[24px] border border-black/15 bg-white font-montserrat text-[15px] font-medium text-black transition-colors hover:bg-black/5"
-                >
-                  {wallet.isConnecting ? "Connecting…" : "Switch wallet"}
-                </button>
-                <button
-                  type="button"
                   onClick={() => wallet.disconnect()}
-                  className="inline-flex h-12 flex-1 items-center justify-center rounded-[24px] border border-black/15 bg-white font-montserrat text-[15px] font-medium text-black transition-colors hover:bg-black/5"
+                  className="inline-flex h-12 flex-1 items-center justify-center rounded-[24px] border border-black/15 bg-white font-montserrat text-[15px] font-medium text-black hover:text-danger transition-colors hover:bg-black/5"
                 >
                   Disconnect
                 </button>

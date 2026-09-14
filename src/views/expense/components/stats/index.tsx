@@ -39,7 +39,7 @@ function StatColumn(props: {
   const { label, value, hint, hintValue, hintTone = "muted" } = props;
   return (
     <div className="min-w-0">
-      <p className="font-montserrat text-sm font-medium capitalize text-[#606060]">
+      <p className="font-montserrat text-sm font-medium text-[#606060]">
         {label}
       </p>
       <p className="mt-1.5 font-montserrat text-[20px] font-semibold capitalize text-black">
@@ -85,21 +85,21 @@ export function StatsCard(props: StatsCardProps) {
       ) : (
         <>
           <StatColumn
-            label="Total expense"
+            label="Total Expense"
             value={formatAmount(totalExpense)}
             hint="from last month"
             hintValue={formatChange(totalChangePercent)}
             hintTone={changeTone(totalChangePercent)}
           />
           <StatColumn
-            label="Number of expensed"
+            label="Number of Expensed"
             value={String(expensedCount)}
             hint="from last month"
             hintValue={formatChange(expensedChangePercent)}
             hintTone={changeTone(expensedChangePercent)}
           />
           <StatColumn
-            label="Number of expenses"
+            label="Number of Expenses"
             value={String(expenseCount)}
             hint="from last month"
             hintValue={formatChange(expenseChangePercent)}

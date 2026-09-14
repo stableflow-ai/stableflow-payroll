@@ -129,8 +129,8 @@ export function IntegrationCard() {
         <p className="mt-6 font-montserrat text-sm text-[#909090]">Loading integration…</p>
       ) : (
         <>
-          <p className="mt-8 font-montserrat text-sm font-medium capitalize text-[#606060]">
-            Channel of notification
+          <p className="mt-8 font-montserrat text-sm font-medium text-[#606060]">
+            Channel of Notification
           </p>
           <div className="mt-4 flex flex-wrap gap-4">
             <IntegrationChannelCard
@@ -164,13 +164,13 @@ export function IntegrationCard() {
               onChange={() => undefined}
             />
             <IntegrationChannelCard
-              title="SOLANA Address"
+              title="Solana Address"
               config={draft.solana}
               saving={pendingKeys.has(INTEGRATION_FIELD.Solana)}
               onChange={(next) => void persist(INTEGRATION_FIELD.Solana, next)}
             />
             <IntegrationChannelCard
-              title="NEAR Address"
+              title="Near Address"
               config={draft.near}
               saving={pendingKeys.has(INTEGRATION_FIELD.Near)}
               onChange={(next) => void persist(INTEGRATION_FIELD.Near, next)}

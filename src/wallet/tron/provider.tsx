@@ -1,5 +1,4 @@
 import { WalletProvider as TronAdapterProvider } from "@tronweb3/tronwallet-adapter-react-hooks";
-import { WalletModalProvider } from "@tronweb3/tronwallet-adapter-react-ui";
 import "@tronweb3/tronwallet-adapter-react-ui/style.css";
 import {
   BitKeepAdapter,
@@ -10,6 +9,7 @@ import {
 } from "@tronweb3/tronwallet-adapters";
 import { useMemo, type ReactNode } from "react";
 import { TRON_APP_NAME, TRON_WALLETCONNECT_METADATA } from "./config";
+import { TronWalletModalProvider } from "./select-modal";
 
 export function TronWalletProvider({ children }: { children: ReactNode }) {
   const adapters = useMemo(() => {
@@ -31,12 +31,12 @@ export function TronWalletProvider({ children }: { children: ReactNode }) {
   }, []);
 
   return (
-    <TronAdapterProvider adapters={adapters} autoConnect onError={(error) => {
+    <TronAdapterProvider adapters={adapters} autoConnect disableAutoConnectOnLoad onError={(error) => {
       console.error(`[wallet:tron] ${TRON_APP_NAME}`, error);
     }}>
-      <WalletModalProvider>
+      <TronWalletModalProvider>
         {children}
-      </WalletModalProvider>
+      </TronWalletModalProvider>
     </TronAdapterProvider>
   );
 }

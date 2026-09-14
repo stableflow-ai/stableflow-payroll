@@ -144,7 +144,7 @@ export function TeamMemberFormDialog(props: {
       ) : null}
       {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Near) ? (
         <WalletField
-          label="NEAR Wallet Address"
+          label="Near Wallet Address"
           optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Near)}
           value={near}
           error={nearError}

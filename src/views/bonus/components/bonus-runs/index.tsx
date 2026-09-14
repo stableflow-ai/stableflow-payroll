@@ -99,7 +99,7 @@ export function BonusRunsCard(props: {
     <div>
       <div className="flex flex-wrap items-end justify-between gap-3">
         <div className="flex items-end gap-8">
-          <TabLink to={BONUS_PATH}>Bonuses to be paid</TabLink>
+          <TabLink to={BONUS_PATH}>Bonuses to be Paid</TabLink>
           <TabLink to={BONUS_HISTORY_PATH}>Bonus History</TabLink>
         </div>
         {showPendingToolbar ? (

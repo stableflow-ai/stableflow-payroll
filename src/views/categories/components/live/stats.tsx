@@ -26,7 +26,7 @@ function StatColumn(props: {
   const { label, value, hintValue, hintTone = "muted" } = props;
   return (
     <div className="min-w-0">
-      <p className="font-montserrat text-sm font-medium capitalize text-[#606060]">{label}</p>
+      <p className="font-montserrat text-sm font-medium text-[#606060]">{label}</p>
       <p className="mt-1.5 font-montserrat text-[20px] font-semibold capitalize text-black">
         {value}
       </p>
@@ -81,7 +81,7 @@ export function OperationStatsCard(props: {
             hintTone={changeTone(totalChangePercent)}
           />
           <StatColumn
-            label="Number of payments"
+            label="Number of Payments"
             value={String(payouts)}
             hintValue={formatChange(payoutsChangePercent)}
             hintTone={changeTone(payoutsChangePercent)}
