@@ -12,6 +12,7 @@ import {
   AuthPasswordField,
   authErrorMessage,
   AUTH_FORM_CLASS,
+  useTouchedFields,
 } from "./auth-shared";
 import {
   AUTH_LINK_ACCENT_CLASS,
@@ -19,9 +20,13 @@ import {
   EMAIL_MAX_LENGTH,
   PASSWORD_MAX_LENGTH,
   RESET_PASSWORD_VARIANT,
+  emailRuleError,
   loginFormError,
+  passwordRuleError,
 } from "./config";
 import { postAuthPath, registerPathWithReturnTo, returnToFromSearch } from "./return-to";
+
+const LOGIN_FIELDS = ["email", "password"] as const;
 
 export function LoginView() {
   const navigate = useNavigate();
@@ -29,6 +34,7 @@ export function LoginView() {
   const returnTo = returnToFromSearch(params.toString());
   const toast = useToast();
   const loginMutation = useLoginMutation();
+  const { touched, touch, touchAll } = useTouchedFields();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,11 +42,8 @@ export function LoginView() {
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
-    const ruleError = loginFormError(email, password);
-    if (ruleError) {
-      toast.fail({ title: ruleError });
-      return;
-    }
+    touchAll(LOGIN_FIELDS);
+    if (loginFormError(email, password)) return;
     try {
       const session = await loginMutation.mutateAsync({ email: email.trim(), password });
       navigate(postAuthPath(session.user, returnTo), { replace: true });
@@ -53,7 +56,7 @@ export function LoginView() {
 
   return (
     <AuthShell panelTop={<AuthBetaBanner />}>
-      <form onSubmit={submit} className={AUTH_FORM_CLASS}>
+      <form onSubmit={(event) => void submit(event)} className={AUTH_FORM_CLASS}>
         <h1 className="text-center font-montserrat text-xl font-semibold text-black">
           Welcome to Pay. Stableflow
         </h1>
@@ -63,7 +66,12 @@ export function LoginView() {
           label="Sign in by Email"
           type="email"
           value={email}
-          onChange={setEmail}
+          onChange={(value) => {
+            touch("email");
+            setEmail(value);
+          }}
+          onBlur={() => touch("email")}
+          error={touched.email ? emailRuleError(email) : null}
           placeholder="you@company.com"
           autoFocus
           autoComplete="email"
@@ -73,7 +81,12 @@ export function LoginView() {
           id="password"
           label="Password"
           value={password}
-          onChange={setPassword}
+          onChange={(value) => {
+            touch("password");
+            setPassword(value);
+          }}
+          onBlur={() => touch("password")}
+          error={touched.password ? passwordRuleError(password) : null}
           placeholder="At least 8 characters"
           autoComplete="current-password"
           maxLength={PASSWORD_MAX_LENGTH}

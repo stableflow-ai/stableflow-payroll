@@ -25,6 +25,7 @@ import {
   AuthPasswordField,
   authErrorMessage,
   AUTH_FORM_CLASS,
+  useTouchedFields,
 } from "./auth-shared";
 import {
   AUTH_COMPACT_INPUT_CLASS,
@@ -35,8 +36,27 @@ import {
   EMAIL_MAX_LENGTH,
   INVITE_STEP,
   PASSWORD_MAX_LENGTH,
+  confirmPasswordRuleError,
+  emailRuleError,
   inviteSignUpFormError,
+  nameRuleError,
+  passwordRuleError,
 } from "./config";
+
+const SIGN_UP_FIELDS = ["email", "password", "confirmPassword"] as const;
+
+function requiredValueError(value: string, label: string, required: boolean): string | null {
+  if (required && !value.trim()) return `${label} is required`;
+  return null;
+}
+
+function positionRuleError(position: string): string | null {
+  const trimmed = position.trim();
+  if (trimmed.length > CONTACT_NAME_MAX_LENGTH) {
+    return `Position must be at most ${CONTACT_NAME_MAX_LENGTH} characters`;
+  }
+  return null;
+}
 
 export function InviteRegisterView() {
   const { orgId } = useParams();
@@ -44,6 +64,8 @@ export function InviteRegisterView() {
   const toast = useToast();
   const previewQuery = useInvitePreviewQuery(orgId);
   const registerMutation = useInviteRegisterMutation();
+  const signUpTouched = useTouchedFields();
+  const profileTouched = useTouchedFields();
   const [step, setStep] = useState<(typeof INVITE_STEP)[keyof typeof INVITE_STEP]>(INVITE_STEP.SignUp);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -60,17 +82,25 @@ export function InviteRegisterView() {
   const preview = previewQuery.data;
   const settings = preview ? integrationSettingsFromOrganization(preview) : defaultIntegrationSettings();
 
+  const profileFieldKeys = [
+    "name",
+    "position",
+    ...(isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Evm) ? ["evm"] : []),
+    ...(isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Solana) ? ["solana"] : []),
+    ...(isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Near) ? ["near"] : []),
+    ...(isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Tron) ? ["tron"] : []),
+    ...(isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Telegram) ? ["telegram"] : []),
+    ...(isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Slack) ? ["slack"] : []),
+  ];
+
   const submitSignUp = (event: FormEvent) => {
     event.preventDefault();
     if (!orgId) {
       toast.fail({ title: "Invite link is missing an organization" });
       return;
     }
-    const ruleError = inviteSignUpFormError(email, password, confirmPassword);
-    if (ruleError) {
-      toast.fail({ title: ruleError });
-      return;
-    }
+    signUpTouched.touchAll(SIGN_UP_FIELDS);
+    if (inviteSignUpFormError(email, password, confirmPassword)) return;
     setStep(INVITE_STEP.Profile);
   };
 
@@ -80,16 +110,13 @@ export function InviteRegisterView() {
       toast.fail({ title: "Invite link is missing an organization" });
       return;
     }
+    profileTouched.touchAll(profileFieldKeys);
     const wallets = { evm, solana, near, tron };
     const memberEmail = email.trim();
-    const ruleError = memberProfileError(
+    if (memberProfileError(
       { name, position, email: memberEmail, telegram, slack, wallets },
       settings,
-    );
-    if (ruleError) {
-      toast.fail({ title: ruleError });
-      return;
-    }
+    )) return;
     try {
       await registerMutation.mutateAsync({
         orgId,
@@ -152,6 +179,7 @@ export function InviteRegisterView() {
   }
 
   if (step === INVITE_STEP.Profile) {
+    const shown = profileTouched.touched;
     return (
       <AuthShell>
         <form onSubmit={(event) => void submitProfile(event)} className={AUTH_ONBOARDING_FORM_CLASS}>
@@ -184,7 +212,12 @@ export function InviteRegisterView() {
             id="profile-name"
             label="Name"
             value={name}
-            onChange={setName}
+            onChange={(value) => {
+              profileTouched.touch("name");
+              setName(value);
+            }}
+            onBlur={() => profileTouched.touch("name")}
+            error={shown.name ? nameRuleError(name) : null}
             maxLength={CONTACT_NAME_MAX_LENGTH}
             autoFocus
           />
@@ -193,7 +226,12 @@ export function InviteRegisterView() {
             label="Position"
             optional
             value={position}
-            onChange={setPosition}
+            onChange={(value) => {
+              profileTouched.touch("position");
+              setPosition(value);
+            }}
+            onBlur={() => profileTouched.touch("position")}
+            error={shown.position ? positionRuleError(position) : null}
             maxLength={CONTACT_NAME_MAX_LENGTH}
             placeholder="E.g. PM, Engineer..."
           />
@@ -203,8 +241,20 @@ export function InviteRegisterView() {
               label="EVM Wallet Address"
               optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Evm)}
               value={evm}
-              onChange={setEvm}
-              error={walletFieldError(evm, "evm")}
+              onChange={(value) => {
+                profileTouched.touch("evm");
+                setEvm(value);
+              }}
+              onBlur={() => profileTouched.touch("evm")}
+              error={
+                shown.evm
+                  ? requiredValueError(
+                    evm,
+                    "EVM wallet address",
+                    isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Evm),
+                  ) ?? walletFieldError(evm, "evm")
+                  : null
+              }
             />
           ) : null}
           {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Solana) ? (
@@ -213,8 +263,20 @@ export function InviteRegisterView() {
               label="Solana Wallet Address"
               optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Solana)}
               value={solana}
-              onChange={setSolana}
-              error={walletFieldError(solana, "solana")}
+              onChange={(value) => {
+                profileTouched.touch("solana");
+                setSolana(value);
+              }}
+              onBlur={() => profileTouched.touch("solana")}
+              error={
+                shown.solana
+                  ? requiredValueError(
+                    solana,
+                    "Solana wallet address",
+                    isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Solana),
+                  ) ?? walletFieldError(solana, "solana")
+                  : null
+              }
             />
           ) : null}
           {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Near) ? (
@@ -223,8 +285,20 @@ export function InviteRegisterView() {
               label="NEAR Wallet Address"
               optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Near)}
               value={near}
-              onChange={setNear}
-              error={walletFieldError(near, "near")}
+              onChange={(value) => {
+                profileTouched.touch("near");
+                setNear(value);
+              }}
+              onBlur={() => profileTouched.touch("near")}
+              error={
+                shown.near
+                  ? requiredValueError(
+                    near,
+                    "NEAR wallet address",
+                    isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Near),
+                  ) ?? walletFieldError(near, "near")
+                  : null
+              }
             />
           ) : null}
           {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Tron) ? (
@@ -233,8 +307,20 @@ export function InviteRegisterView() {
               label="Tron Wallet Address"
               optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Tron)}
               value={tron}
-              onChange={setTron}
-              error={walletFieldError(tron, "tron")}
+              onChange={(value) => {
+                profileTouched.touch("tron");
+                setTron(value);
+              }}
+              onBlur={() => profileTouched.touch("tron")}
+              error={
+                shown.tron
+                  ? requiredValueError(
+                    tron,
+                    "Tron wallet address",
+                    isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Tron),
+                  ) ?? walletFieldError(tron, "tron")
+                  : null
+              }
             />
           ) : null}
           {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Telegram) ? (
@@ -243,9 +329,21 @@ export function InviteRegisterView() {
               label="Telegram"
               optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Telegram)}
               value={telegram}
-              onChange={setTelegram}
+              onChange={(value) => {
+                profileTouched.touch("telegram");
+                setTelegram(value);
+              }}
+              onBlur={() => profileTouched.touch("telegram")}
               maxLength={CHANNEL_HANDLE_MAX_LENGTH}
-              error={handleFieldError(telegram, "Telegram")}
+              error={
+                shown.telegram
+                  ? requiredValueError(
+                    telegram,
+                    "Telegram",
+                    isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Telegram),
+                  ) ?? handleFieldError(telegram, "Telegram")
+                  : null
+              }
             />
           ) : null}
           {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Slack) ? (
@@ -254,9 +352,21 @@ export function InviteRegisterView() {
               label="Slack"
               optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Slack)}
               value={slack}
-              onChange={setSlack}
+              onChange={(value) => {
+                profileTouched.touch("slack");
+                setSlack(value);
+              }}
+              onBlur={() => profileTouched.touch("slack")}
               maxLength={CHANNEL_HANDLE_MAX_LENGTH}
-              error={handleFieldError(slack, "Slack")}
+              error={
+                shown.slack
+                  ? requiredValueError(
+                    slack,
+                    "Slack",
+                    isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Slack),
+                  ) ?? handleFieldError(slack, "Slack")
+                  : null
+              }
             />
           ) : null}
 
@@ -300,7 +410,12 @@ export function InviteRegisterView() {
           label="Email"
           type="email"
           value={email}
-          onChange={setEmail}
+          onChange={(value) => {
+            signUpTouched.touch("email");
+            setEmail(value);
+          }}
+          onBlur={() => signUpTouched.touch("email")}
+          error={signUpTouched.touched.email ? emailRuleError(email) : null}
           placeholder="you@company.com"
           autoFocus
           autoComplete="email"
@@ -310,7 +425,12 @@ export function InviteRegisterView() {
           id="password"
           label="Password"
           value={password}
-          onChange={setPassword}
+          onChange={(value) => {
+            signUpTouched.touch("password");
+            setPassword(value);
+          }}
+          onBlur={() => signUpTouched.touch("password")}
+          error={signUpTouched.touched.password ? passwordRuleError(password) : null}
           placeholder="At least 8 characters"
           autoComplete="new-password"
           maxLength={PASSWORD_MAX_LENGTH}
@@ -319,7 +439,16 @@ export function InviteRegisterView() {
           id="confirm-password"
           label="Confirm New Password"
           value={confirmPassword}
-          onChange={setConfirmPassword}
+          onChange={(value) => {
+            signUpTouched.touch("confirmPassword");
+            setConfirmPassword(value);
+          }}
+          onBlur={() => signUpTouched.touch("confirmPassword")}
+          error={
+            signUpTouched.touched.confirmPassword
+              ? confirmPasswordRuleError(password, confirmPassword)
+              : null
+          }
           placeholder="Keep the same with the new password"
           autoComplete="new-password"
           maxLength={PASSWORD_MAX_LENGTH}
@@ -351,13 +480,14 @@ function InviteField(props: {
   label: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
   optional?: boolean;
   placeholder?: string;
   maxLength?: number;
   autoFocus?: boolean;
   error?: string | null;
 }) {
-  const { id, label, value, onChange, optional, placeholder, maxLength, autoFocus, error } = props;
+  const { id, label, value, onChange, onBlur, optional, placeholder, maxLength, autoFocus, error } = props;
   return (
     <div className="mt-6">
       <label htmlFor={id} className={AUTH_ONBOARDING_LABEL_CLASS}>
@@ -371,10 +501,18 @@ function InviteField(props: {
         className={cn(AUTH_COMPACT_INPUT_CLASS, "mt-2", error && "border-[#ff5656] text-[#ff5656]")}
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onBlur={onBlur}
         placeholder={placeholder}
         maxLength={maxLength}
         autoFocus={autoFocus}
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? `${id}-error` : undefined}
       />
+      {error ? (
+        <p id={`${id}-error`} className="mt-1.5 font-montserrat text-xs font-medium text-danger">
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

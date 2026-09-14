@@ -26,12 +26,47 @@ export function AuthBetaBanner() {
   );
 }
 
+export function useTouchedFields() {
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  function touch(key: string) {
+    setTouched((prev) => (prev[key] ? prev : { ...prev, [key]: true }));
+  }
+
+  function touchAll(keys: readonly string[]) {
+    setTouched((prev) => {
+      let changed = false;
+      const next = { ...prev };
+      for (const key of keys) {
+        if (!next[key]) {
+          next[key] = true;
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }
+
+  return { touched, touch, touchAll };
+}
+
+function AuthFieldError({ id, error }: { id: string; error?: string | null }) {
+  if (!error) return null;
+  return (
+    <p id={`${id}-error`} className="mt-1.5 font-montserrat text-xs font-medium text-danger">
+      {error}
+    </p>
+  );
+}
+
 export function AuthField({
   id,
   label,
   type = "text",
   value,
   onChange,
+  onBlur,
+  error,
   placeholder,
   autoFocus,
   readOnly = false,
@@ -48,6 +83,8 @@ export function AuthField({
   type?: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
+  error?: string | null;
   placeholder?: string;
   autoFocus?: boolean;
   readOnly?: boolean;
@@ -71,17 +108,21 @@ export function AuthField({
           type={type}
           value={value}
           onChange={(event) => onChange(event.target.value)}
+          onBlur={onBlur}
           placeholder={placeholder}
           autoFocus={autoFocus}
           readOnly={readOnly}
           maxLength={maxLength}
           autoComplete={autoComplete ?? (type === "password" ? "current-password" : "on")}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={error ? `${id}-error` : undefined}
           className={cn(AUTH_INPUT_CLASS, trailing && "pr-12", inputClassName)}
         />
         {trailing ? (
           <div className="absolute inset-y-0 right-3 flex items-center">{trailing}</div>
         ) : null}
       </div>
+      <AuthFieldError id={id} error={error} />
     </div>
   );
 }
@@ -91,6 +132,8 @@ export function AuthPasswordField({
   label,
   value,
   onChange,
+  onBlur,
+  error,
   placeholder,
   autoComplete,
   maxLength,
@@ -102,6 +145,8 @@ export function AuthPasswordField({
   label: string;
   value: string;
   onChange: (value: string) => void;
+  onBlur?: () => void;
+  error?: string | null;
   placeholder?: string;
   autoComplete?: string;
   maxLength?: number;
@@ -118,6 +163,8 @@ export function AuthPasswordField({
       type={visible ? "text" : "password"}
       value={value}
       onChange={onChange}
+      onBlur={onBlur}
+      error={error}
       placeholder={placeholder}
       autoComplete={autoComplete}
       maxLength={maxLength}

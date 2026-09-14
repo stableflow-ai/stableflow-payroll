@@ -40,7 +40,7 @@ Auth screens share `AuthShell`: a blue brand panel (logo, headline, three featur
 
 `/register` is admin-only. Invite code stays required. Members with role `user` join through `/invite/:orgId`, not `/register`.
 
-Validation lives in `src/views/auth/config.ts` as pure `*RuleError` / `*FormError` functions (name ≤ 50, email ≤ 100 and pattern-checked, password 8–50, invite code ≤ 10, confirm must match, organization name ≤ 50, optional logo URL ≤ 500). The first failing rule is shown as an error toast; the request is not sent.
+Validation lives in `src/views/auth/config.ts` as pure `*RuleError` / `*FormError` functions (name ≤ 50, email ≤ 100 and pattern-checked, password 8–50, invite code ≤ 10, confirm must match, organization name ≤ 50, optional logo URL ≤ 500). Login, register (both steps), and invite (sign-up and profile) keep the submit button disabled while the form is invalid. After a field is blurred or the visitor has typed in it, that field’s rule renders under the input as `text-danger`. Untouched empty required fields stay quiet. Client-side failures no longer toast; API errors still do. Reset password still toasts the first failing rule.
 
 **Register organization.** `/register` is two local steps and one API call. Step 1 collects the account. Step 2 collects the organization, with a Back control that returns to step 1 without clearing either form. Continue on step 2 calls `POST /v1/payroll/auth/register` with `organization`. The session is not written until that call succeeds, so `RedirectIfAuthed` does not kick the visitor out mid-flow. If the request fails, the page returns to step 1 and keeps the organization fields. A successful register always includes an organization; there is no `/register/organization` route.
 

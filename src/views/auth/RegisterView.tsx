@@ -12,6 +12,7 @@ import {
   authErrorMessage,
   AUTH_COMPACT_INPUT_CLASS,
   AUTH_FORM_CLASS,
+  useTouchedFields,
 } from "./auth-shared";
 import {
   AUTH_LINK_ACCENT_CLASS,
@@ -26,10 +27,20 @@ import {
   PASSWORD_MAX_LENGTH,
   PASSWORD_MIN_LENGTH,
   REGISTER_STEP,
+  confirmPasswordRuleError,
   createOrganizationFormError,
+  emailRuleError,
+  inviteCodeRuleError,
+  logoUrlRuleError,
+  nameRuleError,
+  organizationNameRuleError,
+  passwordRuleError,
   registerFormError,
 } from "./config";
 import { loginPathWithReturnTo, postAuthPath, returnToFromSearch } from "./return-to";
+
+const SIGN_UP_FIELDS = ["name", "email", "password", "confirmPassword", "inviteCode"] as const;
+const ORGANIZATION_FIELDS = ["organizationName", "logoUrl"] as const;
 
 export function RegisterView() {
   const navigate = useNavigate();
@@ -37,6 +48,8 @@ export function RegisterView() {
   const returnTo = returnToFromSearch(params.toString());
   const toast = useToast();
   const registerMutation = useRegisterMutation();
+  const signUpTouched = useTouchedFields();
+  const organizationTouched = useTouchedFields();
 
   const [step, setStep] = useState<(typeof REGISTER_STEP)[keyof typeof REGISTER_STEP]>(
     REGISTER_STEP.SignUp,
@@ -51,21 +64,15 @@ export function RegisterView() {
 
   const submitSignUp = (event: FormEvent) => {
     event.preventDefault();
-    const ruleError = registerFormError(name, email, password, confirmPassword, inviteCode);
-    if (ruleError) {
-      toast.fail({ title: ruleError });
-      return;
-    }
+    signUpTouched.touchAll(SIGN_UP_FIELDS);
+    if (registerFormError(name, email, password, confirmPassword, inviteCode)) return;
     setStep(REGISTER_STEP.Organization);
   };
 
   const submitOrganization = async (event: FormEvent) => {
     event.preventDefault();
-    const ruleError = createOrganizationFormError(organizationName, logoUrl);
-    if (ruleError) {
-      toast.fail({ title: ruleError });
-      return;
-    }
+    organizationTouched.touchAll(ORGANIZATION_FIELDS);
+    if (createOrganizationFormError(organizationName, logoUrl)) return;
     const logo = logoUrl.trim();
     try {
       const session = await registerMutation.mutateAsync({
@@ -111,7 +118,16 @@ export function RegisterView() {
             id="organization-name"
             label="Organization Name"
             value={organizationName}
-            onChange={setOrganizationName}
+            onChange={(value) => {
+              organizationTouched.touch("organizationName");
+              setOrganizationName(value);
+            }}
+            onBlur={() => organizationTouched.touch("organizationName")}
+            error={
+              organizationTouched.touched.organizationName
+                ? organizationNameRuleError(organizationName)
+                : null
+            }
             autoFocus
             autoComplete="organization"
             maxLength={ORGANIZATION_NAME_MAX_LENGTH}
@@ -122,7 +138,12 @@ export function RegisterView() {
             id="logo-url"
             label="Logo URL"
             value={logoUrl}
-            onChange={setLogoUrl}
+            onChange={(value) => {
+              organizationTouched.touch("logoUrl");
+              setLogoUrl(value);
+            }}
+            onBlur={() => organizationTouched.touch("logoUrl")}
+            error={organizationTouched.touched.logoUrl ? logoUrlRuleError(logoUrl) : null}
             autoComplete="off"
             maxLength={LOGO_URL_MAX_LENGTH}
             labelClassName={AUTH_ONBOARDING_LABEL_CLASS}
@@ -159,7 +180,12 @@ export function RegisterView() {
           id="name"
           label="Your name"
           value={name}
-          onChange={setName}
+          onChange={(value) => {
+            signUpTouched.touch("name");
+            setName(value);
+          }}
+          onBlur={() => signUpTouched.touch("name")}
+          error={signUpTouched.touched.name ? nameRuleError(name) : null}
           placeholder="Name"
           autoFocus
           autoComplete="name"
@@ -170,7 +196,12 @@ export function RegisterView() {
           label="Email"
           type="email"
           value={email}
-          onChange={setEmail}
+          onChange={(value) => {
+            signUpTouched.touch("email");
+            setEmail(value);
+          }}
+          onBlur={() => signUpTouched.touch("email")}
+          error={signUpTouched.touched.email ? emailRuleError(email) : null}
           placeholder="you@company.com"
           autoComplete="email"
           maxLength={EMAIL_MAX_LENGTH}
@@ -179,7 +210,12 @@ export function RegisterView() {
           id="password"
           label="Password"
           value={password}
-          onChange={setPassword}
+          onChange={(value) => {
+            signUpTouched.touch("password");
+            setPassword(value);
+          }}
+          onBlur={() => signUpTouched.touch("password")}
+          error={signUpTouched.touched.password ? passwordRuleError(password) : null}
           placeholder={`${PASSWORD_MIN_LENGTH}–${PASSWORD_MAX_LENGTH} characters`}
           autoComplete="new-password"
           maxLength={PASSWORD_MAX_LENGTH}
@@ -188,7 +224,16 @@ export function RegisterView() {
           id="confirm-password"
           label="Confirm Password"
           value={confirmPassword}
-          onChange={setConfirmPassword}
+          onChange={(value) => {
+            signUpTouched.touch("confirmPassword");
+            setConfirmPassword(value);
+          }}
+          onBlur={() => signUpTouched.touch("confirmPassword")}
+          error={
+            signUpTouched.touched.confirmPassword
+              ? confirmPasswordRuleError(password, confirmPassword)
+              : null
+          }
           placeholder="Keep the same with the password"
           autoComplete="new-password"
           maxLength={PASSWORD_MAX_LENGTH}
@@ -197,7 +242,12 @@ export function RegisterView() {
           id="invite-code"
           label="Invite code"
           value={inviteCode}
-          onChange={setInviteCode}
+          onChange={(value) => {
+            signUpTouched.touch("inviteCode");
+            setInviteCode(value);
+          }}
+          onBlur={() => signUpTouched.touch("inviteCode")}
+          error={signUpTouched.touched.inviteCode ? inviteCodeRuleError(inviteCode) : null}
           placeholder="Invite code"
           autoComplete="off"
           maxLength={INVITE_CODE_MAX_LENGTH}
