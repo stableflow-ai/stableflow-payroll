@@ -7,13 +7,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { NOIR_DOWNLOAD_URL } from "./config";
 import {
   zcashWalletAdapter,
   zecConnectedAddress,
   zecShieldedAddress,
   zecTransparentAddress,
 } from "./sdk";
+import { isNoirWalletUnavailable, openNoirInstallPage } from "./utils";
 
 export interface ZecWalletContextValue {
   account: string | null;
@@ -56,12 +56,16 @@ export function ZecWalletProvider({ children }: { children: ReactNode }) {
       try {
         const installed = await zcashWalletAdapter.detect();
         if (!installed) {
-          window.open(NOIR_DOWNLOAD_URL, "_blank");
+          openNoirInstallPage();
           return;
         }
         await zcashWalletAdapter.connect();
         syncAccount();
       } catch (error: unknown) {
+        if (isNoirWalletUnavailable(error)) {
+          openNoirInstallPage();
+          return;
+        }
         console.error("[wallet:zec]", error);
       } finally {
         setConnecting(false);
