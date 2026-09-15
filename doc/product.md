@@ -92,14 +92,14 @@ Reusable Pay Now overlays. Mount them from the page; do not wrap them in another
 
 Import: `@/views/pay/components/single-payout/SinglePayoutDialog`.
 
-Props: `open`, `onClose`, `recipient: { name: string; wallets; email?: string | null } | null`.
+Props: `open`, `onClose`, `recipient: { id: number; name: string; wallets; email?: string | null } | null`.
 
 Renders `SinglePayoutCard` whenever `recipient` is set (wallets may all be empty). The address field is editable. Current caller: `/team`. Initial address prefers evm → near → solana → tron. Changing the recipient token fills that chain's wallet, or leaves the address empty so the payer can paste one. `email` prefills Notify Recipient.
 
 ```tsx
 <SinglePayoutDialog
   open={Boolean(paying)}
-  recipient={paying ? { name: paying.name, wallets: paying.wallets, email: paying.email } : null}
+  recipient={paying ? { id: paying.id, name: paying.name, wallets: paying.wallets, email: paying.email } : null}
   onClose={() => setPaying(null)}
 />
 ```
@@ -133,7 +133,7 @@ Title **Payment**. For **admin**, a centred `PaymentModeTabs` control switches S
 
 The form lives in `SinglePayoutCard` so `SinglePayoutDialog` can mount the same card with a prefilled recipient. The address book (`RecipientsDialog`) depends on role: **admin** lists Team members with a wallet (`useTeamMembersInfiniteQuery`, scroll to load more, display wallet evm → near → solana → tron) and is select-only (no Add / Edit / Delete; Team is managed on `/team`). Pasting any of a member's wallets still matches the name chip. **Employee** keeps a personal book: create, edit, and delete through `useContacts` → `/v1/payroll/recipients`. A pasted Zcash `t1` / `t3` or Unified `u1` address (detected before Solana) can receive **ZEC**; Send still posts `/payments` and opens the hosted `pay_url`. Sapling `zs1` addresses are rejected.
 
-**Notify Recipient** sits above Send Payment: a Switch plus label, off by default. Turning it on shows an editable email, prefilled from the matched Team member or contact (Team Pay Now also passes `TeamMember.email`). Changing the recipient address refills the email. Send posts to `/v1/payroll/payments` (`useCreatePayrollPaymentMutation`) with the amount, the recipient, the destination `network` / `symbol` from `payoutNetworkToken`, the optional purpose (`memo` on the API), `success_url` = `{origin}/pay/result`, and when the switch is on a valid email, `notification: { email }`. Empty `slack` is omitted. An empty or invalid email while the switch is on blocks the request. The backend creates a hosted checkout session and answers with `pay_url`; the browser is sent there with `window.location.assign`. Payment itself happens on the hosted checkout, so this screen never touches a wallet.
+**Notify Recipient** sits above Send Payment: a Switch plus label, off by default. Turning it on shows an editable email, prefilled from the matched Team member or contact (Team Pay Now also passes `TeamMember.email`). Changing the recipient address refills the email. Send posts to `/v1/payroll/payments` (`useCreatePayrollPaymentMutation`) with the amount, the recipient, the destination `network` / `symbol` from `payoutNetworkToken`, the optional purpose (`memo` on the API), `success_url` = `{origin}/pay/result`, and when the switch is on a valid email, `notification: { email }`. Empty `slack` is omitted. An empty or invalid email while the switch is on blocks the request. **Admin** also sends `team_member_id` when the recipient matches a Team member (address book, a pasted member wallet, or Team Pay Now). Employees omit that field. The backend creates a hosted checkout session and answers with `pay_url`; the browser is sent there with `window.location.assign`. Payment itself happens on the hosted checkout, so this screen never touches a wallet.
 
 ### `/pay/form` — Payment by form
 
@@ -201,7 +201,7 @@ Add Member (white dashed border + plus) and Invite (black + link icon) share `Te
 
 **Invite** shows `{origin}/invite/{org_id}` (string `org_id`, URL-encoded) with Copy. It does not add a row. Invite is unavailable until that string id is loaded.
 
-Row menu: Edit, Pay Now, Remove. Remove asks for confirmation. **Pay Now** always opens `SinglePayoutDialog` with the member's name and wallets. The address field is editable. The first filled wallet is prefilled (evm → near → solana → tron); changing the recipient token switches to that chain's wallet, or leaves the field empty so the payer can type or paste one.
+Row menu: Edit, Pay Now, Remove. Remove asks for confirmation. **Pay Now** always opens `SinglePayoutDialog` with the member's `id`, name, and wallets. The address field is editable. The first filled wallet is prefilled (evm → near → solana → tron); changing the recipient token switches to that chain's wallet, or leaves the field empty so the payer can type or paste one.
 
 ### `/setting` — Settings
 
