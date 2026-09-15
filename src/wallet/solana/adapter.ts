@@ -22,7 +22,6 @@ export function useSolanaWallet(): UseWalletResult {
     signTransaction,
   } = useSolanaAdapter();
   const { setVisible, visible } = useSolanaWalletModal();
-
   const address = publicKey?.toBase58() || null;
 
   useEffect(() => {
