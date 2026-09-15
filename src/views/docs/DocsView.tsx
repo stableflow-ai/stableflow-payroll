@@ -6,16 +6,13 @@ import { BUTTON_SIZE, BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Drawer } from "@/components/ui/drawer/Drawer";
 import { DRAWER_SIDE } from "@/components/ui/drawer/config";
 import { useMediaQuery } from "@/hooks/use-media-query";
-import { cn } from "@/lib/utils";
 import { DocsArticle } from "./components/DocsArticle";
 import { DocsTableOfContents } from "./components/DocsTableOfContents";
 import {
   DOCS_BACK_TO_TOP_SCROLL_PX,
   DOCS_COPY,
-  DOCS_LOCALE,
   DOCS_TOC_RAIL_QUERY,
   DOCS_WIDE_DRAWER_QUERY,
-  type DocsLocale,
   type DocsTocId,
 } from "./config";
 import { useDocsToc } from "./useDocsToc";
@@ -57,52 +54,20 @@ function BackToTopButton(props: { label: string; visible: boolean }) {
   );
 }
 
-function LanguageSwitch(props: {
-  locale: DocsLocale;
-  onChange: (locale: DocsLocale) => void;
-  copy: (typeof DOCS_COPY)[DocsLocale];
-}) {
-  const { locale, onChange, copy } = props;
-  return (
-    <div className="flex items-center gap-1" role="group" aria-label={copy.language}>
-      {([DOCS_LOCALE.En, DOCS_LOCALE.Zh] as const).map((value) => {
-        const current = locale === value;
-        return (
-          <button
-            key={value}
-            type="button"
-            onClick={() => onChange(value)}
-            className={cn(
-              "rounded-[6px] px-2.5 py-1 font-montserrat text-[13px] transition-colors",
-              current
-                ? "bg-[#ebebeb] font-medium text-black"
-                : "border border-[#e3e3e3] font-normal text-[#606060] hover:text-black",
-            )}
-          >
-            {value === DOCS_LOCALE.En ? copy.en : copy.zh}
-          </button>
-        );
-      })}
-    </div>
-  );
-}
-
 export function DocsView() {
   const navigate = useNavigate();
-  const [locale, setLocale] = useState<DocsLocale>(DOCS_LOCALE.En);
   const [menuOpen, setMenuOpen] = useState(false);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const rail = useMediaQuery(DOCS_TOC_RAIL_QUERY);
   const wideDrawer = useMediaQuery(DOCS_WIDE_DRAWER_QUERY);
-  const { activeId, navigateTo } = useDocsToc(locale);
-  const copy = DOCS_COPY[locale];
+  const { activeId, navigateTo } = useDocsToc();
 
   useEffect(() => {
-    document.title = copy.documentTitle;
+    document.title = DOCS_COPY.documentTitle;
     return () => {
       document.title = "Stableflow Pay";
     };
-  }, [copy.documentTitle]);
+  }, []);
 
   useEffect(() => {
     const onScroll = () => {
@@ -127,12 +92,7 @@ export function DocsView() {
     setMenuOpen(false);
   }
 
-  const toc = (
-    <div className="flex min-h-0 flex-1 flex-col gap-4">
-      <LanguageSwitch locale={locale} onChange={setLocale} copy={copy} />
-      <DocsTableOfContents locale={locale} activeId={activeId} onNavigate={handleNavigate} />
-    </div>
-  );
+  const toc = <DocsTableOfContents activeId={activeId} onNavigate={handleNavigate} />;
 
   return (
     <div className="min-h-svh bg-[#f6f6f6] text-black">
@@ -141,7 +101,7 @@ export function DocsView() {
           <aside className="hidden w-[276px] shrink-0 lg:block">
             <div className="sticky top-6 flex max-h-[calc(100svh-3rem)] flex-col overflow-y-auto pr-1">
               <div className="mb-4">
-                <BackButton label={copy.back} onClick={goBack} />
+                <BackButton label={DOCS_COPY.back} onClick={goBack} />
               </div>
               {toc}
             </div>
@@ -149,7 +109,7 @@ export function DocsView() {
 
           <div className="min-w-0 flex-1">
             <div className="mb-5 flex items-center justify-between gap-3 lg:hidden">
-              <BackButton label={copy.back} onClick={goBack} />
+              <BackButton label={DOCS_COPY.back} onClick={goBack} />
               <Button
                 type="button"
                 variant={BUTTON_VARIANT.Normal}
@@ -158,10 +118,10 @@ export function DocsView() {
                 onClick={() => setMenuOpen(true)}
               >
                 <IconMenu className="size-3.5" />
-                {copy.contents}
+                {DOCS_COPY.contents}
               </Button>
             </div>
-            <DocsArticle locale={locale} onNavigate={handleNavigate} />
+            <DocsArticle onNavigate={handleNavigate} />
           </div>
         </div>
       </div>
@@ -171,14 +131,14 @@ export function DocsView() {
           open={menuOpen}
           onClose={() => setMenuOpen(false)}
           side={wideDrawer ? DRAWER_SIDE.Left : DRAWER_SIDE.Bottom}
-          title={copy.contents}
+          title={DOCS_COPY.contents}
           cardClassName="max-h-[90vh] overflow-y-auto"
         >
           {toc}
         </Drawer>
       )}
 
-      <BackToTopButton label={copy.backToTop} visible={showBackToTop} />
+      <BackToTopButton label={DOCS_COPY.backToTop} visible={showBackToTop} />
     </div>
   );
 }

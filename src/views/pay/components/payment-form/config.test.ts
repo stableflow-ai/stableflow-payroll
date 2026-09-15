@@ -8,7 +8,7 @@ import {
 describe("batchSplitBannerText", () => {
   it("uses two for a pair of payments", () => {
     expect(batchSplitBannerText(2)).toBe(
-      "A batch payment can support up to 50 transactions, and this payment will be divided into two payments",
+      "A batch payment supports up to 100 transactions from EVM, 10 from Solana, and 60 from Tron or NEAR per batch, and this payment will be divided into two payments",
     );
   });
 
