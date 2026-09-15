@@ -6,6 +6,7 @@ import { GoogleBindView } from "@/views/auth/GoogleBindView";
 import { GoogleRegisterView } from "@/views/auth/GoogleRegisterView";
 import { GoogleInviteRegisterView } from "@/views/auth/GoogleInviteRegisterView";
 import { HowItWorksView } from "@/views/how-it-works/HowItWorksView";
+import { DocsView } from "@/views/docs/DocsView";
 import { PayrollView } from "@/views/payroll";
 import { ExpenseView } from "@/views/expense";
 import { BonusView } from "@/views/bonus";
@@ -76,6 +77,10 @@ export const router = createBrowserRouter([
   {
     path: "/howitworks",
     element: <HowItWorksView />,
+  },
+  {
+    path: "/docs",
+    element: <DocsView />,
   },
   {
     element: <AppLayout />,

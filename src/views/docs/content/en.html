@@ -1,0 +1,1013 @@
+<header class="doc-head" id="top">
+      <p class="doc-eyebrow">Stableflow Payroll</p>
+      <h1 class="doc-title">User Guide</h1>
+    </header>
+
+<p>Stableflow Payroll is a lightweight financial management platform for
+organizations and teams. Its core payment capabilities are
+<strong>single payments</strong> and <strong>batch payments</strong>,
+used to centralize funds, payouts, and member collaboration. The
+platform has two sides: organizers manage and pay out payroll,
+reimbursements, and bonuses, while members submit reimbursements and
+track their income.</p>
+<hr />
+<h2 id="1-platform-overview"><span class="sec-num">1</span> <span class="sec-title">Platform overview</span></h2>
+<p>Stableflow Payroll lets a business send stablecoins from <strong>one
+paying wallet</strong> to addresses on EVM, Near, Solana, Tron, and
+Zcash. Paying with <strong>native Zcash</strong> requires <strong>Noir
+Wallet</strong>.</p>
+<p>You stay self-custodial: single payments jump to hosted checkout,
+while payment by form is signed in the app.</p>
+<figure>
+<img src="/docs/admin-overview.png" alt="Admin Overview">
+<figcaption aria-hidden="true">Admin Overview</figcaption>
+</figure>
+<h3 id="navigation-at-a-glance">Navigation at a glance</h3>
+<p>After signing in, the left nav takes you to every module:</p>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Page</th>
+<th>Purpose</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Overview</td>
+<td>Overview</td>
+<td>Workspace funds at a glance, trend charts, and recent activity</td>
+</tr>
+<tr>
+<td>Payment</td>
+<td>Payment</td>
+<td>Start a single payment, or a batch payment from a form</td>
+</tr>
+<tr>
+<td>Operations</td>
+<td>Operations</td>
+<td>Operational categories for payment scenarios. Three are shown by
+default: Payroll handles wage records; Expenses covers reimbursement
+items; Bonus manages team bonuses</td>
+</tr>
+<tr>
+<td>Team</td>
+<td>Team</td>
+<td>Members and organization collaboration</td>
+</tr>
+<tr>
+<td>History</td>
+<td>History</td>
+<td>Look up past actions and their status</td>
+</tr>
+<tr>
+<td>Settings</td>
+<td>Settings</td>
+<td>Workspace or personal settings</td>
+</tr>
+</tbody>
+</table>
+<h3 id="roles-at-a-glance">Roles at a glance</h3>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Value</th>
+<th>What they can do</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Admin</strong></td>
+<td><code>admin</code></td>
+<td>Register the organization, manage scenario forms, start payments,
+manage team and organization settings</td>
+</tr>
+<tr>
+<td><strong>Member</strong></td>
+<td><code>user</code></td>
+<td>See their own income, make single payments, submit payment requests,
+maintain their profile</td>
+</tr>
+</tbody>
+</table>
+<hr />
+<h2 id="2-sign-in-and-register"><span class="sec-num">2</span> <span class="sec-title">Sign in and register</span></h2>
+<p>On first use, complete account verification on the register page and
+create an organization — you enter the platform as an
+<strong>organizer</strong>. Members join through the invite link an
+organization sends them. If the organization has Google sign-in enabled,
+either can use a Google account instead.</p>
+<h3 id="21-email-sign-in"><span class="sub-num">2.1</span> <span class="sub-title">Email sign-in</span></h3>
+<figure>
+<img src="/docs/login.png" alt="Sign-in page">
+<figcaption aria-hidden="true">Sign-in page</figcaption>
+</figure>
+<ol type="1">
+<li><strong>Sign in by Email</strong> (max 100 characters, must be a
+valid email).</li>
+<li><strong>Password</strong> (8–50 characters).</li>
+<li><strong>Sign in</strong>.</li>
+</ol>
+<p><strong>Other entry points</strong></p>
+<ul>
+<li><strong>Forgot Password?</strong> — reset dialog (see <a
+href="#25-forgot-password-change-password">2.5</a>).</li>
+<li><strong>Sign in with Google</strong> — see <a
+href="#23-google-sign-in-bindand-register">2.3</a> (needs Google
+sign-in enabled).</li>
+<li><strong>Create an account</strong> — admin register.</li>
+</ul>
+<h3 id="22-register-an-organizationadmin"><span class="sub-num">2.2</span> <span class="sub-title">Register an organization
+(admin)</span></h3>
+<p>This is <strong>admin-only</strong>. An invite code is required.
+There is <strong>no</strong> Google button here; members use the
+organization invite link.</p>
+<figure>
+<img src="/docs/register-step1.png"
+alt="Register step 1: Create account">
+<figcaption aria-hidden="true">Register step 1: Create
+account</figcaption>
+</figure>
+<p><strong>Step 1: Create account</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Your name</td>
+<td>Required, max 50</td>
+</tr>
+<tr>
+<td>Email</td>
+<td>Required, max 100, valid email</td>
+</tr>
+<tr>
+<td>Password</td>
+<td>8–50 characters</td>
+</tr>
+<tr>
+<td>Confirm Password</td>
+<td>Must match</td>
+</tr>
+<tr>
+<td>Invite code</td>
+<td>Required, max 10</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Continue</strong> goes to step 2.</p>
+<p><strong>Sign in</strong> returns to login.</p>
+<p><strong>Step 2: Organization</strong></p>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Rules</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Organization Name</td>
+<td>Required, max 50</td>
+</tr>
+<tr>
+<td>Logo URL</td>
+<td>Optional; if set, http(s) URL, max 500</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li><strong>Back</strong> returns to step 1 without clearing either
+form.</li>
+<li><strong>Create Organization</strong> submits, then you go to
+Overview.</li>
+</ul>
+<h3 id="23-google-sign-in-bindand-register"><span class="sub-num">2.3</span> <span class="sub-title">Google sign-in, bind,
+and register</span></h3>
+<p>When the organization has Google sign-in enabled, <strong>Sign in
+with Google</strong> appears on login and on invite step 1.</p>
+<p>The Google Identity dialog returns the credential used for
+sign-in.</p>
+<p><strong>Already registered Google account</strong> — signs in like
+email login.</p>
+<p><strong>Not registered</strong></p>
+<p><strong>Google account not registered</strong> dialog:</p>
+<ul>
+<li><strong>Register</strong> (left, secondary) — create a new
+account.</li>
+<li><strong>Bind</strong> (right, primary) — attach Google to an
+existing email.</li>
+</ul>
+<p><strong>Bind an existing email</strong></p>
+<ol type="1">
+<li><strong>Email</strong> (may be prefilled from Google).</li>
+<li><strong>Send Code</strong> (60s cooldown).</li>
+<li>Enter the code and submit.</li>
+<li>You are signed in and sent to Overview.</li>
+</ol>
+<p><strong>Admin Google register</strong></p>
+<p>From the login unregistered dialog, <strong>Register</strong>. One
+page:</p>
+<ul>
+<li>Name (prefilled from Google)</li>
+<li>Invite code</li>
+<li>Organization name</li>
+<li>Logo URL (optional)</li>
+</ul>
+<p>This creates the admin account and organization.</p>
+<p><strong>Member Google register</strong></p>
+<p>From the invite unregistered dialog, <strong>Register</strong>. Name
+is prefilled; fill position plus Integration-required wallets /
+notification fields, then join as a member.</p>
+<p>The email register flow has no Google button; admins who want Google
+should use Sign in with Google → Register from login.</p>
+<h3 id="24-join-by-invite-member"><span class="sub-num">2.4</span> <span class="sub-title">Join by invite (member)</span></h3>
+<p>The invite link is copied by an admin from Team or Settings →
+Organization → <strong>Invite</strong>.</p>
+<p>If you already have an account, sign in to your organization first,
+then open the invite link.</p>
+<p><strong>Step 1: Sign up</strong></p>
+<p>Email, Password, Confirm New Password, then <strong>Sign up</strong>.
+<strong>Sign in with Google</strong> is also available.</p>
+<p><strong>Step 2: Profile Setting</strong></p>
+<p>Shows organization name, logo, and the step-1 email.
+<strong>Back</strong> keeps both forms.</p>
+<p>Always:</p>
+<ul>
+<li><strong>Name</strong> (required, max 50)</li>
+<li><strong>Position</strong> (optional, max 50)</li>
+</ul>
+<p>Other fields follow organization <strong>Integration</strong>:</p>
+<ul>
+<li>Wallets: EVM (required), SOLANA, NEAR, Tron — only if that channel
+is on. Required channels must be filled and must match that chain.</li>
+<li>Notifications: Email / Telegram / Slack — only if on. When Email is
+on, the step-1 account email is reused; it is not asked again.</li>
+</ul>
+<p><strong>Continue</strong> finishes the registration and opens
+Overview.</p>
+<h3 id="25-forgot-password-change-password"><span class="sub-num">2.5</span> <span class="sub-title">Forgot password /
+change password</span></h3>
+<figure>
+<img src="/docs/reset-password.png" alt="Guest reset password">
+<figcaption aria-hidden="true">Guest reset password</figcaption>
+</figure>
+<p><strong>Guest (Forgot Password? on login)</strong></p>
+<ol type="1">
+<li>Enter email, send a code (toast <em>Verification code sent</em>, 60s
+cooldown).</li>
+<li>Code, new password, confirm password.</li>
+<li>Submit, then sign in with the new password.</li>
+</ol>
+<p><strong>Signed in (account menu Reset Password, or Settings →
+Profile)</strong></p>
+<p>Current password, new password, confirm password. No email code.</p>
+<p>The account menu also has <strong>Logout</strong>.</p>
+<hr />
+<h2 id="3-workspace-and-navigation"><span class="sec-num">3</span> <span class="sec-title">Workspace and navigation</span></h2>
+<h3 id="31-sidebar"><span class="sub-num">3.1</span> <span class="sub-title">Sidebar</span></h3>
+<p><strong>Admin</strong></p>
+<ul>
+<li>Overview</li>
+<li>Payment</li>
+<li>Operations: Payroll, Expense, Bonus, plus enabled categories
+(Office, Procurement, and so on)</li>
+<li>Team</li>
+<li>History</li>
+<li>Settings</li>
+</ul>
+<p><strong>Member</strong></p>
+<ul>
+<li>Overview</li>
+<li>Payment (single payment only — no Payment by Form tabs)</li>
+<li>Expenses: Request Payment, Requests</li>
+<li>History</li>
+<li>Settings (Profile only)</li>
+</ul>
+<h3 id="32-overview"><span class="sub-num">3.2</span> <span class="sub-title">Overview</span></h3>
+<p>The Overview page is built from <strong>key amounts /
+metrics</strong>, a <strong>time-series line chart</strong>, and a
+<strong>recent activity</strong> panel on the right. It is designed for
+a daily starting check: see how total amounts move day to day, week to
+week, and month to month, scan what is waiting or active, then move into
+Payment, Expenses, or History to handle it.</p>
+<ol type="1">
+<li><strong>Organization summary</strong> — name / logo, owner, team
+count, <strong>Update Settings</strong>.</li>
+<li><strong>Payments</strong> — Total Payment, Number of Payments,
+<strong>View all</strong> to History. Area chart: Daily / Weekly /
+Monthly and Volume / Transaction.</li>
+<li><strong>High Priority</strong> — rows to Payroll, Expense, or
+History (failed payouts).</li>
+</ol>
+<hr />
+<h2 id="4-payments"><span class="sec-num">4</span> <span class="sec-title">Payments</span></h2>
+<p>Payment offers two modes: <strong>Single Payment</strong> and
+<strong>Payment by Form</strong>. The former suits one-off payments with
+information you already have; the latter suits cases where payment
+details are collected or entered through an on-page form. Which one to
+use should follow your organization's process and the fields the page
+actually offers.</p>
+<p>A single payment jumps to hosted checkout; payment by form needs a
+connected wallet and is signed in the app.</p>
+<h3 id="41-connect-a-wallet"><span class="sub-num">4.1</span> <span class="sub-title">Connect a wallet</span></h3>
+<p>Top right of the page:</p>
+<ul>
+<li>Disconnected: <strong>Connect Wallet</strong></li>
+<li>Connected: chain icon + shortened address; click to manage</li>
+</ul>
+<p>Payer chain kinds:</p>
+<ul>
+<li><strong>EVM</strong> (RainbowKit): Ethereum, Base, Arbitrum,
+Optimism, Polygon, BNB Chain, Avalanche, Gnosis, Scroll, X Layer,
+Berachain, and others in the registry</li>
+<li><strong>Near</strong></li>
+<li><strong>Solana</strong></li>
+<li><strong>Tron</strong></li>
+<li><strong>Zcash (Noir Wallet):</strong> display / quote payer is
+shielded Unified (<code>u1</code>); refund is transparent
+(<code>t1</code> / <code>t3</code>)</li>
+</ul>
+<p><strong>Single Payment (<code>/pay</code>) does not use a wallet in
+this app.</strong> Submit opens hosted checkout.</p>
+<p><strong>Payment by Form and Pay Now on Payroll / Expense / Bonus /
+Operations</strong> need a wallet that matches You Pay, and you sign
+here.</p>
+<p>Zcash:</p>
+<ul>
+<li>Native Zcash origin only when the form has <strong>one</strong>
+recipient. With several recipients, Zcash is visible but disabled:
+<em>Zcash does not support batch payments yet</em>.</li>
+<li>Confirming inbound ZEC is not spendable: <em>ZEC is still confirming
+in Noir Wallet. Wait until it is spendable, then retry.</em></li>
+<li>Recipients can be <code>t1</code> / <code>t3</code> or Unified
+<code>u1</code> for <strong>ZEC</strong>. Sapling <code>zs1</code> is
+rejected.</li>
+</ul>
+<h3 id="42-single-payment"><span class="sub-num">4.2</span> <span class="sub-title">Single Payment</span></h3>
+<figure>
+<img src="/docs/admin-payment.png" alt="Admin Single Payment">
+<figcaption aria-hidden="true">Admin Single Payment</figcaption>
+</figure>
+<p>Admins can switch between two modes:</p>
+<ul>
+<li><strong>Single Payment</strong> → <code>/pay</code></li>
+<li><strong>Payment by Form</strong> → <code>/pay/form</code></li>
+</ul>
+<p>Members do not see the tabs.</p>
+<p>A single payment starts by entering a recipient <strong>wallet
+address</strong>, or by picking someone from the <strong>Team address
+book</strong>, then choosing the receiving <strong>token and
+chain</strong>. You can record a <strong>purpose</strong> for the
+payment, visible only to the payer, to look back on later. With
+<strong>notifications</strong> on, the recipient can be told by email or
+Slack.</p>
+<p><strong>Form</strong></p>
+<p>One card:</p>
+<ol type="1">
+<li><strong>Recipient</strong>
+<ul>
+<li>Search or paste an address.</li>
+<li>Address book: <strong>team members with a wallet</strong> (scroll to
+load more), select-only. Wallet order: EVM → Near → Solana → Tron.
+Pasting any of a member’s wallets still matches the name chip.</li>
+<li>Changing to another chain clears the token, then defaults USDT →
+USDC → first available token on that chain.</li>
+</ul></li>
+<li><strong>Amount + receiving token</strong> (max 6 decimal
+places).</li>
+<li><strong>Purpose / memo</strong> (optional, max 200).</li>
+<li><strong>Notify Recipient</strong> — off by default. On shows an
+editable email (prefilled from a matched member). An empty or invalid
+email while the switch is on blocks send.</li>
+</ol>
+<p>Empty CTA: <strong>Starts from adding recipient</strong>. When ready:
+<strong>Send Payment</strong>.</p>
+<p><strong>After send</strong></p>
+<p>Submitting jumps to hosted checkout to complete the payment.</p>
+<p><strong>Pay Now</strong> in a Team row starts a single payment too:
+name and wallets prefilled, address still editable.</p>
+<h3 id="43-payment-by-form"><span class="sub-num">4.3</span> <span class="sub-title">Payment by Form</span></h3>
+<p>Admin only.</p>
+<figure>
+<img src="/docs/admin-payment-form.png"
+alt="Admin Payment by Form">
+<figcaption aria-hidden="true">Admin Payment by Form</figcaption>
+</figure>
+<p>Depending on your business needs, first manage the scenario forms
+under Operations — for example, import and manage a Payroll form. Then
+you can use form payment: pick the matching form and pay the batch.</p>
+<p>The same form is used for the <strong>Pay Now</strong> dialog on
+Payroll / Expense / Bonus / Operations.</p>
+<p><strong>Choose a form</strong></p>
+<p><strong>Form</strong> lists current payables:</p>
+<ul>
+<li>Payroll</li>
+<li>Reimbursement</li>
+<li>Bonus</li>
+<li>Dynamic Operations (Office and others; labels prefer catalog
+names)</li>
+</ul>
+<p>Opening a member’s request link preselects the matching expense
+batch.</p>
+<p>Empty CTA: <strong>Select Category</strong>.</p>
+<p><strong>You Pay</strong></p>
+<p>Pick paying wallet, chain, and token. The quote fills <strong>You
+Pay</strong> and <strong>Est. Cost</strong> with the total.</p>
+<p><strong>Details</strong> next to Total Valued opens a drawer: total,
+recipient count, and Next Pay-date for payroll. Each row: name, email,
+address, payout preference, Amount, Net Pay.</p>
+<ul>
+<li><strong>Payroll only</strong> can <strong>Edit / Save</strong> Net
+Pay (max 6 decimals); save writes changed rows only, and closing the
+drawer or switching forms drops unsaved edits.</li>
+<li>Expense / Bonus / Operations Details are read-only.</li>
+<li>After the first split batch is paid, Details becomes read-only.</li>
+</ul>
+<p><strong>Notify Recipient</strong></p>
+<p>Off by default. On shows <code>{n} Email</code>. Click opens Notify
+Recipients: master switch, name + email + checkbox per person. All start
+selected. Missing email shows <code>-</code>. Turning the card switch
+off, the drawer switch off, or unchecking every row turns Notify
+off.</p>
+<p>CSV import does not supply notify emails; only rows that already have
+an email can be notified.</p>
+<p><strong>Send</strong></p>
+<ul>
+<li><strong>One batch:</strong> <strong>Send Payment</strong>, then sign
+in your wallet.</li>
+<li><strong>Split batches</strong> (about 50 txs per batch): each batch
+shows <strong>Pay Now</strong> (<em>Batch Payment n</em> + source
+amount), signed one batch at a time. The form stays open until every
+batch is paid.</li>
+<li>When your allowance is short: <em>Insufficient approval. Refreshing
+the quote.</em></li>
+</ul>
+<h3 id="44-payment-result"><span class="sub-num">4.4</span> <span class="sub-title">Payment result</span></h3>
+<p>Hosted checkout returns to this page <strong>after
+success</strong>.</p>
+<p>On success: <strong>Payment sent</strong> plus amount. Otherwise
+<strong>Payment in progress</strong>.</p>
+<p>Shows amount, token, network, recipient, time, and source /
+destination tx hashes (explorer links).</p>
+<h3 id="45-after-payment-and-batchlimits"><span class="sub-num">4.5</span> <span class="sub-title">After payment, and batch
+limits</span></h3>
+<p>Once a batch payment is submitted, transaction results are listed one
+by one until every pending item in the form is done. If some
+transactions failed, pay them again from the form manager.</p>
+<blockquote>
+<p>⚠️ <strong>Note:</strong> A single batch payment is limited to
+<strong>50 transactions</strong>. If the form has more than 50 pending
+items, the payment is automatically split into several actions.</p>
+</blockquote>
+<p>Chain, limit, and import-template details are in <a
+href="#93-limits-chains-and-notes">9.3 Limits, chains, and
+notes</a>.</p>
+<hr />
+<h2 id="5-operations"><span class="sec-num">5</span> <span class="sec-title">Operations</span></h2>
+<p>Stableflow Payroll offers three payment scenarios by default —
+<strong>Payroll / Expenses / Bonus</strong> — and can enable more. Extra
+scenarios come from the operations catalog.</p>
+<figure>
+<img src="/docs/admin-categories.png" alt="Categories drawer">
+<figcaption aria-hidden="true">Categories drawer</figcaption>
+</figure>
+<h3 id="51-payroll"><span class="sub-num">5.1</span> <span class="sub-title">Payroll</span></h3>
+<figure>
+<img src="/docs/admin-payroll.png" alt="Admin Payroll">
+<figcaption aria-hidden="true">Admin Payroll</figcaption>
+</figure>
+<p>The Payroll page carries the key parameters, the monthly payroll
+trend chart, recent payouts, payroll management and editing, and payroll
+payment history. On screen: stats, Daily / Weekly / Monthly chart, and
+recent payouts — a row opens History.</p>
+<p><strong>Next Payroll</strong></p>
+<p>Next cycle table; email after address.</p>
+<p>An empty list shows the create options:</p>
+<ul>
+<li><strong>Download Template</strong> — Excel (<code>.xlsx</code>) with
+token / network dropdowns.</li>
+<li><strong>Import CSV</strong> — from a local file or Google Docs, CSV
+or Excel, max 500 rows. Import opens Add Payroll with the rows.</li>
+<li><strong>Add Payroll</strong> — empty Add Payroll drawer.</li>
+</ul>
+<p>For a first payroll edit, you can edit and import from the platform's
+template, or enter the form by hand.</p>
+<p>Pay date: First day of month, Last day of month, Day of month (1–31;
+1 and 31 mean first / last day).</p>
+<p><strong>Save</strong> stays on Next Payroll. <strong>Edit</strong>
+can change rows, add rows, and delete ids.</p>
+<p><strong>Pay Now</strong> opens Payment by Form titled
+<code>{Month} Payroll</code>, carrying the current Net Pay. Before
+payday the button reads <strong>Not payday yet</strong> and does not
+open.</p>
+<p><strong>Payroll History</strong></p>
+<p>Paginated. <strong>Export CSV</strong>.</p>
+<p><strong>View Details</strong> opens a right drawer; the export next
+to it downloads <strong>that run</strong>.</p>
+<p>Status: Failed, Expired, Paid, Pending. Failed / Expired can be
+retried with <strong>Pay Again</strong>.</p>
+<p>To trace payroll operations, cross-check the Payroll records against
+<a href="#7-history">History</a>.</p>
+<h3 id="52-expenses"><span class="sub-num">5.2</span> <span class="sub-title">Expenses</span></h3>
+<p>Expenses handles team reimbursement and expense payment management.
+Organizers batch-import or manually enter expense items in <strong>Open
+Expense</strong>; the items in <strong>Request Payments</strong> come
+from member requests, which the organizer can review — checking the
+amounts and the stated purpose — and then approve for payment.</p>
+<figure>
+<img src="/docs/admin-expense.png" alt="Admin Expense">
+<figcaption aria-hidden="true">Admin Expense</figcaption>
+</figure>
+<p>When there are open requests, the sidebar shows a count badge.</p>
+<p>Same pattern: stats, chart, recent payouts (a row opens History).</p>
+<p><strong>Open Expense</strong></p>
+<p>Grouped by batch. One-member batches show Title / Name / Purpose /
+Description / Address / Email / Payout Preference / Amount. Multi-member
+batches collapse; Purpose / Description / Address / Email show
+<code>-</code> until expanded. http(s) URLs in Description are receipt
+links (confirm, then new tab).</p>
+<p><strong>Pay Now</strong> on the batch header pays the <strong>whole
+batch</strong>.</p>
+<p>An empty list offers Download Template, Import CSV and Add Expense;
+with batches, the toolbar offers the same three.</p>
+<p>Import: max 500 rows, CSV or Excel. <strong>Save</strong> returns to
+Open Expense.</p>
+<p><strong>Request Payments</strong></p>
+<figure>
+<img src="/docs/admin-expense-requests.png"
+alt="Admin Request Payments">
+<figcaption aria-hidden="true">Admin Request Payments</figcaption>
+</figure>
+<p>One person per row. Empty: <em>No payment requests</em>. <strong>Pay
+Now</strong> pays that row’s <strong>entire batch</strong>, not only the
+row.</p>
+<p><strong>Expense History</strong></p>
+<p>Search and date range. <strong>Export CSV</strong> uses the current
+filters. Description / Receipt matches Request Payments.</p>
+<p>Status: Failed, Expired, Paid, Pending. Failed / Expired can use
+<strong>Pay Again</strong>.</p>
+<h3 id="53-bonus"><span class="sub-num">5.3</span> <span class="sub-title">Bonus</span></h3>
+<figure>
+<img src="/docs/admin-bonus.png" alt="Admin Bonus">
+<figcaption aria-hidden="true">Admin Bonus</figcaption>
+</figure>
+<p>Bonus supports batch import and one-by-one entry, to lay out the
+team's bonus forms.</p>
+<blockquote>
+<p>⚠️ A bonus is often paid out in a <strong>project token</strong>.
+When entering a recipient wallet, check that the address can accept that
+token / chain.</p>
+</blockquote>
+<p>Same layout as Expense: stats, chart, recent, open batches,
+history.</p>
+<p>Empty open list: Download Template, Import CSV, <strong>Add
+Bonus</strong>; with data the same three appear. Import max 500 rows,
+Save returns to the open list.</p>
+<p>Grouping matches Open Expense. Bonus column: one member shows
+<code>amount symbol ($volume)</code>; multi-member expands per person
+while the header keeps the batch USD total. Description URLs are
+clickable.</p>
+<p>A batch being paid shows Paying; otherwise it shows <strong>Pay
+Now</strong>.</p>
+<p>History is per person: Name / Purpose / Description / Bonus / Address
+/ Payout Preference / Amount / Status. Failed / Expired can Pay Again.
+Export CSV is available.</p>
+<h3 id="54-more-scenarios-manageoperations"><span class="sub-num">5.4</span> <span class="sub-title">More scenarios (Manage
+Operations)</span></h3>
+<p>More scenarios appear by clicking the <strong>⋯</strong> (more) next
+to the Operations nav item — for example office running costs,
+procurement, outsourcing, or KOL marketing. You can preview that
+module's <strong>form template</strong>, and <strong>enable</strong> it;
+once enabled, the module joins the main menu as a frequently used
+form.</p>
+<p>Categories that may appear in the catalog:</p>
+<ul>
+<li>Office</li>
+<li>Procurement</li>
+<li>Outsourcing</li>
+<li>KOL&amp;MKT</li>
+<li>Grants</li>
+<li>OTC Treasury</li>
+</ul>
+<p>plus any other category in the catalog.</p>
+<p><strong>More Categories</strong></p>
+<p>The <strong>⋯</strong> on Operations opens the categories drawer.</p>
+<p>Each card can preview a template: hover <strong>View
+Template</strong>, click the card to open it, and go back to the grid.
+Templates are sample rows; nothing is paid.</p>
+<ul>
+<li>Not added: card <strong>Switch</strong> or template <strong>Add
+Category</strong> adds it.</li>
+<li>Added: the switch enables or disables the category.</li>
+<li>Only enabled categories appear in the sidebar; disabling removes the
+category from it.</li>
+<li><strong>Add Category</strong> on a template closes the drawer and
+opens that category.</li>
+</ul>
+<p><strong>Category page</strong></p>
+<p>While a category is not enabled, the page shows its description,
+template and <strong>Add Category</strong>. Once enabled it has two
+tabs: <strong>Payments</strong> and <strong>Payout History</strong>.</p>
+<p>Layout matches Expense: stats (Total Payment / Number of payments),
+chart, recent, open batches, history. Copy uses the catalog name (Add
+Payment / Import).</p>
+<p>Empty open list: Download Template, Import CSV, Add Payment. Import
+columns: <code>recipient,email,amount,token,network,memo</code>, max 500
+rows.</p>
+<p>History can filter by date but has no search. Failed / Expired can
+Pay Again. <strong>Pay Now</strong> pays that batch via Payment by
+Form.</p>
+<hr />
+<h2 id="6-team"><span class="sec-num">6</span> <span class="sec-title">Team</span></h2>
+<figure>
+<img src="/docs/admin-team.png" alt="Admin Team">
+<figcaption aria-hidden="true">Admin Team</figcaption>
+</figure>
+<p>Team members can be added by an organizer, or invited through the
+organization. An invited person who activates the platform through the
+invite link is automatically placed under that organization; a new user
+needs to register an account by email to join.</p>
+<p>Search by name, email, position or EVM address, over a paginated
+table (10 per page). Columns: Name, Position, Email, Wallet. Wallet
+prefers EVM, then Near, Solana, Tron.</p>
+<p>Same buttons as Settings → Organization:</p>
+<ul>
+<li><strong>Add Member</strong> — member form.</li>
+<li><strong>Invite</strong> — copy the invite link to send to a
+member.</li>
+</ul>
+<p><strong>Add / Edit</strong></p>
+<p>Fields follow Integration:</p>
+<ul>
+<li>Name always (required, max 50)</li>
+<li>Position optional (max 50)</li>
+<li>Wallet and notification fields only when that channel is on;
+Required must be filled. EVM is required.</li>
+<li>A filled wallet must pass that chain’s address check (including
+Tron).</li>
+<li>Telegram / Slack are saved when filled; editing prefills the saved
+values.</li>
+</ul>
+<p><strong>Row menu</strong></p>
+<ul>
+<li><strong>Edit</strong></li>
+<li><strong>Pay Now</strong> — start a single payment</li>
+<li><strong>Remove</strong> — confirm, then delete</li>
+</ul>
+<hr />
+<h2 id="7-history"><span class="sec-num">7</span> <span class="sec-title">History</span></h2>
+<p>Admins see the whole organization; members see only their own income
+and payouts.</p>
+<p>History is for <strong>looking back at past actions</strong>. It is
+the main place to check a payment's status, confirm something was
+submitted, and reconcile payroll, reimbursement, or bonus records. Look
+here first when:</p>
+<ul>
+<li>a payment's page state is unclear</li>
+<li>you suspect a duplicate submission</li>
+<li>you need to trace the basis for a business decision</li>
+<li>you need to confirm the final outcome of an action</li>
+</ul>
+<figure>
+<img src="/docs/admin-history.png" alt="Admin History">
+<figcaption aria-hidden="true">Admin History</figcaption>
+</figure>
+<p><strong>Top bar</strong></p>
+<ul>
+<li><strong>Search</strong></li>
+<li><strong>Date range</strong> (default last 30 days)</li>
+<li><strong>Export CSV</strong> (current filters)</li>
+</ul>
+<p><strong>Card filters</strong></p>
+<p>Members also have <strong>Type</strong>: All / Income / Payout.</p>
+<p>Then: Source Network, Source Token, Destination Network, Destination
+Token, Status (All / Created / Processing / Completed / Failed /
+Expired).</p>
+<p>Any filter change resets to page 1. There is no amount filter.</p>
+<p><strong>Table</strong></p>
+<p>Amount, Source, arrow, Received, Destination, From, To, Time,
+Status.</p>
+<p>Member rows prepend <strong>Type</strong> (Income / Payout) and sign
+Amount: green <code>+</code> income, red <code>-</code> payout.</p>
+<p>Source / Destination show token logo and <code>SYMBOL · Chain</code>.
+From / To copy the truncated address and open the explorer.</p>
+<p>Status: Completed green; Failed / Expired red; Created / Processing
+black.</p>
+<hr />
+<h2 id="8-settings"><span class="sec-num">8</span> <span class="sec-title">Settings</span></h2>
+<p>Settings is where you configure organization information and which
+member fields are required. Toggling an item in the
+<strong>Integration</strong> section changes what members are asked to
+fill in — for example, which chain wallet addresses they provide, and
+whether each is optional or required.</p>
+<figure>
+<img src="/docs/admin-settings.png" alt="Admin Settings">
+<figcaption aria-hidden="true">Admin Settings</figcaption>
+</figure>
+<p><strong>Profile (everyone)</strong></p>
+<ul>
+<li><strong>Name</strong> editable (max 50)</li>
+<li><strong>Account Email</strong> read-only</li>
+<li><strong>Reset Password</strong> opens the signed-in dialog</li>
+<li>Admin <strong>Save</strong> updates name only</li>
+<li>Members also see:
+<ul>
+<li>Position (optional, max 50)</li>
+<li>EVM Wallet Address (usually required)</li>
+<li>Solana / NEAR / Tron / Slack / Telegram when the org has those
+channels on</li>
+<li>Save posts name and member profile</li>
+</ul></li>
+</ul>
+<p><strong>Organization (admin)</strong></p>
+<ul>
+<li>Organization Name, optional Logo URL (same rules as register)</li>
+<li><strong>Add Member</strong> / <strong>Invite</strong> (same as
+Team)</li>
+<li>Save updates the name and logo; the sidebar follows</li>
+</ul>
+<p><strong>Integration (admin)</strong></p>
+<p>Changes <strong>save immediately</strong>. There is no Integration
+Save button.</p>
+<p><em>Channel of Notification</em></p>
+<ul>
+<li>Email: locked Required</li>
+<li>Slack: switch + Required / Optional. Turning it on starts Slack
+authorization and connects automatically. Telegram is not available
+yet.</li>
+</ul>
+<p><em>Wallet Address</em></p>
+<ul>
+<li>EVM Address: locked Required, no switch</li>
+<li>SOLANA / NEAR / Tron: switch + Required / Optional (dropdown
+disabled when off)</li>
+</ul>
+<p>These settings drive Add Member, invite Profile Setting, and member
+Settings fields.</p>
+<hr />
+<h2 id="9-advanced"><span class="sec-num">9</span> <span class="sec-title">Advanced</span></h2>
+<h3 id="91-roles-and-permissions"><span class="sub-num">9.1</span> <span class="sub-title">Roles and permissions</span></h3>
+<p>There are two roles:</p>
+<table>
+<thead>
+<tr>
+<th>Role</th>
+<th>Value</th>
+<th>How you get it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Admin</strong></td>
+<td><code>admin</code></td>
+<td>Register an organization</td>
+</tr>
+<tr>
+<td><strong>Member</strong></td>
+<td><code>user</code></td>
+<td>Join through the invite link the organization sends</td>
+</tr>
+</tbody>
+</table>
+<p>Admins manage scenario forms, start payments and maintain the team
+and organization settings; members only see their own income, make
+single payments and submit payment requests.</p>
+<p>The sidebar, item by item, is in <a href="#31-sidebar">3.1
+Sidebar</a>.</p>
+<h3 id="92-member-flows"><span class="sub-num">9.2</span> <span class="sub-title">Member flows</span></h3>
+<p>Members join via invite (see <a href="#24-join-by-invite-member">2.4
+Join by invite</a>). After sign-in the sidebar is Overview, Payment,
+Expenses, History, Settings.</p>
+<p><strong>9.2.1 Member Overview</strong></p>
+<p>Greeting <em>Hi! {name}</em>.</p>
+<figure>
+<img src="/docs/member-overview.png" alt="Member Overview">
+<figcaption aria-hidden="true">Member Overview</figcaption>
+</figure>
+<ul>
+<li><strong>Total Income</strong> / <strong>Payment
+Transaction</strong></li>
+<li><strong>Total Payout</strong> / <strong>Payout
+Transaction</strong></li>
+<li><strong>Payment Volume</strong> bar chart: Income green, Payout
+purple; Daily / Weekly / Monthly</li>
+<li><strong>Open Requests</strong> (up to 6): shows the purpose,
+<strong>View All</strong> opens every request</li>
+<li><strong>Recent Payments</strong> (up to 5): Type, Purpose (memo),
+link to History</li>
+</ul>
+<p><strong>9.2.2 Member Single Payment</strong></p>
+<figure>
+<img src="/docs/member-payment.png"
+alt="Member payment (no Payment by Form tabs)">
+<figcaption aria-hidden="true">Member payment (no Payment by Form
+tabs)</figcaption>
+</figure>
+<p>Same single-pay card as admin, except:</p>
+<ul>
+<li>No Payment by Form tabs</li>
+<li>Address book is a <strong>personal</strong> contact list (create /
+edit / delete)</li>
+<li>Still hosted checkout</li>
+</ul>
+<p>Zcash transparent / Unified can receive ZEC; <code>zs1</code>
+cannot.</p>
+<p><strong>9.2.3 Request Payment</strong></p>
+<figure>
+<img src="/docs/member-request-payment.png"
+alt="Member Request Payment">
+<figcaption aria-hidden="true">Member Request Payment</figcaption>
+</figure>
+<p>Sidebar label <strong>Expenses</strong>. In-page tabs:</p>
+<ul>
+<li><strong>Request Payment</strong></li>
+<li><strong>Requests</strong></li>
+</ul>
+<p>Form:</p>
+<ol type="1">
+<li><strong>Request for</strong> (required, max 50) — short name the
+payer sees. Tooltip: <em>Short name the payer sees on the
+request.</em></li>
+<li><strong>Description</strong> (optional, max 200) — invoice detail or
+attachment link.</li>
+<li><strong>Payment setting</strong> — amount (max 6 decimals) +
+receiving token.</li>
+<li><strong>Receiving Address</strong> — prefers a saved default for
+that chain, else the connected wallet. <strong>Save as default</strong>
+is a toggle. No private-receive mode.</li>
+</ol>
+<p><strong>Generate Payment Request</strong> shows:</p>
+<p><code>{origin}/pay/form?batch_id={batch_id}</code></p>
+<p>That link is what the <strong>admin</strong> uses to pay.
+<strong>Copy Link</strong> copies it; the form then resets.</p>
+<p>Generate checks: organization present, token selected, amount
+positive, purpose filled, address matches the token chain.</p>
+<p><strong>9.2.4 My Requests</strong></p>
+<figure>
+<img src="/docs/member-requests.png" alt="Member My Requests">
+<figcaption aria-hidden="true">Member My Requests</figcaption>
+</figure>
+<p>10 per page.</p>
+<table>
+<thead>
+<tr>
+<th>Column</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Request for</td>
+<td>Purpose, copy-link, created time</td>
+</tr>
+<tr>
+<td>Request to pay</td>
+<td><code>amount SYMBOL · Chain</code></td>
+</tr>
+<tr>
+<td>Receive Address</td>
+<td>Your receiving address</td>
+</tr>
+<tr>
+<td>Paid Address</td>
+<td>Address that paid</td>
+</tr>
+<tr>
+<td>Paid Time</td>
+<td>When it was paid</td>
+</tr>
+<tr>
+<td>Status</td>
+<td>Pending / Complete / Failed</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Pending: <code>pending</code> / <code>created</code> /
+<code>processing</code> (blue)</li>
+<li>Complete: <code>completed</code> (green)</li>
+<li>Failed: <code>failed</code> / <code>expired</code> (red)</li>
+</ul>
+<p>When there is a tx hash, Status opens the explorer. Requests cannot
+be withdrawn or disabled.</p>
+<p><strong>9.2.5 Member History / Settings</strong></p>
+<figure>
+<img src="/docs/member-settings.png"
+alt="Member Settings (Profile only)">
+<figcaption aria-hidden="true">Member Settings (Profile
+only)</figcaption>
+</figure>
+<p>See <a href="#7-history">7 History</a> and <a href="#8-settings">8
+Settings</a>. History adds Type and signed amount colors. Settings is
+Profile only.</p>
+<p><strong>9.2.6 What members cannot do</strong></p>
+<ul>
+<li>Cannot use batch payment, Payroll, the expense console, Bonus,
+operations categories or Team</li>
+<li>Cannot enable or disable operations categories, or change
+organization settings</li>
+<li>The Single Payment address book is your own contacts, not the full
+team list</li>
+<li>A request link is only paid once an admin actually pays it</li>
+</ul>
+<h3 id="93-limits-chains-and-notes"><span class="sub-num">9.3</span> <span class="sub-title">Limits, chains, and notes</span></h3>
+<p><strong>Input limits</strong></p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Limit</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Name / position / organization name</td>
+<td>Max 50</td>
+</tr>
+<tr>
+<td>Login email</td>
+<td>Max 100</td>
+</tr>
+<tr>
+<td>Password</td>
+<td>8–50</td>
+</tr>
+<tr>
+<td>Invite code</td>
+<td>Max 10</td>
+</tr>
+<tr>
+<td>Logo URL</td>
+<td>Max 500, http(s)</td>
+</tr>
+<tr>
+<td>Amount decimals</td>
+<td>Max 6</td>
+</tr>
+<tr>
+<td>Memo / Purpose / Description</td>
+<td>Max 200 (request purpose max 50)</td>
+</tr>
+<tr>
+<td>CSV / Excel import</td>
+<td>Max 500 rows</td>
+</tr>
+<tr>
+<td>Code cooldown</td>
+<td>60 seconds</td>
+</tr>
+<tr>
+<td>Single-pay slippage</td>
+<td>Fixed 5%</td>
+</tr>
+</tbody>
+</table>
+<p><strong>How payment actually happens</strong></p>
+<table>
+<thead>
+<tr>
+<th>Flow</th>
+<th>Who</th>
+<th>Wallet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Single Payment</td>
+<td>Admin or member</td>
+<td>Hosted checkout</td>
+</tr>
+<tr>
+<td>Team Pay Now</td>
+<td>Admin</td>
+<td>Same</td>
+</tr>
+<tr>
+<td>Payment by Form / business Pay Now</td>
+<td>Admin only</td>
+<td>Connect and sign in the app</td>
+</tr>
+<tr>
+<td>Member request</td>
+<td>Member creates the link; admin pays</td>
+<td>Member does not pay</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Import template</strong></p>
+<p>Generic / expense / operations header:</p>
+<pre><code>recipient,email,amount,token,network,memo</code></pre>
+<p><code>network</code> accepts aliases (<code>ethereum</code> → eth,
+<code>matic</code> → pol, <code>arbitrum</code> → arb). Token and
+network must be a supported pair.</p>
+<p><strong>Session</strong></p>
+<ul>
+<li>Do not share invite links or invite codes publicly.</li>
+<li>Keys stay in your wallet extension / Noir Wallet.</li>
+</ul>
