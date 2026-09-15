@@ -1,10 +1,14 @@
 /**
  * Broadcast a batch swap transaction on the origin chain.
+ *
+ * Only the EVM branch can return `pending-multisig`: the other chains have no
+ * multisig support here, so they always resolve to an executed transaction hash.
  */
 
 import type { PayBatchSwapTransaction } from "@/types/payout";
 import { isNativeToken, type IntentsToken } from "@/stores/intents-tokens";
 import { broadcastBatchPayCallData } from "./broadcast-quick-pay";
+import { executedBroadcast, type BroadcastResult } from "./types";
 import { broadcastNearActions } from "./near/transfer";
 import { broadcastSerializedSolanaTx } from "./solana/transfer";
 import { broadcastTronCallData, waitForTronSuccess } from "./tron/transfer";
@@ -15,7 +19,7 @@ export async function broadcastBatchPayout(input: {
   transaction: PayBatchSwapTransaction;
   amountIn: bigint;
   payer: string;
-}): Promise<string> {
+}): Promise<BroadcastResult> {
   const kind = input.token.chain.chainKind;
   if (kind === "evm") return broadcastEvm(input);
   if (kind === "tron") return broadcastTron(input);
@@ -30,7 +34,7 @@ async function broadcastEvm(input: {
   transaction: PayBatchSwapTransaction;
   amountIn: bigint;
   payer: string;
-}): Promise<string> {
+}): Promise<BroadcastResult> {
   const tx = input.transaction;
   const chainId = input.token.chain.chainId;
   if (!chainId) throw new Error("Missing EVM chain id");
@@ -57,7 +61,7 @@ async function broadcastTron(input: {
   token: IntentsToken;
   transaction: PayBatchSwapTransaction;
   amountIn: bigint;
-}): Promise<string> {
+}): Promise<BroadcastResult> {
   const tx = input.transaction;
   if (!tx.batch_contract?.trim() || !tx.callData?.trim()) {
     throw new Error("Missing batch transaction");
@@ -74,41 +78,41 @@ async function broadcastTron(input: {
     });
     await waitForTronSuccess(hash);
   }
-  return broadcastTronCallData({
+  return executedBroadcast(await broadcastTronCallData({
     contract: tx.batch_contract,
     callData: tx.callData,
     callValue: native ? input.amountIn : 0n,
-  });
+  }));
 }
 
 async function broadcastNear(input: {
   transaction: PayBatchSwapTransaction;
-}): Promise<string> {
+}): Promise<BroadcastResult> {
   const tx = input.transaction;
   const receiverId = tx.receiverId?.trim();
   if (!receiverId || !tx.actions?.length) {
     throw new Error("Missing batch transaction");
   }
-  return broadcastNearActions({
+  return executedBroadcast(await broadcastNearActions({
     receiverId,
     actions: tx.actions,
-  });
+  }));
 }
 
 async function broadcastSolana(input: {
   transaction: PayBatchSwapTransaction;
-}): Promise<string> {
+}): Promise<BroadcastResult> {
   const serialized = input.transaction.serializedTransaction?.trim();
   if (!serialized) throw new Error("Missing batch transaction");
-  return broadcastSerializedSolanaTx({
+  return executedBroadcast(await broadcastSerializedSolanaTx({
     serializedTransaction: serialized,
-  });
+  }));
 }
 
 async function broadcastZec(input: {
   token: IntentsToken;
   transaction: PayBatchSwapTransaction;
-}): Promise<string> {
+}): Promise<BroadcastResult> {
   const outputs = input.transaction.outputs ?? [];
   if (outputs.length !== 1) {
     throw new Error("Zcash does not support batch payments yet");
@@ -116,9 +120,9 @@ async function broadcastZec(input: {
   const output = outputs[0];
   const amountRaw = output.amountRaw.trim();
   if (!amountRaw) throw new Error("Missing Zcash output amount");
-  return transferNativeZec({
+  return executedBroadcast(await transferNativeZec({
     to: output.address,
     amountIn: BigInt(amountRaw),
     decimals: input.token.decimals,
-  });
+  }));
 }

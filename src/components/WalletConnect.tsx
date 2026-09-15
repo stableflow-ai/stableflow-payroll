@@ -1,7 +1,9 @@
 import { useMemo, useState, type MouseEvent } from "react";
+import { SafeMultisigBadge } from "@/components/safe/SafeMultisigBadge";
 import { useConnectedWallets, useWallet } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
 import type { ChainKind } from "@/wallet/types";
+import { useSafeMode } from "@/wallet/evm/safe";
 import { chainLabel, FIXED_CHAIN_KINDS } from "@/config/chains";
 
 
@@ -20,6 +22,7 @@ export function WalletConnectDialog({
   const [selectedKind, setSelectedKind] = useState<ChainKind>(preferredKind);
   const wallet = useWallet(selectedKind);
   const address = wallet.account?.address || null;
+  const safeApp = useSafeMode().mode === "app";
 
   const kindHint = useMemo(() => {
     if (selectedKind === "near") return "Connect a NEAR wallet such as Hot Wallet or Meteor.";
@@ -97,9 +100,12 @@ export function WalletConnectDialog({
           {address ? (
             <>
               <div className="rounded-[16px] border border-black/10 bg-[#f6f6f6] p-4">
-                <p className="font-montserrat text-[14px] font-medium text-black">
-                  Connected {chainLabel(selectedKind).toUpperCase()} wallet
-                </p>
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-montserrat text-[14px] font-medium text-black">
+                    Connected {chainLabel(selectedKind).toUpperCase()} wallet
+                  </p>
+                  {selectedKind === "evm" ? <SafeMultisigBadge /> : null}
+                </div>
                 <p className="mt-3 break-all font-montserrat text-[14px] text-black">
                   {address}
                 </p>
@@ -107,15 +113,19 @@ export function WalletConnectDialog({
                   This address is used when you pay from {chainLabel(selectedKind)}.
                 </p>
               </div>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <button
-                  type="button"
-                  onClick={() => wallet.disconnect()}
-                  className="inline-flex h-12 flex-1 items-center justify-center rounded-[24px] border border-black/15 bg-white font-montserrat text-[15px] font-medium text-black hover:text-danger transition-colors hover:bg-black/5"
-                >
-                  Disconnect
-                </button>
-              </div>
+              {/* Inside the Safe App the connection is the host iframe, so there is
+                  nothing this page can disconnect from. */}
+              {selectedKind === "evm" && safeApp ? null : (
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <button
+                    type="button"
+                    onClick={() => wallet.disconnect()}
+                    className="inline-flex h-12 flex-1 items-center justify-center rounded-[24px] border border-black/15 bg-white font-montserrat text-[15px] font-medium text-black hover:text-danger transition-colors hover:bg-black/5"
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              )}
             </>
           ) : (
             <>

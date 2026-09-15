@@ -20,8 +20,14 @@ import useToast from "@/hooks/use-toast";
 import { organizationId } from "@/lib/auth-role";
 import { formatAmount, browserTimeZone } from "@/utils";
 import { cn } from "@/lib/utils";
+import { enqueueSafePendingPayout } from "@/stores/safe-pending-payout";
 import { broadcastBatchPayout } from "@/wallet/broadcast-batch-payout";
 import { INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE } from "@/wallet/config";
+import {
+  SAFE_AWAITING_SIGNATURES_TITLE,
+  safeAwaitingSignaturesMessage,
+} from "@/wallet/evm/safe";
+import type { BroadcastResult } from "@/wallet/types";
 import { assertNativeZecSpendable, zecSpendableGateMessage } from "@/wallet/zec/balance";
 import { ZCASH_TRANSPARENT_REFUND_MESSAGE } from "@/wallet/zec/config";
 import type { ChainKind } from "@/wallet";
@@ -48,6 +54,7 @@ import { NotifyRecipientsDrawer } from "./NotifyRecipientsDrawer";
 import { PaymentFormBatchRows } from "./PaymentFormBatchRows";
 import { PaymentFormDetailsDrawer } from "./PaymentFormDetailsDrawer";
 import { PaymentFormSelect } from "./PaymentFormSelect";
+import { SafePendingCard } from "./SafePendingCard";
 import { batchPayoutCommitTitle } from "./config";
 import {
   buildPayablePayRequest,
@@ -298,13 +305,14 @@ export function PaymentByFormCard(props: {
         throw new Error("Missing batch transaction");
       }
       const batchIndex = batches.findIndex((row) => row.quoteBatchId === quoteBatchId) + 1;
+      const title = batchPayoutCommitTitle(detail?.title ?? "", batchIndex, batches.length);
       setPhase("sending");
       setSendingQuoteBatchId(quoteBatchId);
       setNotifyOpen(false);
       markBatchConsumed(quoteBatchId);
-      let txHash: string;
+      let result: BroadcastResult;
       try {
-        txHash = await broadcastBatchPayout({
+        result = await broadcastBatchPayout({
           token: originToken,
           transaction: tx,
           amountIn,
@@ -321,11 +329,36 @@ export function PaymentByFormCard(props: {
         }
         throw error;
       }
+      // A Safe proposal has no transaction hash until the owners execute it, so it
+      // waits in `safe-pending-payout` instead of going straight to the submit
+      // queue. The consumed marker stays either way: this batch's deposit
+      // addresses must never be paid twice.
+      if (result.kind === "pending-multisig") {
+        enqueueSafePendingPayout({
+          safeTxHash: result.safeTxHash,
+          safeAddress: result.safeAddress,
+          chainId: result.chainId,
+          threshold: result.threshold,
+          safeNonce: result.safeNonce,
+          fromBlock: result.fromBlock,
+          deadline: batch.deadline,
+          quoteId: quote.quoteId,
+          quoteBatchId,
+          title,
+          type: detail?.type ?? "",
+          formKey,
+        });
+        toast.info({
+          title: SAFE_AWAITING_SIGNATURES_TITLE,
+          text: safeAwaitingSignaturesMessage(result.threshold),
+        });
+        return quoteBatchId;
+      }
       enqueueBatchPayoutCommit({
         quoteId: quote.quoteId,
         quoteBatchId,
-        txHash,
-        title: batchPayoutCommitTitle(detail?.title ?? "", batchIndex, batches.length),
+        txHash: result.txHash,
+        title,
         type: detail?.type ?? "",
         formKey,
       });
@@ -542,6 +575,8 @@ export function PaymentByFormCard(props: {
           {formPicked ? "Send Payment" : "Select Category"}
         </Button>
       )}
+
+      <SafePendingCard formKey={formKey} />
 
       <PaymentFormDetailsDrawer
         open={detailsOpen}

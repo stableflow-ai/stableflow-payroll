@@ -21,20 +21,25 @@ export interface ChainConfig {
   batchEnabled: boolean;
   /** Block explorer prefix for a transaction hash (ends with `/`). */
   txExplorer: string;
+  /**
+   * EIP-3770 short name, needed to address a Safe in Safe{Wallet} links. Left unset
+   * for chains Safe{Wallet} does not list, which suppresses the link entirely.
+   */
+  safeShortName?: string;
 }
 
 /** Registered chains. Token availability still comes from 1Click /v0/tokens. */
 export const FIXED_CHAINS: ChainConfig[] = [
-  { blockchain: "eth", chainName: "Ethereum", chainKind: "evm", chainId: 1, logo: chainLogoUrl("eth"), payerEnabled: true, batchEnabled: true, txExplorer: "https://etherscan.io/tx/" },
-  { blockchain: "base", chainName: "Base", chainKind: "evm", chainId: 8453, logo: chainLogoUrl("base"), payerEnabled: true, batchEnabled: true, txExplorer: "https://basescan.org/tx/" },
-  { blockchain: "arb", chainName: "Arbitrum", chainKind: "evm", chainId: 42161, logo: chainLogoUrl("arb"), payerEnabled: true, batchEnabled: true, txExplorer: "https://arbiscan.io/tx/" },
-  { blockchain: "op", chainName: "Optimism", chainKind: "evm", chainId: 10, logo: chainLogoUrl("op"), payerEnabled: true, batchEnabled: true, txExplorer: "https://optimistic.etherscan.io/tx/" },
-  { blockchain: "pol", chainName: "Polygon", chainKind: "evm", chainId: 137, logo: chainLogoUrl("pol"), payerEnabled: true, batchEnabled: true, txExplorer: "https://polygonscan.com/tx/" },
-  { blockchain: "bsc", chainName: "BNB Chain", chainKind: "evm", chainId: 56, logo: chainLogoUrl("bsc"), payerEnabled: true, batchEnabled: true, txExplorer: "https://bscscan.com/tx/" },
-  { blockchain: "avax", chainName: "Avalanche", chainKind: "evm", chainId: 43114, logo: chainLogoUrl("avax"), payerEnabled: true, batchEnabled: true, txExplorer: "https://snowscan.xyz/tx/" },
-  { blockchain: "gnosis", chainName: "Gnosis", chainKind: "evm", chainId: 100, logo: chainLogoUrl("gnosis"), payerEnabled: true, batchEnabled: true, txExplorer: "https://gnosisscan.io/tx/" },
+  { blockchain: "eth", chainName: "Ethereum", chainKind: "evm", chainId: 1, logo: chainLogoUrl("eth"), payerEnabled: true, batchEnabled: true, safeShortName: "eth", txExplorer: "https://etherscan.io/tx/" },
+  { blockchain: "base", chainName: "Base", chainKind: "evm", chainId: 8453, logo: chainLogoUrl("base"), payerEnabled: true, batchEnabled: true, safeShortName: "base", txExplorer: "https://basescan.org/tx/" },
+  { blockchain: "arb", chainName: "Arbitrum", chainKind: "evm", chainId: 42161, logo: chainLogoUrl("arb"), payerEnabled: true, batchEnabled: true, safeShortName: "arb1", txExplorer: "https://arbiscan.io/tx/" },
+  { blockchain: "op", chainName: "Optimism", chainKind: "evm", chainId: 10, logo: chainLogoUrl("op"), payerEnabled: true, batchEnabled: true, safeShortName: "oeth", txExplorer: "https://optimistic.etherscan.io/tx/" },
+  { blockchain: "pol", chainName: "Polygon", chainKind: "evm", chainId: 137, logo: chainLogoUrl("pol"), payerEnabled: true, batchEnabled: true, safeShortName: "matic", txExplorer: "https://polygonscan.com/tx/" },
+  { blockchain: "bsc", chainName: "BNB Chain", chainKind: "evm", chainId: 56, logo: chainLogoUrl("bsc"), payerEnabled: true, batchEnabled: true, safeShortName: "bnb", txExplorer: "https://bscscan.com/tx/" },
+  { blockchain: "avax", chainName: "Avalanche", chainKind: "evm", chainId: 43114, logo: chainLogoUrl("avax"), payerEnabled: true, batchEnabled: true, safeShortName: "avax", txExplorer: "https://snowscan.xyz/tx/" },
+  { blockchain: "gnosis", chainName: "Gnosis", chainKind: "evm", chainId: 100, logo: chainLogoUrl("gnosis"), payerEnabled: true, batchEnabled: true, safeShortName: "gno", txExplorer: "https://gnosisscan.io/tx/" },
   // { blockchain: "monad", chainName: "Monad", chainKind: "evm", chainId: 143, logo: chainLogoUrl("monad"), payerEnabled: true, batchEnabled: true, txExplorer: "https://monadvision.com/tx/" },
-  { blockchain: "scroll", chainName: "Scroll", chainKind: "evm", chainId: 534352, logo: chainLogoUrl("scroll"), payerEnabled: true, batchEnabled: true, txExplorer: "https://scrollscan.com/tx/" },
+  { blockchain: "scroll", chainName: "Scroll", chainKind: "evm", chainId: 534352, logo: chainLogoUrl("scroll"), payerEnabled: true, batchEnabled: true, safeShortName: "scr", txExplorer: "https://scrollscan.com/tx/" },
   { blockchain: "xlayer", chainName: "X Layer", chainKind: "evm", chainId: 196, logo: chainLogoUrl("xlayer"), payerEnabled: true, batchEnabled: true, txExplorer: "https://www.okx.com/web3/explorer/xlayer/tx/" },
   // { blockchain: "plasma", chainName: "Plasma", chainKind: "evm", chainId: 9745, logo: chainLogoUrl("plasma"), payerEnabled: true, batchEnabled: true, txExplorer: "https://plasmascan.to/tx/" },
   { blockchain: "bera", chainName: "Berachain", chainKind: "evm", chainId: 80094, logo: chainLogoUrl("bera"), payerEnabled: true, batchEnabled: true, txExplorer: "https://berascan.com/tx/" },
@@ -64,6 +69,11 @@ export function chainKindForNetwork(network: string): ChainKind | null {
 
 const byBlockchain = new Map(FIXED_CHAINS.map((c) => [c.blockchain, c]));
 const byChainName = new Map(FIXED_CHAINS.map((c) => [c.chainName.toLowerCase(), c]));
+const byChainId = new Map(
+  FIXED_CHAINS
+    .filter((c): c is ChainConfig & { chainId: number } => c.chainId != null)
+    .map((c) => [c.chainId, c]),
+);
 
 /** CSV / Sheets aliases → 1Click blockchain codes. */
 const NETWORK_ALIASES: Record<string, string> = {
@@ -92,6 +102,10 @@ export function getChainByBlockchain(blockchain: string): ChainConfig | undefine
   return byBlockchain.get(blockchain);
 }
 
+export function getChainByChainId(chainId: number): ChainConfig | undefined {
+  return byChainId.get(chainId);
+}
+
 export function getChainByNetwork(network: string): ChainConfig | undefined {
   const key = String(network || "").trim().toLowerCase();
   if (!key) return undefined;
@@ -107,6 +121,17 @@ export function chainDisplayName(network: string): string {
 
 export function networkToChainId(network: string): number | null {
   return getChainByNetwork(network)?.chainId ?? null;
+}
+
+/**
+ * Safe{Wallet} queue for one Safe. `null` when the chain has no EIP-3770 short
+ * name, since the address cannot be expressed without one.
+ */
+export function safeQueueUrl(chainId: number, safeAddress: string): string | null {
+  const shortName = getChainByChainId(chainId)?.safeShortName;
+  const address = safeAddress.trim();
+  if (!shortName || !address) return null;
+  return `https://app.safe.global/transactions/queue?safe=${shortName}:${address}`;
 }
 
 export function txExplorerUrl(network: string, txHash: string | null | undefined): string | null {

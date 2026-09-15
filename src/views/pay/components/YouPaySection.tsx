@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
 import { IconLogout } from "@/components/icons/logout";
+import { SafeMultisigBadge } from "@/components/safe/SafeMultisigBadge";
 import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
 import { formatAddress, formatAmount } from "@/utils";
+import { useSafeMode } from "@/wallet/evm/safe";
 import { cn } from "@/lib/utils";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import { useTokenBalance } from "@/hooks/use-token-balances";
@@ -47,6 +49,8 @@ export function YouPaySection(props: {
   const balanceOwners = useConnectedWallets();
   const fetchOneBalance = useTokenBalancesStore((s) => s.fetchOne);
   const originBalance = useTokenBalance(walletAddress, originToken?.assetId);
+  const isEvmOrigin = originToken?.chain.chainKind === "evm";
+  const safeApp = useSafeMode().mode === "app";
 
   useEffect(() => {
     if (!walletAddress || !originToken) return;
@@ -68,7 +72,10 @@ export function YouPaySection(props: {
           {walletAddress ? (
             <>
               <p className="font-montserrat text-xs text-[#606060]">{formatAddress(walletAddress)}</p>
-              {onDisconnectWallet ? (
+              {isEvmOrigin ? <SafeMultisigBadge /> : null}
+              {/* Inside the Safe App the connection is the host iframe, so there is
+                  nothing this page can disconnect from. */}
+              {onDisconnectWallet && !(isEvmOrigin && safeApp) ? (
                 <button
                   type="button"
                   aria-label="Disconnect"
