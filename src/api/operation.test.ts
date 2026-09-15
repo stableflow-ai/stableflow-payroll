@@ -4,6 +4,7 @@ import {
   mapOperationCatalogItem,
   mapOperationCurrentStats,
   operationImportRequestBody,
+  upsertOperationCatalogItem,
 } from "./operation";
 import { OPERATION_STATUS } from "@/types/operation";
 
@@ -41,6 +42,54 @@ describe("mapOperationCatalog", () => {
     ]);
     expect(list.map((item) => item.category)).toEqual(["office", "procurement"]);
     expect(list[1]?.added).toBe(false);
+  });
+});
+
+describe("upsertOperationCatalogItem", () => {
+  const office = {
+    id: 1,
+    category: "office",
+    name: "Office",
+    icon: "office.svg",
+    description: "Rent",
+    added: false,
+    status: "",
+  };
+
+  it("patches added and status on the matching id", () => {
+    expect(
+      upsertOperationCatalogItem([office], {
+        ...office,
+        added: true,
+        status: OPERATION_STATUS.Active,
+      }),
+    ).toEqual([
+      {
+        ...office,
+        added: true,
+        status: OPERATION_STATUS.Active,
+      },
+    ]);
+  });
+
+  it("keeps previous fields when the patch omits them", () => {
+    expect(
+      upsertOperationCatalogItem([office], {
+        id: 1,
+        category: "",
+        name: "",
+        icon: "",
+        description: "",
+        added: true,
+        status: OPERATION_STATUS.Disabled,
+      }),
+    ).toEqual([
+      {
+        ...office,
+        added: true,
+        status: OPERATION_STATUS.Disabled,
+      },
+    ]);
   });
 });
 

@@ -110,20 +110,24 @@ function OperationsGroup(props: { item: PayNavGroupItem; onNavigate?: () => void
             aria-hidden
             className="absolute top-1 bottom-1 left-[14px] w-px bg-black/10"
           />
-          {item.children.map((child) => (
-            <NavLink
-              key={child.to}
-              to={child.to}
-              end
-              onClick={onNavigate}
-              className={navLinkClass(isPayNavLeafActive(child, pathname))}
-            >
-              <span className="pl-6">{child.label}</span>
-              {child.id === PAY_NAV_ID.Expense ? (
-                <CountBadge count={expenseRequestCount} className="ml-auto" />
-              ) : null}
-            </NavLink>
-          ))}
+          {item.children.map((child) => {
+            const ChildIcon = child.icon;
+            return (
+              <NavLink
+                key={child.to}
+                to={child.to}
+                end
+                onClick={onNavigate}
+                className={navLinkClass(isPayNavLeafActive(child, pathname))}
+              >
+                {ChildIcon ? <ChildIcon className="size-3.5 shrink-0" /> : null}
+                <span>{child.label}</span>
+                {child.id === PAY_NAV_ID.Expense ? (
+                  <CountBadge count={expenseRequestCount} className="ml-auto" />
+                ) : null}
+              </NavLink>
+            );
+          })}
         </div>
       ) : null}
       <CategoriesDrawer

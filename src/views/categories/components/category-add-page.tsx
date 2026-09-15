@@ -11,7 +11,8 @@ export function CategoryAddPage(props: { item: CategoryItem }) {
   const { item } = props;
   const { setHeaderExtra } = useOutletContext<PayLayoutOutletContext>();
   const toast = useToast();
-  const { setEnabled, busy } = useToggleOperationCategory();
+  const { setEnabled, isPending } = useToggleOperationCategory();
+  const pending = isPending(item.operationId);
 
   useEffect(() => {
     setHeaderExtra(null);
@@ -34,7 +35,7 @@ export function CategoryAddPage(props: { item: CategoryItem }) {
       <CategoryTemplatePreview
         item={item}
         onAdd={() => {
-          if (busy) return;
+          if (pending) return;
           void setEnabled(item, true).catch((error: unknown) => {
             toast.fail({
               title: error instanceof Error ? error.message : "Could not add category",

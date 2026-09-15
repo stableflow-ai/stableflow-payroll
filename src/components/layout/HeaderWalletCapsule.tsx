@@ -34,7 +34,7 @@ export function HeaderWalletCapsule() {
           variant="primary"
           size="md"
           rounded="rounded-full"
-          className="px-[22px]"
+          className="px-[22px] !text-sm"
           onClick={() => setDialogOpen(true)}
         >
           Connect Wallet

@@ -1,15 +1,25 @@
 import type { ComponentType } from "react";
 import {
+  IconBonus,
+  IconExpense,
+  IconExpenseUser,
+  IconGrants,
   IconHistory,
+  IconKolMkt,
+  IconOffice,
   IconOperations,
+  IconOtcTreasury,
+  IconOutsourcing,
   IconOverview,
   IconPayment,
-  IconExpense,
+  IconPayroll,
+  IconProcurement,
   IconSetting,
   IconTeam,
 } from "@/components/icons";
 import type { IconProps } from "@/components/icons/types";
 import { AUTH_USER_ROLE, type AuthUserRole } from "@/types/auth";
+import { OPERATION_CATEGORY } from "@/types/operation";
 import { BONUS_HISTORY_PATH, BONUS_PATH } from "@/views/bonus/config";
 import {
   categoryHistoryPath,
@@ -83,18 +93,21 @@ export const PAY_NAV_ITEMS: readonly PayNavItem[] = [
         id: PAY_NAV_ID.Payroll,
         label: "Payroll",
         to: PAYROLL_PATH,
+        icon: IconPayroll,
         match: [PAYROLL_PATH, PAYROLL_HISTORY_PATH],
       },
       {
         id: PAY_NAV_ID.Expense,
         label: "Expense",
         to: EXPENSE_PATH,
+        icon: IconExpenseUser,
         match: [EXPENSE_PATH, EXPENSE_REQUESTS_PATH, EXPENSE_HISTORY_PATH],
       },
       {
         id: PAY_NAV_ID.Bonus,
         label: "Bonus",
         to: BONUS_PATH,
+        icon: IconBonus,
         match: [BONUS_PATH, BONUS_HISTORY_PATH],
       },
     ],
@@ -117,16 +130,27 @@ const EMPLOYEE_REQUEST_NAV: PayNavLeaf = {
 
 const EMPLOYEE_HIDDEN_NAV_IDS = new Set<string>([PAY_NAV_ID.Operations, PAY_NAV_ID.Team]);
 
+const OPERATION_CATEGORY_NAV_ICONS: Record<string, ComponentType<IconProps>> = {
+  [OPERATION_CATEGORY.Office]: IconOffice,
+  [OPERATION_CATEGORY.Procurement]: IconProcurement,
+  [OPERATION_CATEGORY.Outsourcing]: IconOutsourcing,
+  [OPERATION_CATEGORY.KolMkt]: IconKolMkt,
+  [OPERATION_CATEGORY.Grants]: IconGrants,
+  [OPERATION_CATEGORY.OtcTreasury]: IconOtcTreasury,
+};
+
 export function extraOperationsNavLeaves(
   catalog: readonly { category: string; name: string }[],
 ): PayNavLeaf[] {
   return catalog.map((item) => {
     const to = categoryPath(item.category);
+    const icon = OPERATION_CATEGORY_NAV_ICONS[item.category];
     return {
       id: item.category,
       label: item.name,
       to,
       match: [to, categoryHistoryPath(item.category)],
+      ...(icon ? { icon } : {}),
     };
   });
 }

@@ -66,6 +66,26 @@ export function mapOperationCatalog(raw: unknown): OperationCatalogItem[] {
   });
 }
 
+export function upsertOperationCatalogItem(
+  list: readonly OperationCatalogItem[] | undefined,
+  next: OperationCatalogItem,
+): OperationCatalogItem[] {
+  const current = list ? [...list] : [];
+  const index = current.findIndex((row) => row.id === next.id);
+  if (index < 0) return next.category ? [...current, next] : current;
+  const previous = current[index];
+  if (!previous) return current;
+  current[index] = {
+    ...previous,
+    ...next,
+    category: next.category.trim() || previous.category,
+    name: next.name.trim() || previous.name,
+    icon: next.icon.trim() || previous.icon,
+    description: next.description.trim() || previous.description,
+  };
+  return current;
+}
+
 export function mapOperationCurrentStats(raw: unknown): OperationCurrentStats {
   const row = asRecord(raw) ?? {};
   return {
@@ -110,7 +130,7 @@ export async function addOrganizationOperation(
       icon: "",
       description: "",
       added: true,
-      status: OPERATION_STATUS.Active,
+      status: enable ? OPERATION_STATUS.Active : OPERATION_STATUS.Disabled,
     }
   );
 }

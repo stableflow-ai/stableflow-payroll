@@ -9,12 +9,13 @@ import {
   getOperationRecentPayouts,
   getOperationTotalPayout,
   importOperations,
+  upsertOperationCatalogItem,
 } from "@/api/operation";
 import { queryKeys } from "@/api/query-keys";
 import { isUser, organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import {
-  OPERATION_STATUS,
+  type OperationCatalogItem,
   type OperationHistoryExportQuery,
   type OperationHistoryQuery,
   type OperationTotalPayoutPeriod,
@@ -191,7 +192,20 @@ export function useAddOrganizationOperationMutation() {
       }
       return addOrganizationOperation(orgId, params.operationId, params.enable);
     },
-    onSuccess: () => invalidateOperations(queryClient),
+    onSuccess: async (item) => {
+      if (orgId == null) return;
+      const catalogKey = queryKeys.operation.catalog(orgId);
+      await queryClient.cancelQueries({ queryKey: catalogKey });
+      queryClient.setQueryData(
+        catalogKey,
+        (current: OperationCatalogItem[] | undefined) =>
+          upsertOperationCatalogItem(current, item),
+      );
+      void queryClient.invalidateQueries({
+        queryKey: queryKeys.operation.all,
+        predicate: (query) => query.queryKey[1] !== "catalog",
+      });
+    },
   });
 }
 

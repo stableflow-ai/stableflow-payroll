@@ -37,7 +37,7 @@ export function CategoriesDrawer(props: {
     [catalogQuery.data],
   );
   const [previewItem, setPreviewItem] = useState<CategoryItem | null>(null);
-  const { setEnabled, busy } = useToggleOperationCategory();
+  const { setEnabled, isPending } = useToggleOperationCategory();
 
   useEffect(() => {
     if (!open) setPreviewItem(null);
@@ -130,7 +130,7 @@ export function CategoriesDrawer(props: {
             <CategoryCard
               key={item.category}
               item={item}
-              busy={busy}
+              loading={isPending(item.operationId)}
               onPreview={() => setPreviewItem(item)}
               onToggle={async (checked) => {
                 try {
@@ -152,11 +152,11 @@ export function CategoriesDrawer(props: {
 
 function CategoryCard(props: {
   item: CategoryItem;
-  busy: boolean;
+  loading: boolean;
   onPreview: () => void;
   onToggle: (checked: boolean) => void | Promise<void>;
 }) {
-  const { item, busy, onPreview, onToggle } = props;
+  const { item, loading, onPreview, onToggle } = props;
   const enabled = isCategoryNavEnabled(item);
 
   return (
@@ -173,7 +173,7 @@ function CategoryCard(props: {
             </p>
             <Switch
               checked={enabled}
-              disabled={busy}
+              loading={loading}
               aria-label={item.title}
               onClick={(event) => {
                 event.stopPropagation();

@@ -10,6 +10,7 @@ Animated toggle built on `motion/react`. Works controlled (`checked` + `onChecke
 - Track colour animates between `#F6F6F6` (off) and `#6284F5` (on) over 200ms
 - Thumb 16px, white, border `#d9d9d9`, springs 13px to the right when checked
 - Disabled: `opacity: 0.3`, `cursor: not-allowed`, no pointer events
+- Loading: `IconLoading` with `animate-spin` replaces the white thumb at the current on/off position. Track colour stays on the current `checked` value. Clicks are ignored. Opacity stays 1.
 
 Constants: `SWITCH_TRACK_OFF_BG`, `SWITCH_TRACK_ON_BG`, `SWITCH_THUMB_TRAVEL_PX` in `./config`.
 
@@ -23,6 +24,7 @@ Extends `HTMLMotionProps<"button">` minus `onChange`, `role`, `aria-checked`, `c
 | `defaultChecked` | `boolean` | `false` | Uncontrolled initial state |
 | `onCheckedChange` | `(checked: boolean) => void` | — | Fired with the next state |
 | `disabled` | `boolean` | — | |
+| `loading` | `boolean` | `false` | Spinner on the thumb; does not change `checked` by itself |
 | `onClick` | `MouseEventHandler` | — | Runs first; call `preventDefault()` to veto the toggle |
 | `className` | `string` | — | Track |
 
