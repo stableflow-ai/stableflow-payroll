@@ -218,7 +218,7 @@ Every quote body sends `payer` and `refundTo`. For non-Zcash origins they are th
 | GET | `/v1/payroll/salaries/history/{execution_id}/export` | yes | `organization_id`, `timezone` | CSV file | `exportPayrollHistoryDetail` | `usePayrollHistoryDetailExportMutation` |
 | GET | `/v1/payroll/salaries/history/export` | yes | `organization_id`, `timezone` | CSV file | `exportPayrollHistory` | `usePayrollHistoryExportMutation` |
 | POST | `/v1/payroll/salaries/import` | yes | body: `organization_id`, `payroll_day_type`, `items` | `PayrollImportResp` | `importPayrollSalaries` | `usePayrollImportMutation` |
-| POST | `/v1/payroll/salaries/update` | yes | body: `organization_id`, `payroll_day_type`, `items`, `delete_ids` | — | `updatePayrollSalaries` | `usePayrollUpdateMutation` |
+| POST | `/v1/payroll/salaries/update` | yes | body: `organization_id`, `payroll_day_type`, `timezone`, `items`, `delete_ids` | — | `updatePayrollSalaries` | `usePayrollUpdateMutation` |
 
 `organization_id` comes from `AuthUser.organization.id`. `timezone` is the browser IANA zone. Queries stay disabled until both the token and organization id are present.
 
@@ -238,7 +238,7 @@ Recent payouts have no `page` in the contract, only `limit` (max 100). `usePayro
 
 `POST /salaries/import` saves a draft next payroll. Set Pay Date is `first_day`, `last_day`, or `day_of_month`. Picking a day in the Day of month dialog sends **1** as `first_day`, **31** as `last_day`, and 2–30 as `day_of_month` plus `payroll_day`. Each item sends `name`, `address`, `amount`, `network`, `symbol`, and optional `email` / `description`. Success returns `{ batch_id, count }` and invalidates the payroll query namespace.
 
-`POST /salaries/update` saves edits to the current next payroll with the same pay-date mapping. Existing rows send their numeric `id`; newly added drawer rows omit `id`. Removed original ids go in `delete_ids`. Items send `name`, `address`, `amount`, `network`, `symbol`, and optional `email` (no `description`). Success invalidates the payroll query namespace.
+`POST /salaries/update` saves edits to the current next payroll with the same pay-date mapping. Existing rows send their numeric `id`; newly added drawer rows omit `id`. Removed original ids go in `delete_ids`. Items send `name`, `address`, `amount`, `network`, `symbol`, and optional `email` (no `description`). The body includes the browser IANA `timezone`. Success invalidates the payroll query namespace.
 
 ### Expenses — `src/api/expense.ts`, `src/types/expense.ts`, `src/hooks/use-expense-api.ts`
 

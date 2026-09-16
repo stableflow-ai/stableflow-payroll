@@ -1,24 +1,27 @@
 import { useEffect, useMemo, useState } from "react";
-import { motion } from "motion/react";
 import { Icon2Right } from "@/components/icons/to-right";
-import { Drawer } from "@/components/ui/drawer/Drawer";
-import { DRAWER_SIDE } from "@/components/ui/drawer/config";
-import { Overlay } from "@/components/ui/overlay/Overlay";
-import {
-  DESKTOP_MEDIA_QUERY,
-  OVERLAY_DIALOG_PANEL_FADE_SECONDS,
-} from "@/components/ui/overlay/config";
+import { Dialog } from "@/components/ui/dialog/Dialog";
 import { useEnsureTokenBalances } from "@/hooks/use-token-balances";
-import { useMediaQuery } from "@/hooks/use-media-query";
-import { FIXED_CHAINS } from "@/config/chains";
+import { FIXED_CHAINS, getChainByBlockchain } from "@/config/chains";
 import type { ChainOwners } from "@/wallet";
 import { isNativeToken, useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
 import { useTokenBalancesStore } from "@/stores/token-balances";
+import { useTokenSelectPrefsStore } from "@/stores/token-select-prefs";
 import type { WalletChainKind } from "@/utils";
 import { ChainPane } from "./chain-pane";
-import { EVM_CHAIN_FILTER, TOKEN_BALANCE_POLL_MS } from "./config";
+import { ALL_CHAIN_FILTER, NETWORK_CHIP_COUNT, TOKEN_BALANCE_POLL_MS } from "./config";
 import { TokenPane } from "./token-pane";
-import { tokenBalanceUsd } from "./utils";
+import {
+  chainHasBalance,
+  isBlockchainDisabled,
+  isChainKindLocked,
+  matchesChainFilter,
+  overflowNetworkCount,
+  sortTokensForSelect,
+  tokenBalanceUsd,
+  tokenMatchesSearch,
+  visibleNetworkChips,
+} from "./utils";
 
 export interface TokenSelectSelection {
   token: IntentsToken;
@@ -47,28 +50,10 @@ function hasAnyOwner(owners: ChainOwners | null | undefined): boolean {
   return Boolean(owners?.evm || owners?.near || owners?.solana || owners?.tron || owners?.zec);
 }
 
-function defaultChainFilter(
-  selected: IntentsToken | undefined,
-  lockChainKind: WalletChainKind | null | undefined,
-  disabledBlockchains: string[] | null | undefined,
-): string {
-  const disabled = new Set((disabledBlockchains ?? []).map((code) => code.toLowerCase()));
-  if (selected && !disabled.has(selected.blockchain.toLowerCase())) {
-    return selected.chain.chainKind === "evm" ? EVM_CHAIN_FILTER : selected.blockchain;
-  }
-  if (lockChainKind && lockChainKind !== "evm") {
-    const chain = FIXED_CHAINS.find((item) => item.chainKind === lockChainKind);
-    if (chain && !disabled.has(chain.blockchain.toLowerCase())) {
-      return chain.blockchain;
-    }
-  }
-  return EVM_CHAIN_FILTER;
-}
-
 export function TokenSelectDialog({
   open,
   onClose,
-  title = "Select token",
+  title = "Select Pay Token",
   selectedAssetId,
   showBalances = false,
   balanceOwners = {},
@@ -79,29 +64,27 @@ export function TokenSelectDialog({
   disabledReason,
   onSelect,
 }: TokenSelectDialogProps) {
-  const isDesktop = useMediaQuery(DESKTOP_MEDIA_QUERY);
   const owners = showBalances ? balanceOwners : {};
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const tokens = useIntentsTokensStore((s) => s.tokens);
   const loading = useIntentsTokensStore((s) => s.loading);
   const getBalance = useTokenBalancesStore((s) => s.getBalance);
   const balanceEntries = useTokenBalancesStore((s) => s.balances);
+  const lastAssetId = useTokenSelectPrefsStore((s) => s.lastAssetId);
+  const lastBlockchain = useTokenSelectPrefsStore((s) => s.lastBlockchain);
+  const setLastToken = useTokenSelectPrefsStore((s) => s.setLastToken);
+  const setLastBlockchain = useTokenSelectPrefsStore((s) => s.setLastBlockchain);
   const [search, setSearch] = useState("");
-  const [chainFilter, setChainFilter] = useState(EVM_CHAIN_FILTER);
-  const [mobileStep, setMobileStep] = useState<"chain" | "token">("chain");
-
-  const selected = useMemo(
-    () => tokens.find((token) => token.assetId === selectedAssetId),
-    [tokens, selectedAssetId],
-  );
+  const [chainFilter, setChainFilter] = useState(ALL_CHAIN_FILTER);
+  const [view, setView] = useState<"token" | "network">("token");
 
   useEffect(() => {
     if (!open) return;
     void ensureFresh();
     setSearch("");
-    setMobileStep("chain");
-    setChainFilter(defaultChainFilter(selected, lockChainKind, disabledBlockchains));
-  }, [open, ensureFresh, selected, lockChainKind, disabledBlockchains]);
+    setView("token");
+    setChainFilter(ALL_CHAIN_FILTER);
+  }, [open, ensureFresh]);
 
   const allowed = useMemo(() => {
     if (!allowedBlockchains || allowedBlockchains.length === 0) return null;
@@ -123,41 +106,56 @@ export function TokenSelectDialog({
     pollMs: TOKEN_BALANCE_POLL_MS,
   });
 
+  const availableChains = useMemo(() => {
+    const codes = new Set(scopedTokens.map((token) => token.blockchain));
+    return FIXED_CHAINS.filter((chain) => codes.has(chain.blockchain));
+  }, [scopedTokens]);
+
+  const chips = useMemo(
+    () => visibleNetworkChips(availableChains, lastBlockchain, NETWORK_CHIP_COUNT),
+    [availableChains, lastBlockchain],
+  );
+
+  const overflowCount = overflowNetworkCount(availableChains.length, chips.length);
+
+  const fundedBlockchains = useMemo(() => {
+    const funded = new Set<string>();
+    if (!showBalances) return funded;
+    for (const chain of availableChains) {
+      if (chainHasBalance(chain.blockchain, scopedTokens, (token) => (
+        getBalance(ownerForToken(owners, token), token.assetId)?.formatted
+      ))) {
+        funded.add(chain.blockchain);
+      }
+    }
+    return funded;
+  }, [availableChains, getBalance, owners, scopedTokens, showBalances, balanceEntries]);
+
   const filteredTokens = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    return scopedTokens.filter((token) => {
-      if (chainFilter === EVM_CHAIN_FILTER) {
-        if (token.chain.chainKind !== "evm") return false;
-      } else if (token.blockchain !== chainFilter) {
-        return false;
-      }
-      if (
-        q
-        && !token.symbol.toLowerCase().includes(q)
-        && !token.providerSymbol.toLowerCase().includes(q)
-        && !token.chain.chainName.toLowerCase().includes(q)
-      ) {
-        return false;
-      }
-      return true;
-    }).slice().sort((a, b) => {
-      const bySymbol = a.symbol.localeCompare(b.symbol) || a.chain.chainName.localeCompare(b.chain.chainName);
-      if (!showBalances) return bySymbol;
-      const aUsd = tokenBalanceUsd(a, getBalance(ownerForToken(owners, a), a.assetId)?.formatted);
-      const bUsd = tokenBalanceUsd(b, getBalance(ownerForToken(owners, b), b.assetId)?.formatted);
-      if (bUsd !== aUsd) return bUsd - aUsd;
-      return bySymbol;
+    const matched = scopedTokens.filter((token) => (
+      matchesChainFilter(token, chainFilter) && tokenMatchesSearch(token, search)
+    ));
+    return sortTokensForSelect(matched, {
+      lastAssetId,
+      showBalances,
+      getBalanceUsd: (token) => tokenBalanceUsd(token, getBalance(ownerForToken(owners, token), token.assetId)?.formatted),
     });
-  }, [scopedTokens, chainFilter, search, showBalances, owners, getBalance, balanceEntries]);
+  }, [scopedTokens, chainFilter, search, lastAssetId, showBalances, owners, getBalance, balanceEntries]);
+
+  const walletKind = chainFilter === ALL_CHAIN_FILTER
+    ? null
+    : getChainByBlockchain(chainFilter)?.chainKind ?? null;
 
   function handleSelectFilter(filter: string) {
     setChainFilter(filter);
-    if (!isDesktop) setMobileStep("token");
+    if (filter !== ALL_CHAIN_FILTER) setLastBlockchain(filter);
+    setView("token");
   }
 
   function handleSelectToken(token: IntentsToken) {
-    const disabled = new Set((disabledBlockchains ?? []).map((code) => code.toLowerCase()));
-    if (disabled.has(token.blockchain.toLowerCase())) return;
+    if (isBlockchainDisabled(token.blockchain, disabledBlockchains)) return;
+    if (isChainKindLocked(token.chain.chainKind, lockChainKind)) return;
+    setLastToken(token.assetId, token.blockchain);
     onSelect({ token });
     onClose();
   }
@@ -173,84 +171,73 @@ export function TokenSelectDialog({
     return entry?.formatted == null && (!entry || entry.status === "loading");
   }
 
-  const chainPane = (
-    <ChainPane
-      chainFilter={chainFilter}
-      onSelectFilter={handleSelectFilter}
-      tokens={scopedTokens}
-      lockChainKind={lockChainKind}
-      disabledBlockchains={disabledBlockchains}
-      disabledReason={disabledReason}
-      hideTitle={!isDesktop}
-    />
-  );
+  function handleBack() {
+    if (view === "network") {
+      setView("token");
+      return;
+    }
+    onClose();
+  }
 
-  const tokenPane = (
-    <TokenPane
-      search={search}
-      onSearchChange={setSearch}
-      tokens={filteredTokens}
-      selectedAssetId={selectedAssetId}
-      loading={loading}
-      showBalances={showBalances}
-      getBalance={tokenBalance}
-      isBalanceLoading={tokenBalanceLoading}
-      showClose={isDesktop}
-      showTitle={isDesktop}
+  return (
+    <Dialog
+      open={open}
       onClose={onClose}
-      onSelectToken={handleSelectToken}
-    />
-  );
-
-  if (!isDesktop) {
-    return (
-      <Drawer
-        open={open}
-        onClose={onClose}
-        side={DRAWER_SIDE.Bottom}
-        title={mobileStep === "chain" ? "Select Chain" : title}
-        headerAction={mobileStep === "token" ? (
+      title={(
+        <span className="flex items-center gap-2">
           <button
             type="button"
             aria-label="Back"
-            onClick={() => setMobileStep("chain")}
+            onClick={handleBack}
             className="cursor-pointer text-black"
           >
             <Icon2Right className="size-3 rotate-180" />
           </button>
-        ) : undefined}
-        cardClassName="max-h-[85vh]"
-      >
-        <div className="min-h-[320px]">
-          {mobileStep === "chain" ? chainPane : tokenPane}
-        </div>
-      </Drawer>
-    );
-  }
-
-  return (
-    <Overlay open={open} onClose={onClose}>
-      <div className="pointer-events-none relative flex size-full items-center justify-center p-4">
-        <motion.div
-          role="dialog"
-          aria-modal="true"
-          className="pointer-events-auto relative flex h-[min(682px,90vh)] w-full max-w-[649px] overflow-hidden rounded-[20px] border border-white bg-[#F6F6F6] shadow-[0_0_20px_0_rgba(0,0,0,0.06)]"
-          onClick={(event) => event.stopPropagation()}
-          initial={{ opacity: 0 }}
-          animate={{
-            opacity: 1,
-            transition: { duration: OVERLAY_DIALOG_PANEL_FADE_SECONDS, delay: 0 },
-          }}
-          exit={{
-            opacity: 0,
-            transition: { duration: OVERLAY_DIALOG_PANEL_FADE_SECONDS, delay: 0 },
-          }}
-        >
-          <div className="w-[275px] shrink-0 overflow-y-auto p-5">{chainPane}</div>
-          <div className="flex min-w-0 flex-1 flex-col bg-white p-5">{tokenPane}</div>
-        </motion.div>
-      </div>
-    </Overlay>
+          {view === "network" ? "Select Network" : title}
+        </span>
+      )}
+      titleClassName="text-base font-medium"
+      cardClassName="w-full md:w-[454px] max-h-[90vh]"
+    >
+      {view === "network" ? (
+        <ChainPane
+          chainFilter={chainFilter}
+          onSelectFilter={handleSelectFilter}
+          tokens={scopedTokens}
+          lockChainKind={lockChainKind}
+          disabledBlockchains={disabledBlockchains}
+          disabledReason={disabledReason}
+          fundedBlockchains={fundedBlockchains}
+        />
+      ) : (
+        <TokenPane
+          search={search}
+          onSearchChange={setSearch}
+          tokens={filteredTokens}
+          selectedAssetId={selectedAssetId}
+          recentlyUsedAssetId={lastAssetId}
+          loading={loading}
+          showBalances={showBalances}
+          getBalance={tokenBalance}
+          isBalanceLoading={tokenBalanceLoading}
+          onSelectToken={handleSelectToken}
+          isTokenDisabled={(token) => (
+            isBlockchainDisabled(token.blockchain, disabledBlockchains)
+            || isChainKindLocked(token.chain.chainKind, lockChainKind)
+          )}
+          chainFilter={chainFilter}
+          walletKind={walletKind}
+          chips={chips}
+          overflowCount={overflowCount}
+          fundedBlockchains={fundedBlockchains}
+          lockChainKind={lockChainKind}
+          disabledBlockchains={disabledBlockchains}
+          disabledReason={disabledReason}
+          onSelectFilter={handleSelectFilter}
+          onOpenNetworks={() => setView("network")}
+        />
+      )}
+    </Dialog>
   );
 }
 

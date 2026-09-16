@@ -15,7 +15,8 @@ import {
 import { MOCK_ENABLED } from "@/mocks/config";
 import { getPayrollOverviewMock } from "@/mocks/payroll";
 import { useAuthStore } from "@/stores/auth";
-import type { PayrollTotalPayoutPeriod } from "@/types/payroll";
+import type { PayrollTotalPayoutPeriod, PayrollUpdateParam } from "@/types/payroll";
+import { browserTimeZone } from "@/utils";
 import { stampDownloadFilename } from "@/views/pay/utils";
 import { EXECUTION_POLL_INTERVAL_MS } from "@/views/pay/execution-poll/config";
 import { pollIntervalIfPending } from "@/views/pay/execution-poll/utils";
@@ -202,7 +203,8 @@ export function usePayrollImportMutation() {
 export function usePayrollUpdateMutation() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: updatePayrollSalaries,
+    mutationFn: (params: Omit<PayrollUpdateParam, "timezone">) =>
+      updatePayrollSalaries({ ...params, timezone: browserTimeZone() }),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.payroll.all });
     },

@@ -126,7 +126,7 @@ export function YouPaySection(props: {
       <TokenSelectDialog
         open={originDialogOpen}
         onClose={() => setOriginDialogOpen(false)}
-        title="You pay with"
+        title="Select Pay Token"
         selectedAssetId={originToken?.assetId}
         showBalances
         balanceOwners={balanceOwners}
