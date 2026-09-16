@@ -20,13 +20,10 @@ import useToast from "@/hooks/use-toast";
 import { organizationId } from "@/lib/auth-role";
 import { formatAmount, browserTimeZone } from "@/utils";
 import { cn } from "@/lib/utils";
-import { enqueueSafePendingPayout } from "@/stores/safe-pending-payout";
+import { showSafeProposalToast } from "@/components/safe/safe-proposal-toast";
 import { broadcastBatchPayout } from "@/wallet/broadcast-batch-payout";
 import { INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE } from "@/wallet/config";
-import {
-  SAFE_AWAITING_SIGNATURES_TITLE,
-  safeAwaitingSignaturesMessage,
-} from "@/wallet/evm/safe";
+import { assertSafeOriginChain } from "@/wallet/evm/safe";
 import type { BroadcastResult } from "@/wallet/types";
 import { assertNativeZecSpendable, zecSpendableGateMessage } from "@/wallet/zec/balance";
 import { ZCASH_TRANSPARENT_REFUND_MESSAGE } from "@/wallet/zec/config";
@@ -54,7 +51,6 @@ import { NotifyRecipientsDrawer } from "./NotifyRecipientsDrawer";
 import { PaymentFormBatchRows } from "./PaymentFormBatchRows";
 import { PaymentFormDetailsDrawer } from "./PaymentFormDetailsDrawer";
 import { PaymentFormSelect } from "./PaymentFormSelect";
-import { SafePendingCard } from "./SafePendingCard";
 import { batchPayoutCommitTitle } from "./config";
 import {
   buildPayablePayRequest,
@@ -277,6 +273,9 @@ export function PaymentByFormCard(props: {
         if (!isSplit && !paymentStarted) void refetchQuote();
         throw new BalanceGateError(SPENT_BATCH_MESSAGE);
       }
+      if (originToken.chain.chainId != null) {
+        await assertSafeOriginChain(originToken.chain.chainId);
+      }
       const payer = wallet.account.address;
       const amountIn = BigInt(batch.totalSourceAmountRaw || "0");
       if (import.meta.env.VITE_VIRIFY_BALANCE !== "false") {
@@ -329,30 +328,17 @@ export function PaymentByFormCard(props: {
         }
         throw error;
       }
-      // A Safe proposal has no transaction hash until the owners execute it, so it
-      // waits in `safe-pending-payout` instead of going straight to the submit
-      // queue. The consumed marker stays either way: this batch's deposit
-      // addresses must never be paid twice.
+      // A Safe proposal has no transaction hash until the owners execute it, so
+      // the payer stays on this page with a persistent toast. The consumed marker
+      // stays either way: this batch's deposit addresses must never be paid twice.
       if (result.kind === "pending-multisig") {
-        enqueueSafePendingPayout({
-          safeTxHash: result.safeTxHash,
-          safeAddress: result.safeAddress,
+        showSafeProposalToast(toast, {
           chainId: result.chainId,
-          threshold: result.threshold,
-          safeNonce: result.safeNonce,
-          fromBlock: result.fromBlock,
-          deadline: batch.deadline,
-          quoteId: quote.quoteId,
-          quoteBatchId,
-          title,
-          type: detail?.type ?? "",
-          formKey,
+          safeAddress: result.safeAddress,
         });
-        toast.info({
-          title: SAFE_AWAITING_SIGNATURES_TITLE,
-          text: safeAwaitingSignaturesMessage(result.threshold),
-        });
-        return quoteBatchId;
+        setPhase("idle");
+        setSendingQuoteBatchId(null);
+        return;
       }
       enqueueBatchPayoutCommit({
         quoteId: quote.quoteId,
@@ -365,6 +351,7 @@ export function PaymentByFormCard(props: {
       return quoteBatchId;
     },
     onSuccess: (quoteBatchId) => {
+      if (!quoteBatchId) return;
       const next = new Set(paidQuoteBatchIdsRef.current);
       next.add(quoteBatchId);
       setPaidQuoteBatchIds(next);
@@ -575,8 +562,6 @@ export function PaymentByFormCard(props: {
           {formPicked ? "Send Payment" : "Select Category"}
         </Button>
       )}
-
-      <SafePendingCard formKey={formKey} />
 
       <PaymentFormDetailsDrawer
         open={detailsOpen}

@@ -70,6 +70,7 @@ src/
     date-range-picker/         shared range picker
     token-select-dialog/       shared chain + token picker
     recipient-avatar/, you-pay/, WalletConnect.tsx
+    safe/                      SafeMultisigBadge, showSafeProposalToast
   api/                         one module per domain, thin wrappers over http()
   hooks/                       use-*-api.ts (TanStack Query) plus wallet/UI hooks
   types/                       request and response types per domain
@@ -80,6 +81,9 @@ src/
   config/                      chains.ts (chain registry, explorers, payer/batch flags)
   mocks/                       mock switchboard; see doc/mocks.md
   wallet/                      per-chain adapters, providers, transfer + broadcast
+    evm/safe/                  Safe proposal helpers (no execution poller):
+                               abi.ts, bundle.ts, config.ts, detect.ts, info.ts,
+                               send.ts, types.ts, use-safe-info.ts, use-safe-mode.ts
 ```
 
 ## Where new code goes

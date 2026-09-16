@@ -32,8 +32,10 @@ import {
   rabbyWallet,
   phantomWallet,
   ledgerWallet,
+  safeWallet,
 } from "@rainbow-me/rainbowkit/wallets";
 import { metadata } from "../metadata";
+import { guardSwitchChain } from "./guard-switch-chain";
 
 const chains = [
   mainnet,
@@ -51,7 +53,7 @@ const chains = [
   berachain,
 ] as const;
 
-const connectors: any = connectorsForWallets(
+const connectors = connectorsForWallets(
   [
     {
       groupName: "Recommended",
@@ -65,6 +67,7 @@ const connectors: any = connectorsForWallets(
         phantomWallet,
         ledgerWallet,
         walletConnectWallet,
+        safeWallet,
       ],
     },
   ],
@@ -74,8 +77,8 @@ const connectors: any = connectorsForWallets(
     appUrl: metadata.url,
     appIcon: metadata.icons[0],
     projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "",
-  }
-);
+  },
+).map(guardSwitchChain);
 
 export const wagmiConfig = createConfig({
   connectors,

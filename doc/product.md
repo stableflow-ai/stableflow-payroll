@@ -78,6 +78,8 @@ Files: `src/views/pay/`. Constants: `src/views/pay/config.ts`. Sidebar: `PaySide
 
 Shared building blocks: `TokenSelectDialog` (chain + token picker, optional balances), `PayoutsTable` (Recipient / Amount / Asset / Memo / Time / Status with an explorer link), `RecipientAddressField` + `RecipientsDialog` + `ContactFormDialog` (address book), `PaymentByFormCard` + `PaymentByFormDialog` (Payment by form, including locked-form Pay Now), `PaymentFormDetailsDrawer` (Total Valued details), `SinglePayoutCard` + `SinglePayoutDialog` (Single Payment, including locked-recipient Pay Now), `usePayOriginToken` and `usePaymentWallet` (paying token and matching wallet).
 
+A connected Safe (Safe App iframe, or Safe{Wallet} over WalletConnect) pays by proposing to the Safe queue. The page does not track signatures or on-chain execution: it shows a persistent toast with a link to the Safe queue. Final payout state comes from the backend watching the quote's `deposit_address` (`GET /v1/nearintents/status`). The origin chain must already match the Safe; a mismatch is refused before the quote is consumed.
+
 Amounts are limited to `AMOUNT_MAX_DECIMALS` (6) in the inputs, memos to `MEMO_MAX_LENGTH` (200), and slippage is fixed at `QUICK_PAY_SLIPPAGE_TOLERANCE` (5).
 
 ### Pay Now dialogs

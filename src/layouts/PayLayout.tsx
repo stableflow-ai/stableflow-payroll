@@ -4,7 +4,6 @@ import { IconMenu } from "@/components/icons";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { HeaderWalletCapsule } from "@/components/layout/HeaderWalletCapsule";
 import { PayFooter } from "@/components/layout/PayFooter";
-import { SafePendingBanner } from "@/components/safe/SafePendingBanner";
 import {
   HEADER_ACCOUNT_MENU_VARIANT,
   HEADER_ACCOUNT_TRIGGER_LABEL,
@@ -14,7 +13,6 @@ import { DRAWER_SIDE } from "@/components/ui/drawer/config";
 import { useBatchPayoutCommitQueue } from "@/hooks/use-batch-payout-commit-queue";
 import { useExpenseOpenRequestsCountQuery } from "@/hooks/use-expense-api";
 import { useOperationCatalogQuery } from "@/hooks/use-operation-api";
-import { useSafePendingPayouts } from "@/hooks/use-safe-pending-payouts";
 import { isUser, organizationName, userRole } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { PaymentModeTabs } from "@/views/pay/components/PaymentModeTabs";
@@ -32,7 +30,6 @@ export interface PayLayoutOutletContext {
 
 export function PayLayout() {
   useBatchPayoutCommitQueue();
-  useSafePendingPayouts();
   useExpenseOpenRequestsCountQuery();
   const catalogQuery = useOperationCatalogQuery();
   const { pathname } = useLocation();
@@ -98,7 +95,6 @@ export function PayLayout() {
           </div>
         </div>
         <div className="min-h-0 flex-1 overflow-y-auto px-2 py-5 md:px-5 lg:px-[26px]">
-          <SafePendingBanner />
           {showModeTabs ? (
             <div className="mb-4">
               <PaymentModeTabs />

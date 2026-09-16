@@ -13,7 +13,6 @@
  */
 
 import SafeAppsSDK from "@safe-global/safe-apps-sdk";
-import type { Hex } from "viem";
 import { getCapabilities, getConnections, getWalletClient, sendCalls } from "wagmi/actions";
 import { getPublicClientForChainId } from "../balance";
 import { wagmiConfig } from "../config";
@@ -23,12 +22,10 @@ import {
   SAFE_CONNECTOR_ID,
   SAFE_MISSING_CALL_DATA_MESSAGE,
   SAFE_NOT_CONNECTED_MESSAGE,
-  SAFE_SEND_BLOCK_MARGIN,
   SAFE_TWO_STEP_APPROVAL_MESSAGE,
   SAFE_UNSUPPORTED_CHAIN_MESSAGE,
-  SAFE_UNTRACKABLE_SUBMISSION_MESSAGE,
 } from "./config";
-import { getSafeInfo } from "./info";
+import { activeSafeMode } from "./detect";
 import type { SafeMetaTx, SafeMode, SafeSendResult } from "./types";
 
 type SupportedEvmChainId = (typeof wagmiConfig)["chains"][number]["id"];
@@ -75,29 +72,11 @@ export class SafeApprovalProposedError extends Error {
   }
 }
 
-/**
- * The proposal went through but the wallet answered with an identifier we cannot
- * resolve against the chain, so the payout has to be confirmed by hand.
- */
-export class SafeUntrackableSubmissionError extends Error {
-  readonly returnedId: string;
-
-  constructor(returnedId: string) {
-    super(SAFE_UNTRACKABLE_SUBMISSION_MESSAGE);
-    this.name = "SafeUntrackableSubmissionError";
-    this.returnedId = returnedId;
-  }
-}
-
 let safeAppsSdk: SafeAppsSDK | null = null;
 
 function getSafeAppsSdk(): SafeAppsSDK {
   if (!safeAppsSdk) safeAppsSdk = new SafeAppsSDK();
   return safeAppsSdk;
-}
-
-function isHash32(value: string): boolean {
-  return /^0x[0-9a-fA-F]{64}$/.test(value);
 }
 
 async function supportsAtomicBatch(chainId: SupportedEvmChainId): Promise<boolean> {
@@ -146,12 +125,20 @@ async function submit(
 }
 
 /**
- * Propose `txs` and capture everything needed to resolve the result later.
+ * Refuse when a Safe is connected on a different chain than `chainId`.
  *
- * `fromBlock` and `safeNonce` are read *before* proposing: both are only
- * meaningful relative to the moment of submission, and a floor that is slightly
- * too low only costs a few extra blocks of log scanning.
+ * A no-op for every other wallet, including a disconnected session, so EOA
+ * payment paths can call this before consuming a quote.
  */
+export async function assertSafeOriginChain(chainId: number): Promise<void> {
+  if (!(await activeSafeMode())) return;
+  const [connection] = getConnections(wagmiConfig);
+  if (!connection) return;
+  if (connection.chainId !== chainId) {
+    throw new SafeChainMismatchError(connection.chainId, chainId);
+  }
+}
+
 export async function sendViaSafe(input: {
   chainId: number;
   txs: SafeMetaTx[];
@@ -161,28 +148,18 @@ export async function sendViaSafe(input: {
   const [connection] = getConnections(wagmiConfig);
   const safeAddress = connection?.accounts[0];
   if (!connection || !safeAddress) throw new SafeNotConnectedError();
-  if (connection.chainId !== input.chainId) {
-    throw new SafeChainMismatchError(connection.chainId, input.chainId);
-  }
+  await assertSafeOriginChain(input.chainId);
 
   const chainId = input.chainId as SupportedEvmChainId;
   const client = getPublicClientForChainId(input.chainId);
   if (!client) throw new Error(`${SAFE_UNSUPPORTED_CHAIN_MESSAGE}: ${input.chainId}`);
 
-  const info = await getSafeInfo({ chainId: input.chainId, address: safeAddress });
-  const head = await client.getBlockNumber();
-  const fromBlock = head > SAFE_SEND_BLOCK_MARGIN ? head - SAFE_SEND_BLOCK_MARGIN : 0n;
-
   const mode: SafeMode = connection.connector.id === SAFE_CONNECTOR_ID ? "app" : "walletconnect";
   const hash = await submit(mode, chainId, input.txs);
-  if (!isHash32(hash)) throw new SafeUntrackableSubmissionError(hash);
 
   return {
-    hash: hash as Hex,
+    hash,
     safeAddress,
     chainId: input.chainId,
-    threshold: info.threshold,
-    safeNonce: info.nonce,
-    fromBlock,
   };
 }

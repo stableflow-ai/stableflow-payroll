@@ -93,12 +93,6 @@ export type BroadcastResult =
       safeTxHash: string;
       safeAddress: string;
       chainId: number;
-      /** Signatures the Safe requires, for the waiting copy. */
-      threshold: number;
-      /** Scan floor for the resolver. Serialized because stores persist as JSON. */
-      fromBlock: string;
-      /** Safe nonce at proposal time, used to detect replacement. */
-      safeNonce: number;
     };
 
 export function executedBroadcast(txHash: string): BroadcastResult {
@@ -110,18 +104,12 @@ export function pendingMultisigBroadcast(result: {
   hash: string;
   safeAddress: string;
   chainId: number;
-  threshold: number;
-  safeNonce: number;
-  fromBlock: bigint;
 }): BroadcastResult {
   return {
     kind: "pending-multisig",
     safeTxHash: result.hash,
     safeAddress: result.safeAddress,
     chainId: result.chainId,
-    threshold: result.threshold,
-    safeNonce: result.safeNonce,
-    fromBlock: result.fromBlock.toString(),
   };
 }
 

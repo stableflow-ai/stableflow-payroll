@@ -12,8 +12,10 @@ describe("isWalletConnectionRejected", () => {
     expect(isWalletConnectionRejected({ error: new Error("connection rejected") })).toBe(true);
   });
 
-  it("ignores transaction and unrelated errors", () => {
+  it("ignores transaction, switch-chain, and unrelated errors", () => {
     expect(isWalletConnectionRejected(new Error("insufficient funds"))).toBe(false);
+    expect(isWalletConnectionRejected(new Error("Requested chain is not authorized in this WalletConnect session"))).toBe(false);
+    expect(isWalletConnectionRejected(new Error("An error occurred when attempting to switch chain."))).toBe(false);
   });
 });
 
