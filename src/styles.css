@@ -136,13 +136,13 @@ w3m-overlay {
   z-index: 10000 !important;
 }
 
-w3m-modal[open],
-wcm-modal[open] {
+w3m-modal.open,
+wcm-modal.open {
   pointer-events: auto !important;
 }
 
-w3m-modal:not([open]),
-wcm-modal:not([open]) {
+w3m-modal:not(.open),
+wcm-modal:not(.open) {
   pointer-events: none !important;
 }
 
