@@ -66,11 +66,11 @@ export function Toast(props: ToastProps) {
         </div>
         <button
           type="button"
-          className="mt-0.5 shrink-0 cursor-pointer text-black"
+          className="mt-0 shrink-0 cursor-pointer text-black"
           onClick={closeToast}
           aria-label="Close"
         >
-          <IconClose className="size-3" />
+          <IconClose className="size-2" />
         </button>
       </div>
       {text ? (

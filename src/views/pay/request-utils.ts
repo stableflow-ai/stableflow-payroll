@@ -9,15 +9,9 @@ import { type WalletChainKind } from "@/utils";
 import type { ChainKind } from "@/wallet";
 import { detectAddressKind } from "./batch-utils";
 import { PAY_FORM_PATH, PAY_REQUEST_STATUS, PAY_REQUEST_STATUS_CLASS } from "./config";
-import { detectAddressChainKind } from "./utils";
+import { detectAddressChainKind, isUserRejectedError } from "./utils";
 
-const USER_REJECTED_PATTERNS = [
-  "user rejected",
-  "user denied",
-  "rejected the request",
-  "request rejected",
-  "action_rejected",
-];
+export { isUserRejectedError };
 
 export function tokenChainKind(token: IntentsToken | null | undefined): ChainKind | null {
   return token?.chain.chainKind ?? null;
@@ -33,12 +27,6 @@ export function receivingAddressError(
     return "Token network does not match address type";
   }
   return null;
-}
-
-export function isUserRejectedError(error: unknown): boolean {
-  const message = error instanceof Error ? error.message : String(error ?? "");
-  const lower = message.toLowerCase();
-  return USER_REJECTED_PATTERNS.some((pattern) => lower.includes(pattern));
 }
 
 export function activateErrorMessage(error: unknown, fallback: string): string {

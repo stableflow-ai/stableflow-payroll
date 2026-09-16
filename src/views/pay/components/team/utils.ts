@@ -2,8 +2,10 @@ import { isAddressValid, type WalletChainKind } from "@/utils";
 import {
   FIELD_REQUIREMENT,
   INTEGRATION_FIELD,
+  ORGANIZATION_FIELD_STATUS,
   type IntegrationFieldKey,
   type IntegrationSettings,
+  type OrganizationAddressSettings,
 } from "@/types/organization";
 import { isValidEmail } from "../../utils";
 import type { TeamMemberWallets } from "@/types/team";
@@ -17,6 +19,29 @@ export function walletForChainKind(
 ): string {
   if (kind === "zec") return "";
   return wallets[kind]?.trim() ?? "";
+}
+
+export type TeamWalletKind = Exclude<WalletChainKind, "zec">;
+
+export const TEAM_WALLET_KIND_OPTIONS: Array<{ kind: TeamWalletKind; label: string }> = [
+  { kind: "evm", label: "EVM Wallet" },
+  { kind: "solana", label: "Solana Wallet" },
+  { kind: "near", label: "Near Wallet" },
+  { kind: "tron", label: "Tron Wallet" },
+];
+
+export function enabledTeamWalletKinds(
+  settings: OrganizationAddressSettings | undefined,
+): TeamWalletKind[] {
+  if (!settings) return ["evm"];
+  return TEAM_WALLET_KIND_OPTIONS
+    .filter((option) => {
+      if (option.kind === "evm") return settings.evmAddress !== ORGANIZATION_FIELD_STATUS.Disabled;
+      if (option.kind === "solana") return settings.solanaAddress !== ORGANIZATION_FIELD_STATUS.Disabled;
+      if (option.kind === "near") return settings.nearAddress !== ORGANIZATION_FIELD_STATUS.Disabled;
+      return settings.tronAddress !== ORGANIZATION_FIELD_STATUS.Disabled;
+    })
+    .map((option) => option.kind);
 }
 
 export function memberDisplayWallet(member: { wallets: TeamMemberWallets }): string | null {

@@ -30,12 +30,13 @@ import {
   matchContact,
   matchPayNowMember,
   matchTeamMember,
+  teamMemberIdFromContact,
   teamMembersToContacts,
 } from "./utils";
 import { emailFieldError, walletForChainKind } from "../team/utils";
 
 export function SinglePayoutCard(props: {
-  initialRecipient?: { name: string; address: string; email?: string | null };
+  initialRecipient?: { id?: number; name: string; address: string; email?: string | null };
   memberWallets?: TeamMemberWallets;
 }) {
   const { initialRecipient, memberWallets } = props;
@@ -78,11 +79,12 @@ export function SinglePayoutCard(props: {
   }, [ensureFresh]);
 
   const payNowMatch =
-    memberWallets && initialRecipient
+    memberWallets && initialRecipient && initialRecipient.id != null
       ? matchPayNowMember(
           addressInput,
           initialRecipient.name,
           memberWallets,
+          initialRecipient.id,
           initialRecipient.email,
         )
       : null;
@@ -132,6 +134,7 @@ export function SinglePayoutCard(props: {
     const notification = notifyEnabled
       ? payrollPaymentNotification({ email: notifyEmail })
       : undefined;
+    const teamMemberId = employee ? undefined : teamMemberIdFromContact(matched);
     try {
       const payment = await createPayment.mutateAsync({
         amount: amountDecimals,
@@ -141,6 +144,7 @@ export function SinglePayoutCard(props: {
         memo: memo.trim() || undefined,
         success_url: `${window.location.origin}${PAYOUT_RESULT_PATH}`,
         organization_id: organizationId(user),
+        ...(teamMemberId != null ? { team_member_id: teamMemberId } : {}),
         ...(notification ? { notification } : {}),
       });
       setRedirecting(true);

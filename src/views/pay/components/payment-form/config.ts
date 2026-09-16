@@ -88,7 +88,12 @@ export const PAYMENT_FORM_DETAILS_COLUMNS = [
   { key: "netPay", label: "Net Pay" },
 ] as const;
 
-export const BATCH_PAYMENT_MAX_ITEMS = 50;
+export const BATCH_PAYMENT_MAX_ITEMS = {
+  evm: 100,
+  solana: 10,
+  tron: 60,
+  near: 60,
+} as const;
 
 export const BATCH_PAYMENT_ROW_PREFIX = "Batch Payment";
 
@@ -106,7 +111,7 @@ const BATCH_COUNT_WORDS: Record<number, string> = {
 
 export function batchSplitBannerText(batchCount: number): string {
   const count = BATCH_COUNT_WORDS[batchCount] ?? String(batchCount);
-  return `A batch payment can support up to ${BATCH_PAYMENT_MAX_ITEMS} transactions, and this payment will be divided into ${count} payments`;
+  return `A batch payment supports up to ${BATCH_PAYMENT_MAX_ITEMS.evm} transactions from EVM, ${BATCH_PAYMENT_MAX_ITEMS.solana} from Solana, and ${BATCH_PAYMENT_MAX_ITEMS.tron} from Tron or NEAR per batch, and this payment will be divided into ${count} payments`;
 }
 
 export function batchPaymentRowLabel(index: number): string {

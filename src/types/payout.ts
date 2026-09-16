@@ -125,6 +125,8 @@ export interface PayrollCreatePaymentParam {
   recipient: string;
   symbol: string;
   organization_id: number | null;
+  /** Team member id when the admin recipient matches a Team row. */
+  team_member_id?: number;
   memo?: string;
   success_url?: string;
   notification?: PayrollPaymentNotification;

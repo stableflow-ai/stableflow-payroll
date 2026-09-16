@@ -24,6 +24,7 @@ export const PAYOUT_SYMBOLS = [
   "SOL",
   "NEAR",
   "ZEC",
+  "RHEA",
 ] as const;
 
 export type PayoutSymbol = (typeof PAYOUT_SYMBOLS)[number];
@@ -165,7 +166,7 @@ export const useIntentsTokensStore = create<IntentsTokensState>()(
       },
     }),
     {
-      name: "stableflow-pay:intents-tokens:v2.5",
+      name: "stableflow-pay:intents-tokens:v2.6",
       partialize: (s) => ({ tokens: s.tokens, fetchedAt: s.fetchedAt }),
     },
   ),

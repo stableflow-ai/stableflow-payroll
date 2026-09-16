@@ -15,6 +15,7 @@ describe("normalizeSymbol", () => {
     expect(normalizeSymbol("sol")).toBe("SOL");
     expect(normalizeSymbol("WETH")).toBe("WETH");
     expect(normalizeSymbol("wNEAR")).toBe("NEAR");
+    expect(normalizeSymbol("RHEA")).toBe("RHEA");
   });
 });
 
@@ -115,5 +116,37 @@ describe("filterTokens", () => {
     expect(isNativeToken(tokens[0])).toBe(true);
     expect(tokens[1]?.contractAddress).toBe("A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS");
     expect(tokens[2]?.contractAddress).toBe("zec.omft.near");
+  });
+
+  it("keeps RHEA on near and bsc, and drops unknown symbols", () => {
+    const tokens = filterTokens([
+      {
+        assetId: "nep141:token.rhealab.near",
+        decimals: 18,
+        blockchain: "near",
+        symbol: "RHEA",
+        price: 0.01436825,
+        contractAddress: "token.rhealab.near",
+      },
+      {
+        assetId: "nep245:v2_1.omft.near:bsc-0x4c067de26475e1cefee8b8d1f6e2266b33a2372e",
+        decimals: 18,
+        blockchain: "bsc",
+        symbol: "RHEA",
+        price: 0.01436825,
+        contractAddress: "0x4c067de26475e1cefee8b8d1f6e2266b33a2372e",
+      },
+      {
+        assetId: "nep141:unknown.near",
+        decimals: 18,
+        blockchain: "near",
+        symbol: "UNKNOWN",
+        contractAddress: "unknown.near",
+      },
+    ]);
+    expect(tokens.map((token) => token.blockchain)).toEqual(["near", "bsc"]);
+    expect(tokens.every((token) => token.symbol === "RHEA")).toBe(true);
+    expect(tokens[0]?.contractAddress).toBe("token.rhealab.near");
+    expect(tokens[1]?.contractAddress).toBe("0x4c067de26475e1cefee8b8d1f6e2266b33a2372e");
   });
 });

@@ -25,6 +25,7 @@ export const HEADER_NAV_ITEMS = [
 ] as const;
 
 export const HOW_IT_WORKS_PATH = "/howitworks";
+export const DOCS_PATH = "/docs";
 export const STABLEFLOW_ABOUT_URL = "https://app.stableflow.ai/about";
 
 export const HEADER_CHAIN_LOGO: Record<ChainKind, string> = {

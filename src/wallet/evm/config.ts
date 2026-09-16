@@ -4,7 +4,7 @@
  * Transports use the signed RPC proxy with public fallbacks from lib/rpc.
  */
 
-import { getDefaultConfig } from "@rainbow-me/rainbowkit";
+import { connectorsForWallets } from "@rainbow-me/rainbowkit";
 import {
   arbitrum,
   avalanche,
@@ -21,6 +21,19 @@ import {
   xLayer,
 } from "wagmi/chains";
 import { evmTransportForBlockchain } from "@/lib/rpc/evm";
+import { createConfig } from "wagmi";
+import {
+  metaMaskWallet,
+  base as baseWallet,
+  okxWallet,
+  bitgetWallet,
+  binanceWallet,
+  walletConnectWallet,
+  rabbyWallet,
+  phantomWallet,
+  ledgerWallet,
+} from "@rainbow-me/rainbowkit/wallets";
+import { metadata } from "../metadata";
 
 const chains = [
   mainnet,
@@ -38,9 +51,34 @@ const chains = [
   berachain,
 ] as const;
 
-export const wagmiConfig = getDefaultConfig({
-  appName: "Stableflow Pay",
-  projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "00000000000000000000000000000000",
+const connectors: any = connectorsForWallets(
+  [
+    {
+      groupName: "Recommended",
+      wallets: [
+        okxWallet,
+        metaMaskWallet,
+        baseWallet,
+        bitgetWallet,
+        binanceWallet,
+        rabbyWallet,
+        phantomWallet,
+        ledgerWallet,
+        walletConnectWallet,
+      ],
+    },
+  ],
+  {
+    appName: metadata.name,
+    appDescription: metadata.description,
+    appUrl: metadata.url,
+    appIcon: metadata.icons[0],
+    projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "",
+  }
+);
+
+export const wagmiConfig = createConfig({
+  connectors,
   chains,
   transports: {
     [mainnet.id]: evmTransportForBlockchain("eth"),

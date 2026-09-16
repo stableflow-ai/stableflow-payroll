@@ -42,10 +42,18 @@ function memberWallets(member: TeamMember): string[] {
     .filter(Boolean);
 }
 
+export function teamMemberIdFromContact(contact: Contact | null | undefined): number | undefined {
+  if (!contact) return undefined;
+  const id = Number(contact.id);
+  if (!Number.isInteger(id) || id <= 0) return undefined;
+  return id;
+}
+
 export function matchPayNowMember(
   address: string,
   name: string,
   wallets: TeamMemberWallets,
+  memberId: number,
   email?: string | null,
 ): Contact | null {
   const kind = detectAddressChainKind(address);
@@ -54,7 +62,7 @@ export function matchPayNowMember(
   if (!wallet || !sameAddress(wallet, address, kind)) return null;
   const trimmed = email?.trim() ?? "";
   return {
-    id: "pay-now",
+    id: String(memberId),
     name,
     wallet,
     email: trimmed || null,

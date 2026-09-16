@@ -1,6 +1,6 @@
 # Project Structure
 
-Stableflow Pay is a Vite 8 + React 19 single-page app. Wallet providers for EVM, Near, Solana, Tron, and Zcash (Noir) are wired. The authenticated shell is a 220px Pay sidebar plus a content column; the released surface is Auth (`/login`, `/register`, `/invite/:orgId`, `/auth/google/bind`, `/register/google`, `/invite/:orgId/google`), `/` (Overview), `/pay/*`, `/team`, `/history`, and `/setting` (including `/setting/slack/callback`).
+Stableflow Pay is a Vite 8 + React 19 single-page app. Wallet providers for EVM, Near, Solana, Tron, and Zcash (Noir) are wired. The authenticated shell is a 220px Pay sidebar plus a content column; the released surface is Auth (`/login`, `/register`, `/invite/:orgId`, `/auth/google/bind`, `/register/google`, `/invite/:orgId/google`), `/` (Overview), `/pay/*`, `/team`, `/history`, and `/setting` (including `/setting/slack/callback`). `/howitworks` and `/docs` are public pages.
 
 Product areas, routes, and constraints: [product.md](product.md).
 
@@ -45,7 +45,7 @@ Copy `.env.example` to `.env.local`.
 public/
   logo.svg, logo-white.svg     product logos
   auth/                        auth page decoration (SVG)
-  avatar/, pay/, howitwork/, setting/, categories/    page art (PNG / brand SVG)
+  avatar/, pay/, howitwork/, docs/, setting/, categories/    page art (PNG / brand SVG)
 src/
   main.tsx                     Buffer/process globals, QueryClientProvider, WalletProvider
   App.tsx                      RouterProvider, ToastContainer, session bootstrap
@@ -61,6 +61,7 @@ src/
     bonus/                     bonus dashboard (to be paid / history routes)
     categories/                Operations More Categories drawer and category dashboards
     how-it-works/              public marketing page
+    docs/                      public user guide (`/docs`)
   components/
     ui/                        public primitives (see doc/components/README.md)
     ui/overlay/                internal overlay plumbing, do not import from features

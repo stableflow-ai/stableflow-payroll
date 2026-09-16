@@ -21,6 +21,7 @@ interface AuthState {
   token: string | null;
   user: AuthUser | null;
   applySession: (token: string, user: AuthUser) => void;
+  hydrateFromStorage: () => void;
   logout: () => void;
 }
 
@@ -36,6 +37,15 @@ export const useAuthStore = create<AuthState>((set) => ({
     const nextUser = hydrateAuthUser(user);
     setStoredSession(token, nextUser);
     set({ token, user: nextUser });
+  },
+  hydrateFromStorage: () => {
+    queryClient.clear();
+    const session = getStoredSession();
+    if (session) {
+      set({ token: session.token, user: session.user });
+      return;
+    }
+    set({ token: null, user: null });
   },
   logout: () => {
     clearStoredSession();

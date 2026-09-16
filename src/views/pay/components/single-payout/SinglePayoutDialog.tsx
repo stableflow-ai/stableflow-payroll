@@ -4,6 +4,7 @@ import { memberDisplayWallet } from "../team/utils";
 import { SinglePayoutCard } from "./SinglePayoutCard";
 
 export type SinglePayoutRecipient = {
+  id: number;
   name: string;
   wallets: TeamMemberWallets;
   email?: string | null;
@@ -27,6 +28,7 @@ export function SinglePayoutDialog(props: {
         <SinglePayoutCard
           key={`${recipient.name}-${memberDisplayWallet(recipient) ?? "empty"}`}
           initialRecipient={{
+            id: recipient.id,
             name: recipient.name,
             address: memberDisplayWallet(recipient) ?? "",
             email: recipient.email,
