@@ -112,7 +112,7 @@ src/
 | `wallet.ts` | no | Per-chain connection state, account, modal control, `signMessage` |
 | `intents-tokens.ts` | `persist` | 1Click token list, `PAYOUT_SYMBOLS`, `ensureFresh`, `findByChainAndSymbol` |
 | `token-balances.ts` | no | Balance cache and fetch status per owner + asset |
-| `quick-pay-prefs.ts` | `persist` | Remembered single-payout preferences |
+| `quick-pay-prefs.ts` | `persist` | Remembered single-payout preferences: last origin token and Notify Recipient switch |
 | `batch-payout-commit-queue.ts` | `persist` | Unused retry queue for `POST /v1/payroll/payouts/submit` (Payment by Form submits once) |
 | `consumed-batches.ts` | `persist` | Spent payroll `quote_batch_id`s so the same deposit addresses are never broadcast twice; `unmarkConsumed` after an insufficient-approval failure that never sent the payout |
 | `nearintents-user-session.ts` | no | Near Intents session for confidential receive / withdraw |

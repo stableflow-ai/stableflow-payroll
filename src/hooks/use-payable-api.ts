@@ -1,5 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
-import { getPayables, payPayable } from "@/api/payable";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { getPayables, payPayable, setPayableQuoteNotification } from "@/api/payable";
 import { queryKeys } from "@/api/query-keys";
 import { organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
@@ -21,8 +21,9 @@ export function usePayablesQuery(options?: { enabled?: boolean }) {
 /**
  * `POST .../salaries/pay/quote`, `.../expenses/pay/quote`, `.../bonuses/pay/quote`,
  * or `.../operations/pay/quote` — quote + on-chain data.
-
- * `notification` and `adjustments` are part of the key so a change re-quotes.
+ *
+ * `adjustments` are part of the key so a net-pay change re-quotes.
+ * Notify Recipient is posted separately and does not re-quote.
  * The mapped value is `{ quoteId, batches }`.
  */
 export function usePayablePayQuery(body: PayablePayRequest | null) {
@@ -33,5 +34,11 @@ export function usePayablePayQuery(body: PayablePayRequest | null) {
     staleTime: 0,
     gcTime: 0,
     retry: 0,
+  });
+}
+
+export function usePayableQuoteNotificationMutation() {
+  return useMutation({
+    mutationFn: setPayableQuoteNotification,
   });
 }

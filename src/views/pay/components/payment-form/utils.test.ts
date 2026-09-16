@@ -65,8 +65,6 @@ describe("buildPayablePayRequest", () => {
         refundTo: "0xpayer",
         organizationId: 8,
         timezone: "UTC",
-        notifyEnabled: false,
-        selectedItemIds: [],
       })?.adjustments,
     ).toEqual([
       { item_id: 2, net_pay: "1" },
@@ -80,8 +78,6 @@ describe("buildPayablePayRequest", () => {
         refundTo: "0xpayer",
         organizationId: 8,
         timezone: "UTC",
-        notifyEnabled: false,
-        selectedItemIds: [],
         netPayById: { 2: "1", 5: "" },
       })?.adjustments,
     ).toEqual([
@@ -96,8 +92,6 @@ describe("buildPayablePayRequest", () => {
         refundTo: "0xpayer",
         organizationId: 8,
         timezone: "UTC",
-        notifyEnabled: false,
-        selectedItemIds: [],
         netPayById: { 2: "1.25" },
       })?.adjustments,
     ).toEqual([
@@ -122,8 +116,6 @@ describe("buildPayablePayRequest", () => {
         refundTo: "0xpayer",
         organizationId: 8,
         timezone: "UTC",
-        notifyEnabled: false,
-        selectedItemIds: [],
         netPayById: { 2: "1.25" },
       })?.adjustments,
     ).toBeUndefined();
@@ -140,66 +132,26 @@ describe("buildPayablePayRequest", () => {
         refundTo: "0xpayer",
         organizationId: 8,
         timezone: "UTC",
-        notifyEnabled: false,
-        selectedItemIds: [],
         netPayById: { 2: "1.25" },
       })?.adjustments,
     ).toBeUndefined();
   });
 
-  it("adds notification only when notify is on", () => {
-    expect(
-      buildPayablePayRequest({
-        payable: PAYABLE,
-        originToken: TOKEN,
-        payer: "0xpayer",
-        refundTo: "0xpayer",
-        organizationId: 8,
-        timezone: "UTC",
-        notifyEnabled: false,
-        selectedItemIds: [2, 5],
-      }),
-    ).toMatchObject({
+  it("does not put notification on the quote request", () => {
+    const request = buildPayablePayRequest({
+      payable: PAYABLE,
+      originToken: TOKEN,
+      payer: "0xpayer",
+      refundTo: "0xpayer",
+      organizationId: 8,
+      timezone: "UTC",
+    });
+    expect(request).toMatchObject({
       type: PAYABLE_TYPE.Payroll,
       period_month: "2026-09",
       timezone: "UTC",
     });
-    expect(
-      buildPayablePayRequest({
-        payable: PAYABLE,
-        originToken: TOKEN,
-        payer: "0xpayer",
-        refundTo: "0xpayer",
-        organizationId: 8,
-        timezone: "UTC",
-        notifyEnabled: false,
-        selectedItemIds: [2, 5],
-      })?.notification,
-    ).toBeUndefined();
-    expect(
-      buildPayablePayRequest({
-        payable: PAYABLE,
-        originToken: TOKEN,
-        payer: "0xpayer",
-        refundTo: "0xpayer",
-        organizationId: 8,
-        timezone: "UTC",
-        notifyEnabled: true,
-        selectedItemIds: [5, 2],
-      })?.notification,
-    ).toBe("all");
-    expect(
-      buildPayablePayRequest({
-        payable: PAYABLE,
-        originToken: TOKEN,
-        payer: "0xpayer",
-        refundTo: "0xpayer",
-        organizationId: 8,
-        timezone: "UTC",
-        notifyEnabled: true,
-        selectedItemIds: [5],
-      })?.notification,
-    ).toBe("5");
+    expect(request && "notification" in request ? request.notification : undefined).toBeUndefined();
   });
 });
 
@@ -258,8 +210,6 @@ describe("buildPayablePayRequest operations", () => {
       refundTo: "0xpayer",
       organizationId: 8,
       timezone: "UTC",
-      notifyEnabled: false,
-      selectedItemIds: [],
       netPayById: { 2: "1.25" },
     });
     expect(request).toMatchObject({
@@ -282,8 +232,6 @@ describe("buildPayablePayRequest operations", () => {
         refundTo: null,
         organizationId: 8,
         timezone: "UTC",
-        notifyEnabled: false,
-        selectedItemIds: [],
       }),
     ).toBeNull();
   });

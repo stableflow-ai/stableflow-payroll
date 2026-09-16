@@ -12,6 +12,7 @@ import useToast from "@/hooks/use-toast";
 import { isUser, organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
+import { useQuickPayPrefsStore } from "@/stores/quick-pay-prefs";
 import type { TeamMemberWallets } from "@/types/team";
 import { payrollPaymentNotification } from "@/types/payout";
 import { ContactFormDialog } from "../ContactFormDialog";
@@ -65,6 +66,11 @@ export function SinglePayoutCard(props: {
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const tokens = useIntentsTokensStore((s) => s.tokens);
   const createPayment = useCreatePayrollPaymentMutation();
+  const notifyEnabled = useQuickPayPrefsStore((state) => state.notifyRecipient);
+  const setNotifyEnabled = useQuickPayPrefsStore((state) => state.setNotifyRecipient);
+  const [prefsHydrated, setPrefsHydrated] = useState(() =>
+    useQuickPayPrefsStore.persist.hasHydrated(),
+  );
 
   const [addressInput, setAddressInput] = useState(initialRecipient?.address ?? "");
   const [amount, setAmount] = useState("");
@@ -75,7 +81,6 @@ export function SinglePayoutCard(props: {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Contact | null>(null);
   const [deleting, setDeleting] = useState<Contact | null>(null);
-  const [notifyEnabled, setNotifyEnabled] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState("");
   /** Stays true while the browser navigates to the hosted checkout. */
   const [redirecting, setRedirecting] = useState(false);
@@ -84,6 +89,11 @@ export function SinglePayoutCard(props: {
   useEffect(() => {
     void ensureFresh();
   }, [ensureFresh]);
+
+  useEffect(() => {
+    if (prefsHydrated) return;
+    return useQuickPayPrefsStore.persist.onFinishHydration(() => setPrefsHydrated(true));
+  }, [prefsHydrated]);
 
   const payNowMatch =
     memberWallets && initialRecipient && initialRecipient.id != null
@@ -132,7 +142,7 @@ export function SinglePayoutCard(props: {
 
   async function handleSend() {
     if (!destToken || !amountDecimals || !destinationAddress) return;
-    if (notifyEnabled) {
+    if (prefsHydrated && notifyEnabled) {
       const emailError = notifyEmail.trim()
         ? emailFieldError(notifyEmail)
         : "Enter a valid email";
@@ -142,7 +152,7 @@ export function SinglePayoutCard(props: {
       }
     }
     const dest = payoutNetworkToken(destToken);
-    const notification = notifyEnabled
+    const notification = prefsHydrated && notifyEnabled
       ? payrollPaymentNotification({ email: notifyEmail })
       : undefined;
     const teamMemberId = employee ? undefined : teamMemberIdFromContact(matched);
@@ -218,7 +228,8 @@ export function SinglePayoutCard(props: {
 
       <NotifyRecipientBar
         className="mt-6"
-        enabled={notifyEnabled}
+        enabled={prefsHydrated ? notifyEnabled : false}
+        disabled={!prefsHydrated}
         onEnabledChange={setNotifyEnabled}
       >
         <input

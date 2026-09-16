@@ -1,7 +1,6 @@
 import {
   PAYABLE_TYPE,
   effectiveNetPay,
-  payableNotification,
   payablePayrollAdjustments,
   type Payable,
   type PayablePayRequest,
@@ -113,8 +112,6 @@ export function buildPayablePayRequest(input: {
   refundTo: string | null;
   organizationId: number | null;
   timezone: string;
-  notifyEnabled: boolean;
-  selectedItemIds: readonly number[];
   netPayById?: Record<number, string>;
 }): PayablePayRequest | null {
   const {
@@ -124,15 +121,10 @@ export function buildPayablePayRequest(input: {
     refundTo,
     organizationId,
     timezone,
-    notifyEnabled,
-    selectedItemIds,
     netPayById = {},
   } = input;
   if (!payable || !originToken || !payer || !refundTo || organizationId == null) return null;
   if (!isBatchOriginToken(originToken)) return null;
-  const notification = notifyEnabled
-    ? payableNotification(selectedItemIds, payableItemIds(payable))
-    : undefined;
   const adjustments =
     payable.type === PAYABLE_TYPE.Payroll
       ? payablePayrollAdjustments(payable.items, netPayById)
@@ -143,7 +135,6 @@ export function buildPayablePayRequest(input: {
     refundTo,
     source_network: originToken.blockchain,
     source_symbol: originToken.symbol,
-    ...(notification ? { notification } : {}),
     ...(adjustments ? { adjustments } : {}),
   };
   if (payable.type === PAYABLE_TYPE.Payroll) {

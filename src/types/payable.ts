@@ -64,8 +64,12 @@ export interface PayablePayBaseParam {
   refundTo: string;
   source_network: string;
   source_symbol: string;
-  notification?: string;
   adjustments?: PayablePayAdjustment[];
+}
+
+export interface PayableQuoteNotificationParam {
+  quote_id: string;
+  notification: string;
 }
 
 export interface PayrollPayParam extends PayablePayBaseParam {

@@ -139,7 +139,6 @@ export interface OperationPayQuoteParam {
   refundTo: string;
   source_network: string;
   source_symbol: string;
-  notification?: string;
 }
 
 export function isOperationNavEnabled(item: Pick<OperationCatalogItem, "added" | "status">): boolean {

@@ -6,7 +6,7 @@ import { BATCH_BLOCKCHAINS } from "@/config/chains";
 import { batchSubmit } from "@/api/payout";
 import { queryKeys } from "@/api/query-keys";
 import { usePayOriginToken } from "@/hooks/use-pay-origin-token";
-import { usePayablePayQuery, usePayablesQuery } from "@/hooks/use-payable-api";
+import { usePayablePayQuery, usePayablesQuery, usePayableQuoteNotificationMutation } from "@/hooks/use-payable-api";
 import { usePaymentWallet } from "@/hooks/use-payment-wallet";
 import { useTokenBalancesStore } from "@/stores/token-balances";
 import { useIntentsTokensStore } from "@/stores/intents-tokens";
@@ -34,6 +34,7 @@ import {
   findPayable,
   parsePayableKey,
   payableKeyId,
+  payableNotification,
   type Payable,
   type PayableKey,
 } from "@/types/payable";
@@ -117,6 +118,12 @@ export function PaymentByFormCard(props: {
   const paidQuoteBatchIdsRef = useRef(paidQuoteBatchIds);
   paidQuoteBatchIdsRef.current = paidQuoteBatchIds;
   const refreshedForBatchId = useRef("");
+  const postedNotifyRef = useRef<{ quoteId: string; notification: string } | null>(null);
+  const [postedNotify, setPostedNotify] = useState<{
+    quoteId: string;
+    notification: string;
+  } | null>(null);
+  const notifyMutation = usePayableQuoteNotificationMutation();
 
   useEffect(() => {
     void ensureFresh();
@@ -175,6 +182,8 @@ export function PaymentByFormCard(props: {
     setPaidQuoteBatchIds(new Set());
     setSendingQuoteBatchId(null);
     setPhase("idle");
+    postedNotifyRef.current = null;
+    setPostedNotify(null);
   }, [selectedId]);
 
   const payBody = useMemo(
@@ -186,8 +195,6 @@ export function PaymentByFormCard(props: {
         refundTo: quoteRefundTo,
         organizationId: orgId,
         timezone,
-        notifyEnabled,
-        selectedItemIds: [...selectedItemIds],
         netPayById,
       }),
     [
@@ -197,14 +204,42 @@ export function PaymentByFormCard(props: {
       quoteRefundTo,
       orgId,
       timezone,
-      notifyEnabled,
-      selectedItemIds,
       netPayById,
     ],
   );
 
   const quoteQuery = usePayablePayQuery(payBody);
   const quote = payBody ? quoteQuery.data : undefined;
+  const quoteId = quote?.quoteId ?? "";
+  const desiredNotification = notifyEnabled && detail
+    ? (payableNotification([...selectedItemIds], payableItemIds(detail)) ?? "")
+    : "";
+
+  useEffect(() => {
+    if (!quoteId) return;
+    const posted = postedNotifyRef.current;
+    if (desiredNotification === "") {
+      if (!posted || posted.quoteId !== quoteId || posted.notification === "") return;
+    } else if (posted?.quoteId === quoteId && posted.notification === desiredNotification) {
+      return;
+    }
+    let cancelled = false;
+    void notifyMutation.mutateAsync({
+      quote_id: quoteId,
+      notification: desiredNotification,
+    }).then(() => {
+      if (cancelled) return;
+      const next = { quoteId, notification: desiredNotification };
+      postedNotifyRef.current = next;
+      setPostedNotify(next);
+    }).catch((error) => {
+      if (cancelled) return;
+      toast.fail({ title: formatQuoteErrorMessage(error, 2) });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [desiredNotification, quoteId]);
   const batches = quote?.batches ?? [];
   const isSplit = batches.length > 1;
   const firstQuoteBatchId = batches[0]?.quoteBatchId ?? "";
@@ -413,11 +448,18 @@ export function PaymentByFormCard(props: {
   const formPicked = Boolean(selectedId);
   const formSelected = Boolean(selectedId && detail);
   const quoteReady = Boolean(quote && !quoteStale && !quoteError);
+  const notifyReady = !notifyEnabled
+    || (
+      postedNotify?.quoteId === quoteId
+      && postedNotify.notification === desiredNotification
+      && !notifyMutation.isPending
+    );
   const canSendSingle = Boolean(
     formSelected
     && isBatchOriginToken(originToken)
     && payBody
     && quoteReady
+    && notifyReady
     && firstQuoteBatchId
     && !firstBatchConsumed
     && !sending
@@ -428,6 +470,7 @@ export function PaymentByFormCard(props: {
     || !isBatchOriginToken(originToken)
     || !payBody
     || !quoteReady
+    || !notifyReady
     || sending
     || quoting
     || formsFetching,
@@ -585,7 +628,7 @@ export function PaymentByFormCard(props: {
         <Button
           size="xl"
           className="mt-8 w-full"
-          loading={formPicked && (formsFetching || quoting || sending)}
+          loading={formPicked && (formsFetching || quoting || sending || (notifyEnabled && notifyMutation.isPending))}
           disabled={!canSendSingle}
           onClick={() => handleSend()}
         >
