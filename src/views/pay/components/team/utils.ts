@@ -185,15 +185,16 @@ export function memberProfileError(
     if (error) return error;
   }
 
-  if (isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Slack)) {
-    const error =
-      requiredEmptyError(
-        input.slack,
-        "Slack",
-        isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Slack),
-      ) ?? handleFieldError(input.slack, "Slack");
-    if (error) return error;
-  }
+  // Admin no longer fills in the Slack ID; users fill it in themselves
+  // if (isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Slack)) {
+  //   const error =
+  //     requiredEmptyError(
+  //       input.slack,
+  //       "Slack",
+  //       isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Slack),
+  //     ) ?? handleFieldError(input.slack, "Slack");
+  //   if (error) return error;
+  // }
 
   return null;
 }

@@ -12,6 +12,16 @@ describe("isWalletConnectionRejected", () => {
     expect(isWalletConnectionRejected({ error: new Error("connection rejected") })).toBe(true);
   });
 
+  it("matches captured NEAR connect cancel errors", () => {
+    expect(isWalletConnectionRejected({ code: 4001, message: "User rejected the request" })).toBe(true);
+    expect(isWalletConnectionRejected({ code: "4001" })).toBe(true);
+    expect(isWalletConnectionRejected(new Error("Action was cancelled"))).toBe(true);
+    expect(isWalletConnectionRejected(new Error("User cancelled"))).toBe(true);
+    expect(isWalletConnectionRejected(new Error("Failed to sign in"))).toBe(true);
+    expect(isWalletConnectionRejected(new Error("User cancelled pairing"))).toBe(true);
+    expect(isWalletConnectionRejected(new Error("Wallet closed"))).toBe(true);
+  });
+
   it("ignores transaction, switch-chain, and unrelated errors", () => {
     expect(isWalletConnectionRejected(new Error("insufficient funds"))).toBe(false);
     expect(isWalletConnectionRejected(new Error("Requested chain is not authorized in this WalletConnect session"))).toBe(false);

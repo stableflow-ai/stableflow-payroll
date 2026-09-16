@@ -10,7 +10,7 @@ Product areas, routes, and constraints: [product.md](product.md).
 - **Styling:** Tailwind CSS 4 (`@tailwindcss/vite`, no `tailwind.config.js`), `cn()` (`clsx` + `tailwind-merge`), `class-variance-authority`
 - **State:** Zustand (cross-page client state), TanStack Query (server cache). The JWT session goes through `src/lib/auth-session.ts`; nothing else touches `localStorage` / `sessionStorage`.
 - **Routing:** `react-router-dom` 7 (`createBrowserRouter`)
-- **Wallets:** RainbowKit + wagmi + viem (EVM), `@near-wallet-selector` (Near), `@solana/wallet-adapter` (Solana), `@tronweb3/tronwallet-adapters` (Tron), `@rhea-finance/zcash-wallet-adapter` (Zcash / Noir). Solana send is HTTP-only (the HMAC proxy has no WebSocket): unsigned transactions refresh `recentBlockhash` locally, stay on the RPC that issued it, and rebroadcast until confirmed or the blockhash expires.
+- **Wallets:** RainbowKit + wagmi + viem (EVM), `@hot-labs/near-connect` (Near), `@solana/wallet-adapter` (Solana), `@tronweb3/tronwallet-adapters` (Tron), `@rhea-finance/zcash-wallet-adapter` (Zcash / Noir). Solana send is HTTP-only (the HMAC proxy has no WebSocket): unsigned transactions refresh `recentBlockhash` locally, stay on the RPC that issued it, and rebroadcast until confirmed or the blockhash expires.
 - **Other:** `motion` (animation), `recharts` (charts), `react-toastify` (toasts), `date-fns` (dates), `big.js` (amounts), `papaparse` (CSV), `exceljs` (Excel import templates)
 - **Tests:** Vitest (`src/**/*.test.ts`, `environment: "node"`). There is no ESLint or Prettier config; `pnpm check` and `pnpm test` are the quality gate.
 - **Path alias:** `@/` → `src/`
@@ -33,7 +33,7 @@ Copy `.env.example` to `.env.local`.
 | Variable | Required | Notes |
 | --- | --- | --- |
 | `VITE_API_BASE_URL` | yes | Backend origin. The browser calls it directly; there is no Vite proxy. `http()` throws `ApiError("API base URL is not configured")` when it is empty. |
-| `VITE_WALLETCONNECT_PROJECT_ID` | for wallets | Shared by RainbowKit, the Near selector, and the Tron WalletConnect adapter. |
+| `VITE_WALLETCONNECT_PROJECT_ID` | for wallets | Shared by RainbowKit, Near `@hot-labs/near-connect` Wallet Connect, and the Tron WalletConnect adapter. |
 | `VITE_RPC_PROXY_HOST`, `VITE_RPC_SECRET_KEY` | optional | HMAC-signed RPC proxy used by `src/lib/rpc/`. |
 | `VITE_AMOUNT_MAX_DECIMALS` | optional | Fractional digits for amount inputs (not on-chain token decimals). |
 | `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_API_KEY`, `VITE_GOOGLE_APP_ID` | for Sheets import; client id also for Google sign-in | Google Identity + Picker + Sheets API. Sign-in only needs `VITE_GOOGLE_CLIENT_ID`. |

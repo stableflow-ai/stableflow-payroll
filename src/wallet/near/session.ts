@@ -1,11 +1,11 @@
-import type { WalletSelector } from "@near-wallet-selector/core";
+import type { NearConnector } from "@hot-labs/near-connect";
 
-let selector: WalletSelector | null = null;
+let connector: NearConnector | null = null;
 
-export function setNearSelector(next: WalletSelector | null) {
-  selector = next;
+export function setNearConnector(next: NearConnector | null) {
+  connector = next;
 }
 
-export function getNearSelector(): WalletSelector | null {
-  return selector;
+export function getNearConnector(): NearConnector | null {
+  return connector;
 }

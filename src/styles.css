@@ -120,7 +120,6 @@
 [data-rk],
 .wallet-adapter-modal,
 .wallet-adapter-modal-wrapper,
-#near-wallet-selector-modal,
 .nws-modal,
 .nws-modal-wrapper,
 .adapter-modal,
@@ -144,6 +143,10 @@ wcm-modal.open {
 w3m-modal:not(.open),
 wcm-modal:not(.open) {
   pointer-events: none !important;
+}
+
+.Toastify__toast-container {
+  z-index: 100000001;
 }
 
 .Toastify__toast-container--bottom-right .decash-toast-bottom-right.Toastify__toast {

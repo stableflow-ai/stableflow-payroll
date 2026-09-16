@@ -248,7 +248,7 @@ export function ProfileCard() {
           ) : null}
           {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Slack) ? (
             <ProfileField
-              label="Slack"
+              label="Slack ID"
               optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Slack)}
             >
               <input

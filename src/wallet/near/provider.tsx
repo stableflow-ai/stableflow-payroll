@@ -1,136 +1,97 @@
-import {
-  setupWalletSelector,
-  type WalletSelector,
-} from "@near-wallet-selector/core";
-import { setupIntearWallet } from "@near-wallet-selector/intear-wallet";
-import { setupHotWallet } from "@near-wallet-selector/hot-wallet";
-import { setupLedger } from "@near-wallet-selector/ledger";
-import { setupMeteorWallet } from "@near-wallet-selector/meteor-wallet";
-import { setupModal, type WalletSelectorModal } from "@near-wallet-selector/modal-ui";
-import { setupWalletConnect } from "rhea-wallet-connect";
-import "@near-wallet-selector/modal-ui/styles.css";
+import { NearConnector, type NearWalletBase } from "@hot-labs/near-connect";
+import SignClient from "@walletconnect/sign-client";
 import {
   createContext,
   useContext,
   useEffect,
   useMemo,
-  useRef,
   useState,
   type ReactNode,
 } from "react";
 import { getLogo } from "@/lib/logo";
-import useToast from "@/hooks/use-toast";
-import { withWalletConnectError } from "../connect-feedback";
-import { setNearSelector } from "./session";
-
-type ConnectToast = { fail: (params: { title: string }) => void };
-
-function assignMethod<T extends object, K extends PropertyKey>(
-  target: T,
-  key: K,
-  value: unknown,
-) {
-  try {
-    (target as Record<PropertyKey, unknown>)[key] = value;
-  } catch {
-    Object.defineProperty(target, key, { configurable: true, writable: true, value });
-  }
-}
-
-function patchWalletSignIn(wallet: object, getToast: () => ConnectToast) {
-  const current = wallet as { signIn?: (...args: never[]) => Promise<unknown> };
-  if (typeof current.signIn !== "function") return;
-  const signIn = current.signIn.bind(wallet) as (...args: never[]) => Promise<unknown>;
-  assignMethod(
-    wallet,
-    "signIn",
-    (...args: never[]) => withWalletConnectError(getToast(), () => signIn(...args)),
-  );
-}
-
-function patchSelectorModuleWallets(selector: WalletSelector, getToast: () => ConnectToast) {
-  const patchedModules = new WeakSet<object>();
-  const patchedWallets = new WeakSet<object>();
-  for (const module of selector.store.getState().modules) {
-    if (patchedModules.has(module)) continue;
-    patchedModules.add(module);
-    const originalWallet = module.wallet.bind(module);
-    assignMethod(module, "wallet", async () => {
-      const wallet = await originalWallet();
-      if (wallet && !patchedWallets.has(wallet)) {
-        patchedWallets.add(wallet);
-        patchWalletSignIn(wallet, getToast);
-      }
-      return wallet;
-    });
-  }
-}
+import {
+  applyNearConnectWalletAllowlist,
+  NEAR_CONNECT_NETWORK,
+  NEAR_WALLET_CONNECT_METADATA,
+} from "./config";
+import { setNearConnector } from "./session";
 
 interface NearWalletContextValue {
-  selector: WalletSelector | null;
-  modal: WalletSelectorModal | null;
+  connector: NearConnector | null;
   accountId: string | null;
+  walletIcon: string | null;
   connecting: boolean;
 }
 
 const NearWalletContext = createContext<NearWalletContextValue>({
-  selector: null,
-  modal: null,
+  connector: null,
   accountId: null,
+  walletIcon: null,
   connecting: false,
 });
 
+function createNearWalletConnectClient() {
+  const projectId = import.meta.env.VITE_WALLETCONNECT_PROJECT_ID?.trim();
+  if (!projectId) return undefined;
+  return SignClient.init({
+    projectId,
+    metadata: {
+      ...NEAR_WALLET_CONNECT_METADATA,
+      icons: [getLogo("/stableflow/logos/logo-stableflow.svg")],
+    },
+  });
+}
+
+function accountIdFrom(accounts: readonly { accountId: string }[] | undefined) {
+  return accounts?.[0]?.accountId?.trim() || null;
+}
+
 export function NearWalletProvider({ children }: { children: ReactNode }) {
-  const [selector, setSelector] = useState<WalletSelector | null>(null);
-  const [modal, setModal] = useState<WalletSelectorModal | null>(null);
+  const [connector, setConnector] = useState<NearConnector | null>(null);
   const [accountId, setAccountId] = useState<string | null>(null);
+  const [walletIcon, setWalletIcon] = useState<string | null>(null);
   const [connecting, setConnecting] = useState(true);
-  const toast = useToast();
-  const toastRef = useRef(toast);
-  toastRef.current = toast;
 
   useEffect(() => {
     let cancelled = false;
-    let unsubscribe: (() => void) | undefined;
+    const next = new NearConnector({
+      network: NEAR_CONNECT_NETWORK,
+      autoConnect: true,
+      footerBranding: null,
+      walletConnect: createNearWalletConnectClient(),
+    });
+
+    const syncWallet = (wallet: NearWalletBase | null, accounts?: readonly { accountId: string }[]) => {
+      const id = accountIdFrom(accounts);
+      setAccountId(id);
+      setWalletIcon(id ? wallet?.manifest.icon || null : null);
+    };
+
+    const onSignIn = ({ wallet, accounts }: { wallet: NearWalletBase; accounts: { accountId: string }[] }) => {
+      syncWallet(wallet, accounts);
+    };
+    const onSignOut = () => {
+      syncWallet(null);
+    };
 
     void (async () => {
       try {
-        const nextSelector = await setupWalletSelector({
-          network: "mainnet",
-          debug: false,
-          modules: [
-            setupIntearWallet(),
-            setupMeteorWallet(),
-            setupHotWallet() as never,
-            setupLedger(),
-            setupWalletConnect({
-              projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "",
-              metadata: {
-                name: "StableFlow Pay",
-                description: "Pay with stablecoins anywhere.",
-                url: "https://pay.stableflow.ai",
-                icons: [getLogo("/stableflow/logos/logo-stableflow.svg")]
-              },
-              chainId: "near:mainnet"
-            }),
-          ],
-        });
+        await next.whenManifestLoaded;
         if (cancelled) return;
-        patchSelectorModuleWallets(nextSelector, () => toastRef.current);
-        const nextModal = setupModal(nextSelector, { contractId: "" });
-        setNearSelector(nextSelector);
-        const syncAccounts = () => {
-          const state = nextSelector.store.getState();
-          const active = state.accounts.find((account) => account.active)?.accountId || null;
-          setAccountId(active);
-        };
-        syncAccounts();
-        const subscription = nextSelector.store.observable.subscribe(syncAccounts);
-        unsubscribe = () => subscription.unsubscribe();
-        setSelector(nextSelector);
-        setModal(nextModal);
+        applyNearConnectWalletAllowlist(next);
+        next.on("wallet:signIn", onSignIn);
+        next.on("wallet:signOut", onSignOut);
+        setNearConnector(next);
+        setConnector(next);
+        try {
+          const connected = await next.getConnectedWallet();
+          if (cancelled) return;
+          syncWallet(connected.wallet, connected.accounts);
+        } catch {
+          if (!cancelled) syncWallet(null);
+        }
       } catch (error) {
-        console.error("[wallet:near] Failed to initialize wallet selector", error);
+        console.error("[wallet:near] Failed to initialize Near connector", error);
       } finally {
         if (!cancelled) setConnecting(false);
       }
@@ -138,14 +99,15 @@ export function NearWalletProvider({ children }: { children: ReactNode }) {
 
     return () => {
       cancelled = true;
-      setNearSelector(null);
-      unsubscribe?.();
+      next.off("wallet:signIn", onSignIn);
+      next.off("wallet:signOut", onSignOut);
+      setNearConnector(null);
     };
   }, []);
 
   const value = useMemo<NearWalletContextValue>(
-    () => ({ selector, modal, accountId, connecting }),
-    [selector, modal, accountId, connecting],
+    () => ({ connector, accountId, walletIcon, connecting }),
+    [connector, accountId, walletIcon, connecting],
   );
 
   return <NearWalletContext.Provider value={value}>{children}</NearWalletContext.Provider>;
