@@ -57,16 +57,6 @@ export interface GoogleLoginBody {
   idToken: string;
 }
 
-export interface GoogleBindBody {
-  idToken: string;
-  email: string;
-  code: string;
-}
-
-export interface GoogleBindCodeBody {
-  email: string;
-}
-
 export interface GoogleRegisterBody {
   idToken: string;
   name: string;

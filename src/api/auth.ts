@@ -12,8 +12,6 @@ import {
   type LoginBody,
   type RegisterBody,
   type RegisterUserBody,
-  type GoogleBindBody,
-  type GoogleBindCodeBody,
   type GoogleLoginBody,
   type GoogleRegisterBody,
   type GoogleRegisterUserBody,
@@ -115,28 +113,6 @@ export async function googleLogin(body: GoogleLoginBody) {
       auth: false,
     }),
   );
-}
-
-export async function googleBind(body: GoogleBindBody) {
-  return mapAuthSession(
-    await http<unknown>(`${PAY_API_PREFIX}/auth/google/bind`, {
-      method: "POST",
-      body: {
-        id_token: body.idToken,
-        email: body.email,
-        code: body.code,
-      },
-      auth: false,
-    }),
-  );
-}
-
-export function sendGoogleBindCode(body: GoogleBindCodeBody) {
-  return http<void>(`${PAY_API_PREFIX}/auth/google/bind/code`, {
-    method: "POST",
-    body,
-    auth: false,
-  });
 }
 
 export function googleRegisterRequestBody(body: GoogleRegisterBody) {

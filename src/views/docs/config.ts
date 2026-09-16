@@ -32,7 +32,7 @@ export const DOCS_TOC: readonly DocsTocSection[] = [
       },
       {
         id: "23-google-sign-in-bindand-register",
-        label: "2.3 Google sign-in, bind, and register",
+        label: "2.3 Google sign-in and register",
       },
       {
         id: "24-join-by-invite-member",

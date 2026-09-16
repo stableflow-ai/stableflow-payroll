@@ -1,6 +1,6 @@
 # Project Structure
 
-Stableflow Pay is a Vite 8 + React 19 single-page app. Wallet providers for EVM, Near, Solana, Tron, and Zcash (Noir) are wired. The authenticated shell is a 220px Pay sidebar plus a content column; the released surface is Auth (`/login`, `/register`, `/invite/:orgId`, `/auth/google/bind`, `/register/google`, `/invite/:orgId/google`), `/` (Overview), `/pay/*`, `/team`, `/history`, and `/setting` (including `/setting/slack/callback`). `/howitworks` and `/docs` are public pages.
+Stableflow Pay is a Vite 8 + React 19 single-page app. Wallet providers for EVM, Near, Solana, Tron, and Zcash (Noir) are wired. The authenticated shell is a 220px Pay sidebar plus a content column; the released surface is Auth (`/login`, `/register`, `/invite/:orgId`, `/register/google`, `/invite/:orgId/google`), `/` (Overview), `/pay/*`, `/team`, `/history`, and `/setting` (including `/setting/slack/callback`). `/howitworks` and `/docs` are public pages.
 
 Product areas, routes, and constraints: [product.md](product.md).
 
@@ -117,7 +117,7 @@ src/
 | `consumed-batches.ts` | `persist` | Spent payroll `quote_batch_id`s so the same deposit addresses are never broadcast twice; `unmarkConsumed` after an insufficient-approval failure that never sent the payout |
 | `nearintents-user-session.ts` | no | Near Intents session for confidential receive / withdraw |
 | `google-drive-session.ts` | `persist` (sessionStorage) | Google OAuth token for the Sheets importer |
-| `google-auth-pending.ts` | `persist` (sessionStorage) | Google `id_token` + profile while binding or registering after code 10008 |
+| `google-auth-pending.ts` | `persist` (sessionStorage) | Google `id_token` + profile while registering after code 10008 |
 
 ## Import paths
 

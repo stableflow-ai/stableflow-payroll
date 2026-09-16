@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button/Button";
 import { IconGoogle } from "@/components/icons";
@@ -18,12 +18,10 @@ import {
   isGoogleUnregisteredError,
 } from "../auth-shared";
 import {
-  GOOGLE_BIND_PATH,
   GOOGLE_INVITE_REGISTER_PATH,
   GOOGLE_REGISTER_PATH,
 } from "../config";
 import { postAuthPath } from "../return-to";
-import { GoogleUnregisteredDialog } from "./GoogleUnregisteredDialog";
 
 export function GoogleSignInSection(props: {
   orAlign?: "start" | "center";
@@ -37,7 +35,6 @@ export function GoogleSignInSection(props: {
   const setPending = useGoogleAuthPendingStore((state) => state.setPending);
   const hostRef = useRef<HTMLDivElement>(null);
   const handlingRef = useRef(false);
-  const [dialogOpen, setDialogOpen] = useState(false);
   const configured = isGoogleSignInConfigured();
 
   const handleProfile = async (profile: GoogleIdTokenProfile) => {
@@ -55,7 +52,9 @@ export function GoogleSignInSection(props: {
           orgId: orgId ?? "",
           returnTo,
         });
-        setDialogOpen(true);
+        navigate(orgId ? GOOGLE_INVITE_REGISTER_PATH(orgId) : GOOGLE_REGISTER_PATH, {
+          replace: true,
+        });
         return;
       }
       toast.fail({
@@ -127,19 +126,6 @@ export function GoogleSignInSection(props: {
         />
       </div>
       <div className="mt-8 h-px w-full bg-[#E3E3E3]" />
-
-      <GoogleUnregisteredDialog
-        open={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-        onBind={() => {
-          setDialogOpen(false);
-          navigate(GOOGLE_BIND_PATH);
-        }}
-        onRegister={() => {
-          setDialogOpen(false);
-          navigate(orgId ? GOOGLE_INVITE_REGISTER_PATH(orgId) : GOOGLE_REGISTER_PATH);
-        }}
-      />
     </>
   );
 }
