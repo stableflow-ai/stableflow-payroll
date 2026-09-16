@@ -2,23 +2,19 @@
  * Near native and FT transfers to a deposit address.
  */
 
-import {
-  actionCreators,
-  internalActionToNaj,
-  type FunctionCallAction,
-} from "@near-wallet-selector/core";
+import type { ConnectorAction } from "@hot-labs/near-connect";
 import { nearViewFunction } from "@/lib/rpc/near";
 import type { PayBatchNearAction } from "@/types/payout";
-import { getNearSelector } from "./session";
+import { getNearConnector } from "./session";
 
 const FT_GAS = BigInt("30000000000000");
 const STORAGE_GAS = BigInt("30000000000000");
 const STORAGE_DEPOSIT = BigInt("1250000000000000000000");
 
-function requireSelector() {
-  const selector = getNearSelector();
-  if (!selector) throw new Error("Connect a Near wallet to send this payout");
-  return selector;
+function requireConnector() {
+  const connector = getNearConnector();
+  if (!connector) throw new Error("Connect a Near wallet to send this payout");
+  return connector;
 }
 
 async function hashFromOutcomes(result: unknown): Promise<string> {
@@ -32,7 +28,31 @@ async function hashFromOutcomes(result: unknown): Promise<string> {
   return hash;
 }
 
-function toFunctionCallAction(action: PayBatchNearAction): FunctionCallAction {
+function functionCall(
+  methodName: string,
+  args: object,
+  gas: bigint,
+  deposit: bigint,
+): ConnectorAction {
+  return {
+    type: "FunctionCall",
+    params: {
+      methodName,
+      args,
+      gas: gas.toString(),
+      deposit: deposit.toString(),
+    },
+  };
+}
+
+function nativeTransfer(deposit: bigint): ConnectorAction {
+  return {
+    type: "Transfer",
+    params: { deposit: deposit.toString() },
+  };
+}
+
+function toConnectorAction(action: PayBatchNearAction): ConnectorAction {
   return {
     type: "FunctionCall",
     params: {
@@ -44,15 +64,19 @@ function toFunctionCallAction(action: PayBatchNearAction): FunctionCallAction {
   };
 }
 
+type NearTx = {
+  receiverId: string;
+  actions: ConnectorAction[];
+};
+
 export async function broadcastNearActions(input: {
   receiverId: string;
   actions: PayBatchNearAction[];
 }): Promise<string> {
-  const selector = requireSelector();
-  const wallet = await selector.wallet();
+  const wallet = await requireConnector().wallet();
   const result = await wallet.signAndSendTransaction({
     receiverId: input.receiverId,
-    actions: input.actions.map((action) => internalActionToNaj(toFunctionCallAction(action))),
+    actions: input.actions.map(toConnectorAction),
   });
   return hashFromOutcomes(result);
 }
@@ -61,19 +85,13 @@ export async function transferNativeNear(input: {
   to: string;
   amountIn: bigint;
 }): Promise<string> {
-  const selector = requireSelector();
-  const wallet = await selector.wallet();
+  const wallet = await requireConnector().wallet();
   const result = await wallet.signAndSendTransaction({
     receiverId: input.to,
-    actions: [actionCreators.transfer(input.amountIn)],
+    actions: [nativeTransfer(input.amountIn)],
   });
   return hashFromOutcomes(result);
 }
-
-type NearTx = {
-  receiverId: string;
-  actions: ReturnType<typeof actionCreators.functionCall>[];
-};
 
 async function needsStorageDeposit(tokenContract: string, accountId: string): Promise<boolean> {
   const storage = await nearViewFunction<{ available?: string } | null>(
@@ -88,7 +106,7 @@ function storageDepositTx(tokenContract: string, accountId: string): NearTx {
   return {
     receiverId: tokenContract,
     actions: [
-      actionCreators.functionCall(
+      functionCall(
         "storage_deposit",
         { account_id: accountId, registration_only: true },
         STORAGE_GAS,
@@ -103,8 +121,7 @@ export async function transferFt(input: {
   to: string;
   amountIn: bigint;
 }): Promise<string> {
-  const selector = requireSelector();
-  const wallet = await selector.wallet();
+  const wallet = await requireConnector().wallet();
   const transactions: NearTx[] = [];
 
   if (await needsStorageDeposit(input.tokenContract, input.to)) {
@@ -114,7 +131,7 @@ export async function transferFt(input: {
   transactions.push({
     receiverId: input.tokenContract,
     actions: [
-      actionCreators.functionCall(
+      functionCall(
         "ft_transfer",
         {
           receiver_id: input.to,
@@ -136,8 +153,7 @@ export async function transferNearViaWrap(input: {
   to: string;
   amountIn: bigint;
 }): Promise<string> {
-  const selector = requireSelector();
-  const wallet = await selector.wallet();
+  const wallet = await requireConnector().wallet();
   const payer = (await wallet.getAccounts())[0]?.accountId;
   if (!payer) throw new Error("Connect a Near wallet to send this payout");
 
@@ -150,12 +166,12 @@ export async function transferNearViaWrap(input: {
   }
   transactions.push({
     receiverId: input.tokenContract,
-    actions: [actionCreators.functionCall("near_deposit", {}, FT_GAS, input.amountIn)],
+    actions: [functionCall("near_deposit", {}, FT_GAS, input.amountIn)],
   });
   transactions.push({
     receiverId: input.tokenContract,
     actions: [
-      actionCreators.functionCall(
+      functionCall(
         "ft_transfer",
         {
           receiver_id: input.to,

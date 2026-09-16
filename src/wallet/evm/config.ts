@@ -32,7 +32,10 @@ import {
   rabbyWallet,
   phantomWallet,
   ledgerWallet,
+  safeWallet,
 } from "@rainbow-me/rainbowkit/wallets";
+import { metadata } from "../metadata";
+import { guardSwitchChain } from "./guard-switch-chain";
 
 const chains = [
   mainnet,
@@ -50,15 +53,7 @@ const chains = [
   berachain,
 ] as const;
 
-export const metadata = {
-  name: "Stableflow Pay",
-  description: "Stableflow Pay: USDC and USDT payroll for global teams.",
-  // origin must match your domain & subdomain
-  url: "https://payroll.stableflow.ai",
-  icons: ["https://payroll.stableflow.ai/logo.svg"]
-};
-
-const connectors: any = connectorsForWallets(
+const connectors = connectorsForWallets(
   [
     {
       groupName: "Recommended",
@@ -72,6 +67,7 @@ const connectors: any = connectorsForWallets(
         phantomWallet,
         ledgerWallet,
         walletConnectWallet,
+        safeWallet,
       ],
     },
   ],
@@ -81,8 +77,8 @@ const connectors: any = connectorsForWallets(
     appUrl: metadata.url,
     appIcon: metadata.icons[0],
     projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "",
-  }
-);
+  },
+).map(guardSwitchChain);
 
 export const wagmiConfig = createConfig({
   connectors,

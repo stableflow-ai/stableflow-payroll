@@ -78,6 +78,41 @@ export interface UseWalletResult {
   isModalOpen?: boolean;
 }
 
+/**
+ * Outcome of a broadcast.
+ *
+ * A Safe multisig proposal is accepted long before it is executed, so "the wallet
+ * took it" and "there is a transaction hash" are separate events. Callers must
+ * branch instead of assuming a hash they can submit to the backend.
+ */
+export type BroadcastResult =
+  | { kind: "executed"; txHash: string }
+  | {
+      kind: "pending-multisig";
+      /** Safe's own identifier. Not an on-chain hash yet. */
+      safeTxHash: string;
+      safeAddress: string;
+      chainId: number;
+    };
+
+export function executedBroadcast(txHash: string): BroadcastResult {
+  return { kind: "executed", txHash };
+}
+
+/** Shape-only parameter so this stays independent of the EVM Safe module. */
+export function pendingMultisigBroadcast(result: {
+  hash: string;
+  safeAddress: string;
+  chainId: number;
+}): BroadcastResult {
+  return {
+    kind: "pending-multisig",
+    safeTxHash: result.hash,
+    safeAddress: result.safeAddress,
+    chainId: result.chainId,
+  };
+}
+
 export class UnsupportedChainError extends Error {
   constructor(kind: ChainKind, action: string) {
     super(

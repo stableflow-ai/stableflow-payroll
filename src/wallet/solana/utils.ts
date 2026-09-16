@@ -1,0 +1,57 @@
+import { WalletError } from "@solana/wallet-adapter-base";
+import { WALLET_CONNECTION_REJECTED_MESSAGE } from "../config";
+import { isWalletConnectionRejected } from "../connect-feedback";
+import {
+  LEDGER_DEVICE_LOCKED_CODE,
+  LEDGER_DEVICE_LOCKED_MESSAGE,
+  LEDGER_LIVE_WC_DEEPLINK_PREFIX,
+} from "./config";
+import { LedgerConnectCancelledError } from "./ledger-choice";
+
+const LEDGER_LOCKED_PATTERN = new RegExp(
+  `${LEDGER_DEVICE_LOCKED_CODE}|locked device`,
+  "i",
+);
+
+type ConnectToast = {
+  fail: (params: { title: string }) => void;
+};
+
+export function errorText(error: unknown): string {
+  if (typeof error === "string") return error;
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === "object" && "message" in error) {
+    const message = (error as { message: unknown }).message;
+    if (typeof message === "string") return message;
+  }
+  return String(error ?? "");
+}
+
+export function isLedgerDeviceLocked(error: unknown): boolean {
+  return LEDGER_LOCKED_PATTERN.test(errorText(error));
+}
+
+export function solanaWalletErrorMessage(error: unknown): string | null {
+  if (isLedgerDeviceLocked(error)) return LEDGER_DEVICE_LOCKED_MESSAGE;
+  return null;
+}
+
+export function openLedgerLiveWalletConnect(uri: string) {
+  window.location.href = `${LEDGER_LIVE_WC_DEEPLINK_PREFIX}${encodeURIComponent(uri)}`;
+}
+
+export function reportSolanaWalletError(toast: ConnectToast, error: unknown): void {
+  if (error instanceof LedgerConnectCancelledError) return;
+  const locked = solanaWalletErrorMessage(error);
+  if (locked) {
+    toast.fail({ title: locked });
+    return;
+  }
+  if (isWalletConnectionRejected(error)) {
+    toast.fail({ title: WALLET_CONNECTION_REJECTED_MESSAGE });
+    return;
+  }
+  if (error instanceof WalletError) {
+    toast.fail({ title: error.message || "Solana wallet error" });
+  }
+}

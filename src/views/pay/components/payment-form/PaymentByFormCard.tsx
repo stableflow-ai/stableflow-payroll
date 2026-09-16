@@ -3,25 +3,30 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconEmail, IconLock } from "@/components/icons";
 import { Button } from "@/components/ui/button/Button";
 import { BATCH_BLOCKCHAINS } from "@/config/chains";
+import { batchSubmit } from "@/api/payout";
 import { queryKeys } from "@/api/query-keys";
 import { usePayOriginToken } from "@/hooks/use-pay-origin-token";
-import { usePayablePayQuery, usePayablesQuery } from "@/hooks/use-payable-api";
+import { usePayablePayQuery, usePayablesQuery, usePayableQuoteNotificationMutation } from "@/hooks/use-payable-api";
 import { usePaymentWallet } from "@/hooks/use-payment-wallet";
 import { useTokenBalancesStore } from "@/stores/token-balances";
 import { useIntentsTokensStore } from "@/stores/intents-tokens";
 import { useAuthStore } from "@/stores/auth";
-import { enqueueBatchPayoutCommit } from "@/stores/batch-payout-commit-queue";
+import { notifyBatchPayoutCommitSuccess } from "@/stores/batch-payout-commit-queue";
 import {
   isBatchConsumed,
   markBatchConsumed,
+  unmarkBatchConsumed,
   useConsumedBatchesStore,
 } from "@/stores/consumed-batches";
 import useToast from "@/hooks/use-toast";
 import { organizationId } from "@/lib/auth-role";
 import { formatAmount, browserTimeZone } from "@/utils";
 import { cn } from "@/lib/utils";
+import { showSafeProposalToast } from "@/components/safe/safe-proposal-toast";
 import { broadcastBatchPayout } from "@/wallet/broadcast-batch-payout";
 import { INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE } from "@/wallet/config";
+import { assertSafeOriginChain } from "@/wallet/evm/safe";
+import type { BroadcastResult } from "@/wallet/types";
 import { assertNativeZecSpendable, zecSpendableGateMessage } from "@/wallet/zec/balance";
 import { ZCASH_TRANSPARENT_REFUND_MESSAGE } from "@/wallet/zec/config";
 import type { ChainKind } from "@/wallet";
@@ -29,11 +34,13 @@ import {
   findPayable,
   parsePayableKey,
   payableKeyId,
+  payableNotification,
   type Payable,
   type PayableKey,
 } from "@/types/payable";
 import {
   AMOUNT_MAX_DECIMALS,
+  INSUFFICIENT_APPROVAL_MESSAGE,
   INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE,
   QUOTE_EXPIRED_MESSAGE,
   SPENT_BATCH_MESSAGE,
@@ -51,9 +58,11 @@ import { PaymentFormSelect } from "./PaymentFormSelect";
 import { batchPayoutCommitTitle } from "./config";
 import {
   buildPayablePayRequest,
+  nextUnpaidQuoteBatchId,
   payableItemIds,
   payableQuotePayments,
   payableQuoteSourceAmount,
+  remainingSourceAmountRaw,
   sumQuoteDestinationVolume,
 } from "./utils";
 
@@ -109,6 +118,12 @@ export function PaymentByFormCard(props: {
   const paidQuoteBatchIdsRef = useRef(paidQuoteBatchIds);
   paidQuoteBatchIdsRef.current = paidQuoteBatchIds;
   const refreshedForBatchId = useRef("");
+  const postedNotifyRef = useRef<{ quoteId: string; notification: string } | null>(null);
+  const [postedNotify, setPostedNotify] = useState<{
+    quoteId: string;
+    notification: string;
+  } | null>(null);
+  const notifyMutation = usePayableQuoteNotificationMutation();
 
   useEffect(() => {
     void ensureFresh();
@@ -140,6 +155,7 @@ export function PaymentByFormCard(props: {
   const zcashBatchDisabled = (detail?.items.length ?? 0) > 1;
   const { originToken, setOriginToken } = usePayOriginToken(BATCH_BLOCKCHAINS, {
     excludeBlockchains: zcashBatchDisabled ? ZCASH_DISABLED_BLOCKCHAINS : null,
+    remember: false,
   });
   const originKind: ChainKind =
     originToken?.chain.chainKind === "near"
@@ -166,6 +182,8 @@ export function PaymentByFormCard(props: {
     setPaidQuoteBatchIds(new Set());
     setSendingQuoteBatchId(null);
     setPhase("idle");
+    postedNotifyRef.current = null;
+    setPostedNotify(null);
   }, [selectedId]);
 
   const payBody = useMemo(
@@ -177,8 +195,6 @@ export function PaymentByFormCard(props: {
         refundTo: quoteRefundTo,
         organizationId: orgId,
         timezone,
-        notifyEnabled,
-        selectedItemIds: [...selectedItemIds],
         netPayById,
       }),
     [
@@ -188,14 +204,42 @@ export function PaymentByFormCard(props: {
       quoteRefundTo,
       orgId,
       timezone,
-      notifyEnabled,
-      selectedItemIds,
       netPayById,
     ],
   );
 
   const quoteQuery = usePayablePayQuery(payBody);
   const quote = payBody ? quoteQuery.data : undefined;
+  const quoteId = quote?.quoteId ?? "";
+  const desiredNotification = notifyEnabled && detail
+    ? (payableNotification([...selectedItemIds], payableItemIds(detail)) ?? "")
+    : "";
+
+  useEffect(() => {
+    if (!quoteId) return;
+    const posted = postedNotifyRef.current;
+    if (desiredNotification === "") {
+      if (!posted || posted.quoteId !== quoteId || posted.notification === "") return;
+    } else if (posted?.quoteId === quoteId && posted.notification === desiredNotification) {
+      return;
+    }
+    let cancelled = false;
+    void notifyMutation.mutateAsync({
+      quote_id: quoteId,
+      notification: desiredNotification,
+    }).then(() => {
+      if (cancelled) return;
+      const next = { quoteId, notification: desiredNotification };
+      postedNotifyRef.current = next;
+      setPostedNotify(next);
+    }).catch((error) => {
+      if (cancelled) return;
+      toast.fail({ title: formatQuoteErrorMessage(error, 2) });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [desiredNotification, quoteId]);
   const batches = quote?.batches ?? [];
   const isSplit = batches.length > 1;
   const firstQuoteBatchId = batches[0]?.quoteBatchId ?? "";
@@ -243,6 +287,13 @@ export function PaymentByFormCard(props: {
 
   const settleMutation = useMutation({
     mutationFn: async (quoteBatchId: string) => {
+      const nextQuoteBatchId = nextUnpaidQuoteBatchId(
+        batches,
+        paidQuoteBatchIdsRef.current,
+      );
+      if (quoteBatchId !== nextQuoteBatchId) {
+        throw new BalanceGateError("Pay the previous batch first");
+      }
       const quoted = batches.find((row) => row.quoteBatchId === quoteBatchId);
       const batch = quoted?.batch;
       if (!originToken || !payBody || !quote || !batch || !connectedAddress) {
@@ -270,8 +321,16 @@ export function PaymentByFormCard(props: {
         if (!isSplit && !paymentStarted) void refetchQuote();
         throw new BalanceGateError(SPENT_BATCH_MESSAGE);
       }
+      if (originToken.chain.chainId != null) {
+        await assertSafeOriginChain(originToken.chain.chainId);
+      }
       const payer = wallet.account.address;
       const amountIn = BigInt(batch.totalSourceAmountRaw || "0");
+      const remainingRaw = remainingSourceAmountRaw(
+        batches,
+        paidQuoteBatchIdsRef.current,
+      );
+      const requiredAmount = remainingRaw > 0n ? remainingRaw : amountIn;
       if (import.meta.env.VITE_VIRIFY_BALANCE !== "false") {
         if (originKind === "zec") {
           try {
@@ -298,16 +357,18 @@ export function PaymentByFormCard(props: {
         throw new Error("Missing batch transaction");
       }
       const batchIndex = batches.findIndex((row) => row.quoteBatchId === quoteBatchId) + 1;
+      const title = batchPayoutCommitTitle(detail?.title ?? "", batchIndex, batches.length);
       setPhase("sending");
       setSendingQuoteBatchId(quoteBatchId);
       setNotifyOpen(false);
       markBatchConsumed(quoteBatchId);
-      let txHash: string;
+      let result: BroadcastResult;
       try {
-        txHash = await broadcastBatchPayout({
+        result = await broadcastBatchPayout({
           token: originToken,
           transaction: tx,
           amountIn,
+          requiredAmount,
           payer,
         });
       } catch (error) {
@@ -315,23 +376,46 @@ export function PaymentByFormCard(props: {
           error instanceof Error
           && error.message === INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE
         ) {
-          toast.fail({ title: INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE });
-          if (!paymentStarted) void refetchQuote();
-          throw new BalanceGateError(INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE);
+          unmarkBatchConsumed(quoteBatchId);
+          if (!paymentStarted) {
+            toast.fail({ title: INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE });
+            void refetchQuote();
+            throw new BalanceGateError(INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE);
+          }
+          toast.fail({ title: INSUFFICIENT_APPROVAL_MESSAGE });
+          throw new BalanceGateError(INSUFFICIENT_APPROVAL_MESSAGE);
         }
         throw error;
       }
-      enqueueBatchPayoutCommit({
-        quoteId: quote.quoteId,
-        quoteBatchId,
-        txHash,
-        title: batchPayoutCommitTitle(detail?.title ?? "", batchIndex, batches.length),
-        type: detail?.type ?? "",
-        formKey,
-      });
+      // A Safe proposal has no transaction hash, so there is nothing to commit,
+      // but the batch is spoken for: treat it like a paid batch so the flow moves
+      // on to the next one and only settles the form once every batch is proposed.
+      if (result.kind === "pending-multisig") {
+        showSafeProposalToast(toast, {
+          chainId: result.chainId,
+          safeAddress: result.safeAddress,
+        });
+        return quoteBatchId;
+      }
+      try {
+        const submitted = await batchSubmit({
+          quote_id: quote.quoteId,
+          quote_batch_id: quoteBatchId,
+          tx_hash: result.txHash,
+        });
+        notifyBatchPayoutCommitSuccess({
+          executionId: submitted.executionId,
+          title,
+          type: detail?.type ?? "",
+          formKey,
+        });
+      } catch (error) {
+        toast.fail({ title: formatQuoteErrorMessage(error, 2) });
+      }
       return quoteBatchId;
     },
     onSuccess: (quoteBatchId) => {
+      if (!quoteBatchId) return;
       const next = new Set(paidQuoteBatchIdsRef.current);
       next.add(quoteBatchId);
       setPaidQuoteBatchIds(next);
@@ -364,11 +448,18 @@ export function PaymentByFormCard(props: {
   const formPicked = Boolean(selectedId);
   const formSelected = Boolean(selectedId && detail);
   const quoteReady = Boolean(quote && !quoteStale && !quoteError);
+  const notifyReady = !notifyEnabled
+    || (
+      postedNotify?.quoteId === quoteId
+      && postedNotify.notification === desiredNotification
+      && !notifyMutation.isPending
+    );
   const canSendSingle = Boolean(
     formSelected
     && isBatchOriginToken(originToken)
     && payBody
     && quoteReady
+    && notifyReady
     && firstQuoteBatchId
     && !firstBatchConsumed
     && !sending
@@ -379,6 +470,7 @@ export function PaymentByFormCard(props: {
     || !isBatchOriginToken(originToken)
     || !payBody
     || !quoteReady
+    || !notifyReady
     || sending
     || quoting
     || formsFetching,
@@ -391,6 +483,7 @@ export function PaymentByFormCard(props: {
     }
     const target = quoteBatchId || firstQuoteBatchId;
     if (!target) return;
+    if (target !== nextUnpaidQuoteBatchId(batches, paidQuoteBatchIds)) return;
     void settleMutation.mutateAsync(target);
   }
 
@@ -535,7 +628,7 @@ export function PaymentByFormCard(props: {
         <Button
           size="xl"
           className="mt-8 w-full"
-          loading={formPicked && (formsFetching || quoting || sending)}
+          loading={formPicked && (formsFetching || quoting || sending || (notifyEnabled && notifyMutation.isPending))}
           disabled={!canSendSingle}
           onClick={() => handleSend()}
         >

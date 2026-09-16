@@ -103,6 +103,10 @@ export default defineConfig({
     port: 5201,
     host: "127.0.0.1",
     // When a real API is wired, the client calls VITE_API_BASE_URL directly (no proxy).
+    // Safe{Wallet} fetches /manifest.json cross-origin before it will load this app
+    // as a Safe App. Hosting must also leave `X-Frame-Options` unset and allow
+    // `frame-ancestors https://app.safe.global` so the iframe is not blocked.
+    cors: true,
   },
   test: {
     environment: "node",

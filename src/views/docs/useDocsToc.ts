@@ -36,7 +36,7 @@ function headingIdAtScroll(): DocsTocId {
   return pickLastHeadingPastOffset(headings, offset, DEFAULT_ID);
 }
 
-export function useDocsToc(locale: string) {
+export function useDocsToc() {
   const [activeId, setActiveId] = useState<DocsTocId>(DEFAULT_ID);
   const scrollingRef = useRef(false);
   const scrollTimerRef = useRef<number | null>(null);
@@ -89,7 +89,7 @@ export function useDocsToc(locale: string) {
       window.cancelAnimationFrame(frame);
       window.removeEventListener("hashchange", onHashChange);
     };
-  }, [applySpy, locale]);
+  }, [applySpy]);
 
   useEffect(() => {
     let frame = 0;
@@ -108,7 +108,7 @@ export function useDocsToc(locale: string) {
       window.removeEventListener("resize", onScroll);
       if (frame) window.cancelAnimationFrame(frame);
     };
-  }, [applySpy, locale]);
+  }, [applySpy]);
 
   return { activeId, navigateTo };
 }

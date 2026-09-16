@@ -7,6 +7,7 @@ import {
   mapPayables,
   payPayable,
   payablePayBody,
+  setPayableQuoteNotification,
 } from "./payable";
 import {
   PAYABLE_TYPE,
@@ -359,21 +360,9 @@ describe("payablePayBody", () => {
     });
   });
 
-  it("adds notification as all or comma-separated ids", () => {
+  it("builds notification as all or comma-separated ids and omits it from quote bodies", () => {
     expect(payableNotification([3, 1, 3], [1, 2, 3])).toBe("1,3");
     expect(payableNotification([2, 1], [1, 2])).toBe(PAYABLE_NOTIFICATION_ALL);
-    expect(
-      payablePayBody({
-        type: PAYABLE_TYPE.Bonus,
-        batchId: 2,
-        organization_id: 1,
-        payer: "near.payer",
-        refundTo: "near.refund",
-        source_network: "near",
-        source_symbol: "USDT",
-        notification: "1,3",
-      }).notification,
-    ).toBe("1,3");
     expect(payableNotification([], [1, 2])).toBeUndefined();
     expect(
       payablePayBody({
@@ -673,6 +662,24 @@ describe("payPayable", () => {
           source_symbol: "USDT",
           batch_id: 2,
         },
+      }),
+    );
+  });
+});
+
+describe("setPayableQuoteNotification", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("posts quote_id and notification to /pay/quote/notification", async () => {
+    const spy = vi.spyOn(httpModule, "http").mockResolvedValue(undefined);
+    await setPayableQuoteNotification({ quote_id: "q-1", notification: "all" });
+    expect(spy).toHaveBeenCalledWith(
+      "/v1/payroll/pay/quote/notification",
+      expect.objectContaining({
+        method: "POST",
+        body: { quote_id: "q-1", notification: "all" },
       }),
     );
   });

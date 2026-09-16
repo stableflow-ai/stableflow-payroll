@@ -1,7 +1,9 @@
 import { Buffer } from "buffer";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { isAddressValid } from "@/utils";
+import useToast from "@/hooks/use-toast";
 import type { GeneratedIntent, IntentSignInput, IntentSignedPayload, UseWalletResult, WalletAccount } from "../types";
+import { withWalletConnectError } from "../connect-feedback";
 import { useNearWalletContext } from "./provider";
 import {
   INTENTS_RECIPIENT,
@@ -14,60 +16,51 @@ import {
 } from "../intents-sign";
 
 export function useNearWallet(): UseWalletResult {
-  const { selector, modal, accountId, connecting } = useNearWalletContext();
+  const { connector, accountId, walletIcon, connecting } = useNearWalletContext();
+  const toast = useToast();
   const [modalOpen, setModalOpen] = useState(false);
 
   const account = useMemo<WalletAccount | null>(() => {
     if (!accountId) return null;
-    return { address: accountId, chainKind: "near", chainId: "mainnet" };
-  }, [accountId]);
-
-  useEffect(() => {
-    if (!modal) return;
-    const sub = modal.on("onHide", (event) => {
-      if (event.hideReason === "user-triggered") setModalOpen(false);
-    });
-    return () => sub.remove();
-  }, [modal]);
+    return { address: accountId, chainKind: "near", chainId: "mainnet", icon: walletIcon ?? undefined };
+  }, [accountId, walletIcon]);
 
   useEffect(() => {
     if (accountId) setModalOpen(false);
   }, [accountId]);
 
   const connect = useCallback(() => {
-    const show = () => {
-      setModalOpen(true);
-      modal?.show();
-    };
-    if (!accountId || !selector) {
-      show();
-      return;
-    }
+    if (!connector) return;
+    setModalOpen(true);
     void (async () => {
       try {
-        const wallet = await selector.wallet();
-        await wallet.signOut();
+        if (accountId) {
+          await connector.disconnect().catch(() => {
+            // Still open the picker so the user can switch wallets.
+          });
+        }
+        await withWalletConnectError(toast, () => connector.connect());
       } catch {
-        // Still open the picker so the user can switch wallets.
+        // Toast already reported a user rejection.
+      } finally {
+        setModalOpen(false);
       }
-      show();
     })();
-  }, [accountId, modal, selector]);
+  }, [accountId, connector, toast]);
 
   const disconnect = useCallback(() => {
-    void (async () => {
-      if (!selector) return;
-      const wallet = await selector.wallet();
-      await wallet.signOut();
-    })();
-  }, [selector]);
+    if (!connector) return;
+    void connector.disconnect().catch(() => {
+      // Session is already cleared on wallet:signOut when disconnect succeeds.
+    });
+  }, [connector]);
 
   const signMessage = useCallback(
     async (input: IntentSignInput): Promise<IntentSignedPayload> => {
-      if (!selector || !accountId) {
+      if (!connector || !accountId) {
         throw new Error("[wallet:near] No connected account to sign with.");
       }
-      const wallet = await selector.wallet();
+      const wallet = await connector.wallet();
       if (typeof wallet.signMessage !== "function") {
         throw walletDoesNotSupportSigning("NEAR");
       }
@@ -93,15 +86,15 @@ export function useNearWallet(): UseWalletResult {
         signature: encodeEd25519(signed.signature),
       };
     },
-    [accountId, selector],
+    [accountId, connector],
   );
 
   const signGeneratedIntent = useCallback(
     async (intent: GeneratedIntent): Promise<IntentSignedPayload> => {
-      if (!selector || !accountId) {
+      if (!connector || !accountId) {
         throw new Error("[wallet:near] No connected account to sign with.");
       }
-      const wallet = await selector.wallet();
+      const wallet = await connector.wallet();
       if (typeof wallet.signMessage !== "function") {
         throw walletDoesNotSupportSigning("NEAR");
       }
@@ -125,7 +118,7 @@ export function useNearWallet(): UseWalletResult {
         signature: encodeEd25519(signed.signature),
       };
     },
-    [accountId, selector],
+    [accountId, connector],
   );
 
   const isAddressValidFn = useCallback((value: string) => isAddressValid(value, "near"), []);

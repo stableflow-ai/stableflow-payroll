@@ -1,7 +1,10 @@
 import { useRecipientMutations, useRecipientsQuery } from "@/hooks/use-recipient-api";
 import type { PayRecipient } from "@/types/recipient";
+import type { TeamMemberWallets } from "@/types/team";
 
-export type Contact = PayRecipient;
+export type Contact = PayRecipient & {
+  wallets?: TeamMemberWallets;
+};
 
 export function useContacts(options?: { enabled?: boolean }) {
   const query = useRecipientsQuery(options?.enabled ?? true);

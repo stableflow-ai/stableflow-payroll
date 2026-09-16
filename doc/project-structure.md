@@ -1,6 +1,6 @@
 # Project Structure
 
-Stableflow Pay is a Vite 8 + React 19 single-page app. Wallet providers for EVM, Near, Solana, Tron, and Zcash (Noir) are wired. The authenticated shell is a 220px Pay sidebar plus a content column; the released surface is Auth (`/login`, `/register`, `/invite/:orgId`, `/auth/google/bind`, `/register/google`, `/invite/:orgId/google`), `/` (Overview), `/pay/*`, `/team`, `/history`, and `/setting` (including `/setting/slack/callback`). `/howitworks` and `/docs` are public pages.
+Stableflow Pay is a Vite 8 + React 19 single-page app. Wallet providers for EVM, Near, Solana, Tron, and Zcash (Noir) are wired. The authenticated shell is a 220px Pay sidebar plus a content column; the released surface is Auth (`/login`, `/register`, `/invite/:orgId`, `/register/google`, `/invite/:orgId/google`), `/` (Overview), `/pay/*`, `/team`, `/history`, and `/setting` (including `/setting/slack/callback`). `/howitworks` and `/docs` are public pages.
 
 Product areas, routes, and constraints: [product.md](product.md).
 
@@ -10,7 +10,7 @@ Product areas, routes, and constraints: [product.md](product.md).
 - **Styling:** Tailwind CSS 4 (`@tailwindcss/vite`, no `tailwind.config.js`), `cn()` (`clsx` + `tailwind-merge`), `class-variance-authority`
 - **State:** Zustand (cross-page client state), TanStack Query (server cache). The JWT session goes through `src/lib/auth-session.ts`; nothing else touches `localStorage` / `sessionStorage`.
 - **Routing:** `react-router-dom` 7 (`createBrowserRouter`)
-- **Wallets:** RainbowKit + wagmi + viem (EVM), `@near-wallet-selector` (Near), `@solana/wallet-adapter` (Solana), `@tronweb3/tronwallet-adapters` (Tron), `@rhea-finance/zcash-wallet-adapter` (Zcash / Noir). Solana send is HTTP-only (the HMAC proxy has no WebSocket): unsigned transactions refresh `recentBlockhash` locally, stay on the RPC that issued it, and rebroadcast until confirmed or the blockhash expires.
+- **Wallets:** RainbowKit + wagmi + viem (EVM), `@hot-labs/near-connect` (Near), `@solana/wallet-adapter` (Solana), `@tronweb3/tronwallet-adapters` (Tron), `@rhea-finance/zcash-wallet-adapter` (Zcash / Noir). Solana send is HTTP-only (the HMAC proxy has no WebSocket): unsigned transactions refresh `recentBlockhash` locally, stay on the RPC that issued it, and rebroadcast until confirmed or the blockhash expires.
 - **Other:** `motion` (animation), `recharts` (charts), `react-toastify` (toasts), `date-fns` (dates), `big.js` (amounts), `papaparse` (CSV), `exceljs` (Excel import templates)
 - **Tests:** Vitest (`src/**/*.test.ts`, `environment: "node"`). There is no ESLint or Prettier config; `pnpm check` and `pnpm test` are the quality gate.
 - **Path alias:** `@/` → `src/`
@@ -33,7 +33,7 @@ Copy `.env.example` to `.env.local`.
 | Variable | Required | Notes |
 | --- | --- | --- |
 | `VITE_API_BASE_URL` | yes | Backend origin. The browser calls it directly; there is no Vite proxy. `http()` throws `ApiError("API base URL is not configured")` when it is empty. |
-| `VITE_WALLETCONNECT_PROJECT_ID` | for wallets | Shared by RainbowKit, the Near selector, and the Tron WalletConnect adapter. |
+| `VITE_WALLETCONNECT_PROJECT_ID` | for wallets | Shared by RainbowKit, Near `@hot-labs/near-connect` Wallet Connect, and the Tron WalletConnect adapter. |
 | `VITE_RPC_PROXY_HOST`, `VITE_RPC_SECRET_KEY` | optional | HMAC-signed RPC proxy used by `src/lib/rpc/`. |
 | `VITE_AMOUNT_MAX_DECIMALS` | optional | Fractional digits for amount inputs (not on-chain token decimals). |
 | `VITE_GOOGLE_CLIENT_ID`, `VITE_GOOGLE_API_KEY`, `VITE_GOOGLE_APP_ID` | for Sheets import; client id also for Google sign-in | Google Identity + Picker + Sheets API. Sign-in only needs `VITE_GOOGLE_CLIENT_ID`. |
@@ -70,6 +70,7 @@ src/
     date-range-picker/         shared range picker
     token-select-dialog/       shared chain + token picker
     recipient-avatar/, you-pay/, WalletConnect.tsx
+    safe/                      SafeMultisigBadge, showSafeProposalToast
   api/                         one module per domain, thin wrappers over http()
   hooks/                       use-*-api.ts (TanStack Query) plus wallet/UI hooks
   types/                       request and response types per domain
@@ -80,6 +81,9 @@ src/
   config/                      chains.ts (chain registry, explorers, payer/batch flags)
   mocks/                       mock switchboard; see doc/mocks.md
   wallet/                      per-chain adapters, providers, transfer + broadcast
+    evm/safe/                  Safe proposal helpers (no execution poller):
+                               abi.ts, bundle.ts, config.ts, detect.ts, info.ts,
+                               send.ts, types.ts, use-safe-info.ts, use-safe-mode.ts
 ```
 
 ## Where new code goes
@@ -108,12 +112,12 @@ src/
 | `wallet.ts` | no | Per-chain connection state, account, modal control, `signMessage` |
 | `intents-tokens.ts` | `persist` | 1Click token list, `PAYOUT_SYMBOLS`, `ensureFresh`, `findByChainAndSymbol` |
 | `token-balances.ts` | no | Balance cache and fetch status per owner + asset |
-| `quick-pay-prefs.ts` | `persist` | Remembered single-payout preferences |
-| `batch-payout-commit-queue.ts` | `persist` | Retry queue for `POST /v1/payroll/payouts/submit` |
-| `consumed-batches.ts` | `persist` | Spent payroll `batchId`s so the same deposit addresses are never broadcast twice |
+| `quick-pay-prefs.ts` | `persist` | Remembered single-payout preferences: last origin token and Notify Recipient switch |
+| `batch-payout-commit-queue.ts` | `persist` | Unused retry queue for `POST /v1/payroll/payouts/submit` (Payment by Form submits once) |
+| `consumed-batches.ts` | `persist` | Spent payroll `quote_batch_id`s so the same deposit addresses are never broadcast twice; `unmarkConsumed` after an insufficient-approval failure that never sent the payout |
 | `nearintents-user-session.ts` | no | Near Intents session for confidential receive / withdraw |
 | `google-drive-session.ts` | `persist` (sessionStorage) | Google OAuth token for the Sheets importer |
-| `google-auth-pending.ts` | `persist` (sessionStorage) | Google `id_token` + profile while binding or registering after code 10008 |
+| `google-auth-pending.ts` | `persist` (sessionStorage) | Google `id_token` + profile while registering after code 10008 |
 
 ## Import paths
 

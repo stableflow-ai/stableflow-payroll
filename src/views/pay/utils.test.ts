@@ -44,6 +44,24 @@ describe("formatQuoteErrorMessage", () => {
       "Amount is too low for bridge, try at least 0.01863467251119904",
     );
   });
+
+  it("maps a software-wallet rejection to the unified copy", () => {
+    expect(formatQuoteErrorMessage(new Error("User rejected the request"))).toBe(
+      "User rejected transaction",
+    );
+  });
+
+  it("maps a Ledger device rejection to the unified copy", () => {
+    expect(formatQuoteErrorMessage(
+      new Error("Ledger device: Condition of use not satisfied (denied by the user?) (0x6985)"),
+    )).toBe("User rejected transaction");
+  });
+
+  it("maps a locked Ledger device to the unlock copy", () => {
+    expect(formatQuoteErrorMessage(
+      new Error("Ledger device: Locked device (0x5515)"),
+    )).toBe("Unlock your Ledger device and open the Solana app.");
+  });
 });
 
 describe("parsePayoutCallbackParams", () => {

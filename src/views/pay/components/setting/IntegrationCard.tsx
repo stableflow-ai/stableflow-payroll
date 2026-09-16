@@ -148,7 +148,7 @@ export function IntegrationCard() {
               onChange={(next) => void persist(INTEGRATION_FIELD.Telegram, next)}
             /> */}
             <IntegrationChannelCard
-              title="Slack"
+              title="Slack ID"
               icon={integrationIconImg("/setting/slack.svg", "Slack")}
               config={draft.slack}
               saving={pendingKeys.has(INTEGRATION_FIELD.Slack)}

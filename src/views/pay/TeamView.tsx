@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { RecipientAvatar } from "@/components/recipient-avatar/RecipientAvatar";
+import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { Pagination } from "@/components/ui/pagination/Pagination";
 import { SearchInput } from "@/components/ui/search-input/SearchInput";
 import {
@@ -21,7 +22,14 @@ import { TeamMemberFormDialog } from "./components/team/TeamMemberFormDialog";
 import { TeamMemberMenu } from "./components/team/TeamMemberMenu";
 import { TeamWalletCell } from "./components/team/TeamWalletCell";
 import { TEAM_PAGE_SIZE, TEAM_SEARCH_DEBOUNCE_MS, TEAM_TABLE_COLUMNS } from "./components/team/config";
-import { dash, memberDisplayWallet, organizationInviteUrl } from "./components/team/utils";
+import {
+  dash,
+  enabledTeamWalletKinds,
+  organizationInviteUrl,
+  TEAM_WALLET_KIND_OPTIONS,
+  walletForChainKind,
+  type TeamWalletKind,
+} from "./components/team/utils";
 
 function useDebouncedValue<T>(value: T, delayMs: number): T {
   const [debounced, setDebounced] = useState(value);
@@ -52,6 +60,23 @@ export function TeamView() {
   const { createMutation, updateMutation, removeMutation } = useTeamMemberMutations();
   const members = query.data?.list ?? [];
   const totalPage = Math.max(1, query.data?.totalPage ?? 1);
+  const walletKinds = useMemo(
+    () => enabledTeamWalletKinds(orgQuery.data?.addressSettings),
+    [orgQuery.data?.addressSettings],
+  );
+  const walletKindOptions = useMemo(
+    () => walletKinds.map((kind) => {
+      const option = TEAM_WALLET_KIND_OPTIONS.find((row) => row.kind === kind);
+      return { value: kind, label: option?.label ?? kind };
+    }),
+    [walletKinds],
+  );
+  const [walletKind, setWalletKind] = useState<TeamWalletKind>("evm");
+
+  useEffect(() => {
+    if (walletKinds.length === 0) return;
+    if (!walletKinds.includes(walletKind)) setWalletKind(walletKinds[0]);
+  }, [walletKind, walletKinds]);
 
   function openAdd() {
     setEditing(null);
@@ -96,7 +121,20 @@ export function TeamView() {
             <TableHead>Name</TableHead>
             <TableHead>Position</TableHead>
             <TableHead>Email</TableHead>
-            <TableHead>Wallet</TableHead>
+            <TableHead>
+              <span className="inline-flex min-w-0 items-center gap-1">
+                Wallet
+                {walletKinds.length > 1 ? (
+                  <Dropdown
+                    value={walletKind}
+                    onChange={(value) => setWalletKind(value as TeamWalletKind)}
+                    options={walletKindOptions}
+                    className="inline-flex [&_button>span]:sr-only"
+                    triggerClassName="h-auto w-auto min-w-0 border-0 bg-transparent p-0"
+                  />
+                ) : null}
+              </span>
+            </TableHead>
             <TableHead />
           </TableHeader>
           <TableBody>
@@ -106,7 +144,7 @@ export function TeamView() {
               </p>
             ) : (
               members.map((row) => {
-                const wallet = memberDisplayWallet(row);
+                const wallet = walletForChainKind(row.wallets, walletKind).trim() || null;
                 return (
                   <TableRow key={row.id}>
                     <TableCell>

@@ -9,6 +9,7 @@ import {
   type Payable,
   type PayableItem,
   type PayablePayRequest,
+  type PayableQuoteNotificationParam,
   type PayableType,
   type PayrollPayParam,
 } from "@/types/payable";
@@ -198,7 +199,6 @@ export function payablePayBody(request: PayablePayRequest): Record<string, unkno
     refundTo,
     source_network,
     source_symbol,
-    notification,
     adjustments,
   } = request;
   const body: Record<string, unknown> = {
@@ -208,7 +208,6 @@ export function payablePayBody(request: PayablePayRequest): Record<string, unkno
     source_network,
     source_symbol,
   };
-  if (notification) body.notification = notification;
   if (request.type === PAYABLE_TYPE.Payroll && "period_month" in request) {
     if (adjustments?.length) body.adjustments = adjustments;
     body.period_month = request.period_month;
@@ -223,6 +222,15 @@ export function payablePayBody(request: PayablePayRequest): Record<string, unkno
     return body;
   }
   return body;
+}
+
+export async function setPayableQuoteNotification(
+  body: PayableQuoteNotificationParam,
+): Promise<void> {
+  await http<void>(`${PAY_API_PREFIX}/pay/quote/notification`, {
+    method: "POST",
+    body,
+  });
 }
 
 export async function payPayable(request: PayablePayRequest): Promise<PayablePayQuote> {

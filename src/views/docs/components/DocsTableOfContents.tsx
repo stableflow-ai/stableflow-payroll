@@ -1,15 +1,14 @@
 import { useEffect, useRef } from "react";
 import { cn } from "@/lib/utils";
-import { DOCS_TOC, type DocsLocale, type DocsTocId } from "../config";
+import { DOCS_TOC, type DocsTocId } from "../config";
 
 type DocsTableOfContentsProps = {
-  locale: DocsLocale;
   activeId: DocsTocId;
   onNavigate: (id: DocsTocId) => void;
 };
 
 export function DocsTableOfContents(props: DocsTableOfContentsProps) {
-  const { locale, activeId, onNavigate } = props;
+  const { activeId, onNavigate } = props;
   const navRef = useRef<HTMLElement>(null);
 
   useEffect(() => {
@@ -38,7 +37,7 @@ export function DocsTableOfContents(props: DocsTableOfContentsProps) {
                   : "font-normal text-[#606060] hover:text-black",
               )}
             >
-              <span className="line-clamp-2">{section.label[locale]}</span>
+              <span className="line-clamp-2">{section.label}</span>
             </a>
             {section.children?.length ? (
               <div className="ml-3 mt-0.5 flex flex-col gap-0.5 border-l border-[#e3e3e3] pl-2">
@@ -60,7 +59,7 @@ export function DocsTableOfContents(props: DocsTableOfContentsProps) {
                           : "font-normal text-[#606060] hover:text-black",
                       )}
                     >
-                      <span className="line-clamp-2">{child.label[locale]}</span>
+                      <span className="line-clamp-2">{child.label}</span>
                     </a>
                   );
                 })}

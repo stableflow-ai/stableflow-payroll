@@ -193,9 +193,9 @@ export function TeamMemberFormDialog(props: {
           />
         </Field>
       ) : null}
-      {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Slack) ? (
+      {/* {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Slack) ? (
         <Field
-          label="Slack"
+          label="Slack ID"
           optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Slack)}
         >
           <input
@@ -208,7 +208,7 @@ export function TeamMemberFormDialog(props: {
             onChange={(event) => setSlack(event.target.value)}
           />
         </Field>
-      ) : null}
+      ) : null} */}
       <Button size="lg" className="mt-8 w-full" disabled={!canSave} loading={saving} onClick={handleSave}>
         Save
       </Button>

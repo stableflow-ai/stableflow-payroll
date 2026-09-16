@@ -204,7 +204,7 @@ export function InviteProfileFields(props: {
       {isIntegrationFieldEnabled(settings, INTEGRATION_FIELD.Slack) ? (
         <InviteField
           id="profile-slack"
-          label="Slack"
+          label="Slack ID"
           optional={!isIntegrationFieldRequired(settings, INTEGRATION_FIELD.Slack)}
           value={values.slack}
           onChange={(value) => {

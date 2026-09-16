@@ -59,7 +59,7 @@ export function LoginView() {
     <AuthShell panelTop={<AuthBetaBanner />}>
       <form onSubmit={(event) => void submit(event)} className={AUTH_FORM_CLASS}>
         <h1 className="text-center font-montserrat text-xl font-semibold text-black">
-          Welcome to Pay. Stableflow
+          Welcome to Payroll. Stableflow
         </h1>
 
         <AuthField

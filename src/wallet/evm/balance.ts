@@ -26,7 +26,7 @@ import {
   scroll,
   xLayer,
 } from "viem/chains";
-import { getChainByNetwork } from "@/config/chains";
+import { getChainByChainId, getChainByNetwork } from "@/config/chains";
 import { evmTransportForBlockchain } from "@/lib/rpc/evm";
 
 const chainById: Record<number, Chain> = {
@@ -65,6 +65,12 @@ export function getPublicClientForNetwork(networkOrBlockchain: string) {
   });
   clients.set(config.blockchain, client);
   return client;
+}
+
+export function getPublicClientForChainId(chainId: number) {
+  const config = getChainByChainId(chainId);
+  if (!config) return null;
+  return getPublicClientForNetwork(config.blockchain);
 }
 
 export async function readNativeBalance(opts: {

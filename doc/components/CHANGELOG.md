@@ -4,6 +4,10 @@ Newest first. Add an entry whenever you add or change a component under `src/com
 
 Format: one `## YYYY-MM-DD` heading per day, one `- **ComponentName:** what changed` bullet per component.
 
+## 2026-09-16
+
+- **Toast:** Container `z-index` is `100000001` so a toast stays above the near-connect wallet popup.
+
 ## 2026-09-15
 
 - **Switch:** Optional `loading` shows `IconLoading` (`animate-spin`) in place of the thumb at the current on/off position. Track colour stays on `checked`. Clicks are ignored and opacity stays 1 (unlike `disabled`).

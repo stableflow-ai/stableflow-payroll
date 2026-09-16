@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { IconQuestion } from "@/components/icons/question";
 import { Button } from "@/components/ui/button/Button";
 import { InputNumber } from "@/components/ui/input-number/InputNumber";
@@ -6,11 +6,13 @@ import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
 import { useCreatePayrollPaymentMutation } from "@/hooks/use-single-payout-api";
 import { useContacts, type Contact } from "@/hooks/use-contacts";
+import { useOrganizationQuery } from "@/hooks/use-organization-api";
 import { useTeamMembersInfiniteQuery } from "@/hooks/use-team-api";
 import useToast from "@/hooks/use-toast";
 import { isUser, organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
+import { useQuickPayPrefsStore } from "@/stores/quick-pay-prefs";
 import type { TeamMemberWallets } from "@/types/team";
 import { payrollPaymentNotification } from "@/types/payout";
 import { ContactFormDialog } from "../ContactFormDialog";
@@ -33,7 +35,7 @@ import {
   teamMemberIdFromContact,
   teamMembersToContacts,
 } from "./utils";
-import { emailFieldError, walletForChainKind } from "../team/utils";
+import { emailFieldError, enabledTeamWalletKinds, walletForChainKind } from "../team/utils";
 
 export function SinglePayoutCard(props: {
   initialRecipient?: { id?: number; name: string; address: string; email?: string | null };
@@ -46,6 +48,11 @@ export function SinglePayoutCard(props: {
   const { contacts, addContact, updateContact, deleteContact, isPending: contactsPending } =
     useContacts({ enabled: employee });
   const teamQuery = useTeamMembersInfiniteQuery(!employee);
+  const orgQuery = useOrganizationQuery();
+  const bookChainKinds = useMemo(
+    () => (employee ? [] : enabledTeamWalletKinds(orgQuery.data?.addressSettings)),
+    [employee, orgQuery.data?.addressSettings],
+  );
   const teamMembers = useMemo(
     () => teamQuery.data?.pages.flatMap((page) => page.list) ?? [],
     [teamQuery.data],
@@ -59,6 +66,11 @@ export function SinglePayoutCard(props: {
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const tokens = useIntentsTokensStore((s) => s.tokens);
   const createPayment = useCreatePayrollPaymentMutation();
+  const notifyEnabled = useQuickPayPrefsStore((state) => state.notifyRecipient);
+  const setNotifyEnabled = useQuickPayPrefsStore((state) => state.setNotifyRecipient);
+  const [prefsHydrated, setPrefsHydrated] = useState(() =>
+    useQuickPayPrefsStore.persist.hasHydrated(),
+  );
 
   const [addressInput, setAddressInput] = useState(initialRecipient?.address ?? "");
   const [amount, setAmount] = useState("");
@@ -69,14 +81,19 @@ export function SinglePayoutCard(props: {
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Contact | null>(null);
   const [deleting, setDeleting] = useState<Contact | null>(null);
-  const [notifyEnabled, setNotifyEnabled] = useState(false);
   const [notifyEmail, setNotifyEmail] = useState("");
   /** Stays true while the browser navigates to the hosted checkout. */
   const [redirecting, setRedirecting] = useState(false);
+  const skipDestAutoFillRef = useRef(false);
 
   useEffect(() => {
     void ensureFresh();
   }, [ensureFresh]);
+
+  useEffect(() => {
+    if (prefsHydrated) return;
+    return useQuickPayPrefsStore.persist.onFinishHydration(() => setPrefsHydrated(true));
+  }, [prefsHydrated]);
 
   const payNowMatch =
     memberWallets && initialRecipient && initialRecipient.id != null
@@ -103,6 +120,10 @@ export function SinglePayoutCard(props: {
 
   useEffect(() => {
     if (destToken || !destLockChainKind || tokens.length === 0) return;
+    if (skipDestAutoFillRef.current) {
+      skipDestAutoFillRef.current = false;
+      return;
+    }
     const next = defaultDestToken(tokens, destLockChainKind);
     if (next) setDestToken(next);
   }, [destLockChainKind, destToken, tokens]);
@@ -121,7 +142,7 @@ export function SinglePayoutCard(props: {
 
   async function handleSend() {
     if (!destToken || !amountDecimals || !destinationAddress) return;
-    if (notifyEnabled) {
+    if (prefsHydrated && notifyEnabled) {
       const emailError = notifyEmail.trim()
         ? emailFieldError(notifyEmail)
         : "Enter a valid email";
@@ -131,7 +152,7 @@ export function SinglePayoutCard(props: {
       }
     }
     const dest = payoutNetworkToken(destToken);
-    const notification = notifyEnabled
+    const notification = prefsHydrated && notifyEnabled
       ? payrollPaymentNotification({ email: notifyEmail })
       : undefined;
     const teamMemberId = employee ? undefined : teamMemberIdFromContact(matched);
@@ -207,7 +228,8 @@ export function SinglePayoutCard(props: {
 
       <NotifyRecipientBar
         className="mt-6"
-        enabled={notifyEnabled}
+        enabled={prefsHydrated ? notifyEnabled : false}
+        disabled={!prefsHydrated}
         onEnabledChange={setNotifyEnabled}
       >
         <input
@@ -250,11 +272,18 @@ export function SinglePayoutCard(props: {
         loading={bookLoading}
         selectedAddress={addressInput}
         manageable={employee}
+        chainKinds={bookChainKinds}
         hasMore={!employee && teamQuery.hasNextPage}
         loadingMore={!employee && teamQuery.isFetchingNextPage}
         onLoadMore={!employee ? () => void teamQuery.fetchNextPage() : undefined}
         onSelect={(contact) => {
-          setAddressInput(contact.wallet);
+          const wallet = contact.wallet;
+          const kind = detectAddressChainKind(wallet);
+          setAddressInput(wallet);
+          if (destToken && kind && destToken.chain.chainKind !== kind) {
+            skipDestAutoFillRef.current = true;
+            setDestToken(null);
+          }
           setBookOpen(false);
         }}
         onAdd={employee ? () => {

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { RecipientAvatar } from "@/components/recipient-avatar/RecipientAvatar";
 import { IconDelete } from "@/components/icons/delete";
 import { IconPen } from "@/components/icons/pen";
@@ -9,6 +9,19 @@ import type { Contact } from "@/hooks/use-contacts";
 import { formatAddress, sameAddress } from "@/utils";
 import { detectAddressChainKind } from "../utils";
 import { IconLoading } from "@/components/icons";
+import {
+  TEAM_WALLET_TAB_LABELS,
+  walletForChainKind,
+  type TeamWalletKind,
+} from "./team/utils";
+
+export function recipientRowWallet(
+  contact: Contact,
+  tabKind: TeamWalletKind | null,
+): string {
+  if (tabKind && contact.wallets) return walletForChainKind(contact.wallets, tabKind);
+  return contact.wallet.trim();
+}
 
 export function RecipientsDialog(props: {
   open: boolean;
@@ -24,6 +37,7 @@ export function RecipientsDialog(props: {
   hasMore?: boolean;
   onLoadMore?: () => void;
   manageable?: boolean;
+  chainKinds?: TeamWalletKind[];
 }) {
   const {
     loading,
@@ -39,8 +53,16 @@ export function RecipientsDialog(props: {
     onEdit,
     onDelete,
     manageable = true,
+    chainKinds = [],
   } = props;
   const sentinelRef = useRef<HTMLLIElement>(null);
+  const showChainTabs = chainKinds.length > 0;
+  const [selectedKind, setSelectedKind] = useState<TeamWalletKind>(chainKinds[0] ?? "evm");
+
+  useEffect(() => {
+    if (!open || chainKinds.length === 0) return;
+    setSelectedKind(chainKinds[0]);
+  }, [chainKinds, open]);
 
   useEffect(() => {
     if (!open || !hasMore || loadingMore || !onLoadMore) return;
@@ -52,6 +74,8 @@ export function RecipientsDialog(props: {
     observer.observe(el);
     return () => observer.disconnect();
   }, [contacts.length, hasMore, loadingMore, onLoadMore, open]);
+
+  const tabKind = showChainTabs ? selectedKind : null;
 
   return (
     <Dialog
@@ -68,14 +92,31 @@ export function RecipientsDialog(props: {
         ) : undefined
       }
     >
+      {showChainTabs ? (
+        <div className="mb-3 flex flex-wrap gap-2">
+          {chainKinds.map((kind) => (
+            <Button
+              key={kind}
+              size="sm"
+              variant={kind === selectedKind ? "primary" : "normal"}
+              className="h-[30px] px-3 md:px-3"
+              onClick={() => setSelectedKind(kind)}
+            >
+              {TEAM_WALLET_TAB_LABELS[kind]}
+            </Button>
+          ))}
+        </div>
+      ) : null}
       <ul className="flex max-h-[min(70vh,520px)] flex-col gap-1 overflow-y-auto">
         {
           contacts.length > 0 ? (
             <>
               {contacts.map((contact) => {
+                const wallet = recipientRowWallet(contact, tabKind);
                 const selected = Boolean(
                   selectedAddress
-                  && sameAddress(contact.wallet, selectedAddress, detectAddressChainKind(selectedAddress)),
+                  && wallet
+                  && sameAddress(wallet, selectedAddress, detectAddressChainKind(selectedAddress)),
                 );
                 return (
                   <li
@@ -85,12 +126,14 @@ export function RecipientsDialog(props: {
                   >
                     <RecipientAvatar
                       name={contact.name}
-                      address={contact.wallet}
+                      address={wallet || contact.wallet}
                       className="size-8 text-xs"
                     />
                     <div className="min-w-0 flex-1">
                       <p className="truncate font-montserrat text-sm font-medium text-black">{contact.name}</p>
-                      <p className="font-montserrat text-[10px] text-[#606060]">{formatAddress(contact.wallet)}</p>
+                      <p className="font-montserrat text-[10px] text-[#606060]">
+                        {wallet ? formatAddress(wallet) : ""}
+                      </p>
                     </div>
                     {manageable ? (
                       <div className="flex items-center gap-2 md:opacity-0 md:group-hover:opacity-100">
@@ -112,7 +155,13 @@ export function RecipientsDialog(props: {
                         </button>
                       </div>
                     ) : null}
-                    <Button size="sm" variant="normal" className="w-[79px]" onClick={() => onSelect(contact)}>
+                    <Button
+                      size="sm"
+                      variant="normal"
+                      className="w-[79px]"
+                      disabled={!wallet}
+                      onClick={() => onSelect({ ...contact, wallet })}
+                    >
                       Select
                     </Button>
                   </li>

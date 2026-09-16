@@ -1,6 +1,6 @@
 import { AUTH_USER_ROLE, type AuthOrganization, type AuthSession, type AuthTeamMember, type AuthUser } from "@/types/auth";
 
-const SESSION_KEY = "stableflow-pay.session";
+export const AUTH_SESSION_STORAGE_NAME = "stableflow-pay.session";
 
 let onUnauthorized: (() => void) | null = null;
 
@@ -129,7 +129,7 @@ export function getStoredSession(): AuthSession | null {
   const storage = getStorage();
   if (!storage) return null;
   try {
-    const raw = storage.getItem(SESSION_KEY);
+    const raw = storage.getItem(AUTH_SESSION_STORAGE_NAME);
     if (!raw) return null;
     const parsed: unknown = JSON.parse(raw);
     if (!isAuthSessionRecord(parsed)) return null;
@@ -147,12 +147,12 @@ export function setStoredSession(token: string, user: AuthUser): void {
   const storage = getStorage();
   if (!storage) return;
   const session: AuthSession = { token, user: hydrateAuthUser(user) };
-  storage.setItem(SESSION_KEY, JSON.stringify(session));
+  storage.setItem(AUTH_SESSION_STORAGE_NAME, JSON.stringify(session));
 }
 
 export function clearStoredSession(): void {
   try {
-    getStorage()?.removeItem(SESSION_KEY);
+    getStorage()?.removeItem(AUTH_SESSION_STORAGE_NAME);
   } catch {
     // Ignore storage failures (private mode, etc.).
   }

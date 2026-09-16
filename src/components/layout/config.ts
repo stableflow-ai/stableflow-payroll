@@ -1,7 +1,6 @@
 import { FIXED_CHAIN_KINDS } from "@/config/chains";
 import type { ChainKind, ChainOwners } from "@/wallet/types";
 
-export const HEADER_AVATAR_SRC = "/avatar/avatar-1.png";
 export const HEADER_NAV_ACTIVE_COLOR = "#0054D2";
 
 export const HEADER_ACCOUNT_MENU_VARIANT = {

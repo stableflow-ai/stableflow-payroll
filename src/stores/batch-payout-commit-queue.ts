@@ -1,6 +1,12 @@
 import { create } from "zustand";
 import { createJSONStorage, persist } from "zustand/middleware";
 
+/**
+ * Retry queue for POST /payouts/submit. Currently unused: Payment by Form
+ * submits once and does not enqueue. Keep this module so retries can be
+ * wired back through enqueueBatchPayoutCommit / processAllPendingBatchPayoutCommits.
+ */
+
 const STORAGE_KEY = "stableflow-pay:batch-payout-commit-queue:v3";
 const BASE_RETRY_MS = 5_000;
 
@@ -53,6 +59,10 @@ function notifySuccessListeners(result: BatchPayoutCommitSuccess) {
       // ignore listener errors
     }
   }
+}
+
+export function notifyBatchPayoutCommitSuccess(result: BatchPayoutCommitSuccess) {
+  notifySuccessListeners(result);
 }
 
 function getRetryDelay(retryCount: number): number {
@@ -150,6 +160,7 @@ export const useBatchPayoutCommitQueueStore = create(
   ),
 );
 
+/** Currently unused. Re-enable retries by calling this after a successful broadcast. */
 export function enqueueBatchPayoutCommit(input: {
   quoteId: string;
   quoteBatchId: string;
@@ -174,6 +185,7 @@ export function enqueueBatchPayoutCommit(input: {
   return id;
 }
 
+/** Currently unused. Re-enable retries by calling this from the layout hook. */
 export function processAllPendingBatchPayoutCommits() {
   const { queue } = useBatchPayoutCommitQueueStore.getState();
   for (const item of queue) {

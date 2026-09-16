@@ -5,7 +5,7 @@ Hook: `src/hooks/use-toast.tsx`
 
 Notification card rendered inside `react-toastify`. Call the `useToast()` hook; do not import `react-toastify` or the `Toast` component from a feature.
 
-The `ToastContainer` lives in `src/App.tsx` (bottom-right, no progress bar, transparent wrapper, oldest toward the top, no default close button). The hook positions each toast bottom-right with the `decash-toast decash-toast-bottom-right` class; the matching styles are in `src/styles.css`. New toasts sit at the bottom of the stack; earlier ones move up.
+The `ToastContainer` lives in `src/App.tsx` (bottom-right, no progress bar, transparent wrapper, oldest toward the top, no default close button). The hook positions each toast bottom-right with the `decash-toast decash-toast-bottom-right` class; the matching styles are in `src/styles.css`. The container `z-index` is `100000001` so a toast stays above the near-connect wallet popup (`100000000`). New toasts sit at the bottom of the stack; earlier ones move up.
 
 The public card has no business copy, actions, or progress fields. Callers pass `title` / `text` as `ReactNode` when they need custom markup (for example an in-progress line with a View control). Use `info` for those states.
 

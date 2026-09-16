@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { matchPayNowMember, teamMemberIdFromContact } from "./utils";
+import { matchPayNowMember, teamMemberIdFromContact, teamMemberToContact } from "./utils";
 
 const WALLETS = {
   evm: "0x557be3f47a45499385f60cd64e2ff455e42a3311",
@@ -8,7 +8,44 @@ const WALLETS = {
   tron: "",
 };
 
+const EMPTY_WALLETS = {
+  evm: "",
+  solana: "",
+  near: "",
+  tron: "",
+};
+
 const MEMBER_ID = 42;
+
+function member(overrides: Partial<{
+  id: number;
+  name: string;
+  email: string;
+  wallets: typeof WALLETS;
+}> = {}) {
+  return {
+    id: overrides.id ?? MEMBER_ID,
+    name: overrides.name ?? "Andrew",
+    position: "",
+    email: overrides.email ?? "andrew@gmail.com",
+    telegram: "",
+    slack: "",
+    wallets: overrides.wallets ?? WALLETS,
+  };
+}
+
+describe("teamMemberToContact", () => {
+  it("keeps wallets and still maps members who have no display wallet", () => {
+    const withWallet = teamMemberToContact(member());
+    expect(withWallet.wallet).toBe(WALLETS.evm);
+    expect(withWallet.wallets).toEqual(WALLETS);
+
+    const empty = teamMemberToContact(member({ wallets: EMPTY_WALLETS, email: "   " }));
+    expect(empty.wallet).toBe("");
+    expect(empty.email).toBeNull();
+    expect(empty.wallets).toEqual(EMPTY_WALLETS);
+  });
+});
 
 describe("matchPayNowMember", () => {
   it("matches a wallet on the paying member and ignores other addresses", () => {

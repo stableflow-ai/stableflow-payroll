@@ -3,15 +3,25 @@ import { format } from "date-fns";
 import { ApiError } from "@/lib/api-error";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import { isAddressValid, type WalletChainKind } from "@/utils";
+import { solanaWalletErrorMessage } from "@/wallet/solana/utils";
 import { EMAIL_PATTERN, EXPORT_FILENAME_STAMP } from "./config";
 
 const USER_REJECTED_PATTERNS = [
   "user rejected",
   "user denied",
+  "denied by the user",
   "rejected the request",
   "request rejected",
   "action_rejected",
+  "condition of use not satisfied",
+  "0x6985",
 ];
+
+export function isUserRejectedError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error ?? "");
+  const lower = message.toLowerCase();
+  return USER_REJECTED_PATTERNS.some((pattern) => lower.includes(pattern));
+}
 
 export function isValidEmail(value: string): boolean {
   return EMAIL_PATTERN.test(value.trim());
@@ -137,8 +147,9 @@ export function formatQuoteErrorMessage(error: unknown, decimals = 6): string {
       : String(error ?? "");
   const text = raw || "Quote failed";
   const message = extractEmbeddedMessage(text) || text;
-  const lower = message.toLowerCase();
-  if (USER_REJECTED_PATTERNS.some((pattern) => lower.includes(pattern))) {
+  const ledgerLocked = solanaWalletErrorMessage(message);
+  if (ledgerLocked) return ledgerLocked;
+  if (isUserRejectedError(message)) {
     return "User rejected transaction";
   }
   const amountTooLow = message.match(/Amount is too low for bridge,\s*try at least\s+(\d+(?:\.\d+)?)/i);

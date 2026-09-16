@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { defaultIntegrationSettings, FIELD_REQUIREMENT } from "@/types/organization";
+import {
+  defaultAddressSettings,
+  defaultIntegrationSettings,
+  FIELD_REQUIREMENT,
+  ORGANIZATION_FIELD_STATUS,
+} from "@/types/organization";
 import {
   emailFieldError,
+  enabledTeamWalletKinds,
   memberDisplayWallet,
   organizationInviteUrl,
   teamMemberFormCanSave,
@@ -78,6 +84,19 @@ describe("team form validation", () => {
     ).toBe(VALID_SOL);
     expect(walletForChainKind(EMPTY_WALLETS, "evm")).toBe("");
     expect(emailFieldError("hannah@gmail.com")).toBeNull();
+  });
+
+  it("lists enabled org wallets in EVM, Solana, Near, Tron order", () => {
+    expect(enabledTeamWalletKinds(undefined)).toEqual(["evm"]);
+    expect(enabledTeamWalletKinds(defaultAddressSettings())).toEqual(["evm"]);
+    expect(
+      enabledTeamWalletKinds({
+        evmAddress: ORGANIZATION_FIELD_STATUS.Required,
+        solanaAddress: ORGANIZATION_FIELD_STATUS.Optional,
+        nearAddress: ORGANIZATION_FIELD_STATUS.Disabled,
+        tronAddress: ORGANIZATION_FIELD_STATUS.Optional,
+      }),
+    ).toEqual(["evm", "solana", "tron"]);
   });
 
   it("builds an invite URL from the public org id", () => {

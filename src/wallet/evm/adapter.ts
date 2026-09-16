@@ -2,13 +2,17 @@
  * EVM wallet adapter backed by wagmi + RainbowKit.
  *
  * Message signing uses ERC-191 (`personal_sign`) via wagmi `signMessageAsync`.
+ * A Safe cannot produce one — it signs through EIP-1271 — so both signing paths
+ * refuse outright rather than handing NEAR Intents a signature it will reject.
  */
 
-import { useCallback, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useRef } from "react";
 import { isAddress } from "viem";
-import { useAccount, useDisconnect, useSignMessage } from "wagmi";
+import { useAccount, useConnectors, useDisconnect, useSignMessage, type Connector } from "wagmi";
 import type { GeneratedIntent, IntentSignInput, IntentSignedPayload, UseWalletResult, WalletAccount } from "../types";
 import { useConnectModal } from "@rainbow-me/rainbowkit";
+import useToast from "@/hooks/use-toast";
+import { withWalletConnectError } from "../connect-feedback";
 import {
   buildEvmFamilyPayload,
   encodeSecp256k1Signature,
@@ -17,12 +21,34 @@ import {
   payloadAsText,
   walletDoesNotSupportSigning,
 } from "../intents-sign";
+import { useSafeMode } from "./safe";
 
 export function useEvmWallet(): UseWalletResult {
   const { address, chainId, isConnected, isConnecting, isReconnecting } = useAccount();
   const { disconnect } = useDisconnect();
   const { openConnectModal } = useConnectModal();
+  const connectors = useConnectors();
   const { signMessageAsync } = useSignMessage();
+  const { isSafe } = useSafeMode();
+  const toast = useToast();
+  const toastRef = useRef(toast);
+  toastRef.current = toast;
+
+  useEffect(() => {
+    const originals = new Map<Connector, Connector["connect"]>();
+    for (const connector of connectors) {
+      originals.set(connector, connector.connect);
+      const original = connector.connect.bind(connector) as (...args: never[]) => ReturnType<Connector["connect"]>;
+      connector.connect = ((...args: never[]) =>
+        withWalletConnectError(toastRef.current, () => original(...args))
+      ) as Connector["connect"];
+    }
+    return () => {
+      for (const [connector, original] of originals) {
+        connector.connect = original;
+      }
+    };
+  }, [connectors]);
 
   const account = useMemo<WalletAccount | null>(() => {
     if (!address) return null;
@@ -33,12 +59,16 @@ export function useEvmWallet(): UseWalletResult {
     };
   }, [address, chainId]);
 
+  const connect = useCallback(() => {
+    openConnectModal?.();
+  }, [openConnectModal]);
+
   const signMessage = useCallback(
     async (input: IntentSignInput): Promise<IntentSignedPayload> => {
       if (!address) {
         throw new Error("[wallet:evm] No connected account to sign with.");
       }
-      if (typeof signMessageAsync !== "function") {
+      if (typeof signMessageAsync !== "function" || isSafe) {
         throw walletDoesNotSupportSigning("EVM");
       }
       const payload = buildEvmFamilyPayload(
@@ -53,7 +83,7 @@ export function useEvmWallet(): UseWalletResult {
         signature: encodeSecp256k1Signature(signature),
       };
     },
-    [address, signMessageAsync],
+    [address, isSafe, signMessageAsync],
   );
 
   const signGeneratedIntent = useCallback(
@@ -61,7 +91,7 @@ export function useEvmWallet(): UseWalletResult {
       if (!address) {
         throw new Error("[wallet:evm] No connected account to sign with.");
       }
-      if (typeof signMessageAsync !== "function") {
+      if (typeof signMessageAsync !== "function" || isSafe) {
         throw walletDoesNotSupportSigning("EVM");
       }
       const payload = payloadAsText(intent.payload);
@@ -72,7 +102,7 @@ export function useEvmWallet(): UseWalletResult {
         signature: encodeSecp256k1Signature(signature),
       };
     },
-    [address, signMessageAsync],
+    [address, isSafe, signMessageAsync],
   );
 
   return useMemo<UseWalletResult>(() => ({
@@ -80,7 +110,7 @@ export function useEvmWallet(): UseWalletResult {
     account,
     isConnected: Boolean(isConnected && address),
     isConnecting: isConnecting || isReconnecting,
-    connect: () => openConnectModal?.(),
+    connect,
     disconnect,
     signMessage,
     signGeneratedIntent,
@@ -88,11 +118,11 @@ export function useEvmWallet(): UseWalletResult {
   }), [
     account,
     address,
+    connect,
     disconnect,
     isConnected,
     isConnecting,
     isReconnecting,
-    openConnectModal,
     signMessage,
     signGeneratedIntent,
   ]);

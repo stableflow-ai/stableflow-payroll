@@ -71,10 +71,10 @@ export function AuthShell({
           </ul>
 
           <Link
-            to="/howitworks"
+            to="/docs"
             className="mt-8 inline-flex items-center font-montserrat text-sm font-normal text-white transition-opacity hover:opacity-70 md:mt-auto md:pt-10"
           >
-            How it works
+            Docs
           </Link>
         </div>
       </aside>

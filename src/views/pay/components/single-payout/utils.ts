@@ -4,25 +4,20 @@ import { sameAddress } from "@/utils";
 import { detectAddressChainKind } from "../../utils";
 import { memberDisplayWallet, walletForChainKind } from "../team/utils";
 
-export function teamMemberToContact(member: TeamMember): Contact | null {
-  const wallet = memberDisplayWallet(member);
-  if (!wallet) return null;
+export function teamMemberToContact(member: TeamMember): Contact {
+  const wallet = memberDisplayWallet(member) ?? "";
   const email = member.email.trim();
   return {
     id: String(member.id),
     name: member.name,
     wallet,
     email: email || null,
+    wallets: member.wallets,
   };
 }
 
 export function teamMembersToContacts(members: readonly TeamMember[]): Contact[] {
-  const contacts: Contact[] = [];
-  for (const member of members) {
-    const contact = teamMemberToContact(member);
-    if (contact) contacts.push(contact);
-  }
-  return contacts;
+  return members.map(teamMemberToContact);
 }
 
 export function matchContact(address: string, contacts: readonly Contact[]): Contact | null {
@@ -66,6 +61,7 @@ export function matchPayNowMember(
     name,
     wallet,
     email: trimmed || null,
+    wallets,
   };
 }
 
