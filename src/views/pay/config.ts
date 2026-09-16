@@ -300,6 +300,7 @@ export const EMAIL_MAX_LENGTH = 50;
 export const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 export const SPENT_BATCH_MESSAGE = "This quote was already used. Refreshing the quote.";
 export const QUOTE_EXPIRED_MESSAGE = "Quote expired. Refreshing.";
+export const INSUFFICIENT_APPROVAL_MESSAGE = "Insufficient approval.";
 export const INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE =
   "Insufficient approval. Refreshing the quote.";
 export const ZCASH_BATCH_UNSUPPORTED_MESSAGE =

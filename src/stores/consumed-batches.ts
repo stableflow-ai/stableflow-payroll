@@ -20,6 +20,7 @@ export interface ConsumedBatch {
 interface ConsumedBatchesState {
   items: ConsumedBatch[];
   markConsumed: (batchId: string) => void;
+  unmarkConsumed: (batchId: string) => void;
 }
 
 function prune(items: ConsumedBatch[], now: number): ConsumedBatch[] {
@@ -41,6 +42,13 @@ export const useConsumedBatchesStore = create(
           return { items: prune([...state.items, { batchId: id, consumedAt: now }], now) };
         });
       },
+      unmarkConsumed: (batchId) => {
+        const id = batchId.trim();
+        if (!id) return;
+        set((state) => ({
+          items: state.items.filter((item) => item.batchId !== id),
+        }));
+      },
     }),
     {
       name: STORAGE_KEY,
@@ -53,6 +61,10 @@ export const useConsumedBatchesStore = create(
 
 export function markBatchConsumed(batchId: string) {
   useConsumedBatchesStore.getState().markConsumed(batchId);
+}
+
+export function unmarkBatchConsumed(batchId: string) {
+  useConsumedBatchesStore.getState().unmarkConsumed(batchId);
 }
 
 export function isBatchConsumed(batchId: string): boolean {

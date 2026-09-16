@@ -14,6 +14,7 @@ import { enqueueBatchPayoutCommit } from "@/stores/batch-payout-commit-queue";
 import {
   isBatchConsumed,
   markBatchConsumed,
+  unmarkBatchConsumed,
   useConsumedBatchesStore,
 } from "@/stores/consumed-batches";
 import useToast from "@/hooks/use-toast";
@@ -37,6 +38,7 @@ import {
 } from "@/types/payable";
 import {
   AMOUNT_MAX_DECIMALS,
+  INSUFFICIENT_APPROVAL_MESSAGE,
   INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE,
   QUOTE_EXPIRED_MESSAGE,
   SPENT_BATCH_MESSAGE,
@@ -54,9 +56,11 @@ import { PaymentFormSelect } from "./PaymentFormSelect";
 import { batchPayoutCommitTitle } from "./config";
 import {
   buildPayablePayRequest,
+  nextUnpaidQuoteBatchId,
   payableItemIds,
   payableQuotePayments,
   payableQuoteSourceAmount,
+  remainingSourceAmountRaw,
   sumQuoteDestinationVolume,
 } from "./utils";
 
@@ -246,6 +250,13 @@ export function PaymentByFormCard(props: {
 
   const settleMutation = useMutation({
     mutationFn: async (quoteBatchId: string) => {
+      const nextQuoteBatchId = nextUnpaidQuoteBatchId(
+        batches,
+        paidQuoteBatchIdsRef.current,
+      );
+      if (quoteBatchId !== nextQuoteBatchId) {
+        throw new BalanceGateError("Pay the previous batch first");
+      }
       const quoted = batches.find((row) => row.quoteBatchId === quoteBatchId);
       const batch = quoted?.batch;
       if (!originToken || !payBody || !quote || !batch || !connectedAddress) {
@@ -278,6 +289,11 @@ export function PaymentByFormCard(props: {
       }
       const payer = wallet.account.address;
       const amountIn = BigInt(batch.totalSourceAmountRaw || "0");
+      const remainingRaw = remainingSourceAmountRaw(
+        batches,
+        paidQuoteBatchIdsRef.current,
+      );
+      const requiredAmount = remainingRaw > 0n ? remainingRaw : amountIn;
       if (import.meta.env.VITE_VIRIFY_BALANCE !== "false") {
         if (originKind === "zec") {
           try {
@@ -315,6 +331,7 @@ export function PaymentByFormCard(props: {
           token: originToken,
           transaction: tx,
           amountIn,
+          requiredAmount,
           payer,
         });
       } catch (error) {
@@ -322,9 +339,14 @@ export function PaymentByFormCard(props: {
           error instanceof Error
           && error.message === INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE
         ) {
-          toast.fail({ title: INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE });
-          if (!paymentStarted) void refetchQuote();
-          throw new BalanceGateError(INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE);
+          unmarkBatchConsumed(quoteBatchId);
+          if (!paymentStarted) {
+            toast.fail({ title: INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE });
+            void refetchQuote();
+            throw new BalanceGateError(INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE);
+          }
+          toast.fail({ title: INSUFFICIENT_APPROVAL_MESSAGE });
+          throw new BalanceGateError(INSUFFICIENT_APPROVAL_MESSAGE);
         }
         throw error;
       }
@@ -411,6 +433,7 @@ export function PaymentByFormCard(props: {
     }
     const target = quoteBatchId || firstQuoteBatchId;
     if (!target) return;
+    if (target !== nextUnpaidQuoteBatchId(batches, paidQuoteBatchIds)) return;
     void settleMutation.mutateAsync(target);
   }
 

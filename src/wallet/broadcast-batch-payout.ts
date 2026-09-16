@@ -18,6 +18,8 @@ export async function broadcastBatchPayout(input: {
   token: IntentsToken;
   transaction: PayBatchSwapTransaction;
   amountIn: bigint;
+  /** ERC-20 allowance that must remain after this batch's approvals. Defaults to `amountIn`. */
+  requiredAmount?: bigint;
   payer: string;
 }): Promise<BroadcastResult> {
   const kind = input.token.chain.chainKind;
@@ -33,6 +35,7 @@ async function broadcastEvm(input: {
   token: IntentsToken;
   transaction: PayBatchSwapTransaction;
   amountIn: bigint;
+  requiredAmount?: bigint;
   payer: string;
 }): Promise<BroadcastResult> {
   const tx = input.transaction;
@@ -50,7 +53,7 @@ async function broadcastEvm(input: {
     contract: tx.batch_contract,
     owner: input.payer,
     spender: tx.batch_contract,
-    requiredAmount: input.amountIn,
+    requiredAmount: input.requiredAmount ?? input.amountIn,
     network: input.token.blockchain,
     value: native ? input.amountIn : 0n,
     verifyAllowance: !native,

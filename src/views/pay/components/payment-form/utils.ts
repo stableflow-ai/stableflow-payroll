@@ -7,7 +7,11 @@ import {
   type PayablePayRequest,
 } from "@/types/payable";
 import { isBatchOriginToken } from "../../batch-utils";
-import type { PayablePayQuote, PayrollBatchPayment } from "@/types/payout";
+import type {
+  PayablePayQuote,
+  PayablePayQuoteBatch,
+  PayrollBatchPayment,
+} from "@/types/payout";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import { Big } from "@/utils";
 
@@ -79,6 +83,27 @@ export function payableQuoteSourceAmount(quote: PayablePayQuote): string {
       }
     }, new Big(0))
     .toFixed();
+}
+
+export function nextUnpaidQuoteBatchId(
+  batches: readonly Pick<PayablePayQuoteBatch, "quoteBatchId">[],
+  paidIds: ReadonlySet<string>,
+): string {
+  return batches.find((row) => !paidIds.has(row.quoteBatchId))?.quoteBatchId ?? "";
+}
+
+export function remainingSourceAmountRaw(
+  batches: readonly Pick<PayablePayQuoteBatch, "quoteBatchId" | "batch">[],
+  paidIds: ReadonlySet<string>,
+): bigint {
+  return batches.reduce((sum, row) => {
+    if (paidIds.has(row.quoteBatchId)) return sum;
+    try {
+      return sum + BigInt(row.batch.totalSourceAmountRaw || "0");
+    } catch {
+      return sum;
+    }
+  }, 0n);
 }
 
 export function buildPayablePayRequest(input: {

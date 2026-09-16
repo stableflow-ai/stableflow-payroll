@@ -3,6 +3,7 @@ import { formatAmount } from "@/utils";
 import type { PayablePayQuoteBatch } from "@/types/payout";
 import { AMOUNT_MAX_DECIMALS } from "../../config";
 import { batchPaymentRowLabel, batchSplitBannerText } from "./config";
+import { nextUnpaidQuoteBatchId } from "./utils";
 
 export function PaymentFormBatchRows(props: {
   batches: readonly PayablePayQuoteBatch[];
@@ -12,6 +13,7 @@ export function PaymentFormBatchRows(props: {
   onPay: (quoteBatchId: string) => void;
 }) {
   const { batches, sendingQuoteBatchId, paidQuoteBatchIds, payDisabled, onPay } = props;
+  const nextQuoteBatchId = nextUnpaidQuoteBatchId(batches, paidQuoteBatchIds);
 
   return (
     <>
@@ -24,6 +26,7 @@ export function PaymentFormBatchRows(props: {
         {batches.map((row, index) => {
           const paid = paidQuoteBatchIds.has(row.quoteBatchId);
           const paying = sendingQuoteBatchId === row.quoteBatchId;
+          const next = row.quoteBatchId === nextQuoteBatchId;
           const amount = formatAmount(row.batch.totalSourceAmount, {
             prefix: "",
             maxDecimals: AMOUNT_MAX_DECIMALS,
@@ -41,7 +44,7 @@ export function PaymentFormBatchRows(props: {
               <Button
                 size="md"
                 className="h-[50px] px-3 shrink-0 !text-sm"
-                disabled={payDisabled || paid || paying}
+                disabled={payDisabled || paid || paying || !next}
                 onClick={() => onPay(row.quoteBatchId)}
               >
                 {label}

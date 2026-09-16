@@ -1,6 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { PAYABLE_TYPE, type Payable } from "@/types/payable";
-import { buildPayablePayRequest, payableQuoteSourceAmount, sumPayableNetPay, sumPayableVolume, sumQuoteDestinationVolume } from "./utils";
+import {
+  buildPayablePayRequest,
+  nextUnpaidQuoteBatchId,
+  payableQuoteSourceAmount,
+  remainingSourceAmountRaw,
+  sumPayableNetPay,
+  sumPayableVolume,
+  sumQuoteDestinationVolume,
+} from "./utils";
 
 const PAYABLE: Payable = {
   key: { type: PAYABLE_TYPE.Payroll, periodMonth: "2026-09" },
@@ -310,5 +318,59 @@ describe("payableQuoteSourceAmount", () => {
         ],
       }),
     ).toBe("35001.235");
+  });
+});
+
+describe("nextUnpaidQuoteBatchId", () => {
+  const batches = [
+    { quoteBatchId: "qbatch-1" },
+    { quoteBatchId: "qbatch-2" },
+    { quoteBatchId: "qbatch-3" },
+  ];
+
+  it("returns the first batch when none are paid", () => {
+    expect(nextUnpaidQuoteBatchId(batches, new Set())).toBe("qbatch-1");
+  });
+
+  it("returns the next unpaid batch in order", () => {
+    expect(nextUnpaidQuoteBatchId(batches, new Set(["qbatch-1"]))).toBe("qbatch-2");
+    expect(nextUnpaidQuoteBatchId(batches, new Set(["qbatch-1", "qbatch-2"]))).toBe("qbatch-3");
+  });
+
+  it("returns empty when every batch is paid", () => {
+    expect(
+      nextUnpaidQuoteBatchId(batches, new Set(["qbatch-1", "qbatch-2", "qbatch-3"])),
+    ).toBe("");
+  });
+});
+
+describe("remainingSourceAmountRaw", () => {
+  const batches = [
+    { quoteBatchId: "qbatch-1", batch: { totalSourceAmountRaw: "1000" } as never },
+    { quoteBatchId: "qbatch-2", batch: { totalSourceAmountRaw: "2500" } as never },
+    { quoteBatchId: "qbatch-3", batch: { totalSourceAmountRaw: "400" } as never },
+  ];
+
+  it("sums unpaid batches including the current one", () => {
+    expect(remainingSourceAmountRaw(batches, new Set())).toBe(3900n);
+    expect(remainingSourceAmountRaw(batches, new Set(["qbatch-1"]))).toBe(2900n);
+  });
+
+  it("returns 0n when every batch is paid", () => {
+    expect(
+      remainingSourceAmountRaw(batches, new Set(["qbatch-1", "qbatch-2", "qbatch-3"])),
+    ).toBe(0n);
+  });
+
+  it("skips invalid raw amounts", () => {
+    expect(
+      remainingSourceAmountRaw(
+        [
+          { quoteBatchId: "qbatch-1", batch: { totalSourceAmountRaw: "10" } as never },
+          { quoteBatchId: "qbatch-2", batch: { totalSourceAmountRaw: "nope" } as never },
+        ],
+        new Set(),
+      ),
+    ).toBe(10n);
   });
 });
