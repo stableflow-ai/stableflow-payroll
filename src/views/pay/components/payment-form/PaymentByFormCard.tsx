@@ -22,7 +22,7 @@ import useToast from "@/hooks/use-toast";
 import { organizationId } from "@/lib/auth-role";
 import { formatAmount, browserTimeZone } from "@/utils";
 import { cn } from "@/lib/utils";
-import { showSafeProposalToast } from "@/components/safe/safe-proposal-toast";
+import { showMultisigProposalToast } from "@/components/multisig/multisig-proposal-toast";
 import { broadcastBatchPayout } from "@/wallet/broadcast-batch-payout";
 import { INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE } from "@/wallet/config";
 import { assertSafeOriginChain } from "@/wallet/evm/safe";
@@ -387,14 +387,12 @@ export function PaymentByFormCard(props: {
         }
         throw error;
       }
-      // A Safe proposal has no transaction hash, so there is nothing to commit,
-      // but the batch is spoken for: treat it like a paid batch so the flow moves
-      // on to the next one and only settles the form once every batch is proposed.
+      // A Safe / Trezu proposal has no transaction hash, so there is nothing to
+      // commit, but the batch is spoken for: treat it like a paid batch so the
+      // flow moves on to the next one and only settles the form once every batch
+      // is proposed.
       if (result.kind === "pending-multisig") {
-        showSafeProposalToast(toast, {
-          chainId: result.chainId,
-          safeAddress: result.safeAddress,
-        });
+        showMultisigProposalToast(toast, result);
         return quoteBatchId;
       }
       try {

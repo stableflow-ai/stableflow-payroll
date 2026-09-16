@@ -134,6 +134,19 @@ export function safeQueueUrl(chainId: number, safeAddress: string): string | nul
   return `https://app.safe.global/transactions/queue?safe=${shortName}:${address}`;
 }
 
+/**
+ * Trezu request queue for one SputnikDAO. Pass `proposalId` for the specific
+ * request, or omit it for the DAO's request list.
+ */
+export function trezuRequestsUrl(daoId: string, proposalId?: number): string | null {
+  const id = daoId.trim();
+  if (!id) return null;
+  if (proposalId == null || !Number.isFinite(proposalId) || proposalId < 0) {
+    return `https://trezu.app/${id}/requests`;
+  }
+  return `https://trezu.app/${id}/requests/${proposalId}`;
+}
+
 export function txExplorerUrl(network: string, txHash: string | null | undefined): string | null {
   const hash = String(txHash || "").trim();
   if (!hash) return null;

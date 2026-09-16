@@ -61,7 +61,7 @@ export function useNearWallet(): UseWalletResult {
         throw new Error("[wallet:near] No connected account to sign with.");
       }
       const wallet = await connector.wallet();
-      if (typeof wallet.signMessage !== "function") {
+      if (wallet.manifest.features?.signMessage !== true) {
         throw walletDoesNotSupportSigning("NEAR");
       }
       const recipient = input.recipient || INTENTS_RECIPIENT;
@@ -95,7 +95,7 @@ export function useNearWallet(): UseWalletResult {
         throw new Error("[wallet:near] No connected account to sign with.");
       }
       const wallet = await connector.wallet();
-      if (typeof wallet.signMessage !== "function") {
+      if (wallet.manifest.features?.signMessage !== true) {
         throw walletDoesNotSupportSigning("NEAR");
       }
       const parsed = parseNep413Payload(intent.payload);

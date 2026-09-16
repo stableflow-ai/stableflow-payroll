@@ -9,6 +9,7 @@ export const NEAR_CONNECT_WALLET_IDS = [
   "near-mobile",
   "nightly-wallet",
   "wallet-connect",
+  "trezu-wallet",
 ] as const;
 
 export const NEAR_CONNECT_WALLET_ID_SET = new Set<string>(NEAR_CONNECT_WALLET_IDS);

@@ -70,7 +70,8 @@ src/
     date-range-picker/         shared range picker
     token-select-dialog/       shared chain + token picker
     recipient-avatar/, you-pay/, WalletConnect.tsx
-    safe/                      SafeMultisigBadge, showSafeProposalToast
+    safe/                      SafeMultisigBadge (wraps MultisigBadge)
+    multisig/                  MultisigBadge, showMultisigProposalToast
   api/                         one module per domain, thin wrappers over http()
   hooks/                       use-*-api.ts (TanStack Query) plus wallet/UI hooks
   types/                       request and response types per domain
@@ -84,6 +85,10 @@ src/
     evm/safe/                  Safe proposal helpers (no execution poller):
                                abi.ts, bundle.ts, config.ts, detect.ts, info.ts,
                                send.ts, types.ts, use-safe-info.ts, use-safe-mode.ts
+    near/multisig/             SputnikDAO / Trezu helpers (no execution poller):
+                               config.ts, detect.ts, policy.ts, info.ts,
+                               proposal.ts, types.ts, use-near-dao-info.ts,
+                               use-near-multisig-mode.ts
 ```
 
 ## Where new code goes

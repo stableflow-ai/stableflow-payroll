@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button/Button";
 import { IconArrowDown } from "@/components/icons/arrow-down";
-import { SafeMultisigBadge } from "@/components/safe/SafeMultisigBadge";
+import { MultisigBadge } from "@/components/multisig/MultisigBadge";
 import { WalletConnectDialog } from "@/components/WalletConnect";
 import { primaryConnectedAddress, useConnectedWallets } from "@/hooks/use-wallet";
 import { chainLogoUrl } from "@/lib/logo";
@@ -28,7 +28,7 @@ export function HeaderWalletCapsule() {
             className="size-[30px] rounded-full object-cover"
           />
           <span className="font-montserrat text-sm text-black">{formatAddress(address)}</span>
-          {kind === "evm" ? <SafeMultisigBadge /> : null}
+          {kind === "evm" || kind === "near" ? <MultisigBadge chainKind={kind} /> : null}
           <IconArrowDown className="h-1 w-2.5 text-black" />
         </button>
       ) : (

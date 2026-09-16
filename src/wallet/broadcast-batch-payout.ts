@@ -1,8 +1,9 @@
 /**
  * Broadcast a batch swap transaction on the origin chain.
  *
- * Only the EVM branch can return `pending-multisig`: the other chains have no
- * multisig support here, so they always resolve to an executed transaction hash.
+ * EVM Safe and NEAR SputnikDAO / Trezu can return `pending-multisig`. The other
+ * chains have no multisig support here, so they always resolve to an executed
+ * transaction hash.
  */
 
 import type { PayBatchSwapTransaction } from "@/types/payout";
@@ -96,10 +97,10 @@ async function broadcastNear(input: {
   if (!receiverId || !tx.actions?.length) {
     throw new Error("Missing batch transaction");
   }
-  return executedBroadcast(await broadcastNearActions({
+  return broadcastNearActions({
     receiverId,
     actions: tx.actions,
-  }));
+  });
 }
 
 async function broadcastSolana(input: {

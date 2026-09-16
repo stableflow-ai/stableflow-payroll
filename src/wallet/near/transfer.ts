@@ -2,9 +2,21 @@
  * Near native and FT transfers to a deposit address.
  */
 
-import type { ConnectorAction } from "@hot-labs/near-connect";
+import type { ConnectorAction, NearWalletBase } from "@hot-labs/near-connect";
 import { nearViewFunction } from "@/lib/rpc/near";
 import type { PayBatchNearAction } from "@/types/payout";
+import {
+  executedBroadcast,
+  pendingNearMultisigBroadcast,
+  type BroadcastResult,
+} from "../types";
+import { TREZU_NOT_CONNECTED_MESSAGE } from "./multisig/config";
+import { activeNearMultisigMode } from "./multisig/detect";
+import {
+  discoverProposal,
+  matchSpecFromActions,
+  snapshotLastProposalId,
+} from "./multisig/proposal";
 import { getNearConnector } from "./session";
 
 const FT_GAS = BigInt("30000000000000");
@@ -13,7 +25,7 @@ const STORAGE_DEPOSIT = BigInt("1250000000000000000000");
 
 function requireConnector() {
   const connector = getNearConnector();
-  if (!connector) throw new Error("Connect a Near wallet to send this payout");
+  if (!connector) throw new Error(TREZU_NOT_CONNECTED_MESSAGE);
   return connector;
 }
 
@@ -69,16 +81,61 @@ type NearTx = {
   actions: ConnectorAction[];
 };
 
+async function broadcastNearViaMultisig(
+  wallet: NearWalletBase,
+  input: { receiverId: string; actions: PayBatchNearAction[] },
+): Promise<BroadcastResult> {
+  const daoId = (await wallet.getAccounts())[0]?.accountId?.trim();
+  if (!daoId) throw new Error(TREZU_NOT_CONNECTED_MESSAGE);
+
+  const fromIndex = await snapshotLastProposalId(daoId);
+  const expected = matchSpecFromActions({
+    receiverId: input.receiverId,
+    actions: input.actions,
+  });
+
+  let discovered = false;
+  const submitted = wallet.signAndSendTransaction({
+    receiverId: input.receiverId,
+    actions: input.actions.map(toConnectorAction),
+  });
+  const earlyFail = new Promise<never>((_, reject) => {
+    void submitted.then(
+      () => undefined,
+      (error) => {
+        if (!discovered) {
+          reject(error instanceof Error ? error : new Error(String(error)));
+        }
+      },
+    );
+  });
+
+  try {
+    const proposalId = await Promise.race([
+      discoverProposal({ daoId, fromIndex, expected }),
+      earlyFail,
+    ]);
+    discovered = true;
+    return pendingNearMultisigBroadcast({ proposalId, daoId });
+  } catch (error) {
+    discovered = true;
+    throw error instanceof Error ? error : new Error(String(error));
+  }
+}
+
 export async function broadcastNearActions(input: {
   receiverId: string;
   actions: PayBatchNearAction[];
-}): Promise<string> {
+}): Promise<BroadcastResult> {
   const wallet = await requireConnector().wallet();
+  if (await activeNearMultisigMode()) {
+    return broadcastNearViaMultisig(wallet, input);
+  }
   const result = await wallet.signAndSendTransaction({
     receiverId: input.receiverId,
     actions: input.actions.map(toConnectorAction),
   });
-  return hashFromOutcomes(result);
+  return executedBroadcast(await hashFromOutcomes(result));
 }
 
 export async function transferNativeNear(input: {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { IconLogout } from "@/components/icons/logout";
-import { SafeMultisigBadge } from "@/components/safe/SafeMultisigBadge";
+import { MultisigBadge } from "@/components/multisig/MultisigBadge";
 import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
 import { formatAddress, formatAmount } from "@/utils";
 import { useSafeMode } from "@/wallet/evm/safe";
@@ -50,6 +50,8 @@ export function YouPaySection(props: {
   const fetchOneBalance = useTokenBalancesStore((s) => s.fetchOne);
   const originBalance = useTokenBalance(walletAddress, originToken?.assetId);
   const isEvmOrigin = originToken?.chain.chainKind === "evm";
+  const isNearOrigin = originToken?.chain.chainKind === "near";
+  const originKind = originToken?.chain.chainKind;
   const safeApp = useSafeMode().mode === "app";
 
   useEffect(() => {
@@ -72,7 +74,7 @@ export function YouPaySection(props: {
           {walletAddress ? (
             <>
               <p className="font-montserrat text-xs text-[#606060]">{formatAddress(walletAddress)}</p>
-              {isEvmOrigin ? <SafeMultisigBadge /> : null}
+              {(isEvmOrigin || isNearOrigin) && originKind ? <MultisigBadge chainKind={originKind} /> : null}
               {/* Inside the Safe App the connection is the host iframe, so there is
                   nothing this page can disconnect from. */}
               {onDisconnectWallet && !(isEvmOrigin && safeApp) ? (

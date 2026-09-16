@@ -1,5 +1,5 @@
 import { useMemo, useState, type MouseEvent } from "react";
-import { SafeMultisigBadge } from "@/components/safe/SafeMultisigBadge";
+import { MultisigBadge } from "@/components/multisig/MultisigBadge";
 import { useConnectedWallets, useWallet } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
 import type { ChainKind } from "@/wallet/types";
@@ -25,7 +25,7 @@ export function WalletConnectDialog({
   const safeApp = useSafeMode().mode === "app";
 
   const kindHint = useMemo(() => {
-    if (selectedKind === "near") return "Connect HOT, Meteor, Intear, OKX, Ledger, NEAR Mobile, Nightly, or WalletConnect.";
+    if (selectedKind === "near") return "Connect HOT, Meteor, Intear, OKX, Ledger, NEAR Mobile, Nightly, Trezu, or WalletConnect.";
     if (selectedKind === "solana") return "Connect Phantom or Solflare.";
     if (selectedKind === "tron") return "Connect TronLink, OKX, or WalletConnect.";
     if (selectedKind === "zec") return "Connect Noir Wallet.";
@@ -104,7 +104,9 @@ export function WalletConnectDialog({
                   <p className="font-montserrat text-[14px] font-medium text-black">
                     Connected {chainLabel(selectedKind).toUpperCase()} wallet
                   </p>
-                  {selectedKind === "evm" ? <SafeMultisigBadge /> : null}
+                  {selectedKind === "evm" || selectedKind === "near" ? (
+                    <MultisigBadge chainKind={selectedKind} />
+                  ) : null}
                 </div>
                 <p className="mt-3 break-all font-montserrat text-[14px] text-black">
                   {address}

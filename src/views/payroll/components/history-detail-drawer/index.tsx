@@ -258,7 +258,7 @@ function HistoryDetailRow(props: {
         {row.token} · {chainDisplayName(row.network)}
       </p>
       <p className="font-montserrat text-sm font-medium text-black">
-        {formatAmount(row.amount, { prefix: "", maxDecimals: 0 })}
+        {formatAmount(row.amount, { prefix: "", maxDecimals: 6 })}
       </p>
       <div className="min-w-0">
         <p className="font-montserrat text-sm font-medium text-black">
