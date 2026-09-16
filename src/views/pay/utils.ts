@@ -3,6 +3,7 @@ import { format } from "date-fns";
 import { ApiError } from "@/lib/api-error";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import { isAddressValid, type WalletChainKind } from "@/utils";
+import { solanaWalletErrorMessage } from "@/wallet/solana/utils";
 import { EMAIL_PATTERN, EXPORT_FILENAME_STAMP } from "./config";
 
 const USER_REJECTED_PATTERNS = [
@@ -146,6 +147,8 @@ export function formatQuoteErrorMessage(error: unknown, decimals = 6): string {
       : String(error ?? "");
   const text = raw || "Quote failed";
   const message = extractEmbeddedMessage(text) || text;
+  const ledgerLocked = solanaWalletErrorMessage(message);
+  if (ledgerLocked) return ledgerLocked;
   if (isUserRejectedError(message)) {
     return "User rejected transaction";
   }

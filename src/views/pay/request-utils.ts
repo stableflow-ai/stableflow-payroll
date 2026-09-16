@@ -9,6 +9,7 @@ import { type WalletChainKind } from "@/utils";
 import type { ChainKind } from "@/wallet";
 import { detectAddressKind } from "./batch-utils";
 import { PAY_FORM_PATH, PAY_REQUEST_STATUS, PAY_REQUEST_STATUS_CLASS } from "./config";
+import { solanaWalletErrorMessage } from "@/wallet/solana/utils";
 import { detectAddressChainKind, isUserRejectedError } from "./utils";
 
 export { isUserRejectedError };
@@ -30,6 +31,8 @@ export function receivingAddressError(
 }
 
 export function activateErrorMessage(error: unknown, fallback: string): string {
+  const ledgerLocked = solanaWalletErrorMessage(error);
+  if (ledgerLocked) return ledgerLocked;
   if (isUserRejectedError(error)) return "Signature rejected";
   if (error instanceof Error && error.message) return error.message;
   return fallback;

@@ -56,6 +56,12 @@ describe("formatQuoteErrorMessage", () => {
       new Error("Ledger device: Condition of use not satisfied (denied by the user?) (0x6985)"),
     )).toBe("User rejected transaction");
   });
+
+  it("maps a locked Ledger device to the unlock copy", () => {
+    expect(formatQuoteErrorMessage(
+      new Error("Ledger device: Locked device (0x5515)"),
+    )).toBe("Unlock your Ledger device and open the Solana app.");
+  });
 });
 
 describe("parsePayoutCallbackParams", () => {
