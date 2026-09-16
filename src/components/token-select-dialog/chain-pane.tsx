@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { IconCheck } from "@/components/icons/check";
 import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { FLOATING_SIDE } from "@/components/ui/overlay/use-floating-position";
 import { FIXED_CHAINS, chainLabel, type ChainConfig } from "@/config/chains";
@@ -7,33 +8,20 @@ import { cn } from "@/lib/utils";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import type { WalletChainKind } from "@/utils";
 import { ChainWalletStatus } from "./chain-wallet-status";
-import { EVM_CHAIN_FILTER } from "./config";
+import { isBlockchainDisabled, isChainKindLocked } from "./utils";
 
 export type ChainPaneProps = {
   chainFilter: string;
   onSelectFilter: (filter: string) => void;
   tokens: IntentsToken[];
   lockChainKind?: WalletChainKind | null;
-  hideTitle?: boolean;
   disabledBlockchains?: string[] | null;
   disabledReason?: string;
+  fundedBlockchains: ReadonlySet<string>;
 };
 
-function chainKindLabel(kind: WalletChainKind): string {
-  return chainLabel(kind);
-}
-
-function isLocked(chain: ChainConfig, lockChainKind: WalletChainKind | null | undefined): boolean {
-  return Boolean(lockChainKind && chain.chainKind !== lockChainKind);
-}
-
-function isBlockchainDisabled(
-  blockchain: string,
-  disabledBlockchains: string[] | null | undefined,
-): boolean {
-  if (!disabledBlockchains?.length) return false;
-  const code = blockchain.toLowerCase();
-  return disabledBlockchains.some((item) => item.toLowerCase() === code);
+function lockReason(lockChainKind: WalletChainKind): string {
+  return `Recipient address is on ${chainLabel(lockChainKind)}; edit the recipient to change chain`;
 }
 
 export function ChainPane({
@@ -41,9 +29,9 @@ export function ChainPane({
   onSelectFilter,
   tokens,
   lockChainKind = null,
-  hideTitle = false,
   disabledBlockchains = null,
   disabledReason,
+  fundedBlockchains,
 }: ChainPaneProps) {
   const availableCodes = new Set(tokens.map((token) => token.blockchain));
   const evmChains = FIXED_CHAINS.filter(
@@ -52,10 +40,8 @@ export function ChainPane({
   const nonEvmChains = FIXED_CHAINS.filter(
     (chain) => chain.chainKind !== "evm" && availableCodes.has(chain.blockchain),
   );
-  const evmLocked = Boolean(lockChainKind && lockChainKind !== "evm");
-  const previewLogos = evmChains.slice(0, 4);
 
-  function disabledTooltip(disabled: boolean, reason: string | undefined, content: ReactNode) {
+  function wrapDisabled(disabled: boolean, reason: string | undefined, content: ReactNode) {
     if (!disabled || !reason) return content;
     return (
       <Tooltip side={FLOATING_SIDE.Right} triggerClassName="min-w-0 flex-1" content={reason}>
@@ -64,151 +50,83 @@ export function ChainPane({
     );
   }
 
-  function evmRow(disabled: boolean, content: ReactNode) {
-    if (!disabled || !lockChainKind) return content;
-    return (
-      <Tooltip
-        side={FLOATING_SIDE.Right}
-        content={`Recipient address is on ${chainKindLabel(lockChainKind)}; edit the recipient to change chain`}
+  function networkRow(chain: ChainConfig, trailing: ReactNode) {
+    const selected = chainFilter === chain.blockchain;
+    const locked = isChainKindLocked(chain.chainKind, lockChainKind);
+    const chainDisabled = isBlockchainDisabled(chain.blockchain, disabledBlockchains);
+    const disabled = locked || chainDisabled;
+    const reason = chainDisabled
+      ? disabledReason
+      : locked && lockChainKind
+        ? lockReason(lockChainKind)
+        : undefined;
+    const row = (
+      <div
+        className={cn(
+          "flex min-h-[66px] w-full items-center gap-3 rounded-[12px] px-3",
+          selected ? "bg-[#F6F6F6]" : "hover:bg-[#F6F6F6]",
+          disabled && "opacity-40",
+        )}
       >
-        {content}
-      </Tooltip>
+        {wrapDisabled(
+          disabled,
+          reason,
+          <button
+            type="button"
+            disabled={disabled}
+            onClick={() => {
+              if (disabled) return;
+              onSelectFilter(chain.blockchain);
+            }}
+            className={cn(
+              "flex min-w-0 flex-1 items-center gap-3 text-left",
+              disabled ? "cursor-not-allowed" : "cursor-pointer",
+            )}
+          >
+            <img src={chainLogoUrl(chain.blockchain)} alt="" className="size-8 shrink-0 object-cover" />
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="font-montserrat text-base font-medium text-black">{chain.chainName}</span>
+              {fundedBlockchains.has(chain.blockchain) ? (
+                <span className="size-2.5 shrink-0 rounded-full bg-[#06f]" />
+              ) : null}
+            </span>
+          </button>,
+        )}
+        {trailing}
+        {selected ? (
+          <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-black text-white">
+            <IconCheck className="size-2.5" />
+          </span>
+        ) : null}
+      </div>
     );
+    return <div key={chain.blockchain}>{row}</div>;
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-2.5">
-      {hideTitle ? null : (
-        <p className="font-montserrat text-base font-medium text-black">Select Chain</p>
-      )}
+    <div className="flex h-[min(520px,70vh)] min-h-0 flex-col overflow-y-auto">
       {evmChains.length > 0 ? (
-        <div className="rounded-[12px] bg-[#F6F6F6] p-3">
-          <div className="mb-2 flex items-center justify-between gap-2">
-            <div className="flex min-w-0 items-center gap-2">
-              <div className="grid grid-cols-2 gap-px">
-                {previewLogos.map((chain) => (
-                  <img
-                    key={chain.blockchain}
-                    src={chain.logo}
-                    alt=""
-                    className="size-3 rounded-[3px] object-cover"
-                  />
-                ))}
-              </div>
-              <span className="font-montserrat text-sm font-medium text-black">EVM</span>
-            </div>
+        <div>
+          <div className="flex items-center justify-between gap-2 px-3">
+            <p className="font-montserrat text-xs font-medium text-black">EVM Based</p>
             <ChainWalletStatus kind="evm" />
           </div>
-          <div className="grid grid-cols-2 gap-2">
-            {evmRow(
-              evmLocked,
-              <button
-                type="button"
-                disabled={evmLocked}
-                onClick={() => {
-                  if (evmLocked) return;
-                  onSelectFilter(EVM_CHAIN_FILTER);
-                }}
-                className={cn(
-                  "h-10 rounded-[8px] bg-white px-2 font-montserrat text-xs font-medium text-black",
-                  chainFilter === EVM_CHAIN_FILTER ? "border border-black" : "border border-transparent",
-                  evmLocked ? "cursor-not-allowed opacity-40" : "hover:bg-black/5",
-                )}
-              >
-                All
-              </button>,
-            )}
-            {evmChains.map((chain) => {
-              const selected = chainFilter === chain.blockchain;
-              const locked = isLocked(chain, lockChainKind);
-              const chainDisabled = isBlockchainDisabled(chain.blockchain, disabledBlockchains);
-              const disabled = locked || chainDisabled;
-              return (
-                <span key={chain.blockchain}>
-                  {disabledTooltip(
-                    chainDisabled,
-                    disabledReason,
-                    evmRow(
-                      locked && !chainDisabled,
-                      <button
-                        type="button"
-                        disabled={disabled}
-                        onClick={() => {
-                          if (disabled) return;
-                          onSelectFilter(chain.blockchain);
-                        }}
-                        className={cn(
-                          "flex h-10 w-full items-center gap-1.5 rounded-[8px] bg-white px-2",
-                          selected ? "border border-black" : "border border-transparent",
-                          disabled ? "cursor-not-allowed opacity-40" : "hover:bg-black/5",
-                        )}
-                      >
-                        <img src={chainLogoUrl(chain.blockchain)} alt="" className="size-4 rounded-[3px] object-cover" />
-                        <span className="truncate font-montserrat text-xs font-medium text-black">
-                          {chain.chainName}
-                        </span>
-                      </button>,
-                    ),
-                  )}
-                </span>
-              );
-            })}
+          <div className="mt-2 flex flex-col">
+            {evmChains.map((chain) => networkRow(chain, null))}
           </div>
         </div>
       ) : null}
-      <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
-        {nonEvmChains.map((chain) => {
-          const selected = chainFilter === chain.blockchain;
-          const locked = isLocked(chain, lockChainKind);
-          const chainDisabled = isBlockchainDisabled(chain.blockchain, disabledBlockchains);
-          const disabled = locked || chainDisabled;
-          const kind = chain.chainKind;
-          const selectButton = (
-            <button
-              type="button"
-              disabled={disabled}
-              onClick={() => {
-                if (disabled) return;
-                onSelectFilter(chain.blockchain);
-              }}
-              className={cn(
-                "flex min-w-0 flex-1 items-center gap-2.5 text-left",
-                disabled ? "cursor-not-allowed opacity-40" : "hover:opacity-80",
-              )}
-            >
-              <img src={chain.logo} alt="" className="size-6 rounded-[6px] object-cover" />
-              <span className="font-montserrat text-sm font-medium text-black">{chain.chainName}</span>
-            </button>
-          );
-          const tooltipContent = chainDisabled
-            ? disabledReason
-            : locked && lockChainKind
-              ? `Recipient address is on ${chainKindLabel(lockChainKind)}; edit the recipient to change chain`
-              : null;
-          return (
-            <div
-              key={chain.blockchain}
-              className={cn(
-                "flex min-h-[50px] w-full items-center gap-2.5 rounded-[10px] bg-[#F6F6F6] px-3 py-2",
-                selected ? "border border-black" : "border border-transparent",
-              )}
-            >
-              {tooltipContent ? (
-                <Tooltip
-                  side={FLOATING_SIDE.Right}
-                  triggerClassName="min-w-0 flex-1"
-                  content={tooltipContent}
-                >
-                  {selectButton}
-                </Tooltip>
-              ) : selectButton}
-              {kind === "near" || kind === "solana" || kind === "tron" || kind === "zec" ? (
-                <ChainWalletStatus kind={kind} />
-              ) : null}
-            </div>
-          );
-        })}
-      </div>
+      {nonEvmChains.length > 0 ? (
+        <div className={evmChains.length > 0 ? "mt-6" : undefined}>
+          <p className="px-3 font-montserrat text-xs font-medium text-black">Others</p>
+          <div className="mt-2 flex flex-col">
+            {nonEvmChains.map((chain) => networkRow(
+              chain,
+              <ChainWalletStatus kind={chain.chainKind} />,
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -216,6 +216,7 @@ export async function updatePayrollSalaries(params: PayrollUpdateParam): Promise
     body: {
       organization_id: params.organizationId,
       payroll_day_type: params.payrollDayType,
+      timezone: params.timezone,
       ...(params.payrollDay != null ? { payroll_day: params.payrollDay } : {}),
       items: params.items.map((item) => ({
         ...(item.id != null ? { id: item.id } : {}),

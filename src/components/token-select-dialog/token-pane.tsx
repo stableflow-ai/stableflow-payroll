@@ -1,9 +1,11 @@
-import { IconClose } from "@/components/icons/close";
 import { SearchInput } from "@/components/ui/search-input/SearchInput";
 import { chainLogoUrl } from "@/lib/logo";
 import { cn } from "@/lib/utils";
 import type { IntentsToken } from "@/stores/intents-tokens";
-import { formatAmount } from "@/utils";
+import { formatAmount, type WalletChainKind } from "@/utils";
+import { ChainWalletStatus } from "./chain-wallet-status";
+import { ALL_CHAIN_FILTER } from "./config";
+import { NetworkChips, type NetworkChipsProps } from "./network-chips";
 import { tokenBalanceUsd } from "./utils";
 
 export type TokenPaneProps = {
@@ -11,14 +13,23 @@ export type TokenPaneProps = {
   onSearchChange: (value: string) => void;
   tokens: IntentsToken[];
   selectedAssetId?: string | null;
+  recentlyUsedAssetId?: string | null;
   loading: boolean;
   showBalances?: boolean;
   getBalance: (token: IntentsToken) => string | null | undefined;
   isBalanceLoading: (token: IntentsToken) => boolean;
-  showClose?: boolean;
-  showTitle?: boolean;
-  onClose?: () => void;
   onSelectToken: (token: IntentsToken) => void;
+  isTokenDisabled?: (token: IntentsToken) => boolean;
+  chainFilter: string;
+  walletKind?: WalletChainKind | null;
+  chips: NetworkChipsProps["chips"];
+  overflowCount: number;
+  fundedBlockchains: ReadonlySet<string>;
+  lockChainKind?: WalletChainKind | null;
+  disabledBlockchains?: string[] | null;
+  disabledReason?: string;
+  onSelectFilter: (filter: string) => void;
+  onOpenNetworks: () => void;
 };
 
 export function TokenPane({
@@ -26,41 +37,54 @@ export function TokenPane({
   onSearchChange,
   tokens,
   selectedAssetId,
+  recentlyUsedAssetId = null,
   loading,
   showBalances = false,
   getBalance,
   isBalanceLoading,
-  showClose = false,
-  showTitle = true,
-  onClose,
   onSelectToken,
+  isTokenDisabled,
+  chainFilter,
+  walletKind = null,
+  chips,
+  overflowCount,
+  fundedBlockchains,
+  lockChainKind = null,
+  disabledBlockchains = null,
+  disabledReason,
+  onSelectFilter,
+  onOpenNetworks,
 }: TokenPaneProps) {
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      {showTitle || showClose ? (
-        <div className="mb-4 flex items-center justify-between">
-          {showTitle ? (
-            <p className="font-montserrat text-base font-medium text-black">Select Token</p>
-          ) : <span />}
-          {showClose ? (
-            <button
-              type="button"
-              aria-label="Close"
-              onClick={onClose}
-              className="shrink-0 cursor-pointer text-black"
-            >
-              <IconClose className="size-3.25" />
-            </button>
-          ) : null}
-        </div>
-      ) : null}
+    <div className="flex h-[min(520px,70vh)] min-h-0 flex-col">
       <SearchInput
         value={search}
         onChange={onSearchChange}
-        placeholder="Search token"
+        placeholder="search name or paste address"
         className="shrink-0"
+        inputClassName="h-[42px] rounded-[6px] border-[#e3e3e3] bg-[#f6f6f6] placeholder:text-black/30"
       />
-      <div className="mt-3 flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
+      <div className="mt-6 flex shrink-0 items-center justify-between gap-2">
+        <p className="font-montserrat text-xs font-medium text-black">Select Network</p>
+        {chainFilter !== ALL_CHAIN_FILTER && walletKind ? (
+          <ChainWalletStatus kind={walletKind} />
+        ) : null}
+      </div>
+      <div className="mt-3 shrink-0">
+        <NetworkChips
+          chainFilter={chainFilter}
+          chips={chips}
+          overflowCount={overflowCount}
+          fundedBlockchains={fundedBlockchains}
+          lockChainKind={lockChainKind}
+          disabledBlockchains={disabledBlockchains}
+          disabledReason={disabledReason}
+          onSelectFilter={onSelectFilter}
+          onOpenNetworks={onOpenNetworks}
+        />
+      </div>
+      <p className="mt-6 shrink-0 font-montserrat text-xs font-medium text-black">Token</p>
+      <div className="mt-3 flex min-h-0 flex-1 flex-col overflow-y-auto">
         {loading && tokens.length === 0 ? (
           <p className="px-1 py-4 font-montserrat text-[13px] text-[#606060]">Loading tokens…</p>
         ) : null}
@@ -69,19 +93,23 @@ export function TokenPane({
         ) : null}
         {tokens.map((token) => {
           const selected = token.assetId === selectedAssetId;
+          const recent = token.assetId === recentlyUsedAssetId;
           const formatted = showBalances ? getBalance(token) : null;
           const loadingBalance = showBalances && isBalanceLoading(token);
           const usd = showBalances && !loadingBalance && formatted != null
             ? tokenBalanceUsd(token, formatted)
             : -1;
+          const disabled = Boolean(isTokenDisabled?.(token));
           return (
             <button
               key={token.assetId}
               type="button"
+              disabled={disabled}
               onClick={() => onSelectToken(token)}
               className={cn(
-                "flex w-full items-center justify-between rounded-[10px] px-1 py-1.5 text-left hover:bg-[#F6F6F6]",
+                "flex w-full items-center justify-between rounded-[12px] px-3.5 py-3 text-left hover:bg-[#F6F6F6]",
                 selected && "bg-[#F6F6F6]",
+                disabled && "cursor-not-allowed opacity-40 hover:bg-transparent",
               )}
             >
               <span className="flex min-w-0 items-center gap-2.5">
@@ -94,8 +122,15 @@ export function TokenPane({
                   />
                 </span>
                 <span className="min-w-0">
-                  <span className="block font-montserrat text-sm font-medium text-black">{token.symbol}</span>
-                  <span className="block font-montserrat text-[10px] text-[#606060]">{token.chain.chainName}</span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="font-montserrat text-sm font-semibold text-black">{token.symbol}</span>
+                    {recent ? (
+                      <span className="rounded-[9px] bg-[#06f]/10 px-1.5 font-montserrat text-[10px] font-medium leading-[18px] text-[#06f]">
+                        Recently Used
+                      </span>
+                    ) : null}
+                  </span>
+                  <span className="mt-0.5 block font-montserrat text-xs text-[#606060]">{token.chain.chainName}</span>
                 </span>
               </span>
               {showBalances ? (
@@ -107,11 +142,11 @@ export function TokenPane({
                     />
                   ) : formatted != null ? (
                     <>
-                      <span className="block font-montserrat text-sm text-[#606060]">
+                      <span className="block font-montserrat text-sm font-medium text-black">
                         {formatAmount(formatted, { prefix: "", maxDecimals: 4 })}
                       </span>
                       {usd >= 0 ? (
-                        <span className="block font-montserrat text-[10px] text-[#909090]">
+                        <span className="block font-montserrat text-xs text-[#606060]">
                           {formatAmount(usd, { prefix: "$", showDust: true })}
                         </span>
                       ) : null}

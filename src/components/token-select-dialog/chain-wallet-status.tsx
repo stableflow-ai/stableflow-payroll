@@ -1,9 +1,9 @@
 import type { MouseEvent } from "react";
-import { IconCopy } from "@/components/icons/copy";
 import { IconLogout } from "@/components/icons/logout";
 import { useWallet } from "@/hooks/use-wallet";
 import useToast from "@/hooks/use-toast";
 import { formatAddress } from "@/utils";
+import { useSafeMode } from "@/wallet/evm/safe";
 import type { ChainKind } from "@/wallet";
 
 function stop(event: MouseEvent) {
@@ -14,7 +14,10 @@ function stop(event: MouseEvent) {
 export function ChainWalletStatus({ kind }: { kind: ChainKind }) {
   const wallet = useWallet(kind);
   const toast = useToast();
+  const safeApp = useSafeMode().mode === "app";
   const address = wallet.account?.address;
+  const icon = wallet.account?.icon;
+  const hideDisconnect = kind === "evm" && safeApp;
 
   if (!address) {
     return (
@@ -24,7 +27,7 @@ export function ChainWalletStatus({ kind }: { kind: ChainKind }) {
           stop(event);
           wallet.connect();
         }}
-        className="shrink-0 cursor-pointer font-montserrat text-[13px] font-medium text-black hover:underline"
+        className="shrink-0 cursor-pointer font-montserrat text-xs font-medium text-black hover:underline"
       >
         {wallet.isConnecting ? "Connecting…" : "Connect"}
       </button>
@@ -32,13 +35,12 @@ export function ChainWalletStatus({ kind }: { kind: ChainKind }) {
   }
 
   return (
-    <div className="flex min-w-0 items-center gap-0.5" onClick={stop}>
-      <span className="truncate font-montserrat text-[10px] font-medium text-[#606060]">
-        {formatAddress(address)}
-      </span>
+    <div className="flex min-w-0 items-center gap-1" onClick={stop}>
+      {icon ? (
+        <img src={icon} alt="" className="size-3 shrink-0 rounded-[2px] object-cover" />
+      ) : null}
       <button
         type="button"
-        aria-label="Copy address"
         onClick={async (event) => {
           stop(event);
           try {
@@ -48,21 +50,23 @@ export function ChainWalletStatus({ kind }: { kind: ChainKind }) {
             toast.fail({ title: "Could not copy" });
           }
         }}
-        className="shrink-0 cursor-pointer p-0.5 text-[#909090] hover:text-black"
+        className="truncate font-montserrat text-xs text-[#606060] hover:text-black"
       >
-        <IconCopy className="size-2.5" />
+        {formatAddress(address)}
       </button>
-      <button
-        type="button"
-        aria-label="Disconnect"
-        onClick={(event) => {
-          stop(event);
-          wallet.disconnect();
-        }}
-        className="shrink-0 cursor-pointer p-0.5 text-[#909090] hover:text-black"
-      >
-        <IconLogout className="size-2.5" />
-      </button>
+      {hideDisconnect ? null : (
+        <button
+          type="button"
+          aria-label="Disconnect"
+          onClick={(event) => {
+            stop(event);
+            wallet.disconnect();
+          }}
+          className="inline-flex shrink-0 cursor-pointer text-danger"
+        >
+          <IconLogout className="size-3" />
+        </button>
+      )}
     </div>
   );
 }

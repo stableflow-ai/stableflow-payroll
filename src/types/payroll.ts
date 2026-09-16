@@ -182,6 +182,7 @@ export interface PayrollUpdateParam {
   organizationId: number;
   payrollDayType: PayrollImportDayType;
   payrollDay?: number;
+  timezone: string;
   items: PayrollUpdateItem[];
   deleteIds?: number[];
 }
