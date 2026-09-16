@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { HEADER_AVATAR_SRC } from "@/components/layout/config";
+import { EmailAvatar } from "@/components/recipient-avatar/EmailAvatar";
 import { nameInitials } from "@/components/recipient-avatar/RecipientAvatar";
 import { Card } from "@/components/ui/card/Card";
 import { organizationLogo, organizationName } from "@/lib/auth-role";
@@ -47,10 +47,9 @@ export function OrgSummaryCard(props: { ownerEmail: string; teamMemberCount: num
         <section>
           <p className="font-montserrat text-base font-medium capitalize text-[#aaa]">Owner</p>
           <div className="mt-2.5 flex min-w-0 items-center gap-2.5">
-            <img
-              src={HEADER_AVATAR_SRC}
-              alt=""
-              className="size-[26px] shrink-0 rounded-[15px] object-cover"
+            <EmailAvatar
+              email={ownerEmail}
+              className="size-[26px] shrink-0 rounded-[15px] text-[10px]"
             />
             <p className="truncate font-montserrat text-sm font-medium text-black">{ownerEmail}</p>
           </div>

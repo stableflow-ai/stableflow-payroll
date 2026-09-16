@@ -113,7 +113,7 @@ src/
 | `intents-tokens.ts` | `persist` | 1Click token list, `PAYOUT_SYMBOLS`, `ensureFresh`, `findByChainAndSymbol` |
 | `token-balances.ts` | no | Balance cache and fetch status per owner + asset |
 | `quick-pay-prefs.ts` | `persist` | Remembered single-payout preferences |
-| `batch-payout-commit-queue.ts` | `persist` | Retry queue for `POST /v1/payroll/payouts/submit` |
+| `batch-payout-commit-queue.ts` | `persist` | Unused retry queue for `POST /v1/payroll/payouts/submit` (Payment by Form submits once) |
 | `consumed-batches.ts` | `persist` | Spent payroll `quote_batch_id`s so the same deposit addresses are never broadcast twice; `unmarkConsumed` after an insufficient-approval failure that never sent the payout |
 | `nearintents-user-session.ts` | no | Near Intents session for confidential receive / withdraw |
 | `google-drive-session.ts` | `persist` (sessionStorage) | Google OAuth token for the Sheets importer |

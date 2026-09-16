@@ -6,8 +6,9 @@ import { useQuickPayPrefsStore } from "@/stores/quick-pay-prefs";
 
 export function usePayOriginToken(
   allowedBlockchains: string[] | null = PAYER_BLOCKCHAINS,
-  opts?: { excludeNative?: boolean; excludeBlockchains?: string[] | null },
+  opts?: { excludeNative?: boolean; excludeBlockchains?: string[] | null; remember?: boolean },
 ) {
+  const remember = opts?.remember ?? true;
   const excludeNative = Boolean(opts?.excludeNative);
   const excludeBlockchains = opts?.excludeBlockchains ?? null;
   const savedOriginAssetId = useQuickPayPrefsStore((s) => s.originAssetId);
@@ -16,13 +17,15 @@ export function usePayOriginToken(
   const findByChainAndSymbol = useIntentsTokensStore((s) => s.findByChainAndSymbol);
   const tokensReady = useIntentsTokensStore((s) => s.tokens.length > 0);
   const [prefsHydrated, setPrefsHydrated] = useState(() => useQuickPayPrefsStore.persist.hasHydrated());
+  const [sessionOrigin, setSessionOrigin] = useState<IntentsToken | null>(null);
 
   useEffect(() => {
-    if (prefsHydrated) return;
+    if (!remember || prefsHydrated) return;
     return useQuickPayPrefsStore.persist.onFinishHydration(() => setPrefsHydrated(true));
-  }, [prefsHydrated]);
+  }, [prefsHydrated, remember]);
 
   const originToken = useMemo(() => {
+    if (!remember) return sessionOrigin;
     if (!prefsHydrated || !tokensReady) return null;
     return resolvePayOriginToken({
       savedOriginAssetId,
@@ -33,6 +36,8 @@ export function usePayOriginToken(
       excludeBlockchains,
     });
   }, [
+    remember,
+    sessionOrigin,
     prefsHydrated,
     tokensReady,
     savedOriginAssetId,
@@ -44,8 +49,12 @@ export function usePayOriginToken(
   ]);
 
   const setOriginToken = useCallback((token: IntentsToken) => {
+    if (!remember) {
+      setSessionOrigin(token);
+      return;
+    }
     setSavedOriginAssetId(token.assetId);
-  }, [setSavedOriginAssetId]);
+  }, [remember, setSavedOriginAssetId]);
 
   return { originToken, setOriginToken, tokensReady };
 }

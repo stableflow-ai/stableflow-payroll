@@ -30,6 +30,13 @@ export const TEAM_WALLET_KIND_OPTIONS: Array<{ kind: TeamWalletKind; label: stri
   { kind: "tron", label: "Tron Wallet" },
 ];
 
+export const TEAM_WALLET_TAB_LABELS: Record<TeamWalletKind, string> = {
+  evm: "EVM",
+  solana: "Solana",
+  near: "Near",
+  tron: "Tron",
+};
+
 export function enabledTeamWalletKinds(
   settings: OrganizationAddressSettings | undefined,
 ): TeamWalletKind[] {

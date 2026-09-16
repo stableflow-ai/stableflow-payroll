@@ -10,6 +10,7 @@ import {
   FLOATING_SIDE,
   useFloatingPosition,
 } from "@/components/ui/overlay/use-floating-position";
+import { EmailAvatar } from "@/components/recipient-avatar/EmailAvatar";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import { ResetPasswordDialog } from "@/views/auth/ResetPasswordDialog";
@@ -17,7 +18,6 @@ import { RESET_PASSWORD_VARIANT } from "@/views/auth/config";
 import {
   HEADER_ACCOUNT_MENU_VARIANT,
   HEADER_ACCOUNT_TRIGGER_LABEL,
-  HEADER_AVATAR_SRC,
   type HeaderAccountMenuVariant,
   type HeaderAccountTriggerLabel,
 } from "./config";
@@ -95,12 +95,12 @@ export function HeaderAccountMenu(props: {
           className,
         )}
       >
-        <img
-          src={HEADER_AVATAR_SRC}
-          alt=""
+        <EmailAvatar
+          email={user?.email ?? ""}
+          name={user?.name ?? ""}
           className={cn(
-            "shrink-0 rounded-full object-cover",
-            isSidebar ? "size-5 rounded-[15px]" : "size-[30px]",
+            "shrink-0",
+            isSidebar ? "size-5 rounded-[15px] text-[8px]" : "size-[30px] text-[11px]",
           )}
         />
         {isSidebar ? (
@@ -130,10 +130,10 @@ export function HeaderAccountMenu(props: {
             className="z-1100 w-[249px] overflow-hidden rounded-[12px] border border-[#E0E0E0] bg-[#fdfdfd] shadow-[0_0_20px_rgba(0,0,0,0.06)]"
           >
             <div className="flex h-[70px] items-center gap-2 px-4">
-              <img
-                src={HEADER_AVATAR_SRC}
-                alt=""
-                className="size-10 rounded-full object-cover"
+              <EmailAvatar
+                email={user?.email ?? ""}
+                name={user?.name ?? ""}
+                className="size-10 text-sm"
               />
               <div className="min-w-0">
                 <p className="truncate font-montserrat text-base font-medium text-black">

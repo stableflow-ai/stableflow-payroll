@@ -3,6 +3,7 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconEmail, IconLock } from "@/components/icons";
 import { Button } from "@/components/ui/button/Button";
 import { BATCH_BLOCKCHAINS } from "@/config/chains";
+import { batchSubmit } from "@/api/payout";
 import { queryKeys } from "@/api/query-keys";
 import { usePayOriginToken } from "@/hooks/use-pay-origin-token";
 import { usePayablePayQuery, usePayablesQuery } from "@/hooks/use-payable-api";
@@ -10,7 +11,7 @@ import { usePaymentWallet } from "@/hooks/use-payment-wallet";
 import { useTokenBalancesStore } from "@/stores/token-balances";
 import { useIntentsTokensStore } from "@/stores/intents-tokens";
 import { useAuthStore } from "@/stores/auth";
-import { enqueueBatchPayoutCommit } from "@/stores/batch-payout-commit-queue";
+import { notifyBatchPayoutCommitSuccess } from "@/stores/batch-payout-commit-queue";
 import {
   isBatchConsumed,
   markBatchConsumed,
@@ -147,6 +148,7 @@ export function PaymentByFormCard(props: {
   const zcashBatchDisabled = (detail?.items.length ?? 0) > 1;
   const { originToken, setOriginToken } = usePayOriginToken(BATCH_BLOCKCHAINS, {
     excludeBlockchains: zcashBatchDisabled ? ZCASH_DISABLED_BLOCKCHAINS : null,
+    remember: false,
   });
   const originKind: ChainKind =
     originToken?.chain.chainKind === "near"
@@ -360,14 +362,21 @@ export function PaymentByFormCard(props: {
         });
         return quoteBatchId;
       }
-      enqueueBatchPayoutCommit({
-        quoteId: quote.quoteId,
-        quoteBatchId,
-        txHash: result.txHash,
-        title,
-        type: detail?.type ?? "",
-        formKey,
-      });
+      try {
+        const submitted = await batchSubmit({
+          quote_id: quote.quoteId,
+          quote_batch_id: quoteBatchId,
+          tx_hash: result.txHash,
+        });
+        notifyBatchPayoutCommitSuccess({
+          executionId: submitted.executionId,
+          title,
+          type: detail?.type ?? "",
+          formKey,
+        });
+      } catch (error) {
+        toast.fail({ title: formatQuoteErrorMessage(error, 2) });
+      }
       return quoteBatchId;
     },
     onSuccess: (quoteBatchId) => {
