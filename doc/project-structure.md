@@ -89,6 +89,10 @@ src/
                                config.ts, detect.ts, policy.ts, info.ts,
                                proposal.ts, types.ts, use-near-dao-info.ts,
                                use-near-multisig-mode.ts
+    solana/                    adapter, balance, transfer, session, build-deposit-tx.ts
+    solana/multisig/           SquadsX / Squads v4 helpers (no proposal builder):
+                               config.ts, detect.ts, info.ts, result.ts, send.ts,
+                               types.ts, use-squads-info.ts, use-squads-mode.ts
 ```
 
 ## Where new code goes

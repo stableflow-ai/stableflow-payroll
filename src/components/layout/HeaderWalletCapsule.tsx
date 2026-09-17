@@ -28,7 +28,9 @@ export function HeaderWalletCapsule() {
             className="size-[30px] rounded-full object-cover"
           />
           <span className="font-montserrat text-sm text-black">{formatAddress(address)}</span>
-          {kind === "evm" || kind === "near" ? <MultisigBadge chainKind={kind} /> : null}
+          {kind === "evm" || kind === "near" || kind === "solana" ? (
+            <MultisigBadge chainKind={kind} />
+          ) : null}
           <IconArrowDown className="h-1 w-2.5 text-black" />
         </button>
       ) : (

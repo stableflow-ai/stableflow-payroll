@@ -21,6 +21,7 @@ import {
 import { Buffer } from "buffer";
 import { getActiveSolanaConnection, getSolanaConnection } from "@/lib/rpc/solana";
 import {
+  SOLANA_ATA_ALLOW_OWNER_OFF_CURVE,
   SOLANA_EXPIRED_MESSAGE,
   SOLANA_REBROADCAST_INTERVAL_MS,
   SOLANA_REBROADCAST_MAX_DURATION_MS,
@@ -136,7 +137,9 @@ export async function confirmSolanaSignature(params: {
   }
 }
 
-async function sendAndConfirm(transaction: Transaction | VersionedTransaction): Promise<string> {
+export async function broadcastSolanaTransaction(
+  transaction: Transaction | VersionedTransaction,
+): Promise<{ signature: string; signed: Transaction | VersionedTransaction }> {
   const signer = requireSigner();
   const connection = getSolanaConnection();
 
@@ -164,6 +167,11 @@ async function sendAndConfirm(transaction: Transaction | VersionedTransaction): 
     lastValidBlockHeight: latest?.lastValidBlockHeight,
   });
 
+  return { signature, signed };
+}
+
+async function sendAndConfirm(transaction: Transaction | VersionedTransaction): Promise<string> {
+  const { signature } = await broadcastSolanaTransaction(transaction);
   return signature;
 }
 
@@ -206,8 +214,18 @@ export async function transferSpl(input: {
   const toPubkey = new PublicKey(input.to);
   const mintInfo = await connection.getAccountInfo(mint);
   const programId = mintInfo?.owner.equals(TOKEN_2022_PROGRAM_ID) ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID;
-  const fromTokenAccount = getAssociatedTokenAddressSync(mint, signer.publicKey, false, programId);
-  const toTokenAccount = getAssociatedTokenAddressSync(mint, toPubkey, false, programId);
+  const fromTokenAccount = getAssociatedTokenAddressSync(
+    mint,
+    signer.publicKey,
+    SOLANA_ATA_ALLOW_OWNER_OFF_CURVE,
+    programId,
+  );
+  const toTokenAccount = getAssociatedTokenAddressSync(
+    mint,
+    toPubkey,
+    SOLANA_ATA_ALLOW_OWNER_OFF_CURVE,
+    programId,
+  );
 
   const transaction = new Transaction();
   try {

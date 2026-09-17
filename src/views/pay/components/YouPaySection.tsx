@@ -51,6 +51,7 @@ export function YouPaySection(props: {
   const originBalance = useTokenBalance(walletAddress, originToken?.assetId);
   const isEvmOrigin = originToken?.chain.chainKind === "evm";
   const isNearOrigin = originToken?.chain.chainKind === "near";
+  const isSolanaOrigin = originToken?.chain.chainKind === "solana";
   const originKind = originToken?.chain.chainKind;
   const safeApp = useSafeMode().mode === "app";
 
@@ -74,7 +75,9 @@ export function YouPaySection(props: {
           {walletAddress ? (
             <>
               <p className="font-montserrat text-xs text-[#606060]">{formatAddress(walletAddress)}</p>
-              {(isEvmOrigin || isNearOrigin) && originKind ? <MultisigBadge chainKind={originKind} /> : null}
+              {(isEvmOrigin || isNearOrigin || isSolanaOrigin) && originKind ? (
+                <MultisigBadge chainKind={originKind} />
+              ) : null}
               {/* Inside the Safe App the connection is the host iframe, so there is
                   nothing this page can disconnect from. */}
               {onDisconnectWallet && !(isEvmOrigin && safeApp) ? (

@@ -2,6 +2,7 @@ import { cn } from "@/lib/utils";
 import type { ChainKind } from "@/wallet/types";
 import { useSafeAccountInfo } from "@/wallet/evm/safe";
 import { useNearDaoInfo } from "@/wallet/near/multisig";
+import { useSquadsAccountInfo } from "@/wallet/solana/multisig";
 
 /**
  * `Multisig m/n` next to the connected address. Renders nothing for an EOA /
@@ -17,6 +18,7 @@ export function MultisigBadge({
 }) {
   if (chainKind === "evm") return <EvmMultisigBadge className={className} />;
   if (chainKind === "near") return <NearMultisigBadge className={className} />;
+  if (chainKind === "solana") return <SolanaMultisigBadge className={className} />;
   return null;
 }
 
@@ -64,6 +66,19 @@ function NearMultisigBadge({ className }: { className?: string }) {
     <BadgeShell
       className={className}
       title={`SputnikDAO multisig requiring ${info.threshold} of ${info.members.length} members`}
+      threshold={info.threshold}
+      of={info.members.length}
+    />
+  );
+}
+
+function SolanaMultisigBadge({ className }: { className?: string }) {
+  const info = useSquadsAccountInfo();
+  if (!info) return null;
+  return (
+    <BadgeShell
+      className={className}
+      title={`Squads treasury requiring ${info.threshold} of ${info.members.length} members`}
       threshold={info.threshold}
       of={info.members.length}
     />

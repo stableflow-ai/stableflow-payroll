@@ -104,7 +104,7 @@ export function WalletConnectDialog({
                   <p className="font-montserrat text-[14px] font-medium text-black">
                     Connected {chainLabel(selectedKind).toUpperCase()} wallet
                   </p>
-                  {selectedKind === "evm" || selectedKind === "near" ? (
+                  {selectedKind === "evm" || selectedKind === "near" || selectedKind === "solana" ? (
                     <MultisigBadge chainKind={selectedKind} />
                   ) : null}
                 </div>

@@ -1,4 +1,10 @@
-import { WalletConnectionError, WalletPublicKeyError } from "@solana/wallet-adapter-base";
+import {
+  WalletConnectionError,
+  WalletPublicKeyError,
+  WalletSendTransactionError,
+  WalletSignMessageError,
+  WalletSignTransactionError,
+} from "@solana/wallet-adapter-base";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { WALLET_CONNECTION_REJECTED_MESSAGE } from "../config";
 import { LEDGER_DEVICE_LOCKED_MESSAGE, LEDGER_LIVE_WC_DEEPLINK_PREFIX } from "./config";
@@ -43,6 +49,18 @@ describe("reportSolanaWalletError", () => {
     toast.fail.mockClear();
     reportSolanaWalletError(toast, new WalletConnectionError("failed to open device"));
     expect(toast.fail).toHaveBeenCalledWith({ title: "failed to open device" });
+  });
+
+  it("leaves sign and send rejections to the payment toast", () => {
+    const toast = { fail: vi.fn() };
+    reportSolanaWalletError(toast, new WalletSignTransactionError("User rejected the request"));
+    expect(toast.fail).not.toHaveBeenCalled();
+
+    reportSolanaWalletError(toast, new WalletSendTransactionError("User rejected the request"));
+    expect(toast.fail).not.toHaveBeenCalled();
+
+    reportSolanaWalletError(toast, new WalletSignMessageError("User rejected the request"));
+    expect(toast.fail).not.toHaveBeenCalled();
   });
 });
 

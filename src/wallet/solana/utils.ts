@@ -1,4 +1,9 @@
-import { WalletError } from "@solana/wallet-adapter-base";
+import {
+  WalletError,
+  WalletSendTransactionError,
+  WalletSignMessageError,
+  WalletSignTransactionError,
+} from "@solana/wallet-adapter-base";
 import { WALLET_CONNECTION_REJECTED_MESSAGE } from "../config";
 import { isWalletConnectionRejected } from "../connect-feedback";
 import {
@@ -40,6 +45,14 @@ export function openLedgerLiveWalletConnect(uri: string) {
   window.location.href = `${LEDGER_LIVE_WC_DEEPLINK_PREFIX}${encodeURIComponent(uri)}`;
 }
 
+function isSolanaSignOrSendError(error: unknown): boolean {
+  return (
+    error instanceof WalletSignTransactionError
+    || error instanceof WalletSendTransactionError
+    || error instanceof WalletSignMessageError
+  );
+}
+
 export function reportSolanaWalletError(toast: ConnectToast, error: unknown): void {
   if (error instanceof LedgerConnectCancelledError) return;
   const locked = solanaWalletErrorMessage(error);
@@ -47,6 +60,9 @@ export function reportSolanaWalletError(toast: ConnectToast, error: unknown): vo
     toast.fail({ title: locked });
     return;
   }
+  // Sign / send failures are toasted by the payment mutation. This handler is
+  // only for connect-time adapter errors; otherwise a rejected tx shows twice.
+  if (isSolanaSignOrSendError(error)) return;
   if (isWalletConnectionRejected(error)) {
     toast.fail({ title: WALLET_CONNECTION_REJECTED_MESSAGE });
     return;

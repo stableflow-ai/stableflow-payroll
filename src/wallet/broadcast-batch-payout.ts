@@ -1,9 +1,8 @@
 /**
  * Broadcast a batch swap transaction on the origin chain.
  *
- * EVM Safe and NEAR SputnikDAO / Trezu can return `pending-multisig`. The other
- * chains have no multisig support here, so they always resolve to an executed
- * transaction hash.
+ * EVM Safe, NEAR SputnikDAO / Trezu, and Solana SquadsX can return
+ * `pending-multisig`. Other wallets resolve to an executed transaction hash.
  */
 
 import type { PayBatchSwapTransaction } from "@/types/payout";
@@ -11,7 +10,10 @@ import { isNativeToken, type IntentsToken } from "@/stores/intents-tokens";
 import { broadcastBatchPayCallData } from "./broadcast-quick-pay";
 import { executedBroadcast, type BroadcastResult } from "./types";
 import { broadcastNearActions } from "./near/transfer";
-import { broadcastSerializedSolanaTx } from "./solana/transfer";
+import { buildSolanaDepositTx } from "./solana/build-deposit-tx";
+import { SOLANA_MISSING_OUTPUTS_MESSAGE } from "./solana/config";
+import { activeSquadsMode, sendViaSquads, solanaBroadcastResult } from "./solana/multisig";
+import { broadcastSolanaTransaction } from "./solana/transfer";
 import { broadcastTronCallData, waitForTronSuccess } from "./tron/transfer";
 import { transferNativeZec } from "./zec/transfer";
 
@@ -104,13 +106,28 @@ async function broadcastNear(input: {
 }
 
 async function broadcastSolana(input: {
+  token: IntentsToken;
   transaction: PayBatchSwapTransaction;
+  amountIn: bigint;
+  payer: string;
 }): Promise<BroadcastResult> {
-  const serialized = input.transaction.serializedTransaction?.trim();
-  if (!serialized) throw new Error("Missing batch transaction");
-  return executedBroadcast(await broadcastSerializedSolanaTx({
-    serializedTransaction: serialized,
-  }));
+  const outputs = input.transaction.outputs ?? [];
+  if (!outputs.length) throw new Error(SOLANA_MISSING_OUTPUTS_MESSAGE);
+  const native = isNativeToken(input.token);
+  const unsigned = await buildSolanaDepositTx({
+    payer: input.payer,
+    mint: native ? null : input.token.contractAddress,
+    outputs,
+    totalSourceAmountRaw: input.amountIn,
+  });
+  if (activeSquadsMode()) return sendViaSquads(unsigned);
+  const { signature, signed } = await broadcastSolanaTransaction(unsigned);
+  return solanaBroadcastResult({
+    signature,
+    signed,
+    vaultAddress: input.payer,
+    squadsMode: null,
+  });
 }
 
 async function broadcastZec(input: {

@@ -147,6 +147,16 @@ export function trezuRequestsUrl(daoId: string, proposalId?: number): string | n
   return `https://trezu.app/${id}/requests/${proposalId}`;
 }
 
+/**
+ * Squads app transaction list for one vault. Links the list, not a single
+ * proposal, because SquadsX wrap hashes are not the vault transaction index.
+ */
+export function squadsQueueUrl(vaultAddress: string): string | null {
+  const address = vaultAddress.trim();
+  if (!address) return null;
+  return `https://app.squads.so/squads/${encodeURIComponent(address)}/transactions`;
+}
+
 export function txExplorerUrl(network: string, txHash: string | null | undefined): string | null {
   const hash = String(txHash || "").trim();
   if (!hash) return null;
