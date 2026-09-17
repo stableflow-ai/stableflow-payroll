@@ -1,8 +1,9 @@
 /**
  * Broadcast a batch swap transaction on the origin chain.
  *
- * EVM Safe, NEAR SputnikDAO / Trezu, and Solana SquadsX can return
- * `pending-multisig`. Other wallets resolve to an executed transaction hash.
+ * EVM Safe, NEAR SputnikDAO / Trezu, Solana SquadsX, and Squads SDK
+ * proposals can return `pending-multisig`. Other wallets resolve to an
+ * executed transaction hash.
  */
 
 import type { PayBatchSwapTransaction } from "@/types/payout";
@@ -12,7 +13,7 @@ import { executedBroadcast, type BroadcastResult } from "./types";
 import { broadcastNearActions } from "./near/transfer";
 import { buildSolanaDepositTx } from "./solana/build-deposit-tx";
 import { SOLANA_MISSING_OUTPUTS_MESSAGE } from "./solana/config";
-import { activeSquadsMode, sendViaSquads, solanaBroadcastResult } from "./solana/multisig";
+import { activeSquadsMode, sendViaSquads, sendViaSquadsSdk, solanaBroadcastResult } from "./solana/multisig";
 import { broadcastSolanaTransaction } from "./solana/transfer";
 import { broadcastTronCallData, waitForTronSuccess } from "./tron/transfer";
 import { transferNativeZec } from "./zec/transfer";
@@ -120,7 +121,8 @@ async function broadcastSolana(input: {
     outputs,
     totalSourceAmountRaw: input.amountIn,
   });
-  if (activeSquadsMode()) return sendViaSquads(unsigned);
+  if (activeSquadsMode() === "squadsx") return sendViaSquads(unsigned);
+  if (activeSquadsMode() === "sdk") return sendViaSquadsSdk(unsigned);
   const { signature, signed } = await broadcastSolanaTransaction(unsigned);
   return solanaBroadcastResult({
     signature,

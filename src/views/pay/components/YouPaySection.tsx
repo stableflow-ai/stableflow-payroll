@@ -11,13 +11,16 @@ import { useTokenBalancesStore } from "@/stores/token-balances";
 import { useConnectedWallets } from "@/hooks/use-wallet";
 import { PAYER_BLOCKCHAINS } from "@/config/chains";
 import { ORIGIN_BALANCE_POLL_MS } from "@/views/pay/config";
+import { PayFromSquadSection } from "@/components/multisig/PayFromSquadSection";
 import { TokenSelectButton } from "@/views/pay/components/TokenSelectButton";
+import { useSquadsMode } from "@/wallet/solana/multisig";
 
 export function YouPaySection(props: {
   amountDisplay: string;
   originToken: IntentsToken | null;
   onOriginTokenChange: (token: IntentsToken) => void;
   walletAddress: string | null;
+  signerAddress?: string | null;
   walletConnected: boolean;
   walletIcon?: string | null;
   connecting: boolean;
@@ -34,6 +37,7 @@ export function YouPaySection(props: {
     originToken,
     onOriginTokenChange,
     walletAddress,
+    signerAddress,
     walletConnected,
     walletIcon,
     connecting,
@@ -54,6 +58,13 @@ export function YouPaySection(props: {
   const isSolanaOrigin = originToken?.chain.chainKind === "solana";
   const originKind = originToken?.chain.chainKind;
   const safeApp = useSafeMode().mode === "app";
+  const squads = useSquadsMode();
+  const signer = signerAddress || walletAddress;
+  const fund = walletAddress;
+  const showFund = Boolean(signer && fund && signer !== fund);
+  const ownersForBalances = fund && isSolanaOrigin
+    ? { ...balanceOwners, solana: fund }
+    : balanceOwners;
 
   useEffect(() => {
     if (!walletAddress || !originToken) return;
@@ -72,9 +83,12 @@ export function YouPaySection(props: {
           {walletAddress && walletConnected && walletIcon ? (
             <img src={walletIcon} alt="" className="size-3 rounded-[2px] object-cover" />
           ) : null}
-          {walletAddress ? (
+          {signer ? (
             <>
-              <p className="font-montserrat text-xs text-[#606060]">{formatAddress(walletAddress)}</p>
+              <p className="font-montserrat text-xs text-[#606060]">
+                {formatAddress(signer)}
+                {showFund && fund ? ` · Vault ${formatAddress(fund)}` : ""}
+              </p>
               {(isEvmOrigin || isNearOrigin || isSolanaOrigin) && originKind ? (
                 <MultisigBadge chainKind={originKind} />
               ) : null}
@@ -128,20 +142,25 @@ export function YouPaySection(props: {
           )}
         </span>
       </p>
+      {isSolanaOrigin && walletConnected && !squads.isSquadsX ? (
+        <PayFromSquadSection visible />
+      ) : null}
       <TokenSelectDialog
         open={originDialogOpen}
         onClose={() => setOriginDialogOpen(false)}
         title="Select Pay Token"
         selectedAssetId={originToken?.assetId}
         showBalances
-        balanceOwners={balanceOwners}
+        balanceOwners={ownersForBalances}
         allowedBlockchains={allowedBlockchains}
         disabledBlockchains={disabledBlockchains}
         disabledReason={disabledReason}
         onSelect={({ token }) => {
           onOriginTokenChange(token);
           setOriginDialogOpen(false);
-          const owner = balanceOwners[token.chain.chainKind];
+          const owner = token.chain.chainKind === "solana" && fund
+            ? fund
+            : ownersForBalances[token.chain.chainKind];
           if (owner) void fetchOneBalance(owner, token);
         }}
       />

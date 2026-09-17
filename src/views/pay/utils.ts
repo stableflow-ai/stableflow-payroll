@@ -139,6 +139,7 @@ function extractEmbeddedMessage(text: string): string | null {
   return null;
 }
 
+/** `decimals` is the destination token decimals (1Click EXACT_OUTPUT min amounts). */
 export function formatQuoteErrorMessage(error: unknown, decimals = 6): string {
   const raw = error instanceof ApiError
     ? error.message

@@ -2,7 +2,7 @@
  * Squads vault state for the connected wallet, for UI that needs m-of-n.
  *
  * Read fresh on every connection change because members and threshold are
- * mutable; the cheap SquadsX gate keeps this off the path for plain keypairs.
+ * mutable. SquadsX uses the connected vault; the SDK path uses the bound vault.
  */
 
 import { useWallet as useSolanaAdapter } from "@solana/wallet-adapter-react";
@@ -19,20 +19,21 @@ function adapterFeatures(adapter: unknown): Record<string, unknown> | undefined 
 
 export function useSquadsAccountInfo(): SquadsAccountInfo | null {
   const { publicKey, wallet } = useSolanaAdapter();
-  const { isSquads } = useSquadsMode();
+  const { mode, vaultAddress } = useSquadsMode();
   const [info, setInfo] = useState<SquadsAccountInfo | null>(null);
-  const vaultAddress = publicKey?.toBase58() ?? "";
+  const member = publicKey?.toBase58() ?? "";
 
   useEffect(() => {
-    if (!isSquads || !vaultAddress) {
+    if (!mode || !vaultAddress) {
       setInfo(null);
-      if (!vaultAddress) clearSquadsInfoCache();
+      if (!member) clearSquadsInfoCache();
       return;
     }
     let cancelled = false;
     void getSquadsAccountInfo({
       vaultAddress,
-      features: adapterFeatures(wallet?.adapter),
+      features: mode === "squadsx" ? adapterFeatures(wallet?.adapter) : undefined,
+      member: mode === "sdk" ? member : undefined,
     })
       .then((next) => {
         if (!cancelled) setInfo(next);
@@ -43,7 +44,7 @@ export function useSquadsAccountInfo(): SquadsAccountInfo | null {
     return () => {
       cancelled = true;
     };
-  }, [isSquads, vaultAddress, wallet]);
+  }, [member, mode, vaultAddress, wallet]);
 
   return info;
 }

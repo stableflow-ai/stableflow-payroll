@@ -18,6 +18,16 @@ function txForProgram(programId: typeof SystemProgram.programId) {
 }
 
 describe("solanaBroadcastResult", () => {
+  it("returns pending when Squads SDK mode is active", () => {
+    const signed = txForProgram(SystemProgram.programId);
+    expect(solanaBroadcastResult({
+      signature: "sig",
+      signed,
+      vaultAddress: VAULT,
+      squadsMode: "sdk",
+    }).kind).toBe("pending-multisig");
+  });
+
   it("returns pending when SquadsX mode is active", () => {
     const signed = txForProgram(SystemProgram.programId);
     expect(solanaBroadcastResult({

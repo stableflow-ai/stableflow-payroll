@@ -10,6 +10,7 @@ import * as multisig from "@sqds/multisig";
 import { PublicKey, type AccountInfo, type Connection } from "@solana/web3.js";
 import { getSolanaConnection } from "@/lib/rpc/solana";
 import { SQUADS_INFO_SIGNATURE_LIMIT, SQUADS_V4_PROGRAM_ID, SQUADS_VAULT_INDEX_MAX } from "./config";
+import { memberProposalAccess } from "./access";
 import type { SquadsAccountInfo } from "./types";
 
 type SquadsMultisigAccount = Awaited<ReturnType<typeof multisig.accounts.Multisig.fromAccountAddress>>;
@@ -80,12 +81,25 @@ async function readFeatureMultisigPda(features: Record<string, unknown> | undefi
   return null;
 }
 
-function vaultMatchesMultisig(vault: PublicKey, multisigPda: PublicKey): boolean {
+export function vaultIndexFor(vault: PublicKey, multisigPda: PublicKey): number | null {
   for (let index = 0; index <= SQUADS_VAULT_INDEX_MAX; index += 1) {
     const [derived] = multisig.getVaultPda({ multisigPda, index });
-    if (derived.equals(vault)) return true;
+    if (derived.equals(vault)) return index;
   }
-  return false;
+  return null;
+}
+
+export function listSquadsVaults(multisigPda: PublicKey): { index: number; vaultAddress: string }[] {
+  const rows: { index: number; vaultAddress: string }[] = [];
+  for (let index = 0; index <= SQUADS_VAULT_INDEX_MAX; index += 1) {
+    const [derived] = multisig.getVaultPda({ multisigPda, index });
+    rows.push({ index, vaultAddress: derived.toBase58() });
+  }
+  return rows;
+}
+
+function vaultMatchesMultisig(vault: PublicKey, multisigPda: PublicKey): boolean {
+  return vaultIndexFor(vault, multisigPda) != null;
 }
 
 function decodeMultisigIfOwned(info: AccountInfo<Buffer> | null): SquadsMultisigAccount | null {
@@ -113,7 +127,7 @@ function collectMessageAccountKeys(message: {
   return message.accountKeys ?? [];
 }
 
-async function resolveMultisigPdaFromHistory(
+export async function resolveMultisigPdaFromHistory(
   connection: Connection,
   vault: PublicKey,
 ): Promise<PublicKey | null> {
@@ -138,12 +152,21 @@ async function resolveMultisigPdaFromHistory(
   return null;
 }
 
-function toAccountInfo(decoded: SquadsMultisigAccount, vaultAddress: string, multisigPda: string): SquadsAccountInfo {
+function toAccountInfo(
+  decoded: SquadsMultisigAccount,
+  vaultAddress: string,
+  multisigPda: string,
+  vaultIndex: number,
+  member?: string,
+): SquadsAccountInfo {
+  const members = decoded.members.map((row) => row.key.toBase58());
   return {
     vaultAddress,
     multisigPda,
+    vaultIndex,
     threshold: decoded.threshold,
-    members: decoded.members.map((member) => member.key.toBase58()),
+    members,
+    canInitiate: memberProposalAccess(decoded.members, member ?? "") === "ok",
   };
 }
 
@@ -154,6 +177,7 @@ export function clearSquadsInfoCache(): void {
 export async function getSquadsAccountInfo(input: {
   vaultAddress: string;
   features?: Record<string, unknown>;
+  member?: string;
 }): Promise<SquadsAccountInfo | null> {
   const vaultAddress = input.vaultAddress.trim();
   if (!vaultAddress) return null;
@@ -173,9 +197,10 @@ export async function getSquadsAccountInfo(input: {
 
   try {
     const decoded = await multisig.accounts.Multisig.fromAccountAddress(connection, resolvedPda);
-    if (!vaultMatchesMultisig(vault, resolvedPda)) return null;
+    const vaultIndex = vaultIndexFor(vault, resolvedPda);
+    if (vaultIndex == null) return null;
     pdaByVault.set(vaultAddress, resolvedPda.toBase58());
-    return toAccountInfo(decoded, vaultAddress, resolvedPda.toBase58());
+    return toAccountInfo(decoded, vaultAddress, resolvedPda.toBase58(), vaultIndex, input.member);
   } catch {
     pdaByVault.delete(vaultAddress);
     return null;

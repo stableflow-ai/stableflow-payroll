@@ -71,7 +71,7 @@ src/
     token-select-dialog/       shared chain + token picker
     recipient-avatar/, you-pay/, WalletConnect.tsx
     safe/                      SafeMultisigBadge (wraps MultisigBadge)
-    multisig/                  MultisigBadge, showMultisigProposalToast
+    multisig/                  MultisigBadge, PayFromSquadSection, showMultisigProposalToast
   api/                         one module per domain, thin wrappers over http()
   hooks/                       use-*-api.ts (TanStack Query) plus wallet/UI hooks
   types/                       request and response types per domain
@@ -90,9 +90,10 @@ src/
                                proposal.ts, types.ts, use-near-dao-info.ts,
                                use-near-multisig-mode.ts
     solana/                    adapter, balance, transfer, session, build-deposit-tx.ts
-    solana/multisig/           SquadsX / Squads v4 helpers (no proposal builder):
-                               config.ts, detect.ts, info.ts, result.ts, send.ts,
-                               types.ts, use-squads-info.ts, use-squads-mode.ts
+    solana/multisig/           SquadsX wrap + Squads SDK proposal helpers:
+                               access.ts, config.ts, detect.ts, info.ts, resolve.ts,
+                               result.ts, send.ts, send-sdk.ts, types.ts,
+                               use-squads-info.ts, use-squads-mode.ts
 ```
 
 ## Where new code goes
@@ -128,6 +129,7 @@ src/
 | `nearintents-user-session.ts` | no | Near Intents session for confidential receive / withdraw |
 | `google-drive-session.ts` | `persist` (sessionStorage) | Google OAuth token for the Sheets importer |
 | `google-auth-pending.ts` | `persist` (sessionStorage) | Google `id_token` + profile while registering after code 10008 |
+| `squads-sdk.ts` | `persist` | Per-member Squads vault binding for the non-SquadsX SDK path |
 
 ## Import paths
 

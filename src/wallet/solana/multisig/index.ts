@@ -12,9 +12,20 @@ export {
   isSquadsXAdapter,
   isSquadsXWalletName,
 } from "./detect";
-export { clearSquadsInfoCache, getSquadsAccountInfo } from "./info";
+export { clearSquadsInfoCache, getSquadsAccountInfo, listSquadsVaults, vaultIndexFor } from "./info";
 export { solanaBroadcastResult } from "./result";
+export {
+  bindingFromVaultChoice,
+  inspectSquadsPaste,
+  isTransactionIndexConflict,
+  parsePastedSquadsAddress,
+  restoreSquadsSdkBinding,
+  verifySquadsBinding,
+  withTransactionIndexRetry,
+} from "./resolve";
 export { sendViaSquads } from "./send";
+export { sendViaSquadsSdk } from "./send-sdk";
 export { useSquadsAccountInfo } from "./use-squads-info";
 export { useSquadsMode, type UseSquadsModeResult } from "./use-squads-mode";
-export type { SquadsAccountInfo, SquadsMode } from "./types";
+export { memberProposalAccess } from "./access";
+export type { SquadsAccountInfo, SquadsMode, SquadsSdkBinding } from "./types";

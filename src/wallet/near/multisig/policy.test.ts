@@ -140,4 +140,57 @@ describe("parseDaoInfo", () => {
       }),
     ]))).toBeNull();
   });
+
+  it("reads Trezu call/transfer Approver m/n, not Requestor", () => {
+    const oneVote: Policy["default_vote_policy"] = {
+      weight_kind: "RoleWeight",
+      quorum: "0",
+      threshold: "1",
+    };
+    const twoVotes: Policy["default_vote_policy"] = {
+      weight_kind: "RoleWeight",
+      quorum: "0",
+      threshold: "2",
+    };
+    const info = parseDaoInfo("jimmygu.sputnik-dao.near", policy([
+      role({
+        name: "Requestor",
+        kind: { Group: ["alice.near"] },
+        permissions: [
+          "call:AddProposal",
+          "transfer:AddProposal",
+          "call:VoteRemove",
+          "transfer:VoteRemove",
+        ],
+        vote_policy: { call: oneVote, transfer: oneVote },
+      }),
+      role({
+        name: "Admin",
+        kind: { Group: ["alice.near"] },
+        permissions: ["config:*", "policy:*"],
+        vote_policy: { config: oneVote, policy: oneVote },
+      }),
+      role({
+        name: "Approver",
+        kind: { Group: ["alice.near", "bob.near"] },
+        permissions: [
+          "call:VoteReject",
+          "call:VoteApprove",
+          "call:RemoveProposal",
+          "call:Finalize",
+          "transfer:VoteReject",
+          "transfer:VoteApprove",
+          "transfer:RemoveProposal",
+          "transfer:Finalize",
+        ],
+        vote_policy: { call: twoVotes, transfer: twoVotes },
+      }),
+    ]));
+    expect(info).toEqual({
+      daoId: "jimmygu.sputnik-dao.near",
+      threshold: 2,
+      members: ["alice.near", "bob.near"],
+      roleName: "Approver",
+    });
+  });
 });

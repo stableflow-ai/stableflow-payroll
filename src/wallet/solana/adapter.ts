@@ -25,7 +25,8 @@ export function useSolanaWallet(): UseWalletResult {
     signTransaction,
   } = useSolanaAdapter();
   const { setVisible, visible } = useSolanaWalletModal();
-  const { isSquads } = useSquadsMode();
+  const { mode } = useSquadsMode();
+  const isSquadsX = mode === "squadsx";
   const address = publicKey?.toBase58() || null;
 
   useEffect(() => {
@@ -67,7 +68,7 @@ export function useSolanaWallet(): UseWalletResult {
       if (!address) {
         throw new Error("[wallet:solana] No connected account to sign with.");
       }
-      if (isSquads) {
+      if (isSquadsX) {
         throw walletDoesNotSupportSigning("Solana");
       }
       const message = createSolanaEmptyIntentBytes({
@@ -78,7 +79,7 @@ export function useSolanaWallet(): UseWalletResult {
       const signature = await signSolanaIntentsMessage(message, adapterSignMessage);
       return formatSolanaSignedData(signature, message, address);
     },
-    [adapterSignMessage, address, isSquads],
+    [adapterSignMessage, address, isSquadsX],
   );
 
   const signGeneratedIntent = useCallback(
@@ -86,7 +87,7 @@ export function useSolanaWallet(): UseWalletResult {
       if (!address) {
         throw new Error("[wallet:solana] No connected account to sign with.");
       }
-      if (isSquads) {
+      if (isSquadsX) {
         throw walletDoesNotSupportSigning("Solana");
       }
       const payload = payloadAsText(intent.payload);
@@ -94,7 +95,7 @@ export function useSolanaWallet(): UseWalletResult {
       const signature = await signSolanaIntentsMessage(message, adapterSignMessage);
       return formatSolanaSignedData(signature, message, address);
     },
-    [adapterSignMessage, address, isSquads],
+    [adapterSignMessage, address, isSquadsX],
   );
 
   const isAddressValidFn = useCallback((value: string) => isAddressValid(value, "solana"), []);

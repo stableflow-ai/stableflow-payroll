@@ -59,6 +59,7 @@ import { batchPayoutCommitTitle } from "./config";
 import {
   buildPayablePayRequest,
   nextUnpaidQuoteBatchId,
+  payableDestinationDecimals,
   payableItemIds,
   payableQuotePayments,
   payableQuoteSourceAmount,
@@ -93,6 +94,7 @@ export function PaymentByFormCard(props: {
   const orgId = organizationId(user);
   const timezone = browserTimeZone();
   const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
+  const findByChainAndSymbol = useIntentsTokensStore((s) => s.findByChainAndSymbol);
   const fetchOneBalance = useTokenBalancesStore((s) => s.fetchOne);
 
   const lockedForm = formLocked && formProp ? formProp : null;
@@ -151,6 +153,7 @@ export function PaymentByFormCard(props: {
   const formsFetching = lockedForm ? false : formsQuery.isFetching;
   const detail = lockedForm
     ?? (selectedKey ? findPayable(forms, selectedKey) : null);
+  const destDecimals = payableDestinationDecimals(detail?.items ?? [], findByChainAndSymbol);
   const lockedForms = formLocked ? (detail ? [detail] : []) : forms;
   const zcashBatchDisabled = (detail?.items.length ?? 0) > 1;
   const { originToken, setOriginToken } = usePayOriginToken(BATCH_BLOCKCHAINS, {
@@ -234,12 +237,12 @@ export function PaymentByFormCard(props: {
       setPostedNotify(next);
     }).catch((error) => {
       if (cancelled) return;
-      toast.fail({ title: formatQuoteErrorMessage(error, 2) });
+      toast.fail({ title: formatQuoteErrorMessage(error, destDecimals) });
     });
     return () => {
       cancelled = true;
     };
-  }, [desiredNotification, quoteId]);
+  }, [desiredNotification, destDecimals, quoteId]);
   const batches = quote?.batches ?? [];
   const isSplit = batches.length > 1;
   const firstQuoteBatchId = batches[0]?.quoteBatchId ?? "";
@@ -266,7 +269,7 @@ export function PaymentByFormCard(props: {
   const quoteError = zecQuoteBlocked
     ? ZCASH_TRANSPARENT_REFUND_MESSAGE
     : quoteQuery.isError
-      ? formatQuoteErrorMessage(quoteQuery.error, 2)
+      ? formatQuoteErrorMessage(quoteQuery.error, destDecimals)
       : null;
   const quoting = Boolean(payBody) && (quoteStale || quoteQuery.isFetching) && !quoteError;
   const sourceAmount = quote ? payableQuoteSourceAmount(quote) : "0";
@@ -324,7 +327,7 @@ export function PaymentByFormCard(props: {
       if (originToken.chain.chainId != null) {
         await assertSafeOriginChain(originToken.chain.chainId);
       }
-      const payer = wallet.account.address;
+      const payer = quotePayer || wallet.account.address;
       const amountIn = BigInt(batch.totalSourceAmountRaw || "0");
       const remainingRaw = remainingSourceAmountRaw(
         batches,
@@ -408,7 +411,7 @@ export function PaymentByFormCard(props: {
           formKey,
         });
       } catch (error) {
-        toast.fail({ title: formatQuoteErrorMessage(error, 2) });
+        toast.fail({ title: formatQuoteErrorMessage(error, destDecimals) });
       }
       return quoteBatchId;
     },
@@ -427,6 +430,7 @@ export function PaymentByFormCard(props: {
       setPhase("done");
       void queryClient.removeQueries({ queryKey: [...queryKeys.payable.all, "pay"] });
       if (!formLocked) setPickedId("");
+      setOriginToken(null);
       setDetailsOpen(false);
       setNotifyOpen(false);
       setNetPayById({});
@@ -438,7 +442,7 @@ export function PaymentByFormCard(props: {
       setPhase("idle");
       setSendingQuoteBatchId(null);
       if (error instanceof BalanceGateError) return;
-      toast.fail({ title: formatQuoteErrorMessage(error, 2) });
+      toast.fail({ title: formatQuoteErrorMessage(error, destDecimals) });
     },
   });
 
@@ -562,7 +566,8 @@ export function PaymentByFormCard(props: {
           originToken={originToken}
           onOriginTokenChange={setOriginToken}
           tokenSelectDisabled={paymentStarted}
-          walletAddress={connectedAddress}
+          walletAddress={quotePayer || connectedAddress}
+          signerAddress={connectedAddress}
           walletConnected={wallet.isConnected}
           walletIcon={originKind === "evm" ? paymentWallet.walletInfo.icon : wallet.account?.icon}
           connecting={wallet.isConnecting}

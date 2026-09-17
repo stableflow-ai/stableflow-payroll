@@ -4,8 +4,9 @@ import { useConnectedWallets, useWallet } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
 import type { ChainKind } from "@/wallet/types";
 import { useSafeMode } from "@/wallet/evm/safe";
+import { useSquadsMode } from "@/wallet/solana/multisig";
 import { chainLabel, FIXED_CHAIN_KINDS } from "@/config/chains";
-
+import { PayFromSquadSection } from "@/components/multisig/PayFromSquadSection";
 
 export function WalletConnectDialog({
   onClose,
@@ -23,6 +24,7 @@ export function WalletConnectDialog({
   const wallet = useWallet(selectedKind);
   const address = wallet.account?.address || null;
   const safeApp = useSafeMode().mode === "app";
+  const squads = useSquadsMode();
 
   const kindHint = useMemo(() => {
     if (selectedKind === "near") return "Connect HOT, Meteor, Intear, OKX, Ledger, NEAR Mobile, Nightly, Trezu, or WalletConnect.";
@@ -114,6 +116,9 @@ export function WalletConnectDialog({
                 <p className="mt-2 font-montserrat text-[12px] leading-5 text-[#606060]">
                   This address is used when you pay from {chainLabel(selectedKind)}.
                 </p>
+                {selectedKind === "solana" && !squads.isSquadsX ? (
+                  <PayFromSquadSection visible />
+                ) : null}
               </div>
               {/* Inside the Safe App the connection is the host iframe, so there is
                   nothing this page can disconnect from. */}

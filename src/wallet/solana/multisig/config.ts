@@ -14,3 +14,9 @@ export const SQUADS_PROPOSAL_QUEUE_LINK_LABEL = "Review it in your Squads queue"
 
 export const SQUADS_INFO_SIGNATURE_LIMIT = 25;
 export const SQUADS_VAULT_INDEX_MAX = 8;
+
+export const SQUADS_SDK_INVALID_ADDRESS_MESSAGE = "Enter a Squads vault or multisig address";
+export const SQUADS_SDK_UNRESOLVED_MESSAGE = "Could not resolve that Squads address";
+export const SQUADS_SDK_NOT_MEMBER_MESSAGE = "This wallet is not a member of that Squad";
+export const SQUADS_SDK_NO_INITIATE_MESSAGE =
+  "This wallet cannot propose in that Squad. Enable Proposer in Squads Members.";

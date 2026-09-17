@@ -45,6 +45,16 @@ describe("formatQuoteErrorMessage", () => {
     );
   });
 
+  it("converts a RHEA Near minimum with destination decimals", () => {
+    const error = new ApiError(
+      "Amount is too low for bridge, try at least 16878800283555566203",
+      400,
+    );
+    expect(formatQuoteErrorMessage(error, 18)).toBe(
+      "Amount is too low for bridge, try at least 16.878800283555566203",
+    );
+  });
+
   it("maps a software-wallet rejection to the unified copy", () => {
     expect(formatQuoteErrorMessage(new Error("User rejected the request"))).toBe(
       "User rejected transaction",

@@ -1,4 +1,5 @@
 import type { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
+import type { SquadsSdkBinding } from "./multisig/types";
 
 export type SolanaSigner = {
   publicKey: PublicKey;
@@ -10,8 +11,11 @@ export type SolanaWalletMeta = {
   isSquadsX: boolean;
 };
 
+export type { SquadsSdkBinding };
+
 let signer: SolanaSigner | null = null;
 let walletMeta: SolanaWalletMeta | null = null;
+let sdkBinding: SquadsSdkBinding | null = null;
 
 export function setSolanaSigner(next: SolanaSigner | null) {
   signer = next;
@@ -27,4 +31,12 @@ export function setSolanaWalletMeta(next: SolanaWalletMeta | null) {
 
 export function getSolanaWalletMeta(): SolanaWalletMeta | null {
   return walletMeta;
+}
+
+export function setSquadsSdkBinding(next: SquadsSdkBinding | null) {
+  sdkBinding = next;
+}
+
+export function getSquadsSdkBinding(): SquadsSdkBinding | null {
+  return sdkBinding;
 }

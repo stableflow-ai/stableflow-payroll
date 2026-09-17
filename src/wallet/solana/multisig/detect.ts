@@ -7,7 +7,7 @@
  */
 
 import { PublicKey, Transaction, VersionedTransaction } from "@solana/web3.js";
-import { getSolanaWalletMeta } from "../session";
+import { getSolanaSigner, getSolanaWalletMeta, getSquadsSdkBinding } from "../session";
 import {
   FUSE_GET_EPHEMERAL_SIGNERS_FEATURE,
   SQUADS_V4_PROGRAM_ID,
@@ -49,7 +49,11 @@ export function isSquadsXAdapter(adapter: unknown): boolean {
  * wallet. Module-level so broadcast can branch without React.
  */
 export function activeSquadsMode(): SquadsMode | null {
-  return getSolanaWalletMeta()?.isSquadsX ? "squadsx" : null;
+  if (getSolanaWalletMeta()?.isSquadsX) return "squadsx";
+  const signer = getSolanaSigner();
+  const binding = getSquadsSdkBinding();
+  if (!signer || !binding) return null;
+  return binding.member === signer.publicKey.toBase58() ? "sdk" : null;
 }
 
 function instructionProgramIds(tx: Transaction | VersionedTransaction): PublicKey[] {
