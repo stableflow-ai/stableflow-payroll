@@ -9,9 +9,10 @@ export const FUSE_GET_EPHEMERAL_SIGNERS_FEATURE = "fuse:getEphemeralSigners";
 
 export const SQUADS_APP_TRANSACTIONS_URL = "https://app.squads.so/squads/{vaultAddress}/transactions";
 
+export const SQUADS_PROPOSAL_CONFIRM_MESSAGE = "Confirm this transaction in your Squads treasury";
 export const SQUADS_PROPOSAL_SUBMITTED_MESSAGE = "Transaction proposed to your Squads treasury";
 export const SQUADS_PROPOSAL_QUEUE_LINK_LABEL = "Review it in your Squads queue";
-export const SQUADS_PROPOSAL_POLL_MS = 4_000;
+export const SQUADS_PROPOSAL_POLL_MS = 15_000;
 
 export const SQUADS_INFO_SIGNATURE_LIMIT = 25;
 export const SQUADS_VAULT_INDEX_MAX = 8;

@@ -1,6 +1,18 @@
+/**
+ * Watch one Squads v4 proposal until it is executed, rejected, or cancelled.
+ *
+ * n is `proposal.approved.length`. m is `multisig.threshold`. SquadsX wraps
+ * without a transaction index and cannot use this watcher. See doc/multisig.md.
+ */
+
 import * as squads from "@sqds/multisig";
 import { PublicKey } from "@solana/web3.js";
 import { getSolanaConnection } from "@/lib/rpc/solana";
+import { wait } from "../../multisig/wait";
+import {
+  MULTISIG_WATCH_STATUS,
+  type MultisigWatchSnapshot,
+} from "../../multisig/types";
 import { SQUADS_PROPOSAL_POLL_MS } from "./config";
 
 const TERMINAL_KINDS = new Set(["Executed", "Rejected", "Cancelled"]);
@@ -21,32 +33,64 @@ export function isSquadsProposalTerminal(status: unknown): boolean {
   return TERMINAL_KINDS.has(squadsProposalStatusKind(status));
 }
 
-async function wait(ms: number, signal?: AbortSignal): Promise<void> {
-  if (signal?.aborted) throw new DOMException("Aborted", "AbortError");
-  await new Promise<void>((resolve, reject) => {
-    const timer = setTimeout(resolve, ms);
-    const onAbort = () => {
-      clearTimeout(timer);
-      reject(new DOMException("Aborted", "AbortError"));
+export function isSquadsProposalExecuted(status: unknown): boolean {
+  return squadsProposalStatusKind(status) === "Executed";
+}
+
+export function snapshotFromSquadsProposal(
+  approvedCount: number | null,
+  threshold: number | null,
+  status: unknown,
+): MultisigWatchSnapshot {
+  if (isSquadsProposalExecuted(status)) {
+    return {
+      signed: approvedCount,
+      required: threshold,
+      status: MULTISIG_WATCH_STATUS.Success,
+      txHash: null,
     };
-    signal?.addEventListener("abort", onAbort, { once: true });
-  });
+  }
+  if (isSquadsProposalTerminal(status)) {
+    return {
+      signed: approvedCount,
+      required: threshold,
+      status: MULTISIG_WATCH_STATUS.Failed,
+      txHash: null,
+    };
+  }
+  return {
+    signed: approvedCount,
+    required: threshold,
+    status: MULTISIG_WATCH_STATUS.Pending,
+    txHash: null,
+  };
 }
 
 export async function watchSquadsProposal(input: {
   multisigPda: string;
   transactionIndex: bigint;
+  onUpdate?: (snap: MultisigWatchSnapshot) => void;
   signal?: AbortSignal;
-}): Promise<void> {
+}): Promise<MultisigWatchSnapshot> {
   const connection = getSolanaConnection();
+  const multisigPda = new PublicKey(input.multisigPda);
   const [proposalPda] = squads.getProposalPda({
-    multisigPda: new PublicKey(input.multisigPda),
+    multisigPda,
     transactionIndex: input.transactionIndex,
   });
   while (!input.signal?.aborted) {
     try {
-      const proposal = await squads.accounts.Proposal.fromAccountAddress(connection, proposalPda);
-      if (isSquadsProposalTerminal(proposal.status)) return;
+      const [proposal, account] = await Promise.all([
+        squads.accounts.Proposal.fromAccountAddress(connection, proposalPda),
+        squads.accounts.Multisig.fromAccountAddress(connection, multisigPda),
+      ]);
+      const snap = snapshotFromSquadsProposal(
+        Array.isArray(proposal.approved) ? proposal.approved.length : null,
+        Number.isFinite(account.threshold) ? account.threshold : null,
+        proposal.status,
+      );
+      input.onUpdate?.(snap);
+      if (snap.status !== MULTISIG_WATCH_STATUS.Pending) return snap;
     } catch (error) {
       if (input.signal?.aborted) throw error;
     }

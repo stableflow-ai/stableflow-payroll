@@ -4,6 +4,7 @@ export {
   TREZU_APP_URL,
   TREZU_CONNECTOR_ID,
   TREZU_NOT_CONNECTED_MESSAGE,
+  TREZU_PROPOSAL_CONFIRM_MESSAGE,
   TREZU_PROPOSAL_DISCOVER_TIMEOUT_MESSAGE,
   TREZU_PROPOSAL_QUEUE_LINK_LABEL,
   TREZU_PROPOSAL_SUBMITTED_MESSAGE,
@@ -18,7 +19,7 @@ export {
   proposalMatches,
   snapshotLastProposalId,
 } from "./proposal";
-export { isNearProposalTerminal, watchNearProposal } from "./watch";
+export { isNearProposalApproved, isNearProposalTerminal, nearProposalApproveCount, snapshotFromNearProposal, watchNearProposal } from "./watch";
 export { useNearDaoInfo } from "./use-near-dao-info";
 export { useNearMultisigMode, type UseNearMultisigModeResult } from "./use-near-multisig-mode";
 export type {

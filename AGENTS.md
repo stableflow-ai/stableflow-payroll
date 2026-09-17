@@ -10,6 +10,7 @@ Read these documents before changing this repository:
 - [doc/utils.md](doc/utils.md) — shared helpers (`@/utils`)
 - [doc/components/README.md](doc/components/README.md) — public UI components
 - [doc/components/CHANGELOG.md](doc/components/CHANGELOG.md) — public component change log
+- [doc/multisig.md](doc/multisig.md) — confirm toast + execution watch contract for Safe / Trezu / Squads
 
 ## Hard rules
 

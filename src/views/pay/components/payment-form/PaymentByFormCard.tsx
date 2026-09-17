@@ -22,10 +22,17 @@ import useToast from "@/hooks/use-toast";
 import { organizationId } from "@/lib/auth-role";
 import { formatAmount, browserTimeZone } from "@/utils";
 import { cn } from "@/lib/utils";
-import { showMultisigProposalToast } from "@/components/multisig/multisig-proposal-toast";
+import { showMultisigConfirmToast } from "@/components/multisig/multisig-proposal-toast";
 import { broadcastBatchPayout } from "@/wallet/broadcast-batch-payout";
 import { INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE } from "@/wallet/config";
 import { assertSafeOriginChain } from "@/wallet/evm/safe";
+import {
+  isWatchablePendingMultisig,
+  pendingMultisigSessionId,
+  resolveMultisigConfirmToast,
+  serializePendingMultisig,
+} from "@/wallet/multisig";
+import { useMultisigWatchStore } from "@/stores/multisig-watch-sessions";
 import type { BroadcastResult } from "@/wallet/types";
 import { assertNativeZecSpendable, zecSpendableGateMessage } from "@/wallet/zec/balance";
 import { ZCASH_TRANSPARENT_REFUND_MESSAGE } from "@/wallet/zec/config";
@@ -365,6 +372,8 @@ export function PaymentByFormCard(props: {
       setSendingQuoteBatchId(quoteBatchId);
       setNotifyOpen(false);
       markBatchConsumed(quoteBatchId);
+      const confirmCopy = await resolveMultisigConfirmToast(originKind);
+      const confirmToast = confirmCopy ? showMultisigConfirmToast(toast, confirmCopy) : undefined;
       let result: BroadcastResult;
       try {
         result = await broadcastBatchPayout({
@@ -375,6 +384,7 @@ export function PaymentByFormCard(props: {
           payer,
         });
       } catch (error) {
+        confirmToast?.dismiss();
         if (
           error instanceof Error
           && error.message === INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE
@@ -390,12 +400,36 @@ export function PaymentByFormCard(props: {
         }
         throw error;
       }
-      // A Safe / Trezu proposal has no transaction hash, so there is nothing to
-      // commit, but the batch is spoken for: treat it like a paid batch so the
-      // flow moves on to the next one and only settles the form once every batch
-      // is proposed.
+      confirmToast?.dismiss();
       if (result.kind === "pending-multisig") {
-        showMultisigProposalToast(toast, result);
+        if (isWatchablePendingMultisig(result)) {
+          useMultisigWatchStore.getState().upsertWatch({
+            id: pendingMultisigSessionId(result),
+            proposal: serializePendingMultisig(result),
+            quoteId: quote.quoteId,
+            quoteBatchId,
+            title,
+            type: detail?.type ?? "",
+            formKey,
+            listenDismissed: false,
+          });
+        } else {
+          try {
+            const submitted = await batchSubmit({
+              quote_id: quote.quoteId,
+              quote_batch_id: quoteBatchId,
+              tx_hash: "",
+            });
+            notifyBatchPayoutCommitSuccess({
+              executionId: submitted.executionId,
+              title,
+              type: detail?.type ?? "",
+              formKey,
+            });
+          } catch (error) {
+            toast.fail({ title: formatQuoteErrorMessage(error, destDecimals) });
+          }
+        }
         return quoteBatchId;
       }
       try {

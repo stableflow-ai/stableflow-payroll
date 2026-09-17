@@ -3,6 +3,7 @@ export const TREZU_CONNECTOR_ID = "trezu-wallet";
 
 export const TREZU_APP_URL = "https://trezu.app";
 
+export const TREZU_PROPOSAL_CONFIRM_MESSAGE = "Confirm this transaction in your Trezu treasury";
 export const TREZU_PROPOSAL_SUBMITTED_MESSAGE = "Transaction proposed to your Trezu treasury";
 export const TREZU_PROPOSAL_QUEUE_LINK_LABEL = "Review it in your Trezu queue";
 
@@ -12,4 +13,4 @@ export const TREZU_PROPOSAL_DISCOVER_TIMEOUT_MESSAGE =
 
 export const PROPOSAL_DISCOVER_INTERVAL_MS = 1000;
 export const PROPOSAL_DISCOVER_TIMEOUT_MS = 90_000;
-export const PROPOSAL_WATCH_INTERVAL_MS = 4_000;
+export const PROPOSAL_WATCH_INTERVAL_MS = 15_000;

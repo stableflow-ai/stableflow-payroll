@@ -21,7 +21,8 @@ export const SAFE_TWO_STEP_APPROVAL_MESSAGE =
 export const SAFE_APPROVAL_PROPOSED_MESSAGE =
   "Your Safe cannot batch calls, so only the token approval was proposed. Sign it in your Safe, then pay again with a fresh quote. Nothing was paid yet.";
 
+export const SAFE_PROPOSAL_CONFIRM_MESSAGE = "Confirm this transaction in your Safe";
 export const SAFE_PROPOSAL_SUBMITTED_MESSAGE = "Transaction proposed to your Safe";
 export const SAFE_PROPOSAL_QUEUE_LINK_LABEL = "Review it in your Safe queue";
 export const SAFE_CLIENT_GATEWAY_URL = "https://safe-client.safe.global";
-export const SAFE_PROPOSAL_POLL_MS = 4_000;
+export const SAFE_PROPOSAL_POLL_MS = 15_000;

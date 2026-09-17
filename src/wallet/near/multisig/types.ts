@@ -75,6 +75,9 @@ export interface SputnikProposal {
   id: number;
   kind: SputnikProposalKind;
   status?: unknown;
+  /** Role → [Approve, Reject, Remove] weights from `get_proposal`. */
+  vote_counts?: Record<string, unknown>;
+  votes?: Record<string, unknown>;
 }
 
 export interface ProposalMatchSpec {

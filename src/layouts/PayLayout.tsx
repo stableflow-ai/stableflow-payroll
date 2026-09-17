@@ -10,7 +10,6 @@ import {
 } from "@/components/layout/config";
 import { Drawer } from "@/components/ui/drawer/Drawer";
 import { DRAWER_SIDE } from "@/components/ui/drawer/config";
-import { useBatchPayoutCommitQueue } from "@/hooks/use-batch-payout-commit-queue";
 import { useExpenseOpenRequestsCountQuery } from "@/hooks/use-expense-api";
 import { useOperationCatalogQuery } from "@/hooks/use-operation-api";
 import { isUser, organizationName, userRole } from "@/lib/auth-role";
@@ -29,7 +28,6 @@ export interface PayLayoutOutletContext {
 }
 
 export function PayLayout() {
-  useBatchPayoutCommitQueue();
   useExpenseOpenRequestsCountQuery();
   const catalogQuery = useOperationCatalogQuery();
   const { pathname } = useLocation();

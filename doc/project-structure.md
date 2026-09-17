@@ -8,7 +8,7 @@ Product areas, routes, and constraints: [product.md](product.md).
 
 - **Runtime:** Vite 8 (Rolldown), React 19, TypeScript 5.9
 - **Styling:** Tailwind CSS 4 (`@tailwindcss/vite`, no `tailwind.config.js`), `cn()` (`clsx` + `tailwind-merge`), `class-variance-authority`
-- **State:** Zustand (cross-page client state), TanStack Query (server cache). The JWT session goes through `src/lib/auth-session.ts`; nothing else touches `localStorage` / `sessionStorage`.
+- **State:** Zustand (cross-page client state), TanStack Query (server cache). The JWT session goes through `src/lib/auth-session.ts`. Tab-scoped session data (Google auth pending, multisig watches) uses Zustand `persist` + `sessionStorage`; views do not read Web storage.
 - **Routing:** `react-router-dom` 7 (`createBrowserRouter`)
 - **Wallets:** RainbowKit + wagmi + viem (EVM), `@hot-labs/near-connect` (Near), `@solana/wallet-adapter` (Solana), `@tronweb3/tronwallet-adapters` (Tron), `@rhea-finance/zcash-wallet-adapter` (Zcash / Noir). Solana send is HTTP-only (the HMAC proxy has no WebSocket): unsigned transactions refresh `recentBlockhash` locally, stay on the RPC that issued it, and rebroadcast until confirmed or the blockhash expires.
 - **Other:** `motion` (animation), `recharts` (charts), `react-toastify` (toasts), `date-fns` (dates), `big.js` (amounts), `papaparse` (CSV), `exceljs` (Excel import templates)
@@ -52,7 +52,8 @@ src/
   styles.css                   Tailwind entry + fonts + toast overrides
   shadcn-tailwind.css          theme variables and @theme inline
   router/                      route table (index.tsx) and guards (guards.tsx)
-  layouts/                     AppLayout, PayLayout
+    layouts/                   AppLayout, PayLayout, AppWatchLayout (root toast / execution host)
+    views/                       one folder per area; see product.md
     views/                       one folder per area; see product.md
     auth/                      login, register, create organization, invite register, reset password
     pay/                       overview, single, form, result, request, requests, history, team, setting
@@ -71,7 +72,7 @@ src/
     token-select-dialog/       shared chain + token picker
     recipient-avatar/, you-pay/, WalletConnect.tsx
     safe/                      SafeMultisigBadge (wraps MultisigBadge)
-    multisig/                  MultisigBadge, PayFromSquadSection, showMultisigProposalToast
+    multisig/                  MultisigBadge, PayFromSquadSection, confirm / listen toasts
   api/                         one module per domain, thin wrappers over http()
   hooks/                       use-*-api.ts (TanStack Query) plus wallet/UI hooks
   types/                       request and response types per domain
@@ -82,18 +83,19 @@ src/
   config/                      chains.ts (chain registry, explorers, payer/batch flags)
   mocks/                       mock switchboard; see doc/mocks.md
   wallet/                      per-chain adapters, providers, transfer + broadcast
-    evm/safe/                  Safe proposal helpers (no execution poller):
+    evm/safe/                  Safe proposal helpers:
                                abi.ts, bundle.ts, config.ts, detect.ts, info.ts,
-                               send.ts, types.ts, use-safe-info.ts, use-safe-mode.ts
-    near/multisig/             SputnikDAO / Trezu helpers (no execution poller):
+                               send.ts, types.ts, use-safe-info.ts, use-safe-mode.ts, watch.ts
+    near/multisig/             SputnikDAO / Trezu helpers:
                                config.ts, detect.ts, policy.ts, info.ts,
                                proposal.ts, types.ts, use-near-dao-info.ts,
-                               use-near-multisig-mode.ts
+                               use-near-multisig-mode.ts, watch.ts
     solana/                    adapter, balance, transfer, session, build-deposit-tx.ts
     solana/multisig/           SquadsX wrap + Squads SDK proposal helpers:
                                access.ts, config.ts, detect.ts, info.ts, resolve.ts,
                                result.ts, send.ts, send-sdk.ts, types.ts,
-                               use-squads-info.ts, use-squads-mode.ts
+                               use-squads-info.ts, use-squads-mode.ts, watch.ts
+    multisig/                  Cross-chain confirm toast + watch contract (doc/multisig.md)
 ```
 
 ## Where new code goes
@@ -130,6 +132,7 @@ src/
 | `google-drive-session.ts` | `persist` (sessionStorage) | Google OAuth token for the Sheets importer |
 | `google-auth-pending.ts` | `persist` (sessionStorage) | Google `id_token` + profile while registering after code 10008 |
 | `squads-sdk.ts` | `persist` | Per-member Squads vault binding for the non-SquadsX SDK path |
+| `multisig-watch-sessions.ts` | `persist` (sessionStorage) | In-tab Safe / Trezu / Squads watch sessions plus in-flight execution polls |
 
 ## Import paths
 
