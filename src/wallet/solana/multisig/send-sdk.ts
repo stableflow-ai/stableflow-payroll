@@ -43,15 +43,15 @@ export async function sendViaSquadsSdk(
     instructions: innerMessage.instructions,
   });
 
-  await withTransactionIndexRetry({
+  const transactionIndex = await withTransactionIndexRetry({
     readIndex: async () => {
       const account = await squads.accounts.Multisig.fromAccountAddress(connection, multisigPda);
       return nextTransactionIndex(account.transactionIndex);
     },
-    send: async (transactionIndex) => {
+    send: async (index) => {
       const createIx = squads.instructions.vaultTransactionCreate({
         multisigPda,
-        transactionIndex,
+        transactionIndex: index,
         creator: signer.publicKey,
         vaultIndex: binding.vaultIndex,
         ephemeralSigners: 0,
@@ -60,7 +60,7 @@ export async function sendViaSquadsSdk(
       const proposalIx = squads.instructions.proposalCreate({
         multisigPda,
         creator: signer.publicKey,
-        transactionIndex,
+        transactionIndex: index,
       });
       const outer = new Transaction().add(createIx, proposalIx);
       outer.feePayer = signer.publicKey;
@@ -68,5 +68,9 @@ export async function sendViaSquadsSdk(
     },
   });
 
-  return pendingSquadsMultisigBroadcast({ vaultAddress: binding.vaultAddress });
+  return pendingSquadsMultisigBroadcast({
+    vaultAddress: binding.vaultAddress,
+    multisigPda: binding.multisigPda,
+    transactionIndex,
+  });
 }

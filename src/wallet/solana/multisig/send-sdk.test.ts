@@ -104,7 +104,11 @@ describe("sendViaSquadsSdk", () => {
     const [proposalPda] = squads.getProposalPda({ multisigPda, transactionIndex: 8n });
 
     await expect(sendViaSquadsSdk(innerDeposit(vault))).resolves.toEqual(
-      pendingSquadsMultisigBroadcast({ vaultAddress: vault.toBase58() }),
+      pendingSquadsMultisigBroadcast({
+        vaultAddress: vault.toBase58(),
+        multisigPda: multisigPda.toBase58(),
+        transactionIndex: 8n,
+      }),
     );
 
     expect(broadcastSolanaTransaction).toHaveBeenCalledTimes(1);
@@ -128,7 +132,11 @@ describe("sendViaSquadsSdk", () => {
     const [secondPda] = squads.getTransactionPda({ multisigPda, index: 5n });
 
     await expect(sendViaSquadsSdk(innerDeposit(vault))).resolves.toEqual(
-      pendingSquadsMultisigBroadcast({ vaultAddress: vault.toBase58() }),
+      pendingSquadsMultisigBroadcast({
+        vaultAddress: vault.toBase58(),
+        multisigPda: multisigPda.toBase58(),
+        transactionIndex: 5n,
+      }),
     );
     expect(broadcastSolanaTransaction).toHaveBeenCalledTimes(2);
     expect(instructionTouches(outerTx(0), firstPda)).toBe(true);

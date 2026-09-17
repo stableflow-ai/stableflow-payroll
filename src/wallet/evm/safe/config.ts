@@ -23,3 +23,5 @@ export const SAFE_APPROVAL_PROPOSED_MESSAGE =
 
 export const SAFE_PROPOSAL_SUBMITTED_MESSAGE = "Transaction proposed to your Safe";
 export const SAFE_PROPOSAL_QUEUE_LINK_LABEL = "Review it in your Safe queue";
+export const SAFE_CLIENT_GATEWAY_URL = "https://safe-client.safe.global";
+export const SAFE_PROPOSAL_POLL_MS = 4_000;

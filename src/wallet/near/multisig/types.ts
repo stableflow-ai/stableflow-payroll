@@ -74,6 +74,7 @@ export type SputnikProposalKind = {
 export interface SputnikProposal {
   id: number;
   kind: SputnikProposalKind;
+  status?: unknown;
 }
 
 export interface ProposalMatchSpec {

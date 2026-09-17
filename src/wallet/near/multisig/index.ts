@@ -18,6 +18,7 @@ export {
   proposalMatches,
   snapshotLastProposalId,
 } from "./proposal";
+export { isNearProposalTerminal, watchNearProposal } from "./watch";
 export { useNearDaoInfo } from "./use-near-dao-info";
 export { useNearMultisigMode, type UseNearMultisigModeResult } from "./use-near-multisig-mode";
 export type {

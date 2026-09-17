@@ -151,6 +151,7 @@ export function YouPaySection(props: {
         title="Select Pay Token"
         selectedAssetId={originToken?.assetId}
         showBalances
+        rememberRecentToken
         balanceOwners={ownersForBalances}
         allowedBlockchains={allowedBlockchains}
         disabledBlockchains={disabledBlockchains}

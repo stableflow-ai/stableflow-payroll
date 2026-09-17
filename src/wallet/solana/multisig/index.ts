@@ -25,6 +25,7 @@ export {
 } from "./resolve";
 export { sendViaSquads } from "./send";
 export { sendViaSquadsSdk } from "./send-sdk";
+export { isSquadsProposalTerminal, watchSquadsProposal } from "./watch";
 export { useSquadsAccountInfo } from "./use-squads-info";
 export { useSquadsMode, type UseSquadsModeResult } from "./use-squads-mode";
 export { memberProposalAccess } from "./access";

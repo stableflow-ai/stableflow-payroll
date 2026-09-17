@@ -11,6 +11,7 @@ export const SQUADS_APP_TRANSACTIONS_URL = "https://app.squads.so/squads/{vaultA
 
 export const SQUADS_PROPOSAL_SUBMITTED_MESSAGE = "Transaction proposed to your Squads treasury";
 export const SQUADS_PROPOSAL_QUEUE_LINK_LABEL = "Review it in your Squads queue";
+export const SQUADS_PROPOSAL_POLL_MS = 4_000;
 
 export const SQUADS_INFO_SIGNATURE_LIMIT = 25;
 export const SQUADS_VAULT_INDEX_MAX = 8;

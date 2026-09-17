@@ -206,13 +206,15 @@ export function isTransactionIndexConflict(error: unknown): boolean {
 export async function withTransactionIndexRetry(input: {
   readIndex: () => Promise<bigint>;
   send: (index: bigint) => Promise<void>;
-}): Promise<void> {
+}): Promise<bigint> {
   const first = await input.readIndex();
   try {
     await input.send(first);
+    return first;
   } catch (error) {
     if (!isTransactionIndexConflict(error)) throw error;
     const second = await input.readIndex();
     await input.send(second);
+    return second;
   }
 }

@@ -105,6 +105,8 @@ export type BroadcastResult =
       kind: "pending-multisig";
       chainKind: "solana";
       vaultAddress: string;
+      multisigPda?: string;
+      transactionIndex?: bigint;
     };
 
 export type PendingMultisigBroadcast = Extract<BroadcastResult, { kind: "pending-multisig" }>;
@@ -142,11 +144,15 @@ export function pendingNearMultisigBroadcast(result: {
 
 export function pendingSquadsMultisigBroadcast(result: {
   vaultAddress: string;
+  multisigPda?: string;
+  transactionIndex?: bigint;
 }): BroadcastResult {
   return {
     kind: "pending-multisig",
     chainKind: "solana",
     vaultAddress: result.vaultAddress,
+    ...(result.multisigPda ? { multisigPda: result.multisigPda } : {}),
+    ...(result.transactionIndex != null ? { transactionIndex: result.transactionIndex } : {}),
   };
 }
 
