@@ -188,6 +188,7 @@ export function BonusFormDrawer(props: {
         title="Prefer token"
         selectedAssetId={destRow?.token?.assetId}
         lockChainKind={destRow?.chainKind}
+        requireSupport="receive"
         onSelect={({ token }) => {
           if (!destRowId) return;
           patchRow(destRowId, { token });

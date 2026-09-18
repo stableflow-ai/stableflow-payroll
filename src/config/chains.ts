@@ -1,13 +1,14 @@
 /**
  * Chain registry for Stableflow Pay payments.
- * EVM plus Near / Solana / Tron / Zcash. Token availability still comes from 1Click /v0/tokens.
+ * Runtime lists come from GET /v1/payroll/config; this file keeps UI metadata
+ * and a fail-open fallback.
  */
 
 import { chainLogoUrl } from "@/lib/logo";
 import type { ChainKind } from "@/wallet/types";
 
 export interface ChainConfig {
-  /** 1Click blockchain code (e.g. arb, base). */
+  /** Backend / 1Click blockchain code (e.g. arb, base). */
   blockchain: string;
   /** Display name used in UI / legacy employee.network. */
   chainName: string;
@@ -15,8 +16,6 @@ export interface ChainConfig {
   /** EVM chain id when applicable. */
   chainId?: number;
   logo: string;
-  /** When false, this chain cannot be used as the payer / origin token. */
-  payerEnabled: boolean;
   /** When false, this chain cannot be used as the batch origin. */
   batchEnabled: boolean;
   /** Block explorer prefix for a transaction hash (ends with `/`). */
@@ -28,25 +27,47 @@ export interface ChainConfig {
   safeShortName?: string;
 }
 
-/** Registered chains. Token availability still comes from 1Click /v0/tokens. */
+interface ChainMeta {
+  chainKind: ChainKind;
+  safeShortName?: string;
+}
+
+/** Frontend-only fields the config API does not send. */
+export const CHAIN_META: Record<string, ChainMeta> = {
+  eth: { chainKind: "evm", safeShortName: "eth" },
+  base: { chainKind: "evm", safeShortName: "base" },
+  arb: { chainKind: "evm", safeShortName: "arb1" },
+  op: { chainKind: "evm", safeShortName: "oeth" },
+  pol: { chainKind: "evm", safeShortName: "matic" },
+  bsc: { chainKind: "evm", safeShortName: "bnb" },
+  avax: { chainKind: "evm", safeShortName: "avax" },
+  gnosis: { chainKind: "evm", safeShortName: "gno" },
+  scroll: { chainKind: "evm", safeShortName: "scr" },
+  xlayer: { chainKind: "evm" },
+  bera: { chainKind: "evm" },
+  near: { chainKind: "near" },
+  sol: { chainKind: "solana" },
+  tron: { chainKind: "tron" },
+  zec: { chainKind: "zec" },
+};
+
+/** Fail-open fallback when config has never loaded. */
 export const FIXED_CHAINS: ChainConfig[] = [
-  { blockchain: "eth", chainName: "Ethereum", chainKind: "evm", chainId: 1, logo: chainLogoUrl("eth"), payerEnabled: true, batchEnabled: true, safeShortName: "eth", txExplorer: "https://etherscan.io/tx/" },
-  { blockchain: "base", chainName: "Base", chainKind: "evm", chainId: 8453, logo: chainLogoUrl("base"), payerEnabled: true, batchEnabled: true, safeShortName: "base", txExplorer: "https://basescan.org/tx/" },
-  { blockchain: "arb", chainName: "Arbitrum", chainKind: "evm", chainId: 42161, logo: chainLogoUrl("arb"), payerEnabled: true, batchEnabled: true, safeShortName: "arb1", txExplorer: "https://arbiscan.io/tx/" },
-  { blockchain: "op", chainName: "Optimism", chainKind: "evm", chainId: 10, logo: chainLogoUrl("op"), payerEnabled: true, batchEnabled: true, safeShortName: "oeth", txExplorer: "https://optimistic.etherscan.io/tx/" },
-  { blockchain: "pol", chainName: "Polygon", chainKind: "evm", chainId: 137, logo: chainLogoUrl("pol"), payerEnabled: true, batchEnabled: true, safeShortName: "matic", txExplorer: "https://polygonscan.com/tx/" },
-  { blockchain: "bsc", chainName: "BNB Chain", chainKind: "evm", chainId: 56, logo: chainLogoUrl("bsc"), payerEnabled: true, batchEnabled: true, safeShortName: "bnb", txExplorer: "https://bscscan.com/tx/" },
-  { blockchain: "avax", chainName: "Avalanche", chainKind: "evm", chainId: 43114, logo: chainLogoUrl("avax"), payerEnabled: true, batchEnabled: true, safeShortName: "avax", txExplorer: "https://snowscan.xyz/tx/" },
-  { blockchain: "gnosis", chainName: "Gnosis", chainKind: "evm", chainId: 100, logo: chainLogoUrl("gnosis"), payerEnabled: true, batchEnabled: true, safeShortName: "gno", txExplorer: "https://gnosisscan.io/tx/" },
-  // { blockchain: "monad", chainName: "Monad", chainKind: "evm", chainId: 143, logo: chainLogoUrl("monad"), payerEnabled: true, batchEnabled: true, txExplorer: "https://monadvision.com/tx/" },
-  { blockchain: "scroll", chainName: "Scroll", chainKind: "evm", chainId: 534352, logo: chainLogoUrl("scroll"), payerEnabled: true, batchEnabled: true, safeShortName: "scr", txExplorer: "https://scrollscan.com/tx/" },
-  { blockchain: "xlayer", chainName: "X Layer", chainKind: "evm", chainId: 196, logo: chainLogoUrl("xlayer"), payerEnabled: true, batchEnabled: true, txExplorer: "https://www.okx.com/web3/explorer/xlayer/tx/" },
-  // { blockchain: "plasma", chainName: "Plasma", chainKind: "evm", chainId: 9745, logo: chainLogoUrl("plasma"), payerEnabled: true, batchEnabled: true, txExplorer: "https://plasmascan.to/tx/" },
-  { blockchain: "bera", chainName: "Berachain", chainKind: "evm", chainId: 80094, logo: chainLogoUrl("bera"), payerEnabled: true, batchEnabled: true, txExplorer: "https://berascan.com/tx/" },
-  { blockchain: "near", chainName: "Near", chainKind: "near", logo: chainLogoUrl("near"), payerEnabled: true, batchEnabled: true, txExplorer: "https://nearblocks.io/txns/" },
-  { blockchain: "sol", chainName: "Solana", chainKind: "solana", logo: chainLogoUrl("sol"), payerEnabled: true, batchEnabled: true, txExplorer: "https://solscan.io/tx/" },
-  { blockchain: "tron", chainName: "Tron", chainKind: "tron", logo: chainLogoUrl("tron"), payerEnabled: true, batchEnabled: true, txExplorer: "https://tronscan.org/#/transaction/" },
-  { blockchain: "zec", chainName: "Zcash", chainKind: "zec", logo: chainLogoUrl("zec"), payerEnabled: true, batchEnabled: true, txExplorer: "https://explorer.zcha.in/transactions/" },
+  { blockchain: "eth", chainName: "Ethereum", chainKind: "evm", chainId: 1, logo: chainLogoUrl("eth"), batchEnabled: true, safeShortName: "eth", txExplorer: "https://etherscan.io/tx/" },
+  { blockchain: "base", chainName: "Base", chainKind: "evm", chainId: 8453, logo: chainLogoUrl("base"), batchEnabled: true, safeShortName: "base", txExplorer: "https://basescan.org/tx/" },
+  { blockchain: "arb", chainName: "Arbitrum", chainKind: "evm", chainId: 42161, logo: chainLogoUrl("arb"), batchEnabled: true, safeShortName: "arb1", txExplorer: "https://arbiscan.io/tx/" },
+  { blockchain: "op", chainName: "Optimism", chainKind: "evm", chainId: 10, logo: chainLogoUrl("op"), batchEnabled: true, safeShortName: "oeth", txExplorer: "https://optimistic.etherscan.io/tx/" },
+  { blockchain: "pol", chainName: "Polygon", chainKind: "evm", chainId: 137, logo: chainLogoUrl("pol"), batchEnabled: true, safeShortName: "matic", txExplorer: "https://polygonscan.com/tx/" },
+  { blockchain: "bsc", chainName: "BNB Chain", chainKind: "evm", chainId: 56, logo: chainLogoUrl("bsc"), batchEnabled: true, safeShortName: "bnb", txExplorer: "https://bscscan.com/tx/" },
+  { blockchain: "avax", chainName: "Avalanche", chainKind: "evm", chainId: 43114, logo: chainLogoUrl("avax"), batchEnabled: true, safeShortName: "avax", txExplorer: "https://snowscan.xyz/tx/" },
+  { blockchain: "gnosis", chainName: "Gnosis", chainKind: "evm", chainId: 100, logo: chainLogoUrl("gnosis"), batchEnabled: true, safeShortName: "gno", txExplorer: "https://gnosisscan.io/tx/" },
+  { blockchain: "scroll", chainName: "Scroll", chainKind: "evm", chainId: 534352, logo: chainLogoUrl("scroll"), batchEnabled: true, safeShortName: "scr", txExplorer: "https://scrollscan.com/tx/" },
+  { blockchain: "xlayer", chainName: "X Layer", chainKind: "evm", chainId: 196, logo: chainLogoUrl("xlayer"), batchEnabled: true, txExplorer: "https://www.okx.com/web3/explorer/xlayer/tx/" },
+  { blockchain: "bera", chainName: "Berachain", chainKind: "evm", chainId: 80094, logo: chainLogoUrl("bera"), batchEnabled: true, txExplorer: "https://berascan.com/tx/" },
+  { blockchain: "near", chainName: "Near", chainKind: "near", logo: chainLogoUrl("near"), batchEnabled: true, txExplorer: "https://nearblocks.io/txns/" },
+  { blockchain: "sol", chainName: "Solana", chainKind: "solana", logo: chainLogoUrl("sol"), batchEnabled: true, txExplorer: "https://solscan.io/tx/" },
+  { blockchain: "tron", chainName: "Tron", chainKind: "tron", logo: chainLogoUrl("tron"), batchEnabled: true, txExplorer: "https://tronscan.org/#/transaction/" },
+  { blockchain: "zec", chainName: "Zcash", chainKind: "zec", logo: chainLogoUrl("zec"), batchEnabled: true, txExplorer: "https://explorer.zcha.in/transactions/" },
 ];
 
 export const PAYOUT_NETWORKS = new Set(FIXED_CHAINS.map((c) => c.chainName));
@@ -55,27 +76,7 @@ export const EVM_BLOCKCHAINS = FIXED_CHAINS
   .filter((chain) => chain.chainKind === "evm")
   .map((chain) => chain.blockchain);
 
-export const PAYER_BLOCKCHAINS = FIXED_CHAINS
-  .filter((chain) => chain.payerEnabled)
-  .map((chain) => chain.blockchain);
-
-export const BATCH_BLOCKCHAINS = FIXED_CHAINS
-  .filter((chain) => chain.batchEnabled)
-  .map((chain) => chain.blockchain);
-
-export function chainKindForNetwork(network: string): ChainKind | null {
-  return getChainByNetwork(network)?.chainKind ?? null;
-}
-
-const byBlockchain = new Map(FIXED_CHAINS.map((c) => [c.blockchain, c]));
-const byChainName = new Map(FIXED_CHAINS.map((c) => [c.chainName.toLowerCase(), c]));
-const byChainId = new Map(
-  FIXED_CHAINS
-    .filter((c): c is ChainConfig & { chainId: number } => c.chainId != null)
-    .map((c) => [c.chainId, c]),
-);
-
-/** CSV / Sheets aliases → 1Click blockchain codes. */
+/** CSV / Sheets aliases → blockchain codes. */
 const NETWORK_ALIASES: Record<string, string> = {
   ethereum: "eth",
   mainnet: "eth",
@@ -97,6 +98,108 @@ const NETWORK_ALIASES: Record<string, string> = {
   "tron network": "tron",
   zcash: "zec",
 };
+
+export const CHAIN_KIND_LEBALS: Record<ChainKind, string> = {
+  evm: "EVM",
+  near: "Near",
+  solana: "Solana",
+  tron: "Tron",
+  zec: "Zcash",
+};
+
+export function chainLabel(kind: ChainKind): string {
+  return CHAIN_KIND_LEBALS[kind] || kind;
+}
+
+export const FIXED_CHAIN_KINDS = new Map<ChainKind, { chainKindLabel: string; chainKind: ChainKind }>();
+
+let runtimeChains: ChainConfig[] = FIXED_CHAINS;
+let byBlockchain = new Map<string, ChainConfig>();
+let byChainName = new Map<string, ChainConfig>();
+let byChainId = new Map<number, ChainConfig>();
+
+function rebuildLookups(chains: ChainConfig[]) {
+  byBlockchain = new Map(chains.map((chain) => [chain.blockchain, chain]));
+  byChainName = new Map(chains.map((chain) => [chain.chainName.toLowerCase(), chain]));
+  byChainId = new Map(
+    chains
+      .filter((chain): chain is ChainConfig & { chainId: number } => chain.chainId != null)
+      .map((chain) => [chain.chainId, chain]),
+  );
+  FIXED_CHAIN_KINDS.clear();
+  for (const chain of chains) {
+    if (FIXED_CHAIN_KINDS.has(chain.chainKind)) continue;
+    FIXED_CHAIN_KINDS.set(chain.chainKind, {
+      chainKind: chain.chainKind,
+      chainKindLabel: chainLabel(chain.chainKind),
+    });
+  }
+}
+
+rebuildLookups(FIXED_CHAINS);
+
+export function getRuntimeChains(): ChainConfig[] {
+  return runtimeChains;
+}
+
+export function setRuntimeChains(chains: ChainConfig[]) {
+  runtimeChains = chains.length > 0 ? chains : FIXED_CHAINS;
+  rebuildLookups(runtimeChains);
+}
+
+export function getBatchBlockchains(): string[] {
+  return getRuntimeChains()
+    .filter((chain) => chain.batchEnabled)
+    .map((chain) => chain.blockchain);
+}
+
+export function mergeApiChain(input: {
+  network: string;
+  chainId: string;
+  chainName: string;
+  logo: string;
+  explorer: string;
+  batchPay?: boolean;
+}): ChainConfig | null {
+  const network = input.network.trim();
+  if (!network) return null;
+  const chainIdRaw = input.chainId.trim();
+  const parsedId = chainIdRaw ? Number(chainIdRaw) : NaN;
+  const chainId = Number.isFinite(parsedId) ? parsedId : undefined;
+  const meta = CHAIN_META[network];
+  const chainKind = meta?.chainKind ?? (chainId != null ? "evm" : null);
+  if (!chainKind) return null;
+  return {
+    blockchain: network,
+    chainName: input.chainName.trim() || network,
+    chainKind,
+    chainId,
+    logo: input.logo.trim() || chainLogoUrl(network),
+    batchEnabled: input.batchPay ?? true,
+    txExplorer: input.explorer.trim(),
+    safeShortName: meta?.safeShortName,
+  };
+}
+
+export function mergeApiChains(rows: Array<{
+  network: string;
+  chainId: string;
+  chainName: string;
+  logo: string;
+  explorer: string;
+  batchPay?: boolean;
+}>): ChainConfig[] {
+  const out: ChainConfig[] = [];
+  for (const row of rows) {
+    const chain = mergeApiChain(row);
+    if (chain) out.push(chain);
+  }
+  return out;
+}
+
+export function chainKindForNetwork(network: string): ChainKind | null {
+  return getChainByNetwork(network)?.chainKind ?? null;
+}
 
 export function getChainByBlockchain(blockchain: string): ChainConfig | undefined {
   return byBlockchain.get(blockchain);
@@ -163,29 +266,4 @@ export function txExplorerUrl(network: string, txHash: string | null | undefined
   const prefix = getChainByNetwork(network)?.txExplorer;
   if (!prefix) return null;
   return `${prefix}${hash}`;
-}
-
-export const CHAIN_KIND_LEBALS: Record<ChainKind, string> = {
-  "evm": "EVM",
-  "near": "Near",
-  "solana": "Solana",
-  "tron": "Tron",
-  "zec": "Zcash",
-};
-export function chainLabel(kind: ChainKind): string {
-  return CHAIN_KIND_LEBALS[kind] || kind;
-}
-
-export const FIXED_CHAIN_KINDS = new Map<ChainKind, { chainKindLabel: string; chainKind: ChainKind; }>();
-for (const chain of FIXED_CHAINS) {
-  if (FIXED_CHAIN_KINDS.has(chain.chainKind)) {
-    continue;
-  }
-  if (!chain.payerEnabled) {
-    continue;
-  }
-  FIXED_CHAIN_KINDS.set(chain.chainKind, {
-    chainKind: chain.chainKind,
-    chainKindLabel: chainLabel(chain.chainKind),
-  })
 }

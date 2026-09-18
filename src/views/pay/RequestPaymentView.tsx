@@ -13,7 +13,7 @@ import { useConnectedWallets } from "@/hooks/use-wallet";
 import useToast from "@/hooks/use-toast";
 import { organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
-import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
+import type { IntentsToken } from "@/stores/intents-tokens";
 import { getAddressPlaceholder } from "@/utils";
 import { TokenSelectButton } from "./components/TokenSelectButton";
 import { GenerateLinkDialog } from "./components/request/GenerateLinkDialog";
@@ -41,7 +41,6 @@ export function RequestPaymentView() {
   const createMutation = useCreatePayRequestMutation();
   const defaultsQuery = usePaymentRequestDefaultAddressesQuery();
   const owners = useConnectedWallets();
-  const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
 
   const [addressInput, setAddressInput] = useState("");
   const [amount, setAmount] = useState("");
@@ -60,10 +59,6 @@ export function RequestPaymentView() {
   const destKind = tokenChainKind(destToken);
   const destLockChainKind = detectAddressChainKind(addressInput);
   const defaultAddresses = defaultsQuery.data ?? [];
-
-  useEffect(() => {
-    void ensureFresh();
-  }, [ensureFresh]);
 
   useEffect(() => {
     skipAutofillRef.current = false;
@@ -227,6 +222,7 @@ export function RequestPaymentView() {
         title="Receiving token"
         selectedAssetId={destToken?.assetId}
         lockChainKind={destLockChainKind}
+        requireSupport="receive"
         onSelect={({ token }) => setDestToken(token)}
       />
 

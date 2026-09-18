@@ -9,7 +9,6 @@ import type { IntentsToken } from "@/stores/intents-tokens";
 import { useTokenBalance } from "@/hooks/use-token-balances";
 import { useTokenBalancesStore } from "@/stores/token-balances";
 import { useConnectedWallets } from "@/hooks/use-wallet";
-import { PAYER_BLOCKCHAINS } from "@/config/chains";
 import { ORIGIN_BALANCE_POLL_MS } from "@/views/pay/config";
 import { PayFromSquadSection } from "@/components/multisig/PayFromSquadSection";
 import { TokenSelectButton } from "@/views/pay/components/TokenSelectButton";
@@ -26,7 +25,7 @@ export function YouPaySection(props: {
   connecting: boolean;
   onConnectWallet: () => void;
   onDisconnectWallet?: () => void;
-  allowedBlockchains?: string[];
+  allowedBlockchains?: string[] | null;
   disabledBlockchains?: string[] | null;
   disabledReason?: string;
   amountClassName?: string;
@@ -43,7 +42,7 @@ export function YouPaySection(props: {
     connecting,
     onConnectWallet,
     onDisconnectWallet,
-    allowedBlockchains = PAYER_BLOCKCHAINS,
+    allowedBlockchains = null,
     disabledBlockchains = null,
     disabledReason,
     amountClassName,
@@ -156,6 +155,7 @@ export function YouPaySection(props: {
         allowedBlockchains={allowedBlockchains}
         disabledBlockchains={disabledBlockchains}
         disabledReason={disabledReason}
+        requireSupport="payment"
         onSelect={({ token }) => {
           onOriginTokenChange(token);
           setOriginDialogOpen(false);

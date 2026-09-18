@@ -1,6 +1,6 @@
 import type { CellValue, DataValidation, Workbook, Worksheet } from "exceljs";
-import { FIXED_CHAINS } from "@/config/chains";
-import { PAYOUT_SYMBOLS } from "@/stores/intents-tokens";
+import { getRuntimeChains } from "@/config/chains";
+import { getPayoutSymbols } from "@/stores/intents-tokens";
 import { normalizeParsedRows, parseCsvFile } from "./csv";
 import {
   IMPORT_LISTS_SHEET,
@@ -127,10 +127,12 @@ export async function buildImportTemplateWorkbook(rows: string[][]): Promise<Wor
     sheet.getColumn(col).width = Math.max(12, Math.min(28, header.length + 4));
   }
 
-  PAYOUT_SYMBOLS.forEach((symbol, index) => {
+  const payoutSymbols = getPayoutSymbols();
+  const runtimeChains = getRuntimeChains();
+  payoutSymbols.forEach((symbol, index) => {
     lists.getCell(index + 1, 1).value = symbol;
   });
-  FIXED_CHAINS.forEach((chain, index) => {
+  runtimeChains.forEach((chain, index) => {
     lists.getCell(index + 1, 2).value = chain.blockchain;
   });
   lists.getColumn(1).width = 12;
@@ -140,14 +142,14 @@ export async function buildImportTemplateWorkbook(rows: string[][]): Promise<Wor
   addListValidation(
     sheet,
     headerColumnIndex(headers, IMPORT_TOKEN_HEADER),
-    listFormula("A", PAYOUT_SYMBOLS.length),
+    listFormula("A", payoutSymbols.length),
     "Invalid token",
     "Select a token from the list",
   );
   addListValidation(
     sheet,
     headerColumnIndex(headers, IMPORT_NETWORK_HEADER),
-    listFormula("B", FIXED_CHAINS.length),
+    listFormula("B", runtimeChains.length),
     "Invalid network",
     "Select a network from the list",
   );

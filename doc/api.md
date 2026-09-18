@@ -124,6 +124,14 @@ Paths are prefixed with `PAY_API_PREFIX` (`/v1/payroll`) or `NEARINTENTS_API_PRE
 
 `AuthUser` includes `role`: `"admin"` | `"user"`, optional `telegram` / `slack`, optional `teamMember` (members only), and optional `organization?: { id: number; name: string; logo?: string; orgId?: string } | null`. `login`, `googleLogin`, `googleRegister`, `googleRegisterUser`, `register`, `registerUser`, and `getProfile` map that payload with `mapAuthUser` / `mapAuthSession`. Only `"user"` is stored as the member role; any other value, including a missing role, hydrates as admin. Register body includes required `organization.name` and optional `organization.logo`. Google admin register sends `id_token`, camelCase `inviteCode`, `name`, and `organization` (optional `logo` omitted when empty). Google member register (`POST /auth/google/register/user`, `src/hooks/use-invite-api.ts`) sends string `org_id`, `id_token`, `name`, and omits empty optional wallet / handle fields (`telegram_chat_id`, `slack_user_id`). Envelope `code` `10008` on Google login means the Google account is not registered; the client navigates to Google register (`/register/google` from login, `/invite/:orgId/google` from invite) and does not toast. Empty telegram / slack handles are omitted from the mapped user. Invite-register (`POST /auth/register/user`, `src/hooks/use-invite-api.ts`) sends string `org_id` and omits empty optional wallet / handle fields. Admin Profile POST still sends only `name`. Member GET `/profile` maps `team_member` (`evm_address` / `solana_address` / `near_address` / `tron_address` / `slack_user_id` / `telegram_chat_id`) onto `AuthUser.teamMember`; login omits that object. Member Save posts `POST /profile/user` with `name`, `organization_id`, and `team_member` (`position`, wallet addresses, `slack_user_id`, `telegram_chat_id`); empty keys are omitted.
 
+### Config — `src/api/payroll-config.ts`, `src/types/payroll-config.ts`, `src/hooks/use-payroll-config.ts`
+
+| Method | Path | Auth | Body | Data | API | Hook |
+| --- | --- | --- | --- | --- | --- | --- |
+| GET | `/v1/payroll/config` | yes | — | `PayrollConfig` | `getPayrollConfig` | `usePayrollConfigQuery` |
+
+Authenticated. `usePayrollConfigQuery` is mounted in `App` `SessionBootstrap` (`enabled: Boolean(token)`, 30-minute `staleTime`). Success writes chains and tokens into `useIntentsTokensStore` and `setRuntimeChains`. Failure is fail-open: reuse the last persisted config when present, otherwise fall back to `FIXED_CHAINS` and `FALLBACK_PAYOUT_SYMBOLS`. Chains merge API `network` / `chain_id` / `chain_name` / `logo` / `explorer` / `batch_pay` with frontend `CHAIN_META` (`chainKind`, `safeShortName`). Unknown `network` values without a `chain_id` or `CHAIN_META` entry are skipped. `batchEnabled` comes from `batch_pay` (Zcash is `false` on the API). Origin pickers use every runtime chain; batch origin is `getBatchBlockchains()`. Token `assetId` is `` `${network}:${symbol}:${contract_address || "native"}` ``. `support_payment` filters origin tokens; `support_receive` filters destination tokens. `price` is USD display/sort only. There is no 1Click `GET /v0/tokens` catalog.
+
 ### Organizations — `src/api/organization.ts`, `src/types/organization.ts`, `src/hooks/use-admin-overview-api.ts`, `src/hooks/use-organization-api.ts`, `src/hooks/use-settings-api.ts`, `src/hooks/use-invite-api.ts`
 
 | Method | Path | Auth | Body / Query | Data | API | Hook |
@@ -387,6 +395,7 @@ All four pass `envelope: false`. They are called from `src/lib/confidential/` fo
 | `src/lib/query-client.ts` | `queryClient` (30s `staleTime`, 1 retry, no refetch on focus) |
 | `src/api/config.ts` | `PAY_API_PREFIX`, `NEARINTENTS_API_PREFIX` |
 | `src/api/query-keys.ts` | `queryKeys` factory |
+| `src/api/payroll-config.ts` | `GET /v1/payroll/config` chain and token catalog |
 | `src/api/payable.ts` | Payables list and salaries / expense / bonus / operations quote |
 | `src/api/payout.ts` | Hosted checkout create/get, payout submit, executions, payroll-batch mapping |
 | `src/api/map.ts` | `asRecord`, `apiText`, `apiNumber` |

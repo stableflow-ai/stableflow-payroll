@@ -1,21 +1,36 @@
 import { describe, expect, it } from "vitest";
+import { FIXED_CHAINS } from "@/config/chains";
+import type { PayrollConfigToken } from "@/types/payroll-config";
 import {
-  WRAP_NEAR_ASSET_ID,
   WRAP_NEAR_CONTRACT,
-  filterTokens,
   isNativeToken,
   isNearWrappedGasToken,
+  mapConfigTokens,
   normalizeSymbol,
+  tokenAssetId,
 } from "./intents-tokens";
 
+function configToken(partial: Partial<PayrollConfigToken> & Pick<PayrollConfigToken, "symbol" | "network">): PayrollConfigToken {
+  return {
+    decimals: 18,
+    contractAddress: "",
+    price: "1",
+    supportPayment: true,
+    supportReceive: true,
+    ...partial,
+  };
+}
+
 describe("normalizeSymbol", () => {
-  it("maps aliases and accepts payout symbols", () => {
+  it("maps aliases and uppercases symbols", () => {
     expect(normalizeSymbol("usdt0")).toBe("USDT");
     expect(normalizeSymbol("ETH")).toBe("ETH");
     expect(normalizeSymbol("sol")).toBe("SOL");
     expect(normalizeSymbol("WETH")).toBe("WETH");
     expect(normalizeSymbol("wNEAR")).toBe("NEAR");
+    expect(normalizeSymbol("ZEC")).toBe("ZEC");
     expect(normalizeSymbol("RHEA")).toBe("RHEA");
+    expect(normalizeSymbol("unknown")).toBe("UNKNOWN");
   });
 });
 
@@ -37,46 +52,43 @@ describe("isNearWrappedGasToken", () => {
   it("matches wrap.near on the Near chain only", () => {
     expect(isNearWrappedGasToken({
       blockchain: "near",
-      assetId: WRAP_NEAR_ASSET_ID,
       contractAddress: WRAP_NEAR_CONTRACT,
     })).toBe(true);
     expect(isNearWrappedGasToken({
       blockchain: "bsc",
-      assetId: WRAP_NEAR_ASSET_ID,
       contractAddress: WRAP_NEAR_CONTRACT,
     })).toBe(false);
   });
 });
 
-describe("filterTokens", () => {
-  it("maps Near wNEAR to NEAR, drops BSC NEAR, and prefers wrap.near over native NEAR", () => {
-    const tokens = filterTokens([
-      {
-        assetId: WRAP_NEAR_ASSET_ID,
-        decimals: 24,
-        blockchain: "near",
-        symbol: "wNEAR",
-        price: 1.88,
-        contractAddress: WRAP_NEAR_CONTRACT,
-      },
-      {
-        assetId: "nep141:near",
-        decimals: 24,
-        blockchain: "near",
+describe("mapConfigTokens", () => {
+  it("keeps native Near NEAR and BSC NEAR when wrap.near is absent", () => {
+    const tokens = mapConfigTokens([
+      configToken({ symbol: "NEAR", network: "near", decimals: 24, contractAddress: "" }),
+      configToken({
         symbol: "NEAR",
-        contractAddress: null,
-      },
-      {
-        assetId: "erc20:bsc:near",
+        network: "bsc",
         decimals: 18,
-        blockchain: "bsc",
-        symbol: "NEAR",
         contractAddress: "0x1fa4a73a3f0133f0025378af00236f3abdee5d63",
-      },
-    ]);
+      }),
+    ], FIXED_CHAINS);
+    expect(tokens.map((token) => token.blockchain)).toEqual(["near", "bsc"]);
+    expect(tokens[0]?.assetId).toBe(tokenAssetId("near", "NEAR", null));
+    expect(isNativeToken(tokens[0])).toBe(true);
+  });
+
+  it("prefers wrap.near over native NEAR when both exist", () => {
+    const tokens = mapConfigTokens([
+      configToken({
+        symbol: "wNEAR",
+        network: "near",
+        decimals: 24,
+        contractAddress: WRAP_NEAR_CONTRACT,
+      }),
+      configToken({ symbol: "NEAR", network: "near", decimals: 24, contractAddress: "" }),
+    ], FIXED_CHAINS);
     expect(tokens).toHaveLength(1);
     expect(tokens[0]).toMatchObject({
-      assetId: WRAP_NEAR_ASSET_ID,
       symbol: "NEAR",
       providerSymbol: "wNEAR",
       contractAddress: WRAP_NEAR_CONTRACT,
@@ -85,68 +97,60 @@ describe("filterTokens", () => {
   });
 
   it("keeps ZEC on zec, sol, and near", () => {
-    const tokens = filterTokens([
-      {
-        assetId: "nep141:zec.omft.near",
-        decimals: 8,
-        blockchain: "zec",
+    const tokens = mapConfigTokens([
+      configToken({ symbol: "ZEC", network: "zec", decimals: 8, contractAddress: "" }),
+      configToken({
         symbol: "ZEC",
-        price: 1178.24,
-        contractAddress: null,
-      },
-      {
-        assetId: "1cs_v1:sol:spl:A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
+        network: "sol",
         decimals: 8,
-        blockchain: "sol",
-        symbol: "ZEC",
-        price: 1178.24,
         contractAddress: "A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS",
-      },
-      {
-        assetId: "1cs_v1:near:nep141:zec.omft.near",
-        decimals: 8,
-        blockchain: "near",
+      }),
+      configToken({
         symbol: "ZEC",
-        price: 1178.24,
+        network: "near",
+        decimals: 8,
         contractAddress: "zec.omft.near",
-      },
-    ]);
+      }),
+    ], FIXED_CHAINS);
     expect(tokens.map((token) => token.blockchain)).toEqual(["zec", "sol", "near"]);
-    expect(tokens.every((token) => token.symbol === "ZEC")).toBe(true);
     expect(isNativeToken(tokens[0])).toBe(true);
     expect(tokens[1]?.contractAddress).toBe("A7bdiYdS5GjqGFtxf17ppRHtDKPkkRqbKtR27dxvQXaS");
     expect(tokens[2]?.contractAddress).toBe("zec.omft.near");
   });
 
-  it("keeps RHEA on near and bsc, and drops unknown symbols", () => {
-    const tokens = filterTokens([
-      {
-        assetId: "nep141:token.rhealab.near",
-        decimals: 18,
-        blockchain: "near",
+  it("keeps RHEA on near and bsc", () => {
+    const tokens = mapConfigTokens([
+      configToken({
         symbol: "RHEA",
-        price: 0.01436825,
+        network: "near",
+        decimals: 18,
         contractAddress: "token.rhealab.near",
-      },
-      {
-        assetId: "nep245:v2_1.omft.near:bsc-0x4c067de26475e1cefee8b8d1f6e2266b33a2372e",
-        decimals: 18,
-        blockchain: "bsc",
+      }),
+      configToken({
         symbol: "RHEA",
-        price: 0.01436825,
-        contractAddress: "0x4c067de26475e1cefee8b8d1f6e2266b33a2372e",
-      },
-      {
-        assetId: "nep141:unknown.near",
+        network: "bsc",
         decimals: 18,
-        blockchain: "near",
-        symbol: "UNKNOWN",
-        contractAddress: "unknown.near",
-      },
-    ]);
+        contractAddress: "0x4c067de26475e1cefee8b8d1f6e2266b33a2372e",
+      }),
+    ], FIXED_CHAINS);
     expect(tokens.map((token) => token.blockchain)).toEqual(["near", "bsc"]);
-    expect(tokens.every((token) => token.symbol === "RHEA")).toBe(true);
-    expect(tokens[0]?.contractAddress).toBe("token.rhealab.near");
-    expect(tokens[1]?.contractAddress).toBe("0x4c067de26475e1cefee8b8d1f6e2266b33a2372e");
+  });
+
+  it("keeps two Near ETH contracts as distinct asset ids", () => {
+    const tokens = mapConfigTokens([
+      configToken({
+        symbol: "ETH",
+        network: "near",
+        contractAddress: "hood.omft.near",
+      }),
+      configToken({
+        symbol: "ETH",
+        network: "near",
+        contractAddress: "eth.bridge.near",
+      }),
+    ], FIXED_CHAINS);
+    expect(tokens).toHaveLength(2);
+    expect(tokens[0]?.assetId).toBe(tokenAssetId("near", "ETH", "hood.omft.near"));
+    expect(tokens[1]?.assetId).toBe(tokenAssetId("near", "ETH", "eth.bridge.near"));
   });
 });

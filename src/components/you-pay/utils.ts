@@ -1,5 +1,6 @@
 import { ORIGIN_TOKEN_FALLBACKS } from "./config";
-import { PAYOUT_SYMBOLS, isNativeToken, type IntentsToken, type PayoutSymbol } from "@/stores/intents-tokens";
+import { getRuntimeChains } from "@/config/chains";
+import { getPayoutSymbols, isNativeToken, type IntentsToken, type PayoutSymbol } from "@/stores/intents-tokens";
 
 export function resolvePayOriginToken({
   savedOriginAssetId,
@@ -26,6 +27,7 @@ export function resolvePayOriginToken({
     if (allowed && !allowed.has(token.blockchain)) return false;
     if (excluded?.has(token.blockchain.toLowerCase())) return false;
     if (excludeNative && isNativeToken(token)) return false;
+    if (!token.supportPayment) return false;
     return true;
   }
 
@@ -37,8 +39,11 @@ export function resolvePayOriginToken({
     .filter(accept);
   if (defaults[0]) return defaults[0];
 
-  for (const chain of allowedBlockchains || []) {
-    for (const symbol of PAYOUT_SYMBOLS) {
+  const searchChains = allowedBlockchains?.length
+    ? allowedBlockchains
+    : getRuntimeChains().map((chain) => chain.blockchain);
+  for (const chain of searchChains) {
+    for (const symbol of getPayoutSymbols()) {
       const token = findByChainAndSymbol(chain, symbol);
       if (accept(token)) return token;
     }

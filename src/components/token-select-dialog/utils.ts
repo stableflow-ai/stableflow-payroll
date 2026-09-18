@@ -1,9 +1,9 @@
-import { FIXED_CHAINS, type ChainConfig } from "@/config/chains";
+import { getRuntimeChains, type ChainConfig } from "@/config/chains";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import type { WalletChainKind } from "@/utils";
 import { ALL_CHAIN_FILTER } from "./config";
 
-/** USD value of a token balance using `/v0/tokens` price. Unknown balance is -1 (sort last). */
+/** USD value of a token balance using config `price`. Unknown balance is -1 (sort last). */
 export function tokenBalanceUsd(
   token: Pick<IntentsToken, "price">,
   formatted: string | null | undefined,
@@ -77,7 +77,7 @@ export function visibleNetworkChips(
 export function initialChainFilter(
   lockChainKind: WalletChainKind | null | undefined,
   recentBlockchains: readonly string[],
-  chains: readonly ChainConfig[] = FIXED_CHAINS,
+  chains: readonly ChainConfig[] = getRuntimeChains(),
 ): string {
   if (!lockChainKind) return ALL_CHAIN_FILTER;
   const matching = chains.filter((chain) => chain.chainKind === lockChainKind);

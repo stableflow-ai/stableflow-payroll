@@ -18,7 +18,6 @@ function chain(blockchain: string, chainName = blockchain): ChainConfig {
     chainName,
     chainKind: blockchain === "near" || blockchain === "sol" ? blockchain === "near" ? "near" : "solana" : "evm",
     logo: "",
-    payerEnabled: true,
     batchEnabled: true,
     txExplorer: "/",
   };

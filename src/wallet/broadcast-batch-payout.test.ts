@@ -58,7 +58,6 @@ const solToken = {
     chainName: "Solana",
     chainKind: "solana",
     logo: "",
-    payerEnabled: true,
     batchEnabled: true,
     txExplorer: "",
   },

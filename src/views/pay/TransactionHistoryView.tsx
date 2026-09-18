@@ -8,11 +8,11 @@ import { BUTTON_SIZE, BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { Pagination } from "@/components/ui/pagination/Pagination";
 import { SearchInput } from "@/components/ui/search-input/SearchInput";
-import { FIXED_CHAINS } from "@/config/chains";
+import { getRuntimeChains } from "@/config/chains";
 import { useExportHistoryMutation, useHistoryQuery } from "@/hooks/use-history-api";
 import useToast from "@/hooks/use-toast";
 import { isUser, organizationId } from "@/lib/auth-role";
-import { PAYOUT_SYMBOLS } from "@/stores/intents-tokens";
+import { getPayoutSymbols, useIntentsTokensStore } from "@/stores/intents-tokens";
 import { useAuthStore } from "@/stores/auth";
 import type { HistoryExportQuery, HistoryQuery, HistoryStatus, HistoryType } from "@/types/history";
 import { HISTORY_STATUS, HISTORY_TYPE } from "@/types/history";
@@ -27,16 +27,6 @@ import {
   HISTORY_TYPE_OPTIONS,
 } from "./components/history/config";
 import { historyOptionalFilter } from "./components/history/utils";
-
-const NETWORK_OPTIONS = [
-  { value: HISTORY_FILTER_ALL, label: "All" },
-  ...FIXED_CHAINS.map((chain) => ({ value: chain.blockchain, label: chain.chainName })),
-];
-
-const TOKEN_OPTIONS = [
-  { value: HISTORY_FILTER_ALL, label: "All" },
-  ...PAYOUT_SYMBOLS.map((symbol) => ({ value: symbol, label: symbol })),
-];
 
 const HISTORY_STATUSES = new Set<string>(Object.values(HISTORY_STATUS));
 const HISTORY_TYPES = new Set<string>(Object.values(HISTORY_TYPE));
@@ -79,6 +69,28 @@ export function TransactionHistoryView() {
   const times = rangeToUnixSeconds(range);
   const debouncedSearch = useDebouncedValue(search, HISTORY_SEARCH_DEBOUNCE_MS);
   const exportMutation = useExportHistoryMutation();
+  const runtimeChains = useIntentsTokensStore((state) => state.chains);
+  const runtimeSymbols = useIntentsTokensStore((state) => state.symbols);
+  const networkOptions = useMemo(
+    () => [
+      { value: HISTORY_FILTER_ALL, label: "All" },
+      ...(runtimeChains.length > 0 ? runtimeChains : getRuntimeChains()).map((chain) => ({
+        value: chain.blockchain,
+        label: chain.chainName,
+      })),
+    ],
+    [runtimeChains],
+  );
+  const tokenOptions = useMemo(
+    () => [
+      { value: HISTORY_FILTER_ALL, label: "All" },
+      ...(runtimeSymbols.length > 0 ? runtimeSymbols : getPayoutSymbols()).map((symbol) => ({
+        value: symbol,
+        label: symbol,
+      })),
+    ],
+    [runtimeSymbols],
+  );
 
   const filters = useMemo((): HistoryExportQuery | null => {
     if (orgId == null) return null;
@@ -206,7 +218,7 @@ export function TransactionHistoryView() {
                   setSourceNetwork(value);
                   resetPage();
                 }}
-                options={NETWORK_OPTIONS}
+                options={networkOptions}
                 className="min-w-0 w-full"
                 triggerClassName="w-full"
               />
@@ -217,7 +229,7 @@ export function TransactionHistoryView() {
                   setSourceToken(value);
                   resetPage();
                 }}
-                options={TOKEN_OPTIONS}
+                options={tokenOptions}
                 className="min-w-0 w-full"
                 triggerClassName="w-full"
               />
@@ -228,7 +240,7 @@ export function TransactionHistoryView() {
                   setDestNetwork(value);
                   resetPage();
                 }}
-                options={NETWORK_OPTIONS}
+                options={networkOptions}
                 className="min-w-0 w-full"
                 triggerClassName="w-full"
               />
@@ -239,7 +251,7 @@ export function TransactionHistoryView() {
                   setDestToken(value);
                   resetPage();
                 }}
-                options={TOKEN_OPTIONS}
+                options={tokenOptions}
                 className="min-w-0 w-full"
                 triggerClassName="w-full"
               />

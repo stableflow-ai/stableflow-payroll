@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Icon2Right } from "@/components/icons/to-right";
 import { Dialog } from "@/components/ui/dialog/Dialog";
 import { useEnsureTokenBalances } from "@/hooks/use-token-balances";
-import { FIXED_CHAINS, getChainByBlockchain } from "@/config/chains";
+import { getRuntimeChains, getChainByBlockchain } from "@/config/chains";
 import type { ChainOwners } from "@/wallet";
 import { isNativeToken, useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
 import { useTokenBalancesStore } from "@/stores/token-balances";
@@ -41,6 +41,7 @@ export interface TokenSelectDialogProps {
   excludeNative?: boolean;
   disabledBlockchains?: string[] | null;
   disabledReason?: string;
+  requireSupport?: "payment" | "receive";
   onSelect: (selection: TokenSelectSelection) => void;
 }
 
@@ -65,10 +66,10 @@ export function TokenSelectDialog({
   excludeNative = false,
   disabledBlockchains = null,
   disabledReason,
+  requireSupport,
   onSelect,
 }: TokenSelectDialogProps) {
   const owners = showBalances ? balanceOwners : {};
-  const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const tokens = useIntentsTokensStore((s) => s.tokens);
   const loading = useIntentsTokensStore((s) => s.loading);
   const getBalance = useTokenBalancesStore((s) => s.getBalance);
@@ -83,14 +84,13 @@ export function TokenSelectDialog({
 
   useEffect(() => {
     if (!open) return;
-    void ensureFresh();
     setSearch("");
     setView("token");
     setChainFilter(initialChainFilter(
       lockChainKind,
       useTokenSelectPrefsStore.getState().recentBlockchains,
     ));
-  }, [open, ensureFresh, lockChainKind]);
+  }, [open, lockChainKind]);
 
   const allowed = useMemo(() => {
     if (!allowedBlockchains || allowedBlockchains.length === 0) return null;
@@ -101,9 +101,11 @@ export function TokenSelectDialog({
     return tokens.filter((token) => {
       if (allowed && !allowed.has(token.blockchain.toLowerCase())) return false;
       if (excludeNative && isNativeToken(token)) return false;
+      if (requireSupport === "payment" && !token.supportPayment) return false;
+      if (requireSupport === "receive" && !token.supportReceive) return false;
       return true;
     });
-  }, [tokens, allowed, excludeNative]);
+  }, [tokens, allowed, excludeNative, requireSupport]);
 
   useEnsureTokenBalances({
     owners,
@@ -114,7 +116,7 @@ export function TokenSelectDialog({
 
   const availableChains = useMemo(() => {
     const codes = new Set(scopedTokens.map((token) => token.blockchain));
-    return FIXED_CHAINS.filter((chain) => codes.has(chain.blockchain));
+    return getRuntimeChains().filter((chain) => codes.has(chain.blockchain));
   }, [scopedTokens]);
 
   const chips = useMemo(

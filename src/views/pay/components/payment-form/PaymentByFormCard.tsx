@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconEmail, IconLock } from "@/components/icons";
 import { Button } from "@/components/ui/button/Button";
-import { BATCH_BLOCKCHAINS } from "@/config/chains";
+import { getBatchBlockchains } from "@/config/chains";
 import { batchSubmit } from "@/api/payout";
 import { queryKeys } from "@/api/query-keys";
 import { usePayOriginToken } from "@/hooks/use-pay-origin-token";
@@ -101,8 +101,8 @@ export function PaymentByFormCard(props: {
   const user = useAuthStore((state) => state.user);
   const orgId = organizationId(user);
   const timezone = browserTimeZone();
-  const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const findByChainAndSymbol = useIntentsTokensStore((s) => s.findByChainAndSymbol);
+  const runtimeChains = useIntentsTokensStore((s) => s.chains);
   const fetchOneBalance = useTokenBalancesStore((s) => s.fetchOne);
 
   const lockedForm = formLocked && formProp ? formProp : null;
@@ -136,10 +136,6 @@ export function PaymentByFormCard(props: {
   const notifyMutation = usePayableQuoteNotificationMutation();
 
   useEffect(() => {
-    void ensureFresh();
-  }, [ensureFresh]);
-
-  useEffect(() => {
     if (lockedForm) {
       setPickedId(payableKeyId(lockedForm.key));
       return;
@@ -164,7 +160,8 @@ export function PaymentByFormCard(props: {
   const destDecimals = payableDestinationDecimals(detail?.items ?? [], findByChainAndSymbol);
   const lockedForms = formLocked ? (detail ? [detail] : []) : forms;
   const zcashBatchDisabled = (detail?.items.length ?? 0) > 1;
-  const { originToken, setOriginToken } = usePayOriginToken(BATCH_BLOCKCHAINS, {
+  const batchBlockchains = useMemo(() => getBatchBlockchains(), [runtimeChains]);
+  const { originToken, setOriginToken } = usePayOriginToken(batchBlockchains, {
     excludeBlockchains: zcashBatchDisabled ? ZCASH_DISABLED_BLOCKCHAINS : null,
     remember: false,
   });
@@ -611,7 +608,7 @@ export function PaymentByFormCard(props: {
           connecting={wallet.isConnecting}
           onConnectWallet={() => paymentWallet.connectWallet()}
           onDisconnectWallet={paymentStarted ? undefined : () => paymentWallet.disconnect()}
-          allowedBlockchains={BATCH_BLOCKCHAINS}
+          allowedBlockchains={batchBlockchains}
           disabledBlockchains={zcashBatchDisabled ? ZCASH_DISABLED_BLOCKCHAINS : null}
           disabledReason={zcashBatchDisabled ? ZCASH_BATCH_UNSUPPORTED_MESSAGE : undefined}
         />

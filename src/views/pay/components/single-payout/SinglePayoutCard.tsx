@@ -75,7 +75,6 @@ export function SinglePayoutCard(props: {
   );
   const bookContacts = employee ? contacts : teamContacts;
   const bookLoading = employee ? contactsPending : teamQuery.isPending;
-  const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const tokens = useIntentsTokensStore((s) => s.tokens);
   const createPayment = useCreatePayrollPaymentMutation();
   const notifyEnabled = useQuickPayPrefsStore((state) => state.notifyRecipient);
@@ -99,10 +98,6 @@ export function SinglePayoutCard(props: {
   /** Stays true while the browser navigates to the hosted checkout. */
   const [redirecting, setRedirecting] = useState(false);
   const skipDestAutoFillRef = useRef(false);
-
-  useEffect(() => {
-    void ensureFresh();
-  }, [ensureFresh]);
 
   useEffect(() => {
     if (prefsHydrated) return;
@@ -340,6 +335,7 @@ export function SinglePayoutCard(props: {
         title="Recipient token"
         selectedAssetId={destToken?.assetId}
         lockChainKind={memberWallets ? undefined : destLockChainKind}
+        requireSupport="receive"
         onSelect={({ token }) => {
           setDestToken(token);
           if (memberWallets) {

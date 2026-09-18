@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { resolvePayOriginToken } from "@/components/you-pay/utils";
-import { PAYER_BLOCKCHAINS } from "@/config/chains";
 import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
 import { useQuickPayPrefsStore } from "@/stores/quick-pay-prefs";
 
@@ -10,7 +9,7 @@ export function applyPayOriginToken(remember: boolean, token: IntentsToken | nul
 }
 
 export function usePayOriginToken(
-  allowedBlockchains: string[] | null = PAYER_BLOCKCHAINS,
+  allowedBlockchains: string[] | null = null,
   opts?: { excludeNative?: boolean; excludeBlockchains?: string[] | null; remember?: boolean },
 ) {
   const remember = opts?.remember ?? true;

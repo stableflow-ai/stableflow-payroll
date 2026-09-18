@@ -122,7 +122,7 @@ src/
 | --- | --- | --- |
 | `auth.ts` | via `lib/auth-session.ts` | JWT `token` + `user`, `applySession`, `logout`; registers the 401 handler |
 | `wallet.ts` | no | Per-chain connection state, account, modal control, `signMessage` |
-| `intents-tokens.ts` | `persist` | 1Click token list, `PAYOUT_SYMBOLS`, `ensureFresh`, `findByChainAndSymbol` |
+| `intents-tokens.ts` | `persist` | Payroll config tokens/chains, last-success fail-open cache, `findByChainAndSymbol` |
 | `token-balances.ts` | no | Balance cache and fetch status per owner + asset |
 | `quick-pay-prefs.ts` | `persist` | Remembered single-payout preferences: last origin token and Notify Recipient switch |
 | `token-select-prefs.ts` | `persist` | Last pay token (`assetId`) and recent networks (MRU) chosen in `TokenSelectDialog` |
