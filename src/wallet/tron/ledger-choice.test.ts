@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { LEDGER_DEVICE_LOCKED_MESSAGE } from "./config";
+import { LEDGER_DEVICE_LOCKED_MESSAGE, LEDGER_WRONG_APP_MESSAGE } from "./config";
 import {
   cancelLedgerConnectChooser,
   getLedgerConnectDialogState,
@@ -16,6 +16,18 @@ describe("ledgerChooserErrorMessage", () => {
       LEDGER_DEVICE_LOCKED_MESSAGE,
     );
     expect(ledgerChooserErrorMessage(new Error("USB device not found"))).toBe("USB device not found");
+  });
+
+  it("maps a Tron locked-device APDU to the unlock copy", () => {
+    expect(ledgerChooserErrorMessage(new Error("Ledger device: UNKNOWN_ERROR (0x6a83)."))).toBe(
+      LEDGER_DEVICE_LOCKED_MESSAGE,
+    );
+  });
+
+  it("maps a missing Tron app APDU to the open-app copy", () => {
+    expect(ledgerChooserErrorMessage(new Error("Ledger device: UNKNOWN_ERROR (0x6511)."))).toBe(
+      LEDGER_WRONG_APP_MESSAGE,
+    );
   });
 });
 

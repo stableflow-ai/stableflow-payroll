@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { LEDGER_DEVICE_LOCKED_MESSAGE } from "./config";
+import {
+  LEDGER_DEVICE_LOCKED_MESSAGE,
+  LEDGER_HID_BUSY_MESSAGE,
+  LEDGER_WRONG_APP_MESSAGE,
+} from "./config";
 import {
   cancelLedgerConnectChooser,
   getLedgerConnectDialogState,
@@ -17,6 +21,21 @@ describe("ledgerChooserErrorMessage", () => {
   it("maps a locked Ledger to the unlock copy", () => {
     expect(ledgerChooserErrorMessage(new Error("Ledger device: Locked device (0x5515)"))).toBe(
       LEDGER_DEVICE_LOCKED_MESSAGE,
+    );
+  });
+
+  it("maps a missing Solana app APDU to the open-app copy", () => {
+    expect(ledgerChooserErrorMessage(new Error("Ledger device: UNKNOWN_APDU (0x6d02)"))).toBe(
+      LEDGER_WRONG_APP_MESSAGE,
+    );
+    expect(ledgerChooserErrorMessage(new Error("Ledger device: UNKNOWN_APDU (0x6d00)"))).toBe(
+      LEDGER_WRONG_APP_MESSAGE,
+    );
+  });
+
+  it("maps an in-use HID device to the busy copy", () => {
+    expect(ledgerChooserErrorMessage(new Error("The device is already open."))).toBe(
+      LEDGER_HID_BUSY_MESSAGE,
     );
   });
 });

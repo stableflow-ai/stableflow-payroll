@@ -14,8 +14,12 @@ export const TRON_WALLETCONNECT_ADAPTER_NAME = "WalletConnect";
 export const TRON_LEDGER_ADAPTER_NAME = "Ledger";
 
 export const LEDGER_DEVICE_LOCKED_CODE = "0x5515";
+export const LEDGER_DEVICE_LOCKED_PATTERN = "0x5515|0x6a83|locked device";
 export const LEDGER_DEVICE_LOCKED_MESSAGE =
   "Unlock your Ledger device and open the Tron app.";
+export const LEDGER_WRONG_APP_CODE = "0x6511";
+export const LEDGER_WRONG_APP_MESSAGE =
+  "Open the Tron app on your Ledger and wait until it says Application is ready, then retry.";
 export const LEDGER_TX_DATA_CODE = "0x6a8b";
 export const LEDGER_TX_DATA_MESSAGE =
   'Ledger rejected this transaction. Turn on "Transactions data" in the Tron app settings on your Ledger, then send the payment again.';

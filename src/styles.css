@@ -124,7 +124,10 @@
 .nws-modal-wrapper,
 .adapter-modal,
 .picker-dialog,
-.picker-dialog-bg {
+.picker-dialog-bg,
+.ledger-modal-root,
+.ledger-modal-mask,
+.ledger-modal-wrap {
   pointer-events: auto !important;
   z-index: 10000 !important;
 }

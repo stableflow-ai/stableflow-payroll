@@ -1,7 +1,9 @@
 import {
   LEDGER_CONNECT_USB_FAILED_MESSAGE,
-  LEDGER_DEVICE_LOCKED_CODE,
   LEDGER_DEVICE_LOCKED_MESSAGE,
+  LEDGER_DEVICE_LOCKED_PATTERN,
+  LEDGER_WRONG_APP_CODE,
+  LEDGER_WRONG_APP_MESSAGE,
 } from "./config";
 
 export class LedgerConnectCancelledError extends Error {
@@ -23,8 +25,11 @@ function choiceErrorText(error: unknown): string {
 
 export function ledgerChooserErrorMessage(error: unknown): string {
   const text = choiceErrorText(error);
-  if (new RegExp(`${LEDGER_DEVICE_LOCKED_CODE}|locked device`, "i").test(text)) {
+  if (new RegExp(LEDGER_DEVICE_LOCKED_PATTERN, "i").test(text)) {
     return LEDGER_DEVICE_LOCKED_MESSAGE;
+  }
+  if (new RegExp(LEDGER_WRONG_APP_CODE, "i").test(text)) {
+    return LEDGER_WRONG_APP_MESSAGE;
   }
   return text || LEDGER_CONNECT_USB_FAILED_MESSAGE;
 }

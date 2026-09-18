@@ -2,6 +2,7 @@ import {
   FLOATING_LAYER_Z_INDEX,
   OVERLAY_BASE_Z_INDEX,
   OVERLAY_Z_INDEX_STEP,
+  WALLET_PORTAL_Z_INDEX,
 } from "./config";
 
 let layerSeq = 0;
@@ -49,4 +50,8 @@ export function floatingLayerZIndex(): number {
   const top = openLayers[openLayers.length - 1];
   if (top == null) return FLOATING_LAYER_Z_INDEX;
   return top + OVERLAY_Z_INDEX_STEP;
+}
+
+export function elevatedOverlayZIndex(acquired: number): number {
+  return WALLET_PORTAL_Z_INDEX + (acquired - OVERLAY_BASE_Z_INDEX);
 }

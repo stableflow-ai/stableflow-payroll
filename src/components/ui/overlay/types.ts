@@ -14,4 +14,6 @@ export type OverlayChromeProps = {
   closeClassName?: string;
   closeIcon?: ReactNode;
   headerAction?: ReactNode;
+  /** Sit in the wallet-portal z-index band, above ordinary Dialog / Drawer layers. */
+  elevated?: boolean;
 };

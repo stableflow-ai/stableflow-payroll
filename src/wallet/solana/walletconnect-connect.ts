@@ -1,3 +1,4 @@
+import { WalletConnectWalletAdapter } from "@walletconnect/solana-adapter";
 import { WalletConnectWallet } from "@walletconnect/solana-adapter/core";
 import {
   SOLANA_WC_DEPRECATED_MAINNET_CHAIN,
@@ -9,6 +10,9 @@ import {
   waitForWalletConnectSession,
   type WalletConnectSession,
 } from "./walletconnect-session";
+
+type WalletConnectClientOptions = ConstructorParameters<typeof WalletConnectWallet>[0]["options"];
+type WalletConnectAdapterConfig = ConstructorParameters<typeof WalletConnectWalletAdapter>[0];
 
 type WalletConnectProvider = {
   session?: WalletConnectSession;
@@ -50,6 +54,62 @@ export class WalletConnectSilentConnectError extends Error {
   constructor() {
     super("No WalletConnect session");
     this.name = "WalletConnectSilentConnectError";
+  }
+}
+
+type WalletConnectSessionHolder = {
+  _UniversalProvider?: { session?: WalletConnectSession };
+  _ConnectQueueResolver?: (value: unknown) => void;
+};
+
+async function waitForWalletProvider(
+  wallet: WalletConnectSessionHolder,
+): Promise<{ session?: WalletConnectSession } | undefined> {
+  if (!wallet._UniversalProvider) {
+    await new Promise((resolve) => {
+      wallet._ConnectQueueResolver = resolve;
+    });
+  }
+  return wallet._UniversalProvider;
+}
+
+export async function peekExistingSolanaWalletConnectSession(
+  wallet: WalletConnectSessionHolder,
+): Promise<boolean> {
+  const provider = await waitForWalletProvider(wallet);
+  const session = await waitForExistingWalletConnectSession(() => provider?.session);
+  return hasSolanaAccount(session);
+}
+
+export async function hasExistingSolanaWalletConnectSession(
+  options: WalletConnectClientOptions,
+): Promise<boolean> {
+  if (!options.projectId) return false;
+  const wallet = new WalletConnectWallet({
+    network: SOLANA_WC_MAINNET_CHAIN as ConstructorParameters<typeof WalletConnectWallet>[0]["network"],
+    options,
+  }) as unknown as WalletConnectWalletInternal;
+  return peekExistingSolanaWalletConnectSession(wallet);
+}
+
+export class SolanaWalletConnectWalletAdapter extends WalletConnectWalletAdapter {
+  private readonly clientOptions: WalletConnectClientOptions;
+
+  constructor(config: WalletConnectAdapterConfig) {
+    super(config);
+    this.clientOptions = config.options;
+  }
+
+  override async autoConnect(): Promise<void> {
+    if (!(await hasExistingSolanaWalletConnectSession(this.clientOptions))) {
+      throw new WalletConnectSilentConnectError();
+    }
+    setSilentWalletConnectConnect(true);
+    try {
+      await this.connect();
+    } finally {
+      setSilentWalletConnectConnect(false);
+    }
   }
 }
 

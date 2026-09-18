@@ -3,9 +3,11 @@ import {
   FLOATING_LAYER_Z_INDEX,
   OVERLAY_BASE_Z_INDEX,
   OVERLAY_Z_INDEX_STEP,
+  WALLET_PORTAL_Z_INDEX,
 } from "./config";
 import {
   acquireOverlayLayer,
+  elevatedOverlayZIndex,
   floatingLayerZIndex,
   releaseOverlayLayer,
 } from "./stack";
@@ -32,5 +34,11 @@ describe("overlay stack", () => {
     expect(floatingLayerZIndex()).toBe(FLOATING_LAYER_Z_INDEX);
     const overlay = acquireOverlayLayer();
     expect(floatingLayerZIndex()).toBe(overlay + OVERLAY_Z_INDEX_STEP);
+  });
+
+  it("raises an elevated overlay into the wallet portal band", () => {
+    expect(elevatedOverlayZIndex(OVERLAY_BASE_Z_INDEX + OVERLAY_Z_INDEX_STEP)).toBe(
+      WALLET_PORTAL_Z_INDEX + OVERLAY_Z_INDEX_STEP,
+    );
   });
 });

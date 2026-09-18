@@ -13,6 +13,14 @@ export const SOLANA_REBROADCAST_MAX_DURATION_MS = 60_000;
 export const LEDGER_DEVICE_LOCKED_CODE = "0x5515";
 export const LEDGER_DEVICE_LOCKED_MESSAGE =
   "Unlock your Ledger device and open the Solana app.";
+export const LEDGER_WRONG_APP_CODE = "0x6d02";
+export const LEDGER_WRONG_APP_PATTERN = "0x6d02|0x6d00|UNKNOWN_APDU";
+export const LEDGER_WRONG_APP_MESSAGE =
+  "Open the Solana app on your Ledger and wait until it says Application is ready, then retry.";
+export const LEDGER_HID_BUSY_PATTERN = "already open";
+export const LEDGER_HID_BUSY_MESSAGE =
+  "Ledger USB is already in use. Close Ledger Live, unplug the device, and retry.";
+export const LEDGER_USB_VENDOR_ID = 0x2c97;
 
 export const LEDGER_CONNECT_DIALOG_TITLE = "Connect Ledger";
 export const LEDGER_CONNECT_DIALOG_DESCRIPTION =

@@ -40,6 +40,7 @@ export function Drawer(props: DrawerProps) {
       mask={mask}
       maskClassName={maskClassName}
       closeOnMaskClick={closeOnMaskClick}
+      elevated={props.elevated}
     >
       <motion.div
         className={cn("pointer-events-auto", getDrawerPositionClassName(side), panelClassName)}

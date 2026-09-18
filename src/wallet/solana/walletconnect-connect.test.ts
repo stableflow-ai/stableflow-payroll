@@ -2,7 +2,9 @@ import { WalletConnectWallet } from "@walletconnect/solana-adapter/core";
 import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { SOLANA_WC_MAINNET_CHAIN, SOLANA_WC_SESSION_POLL_MS, SOLANA_WC_SILENT_SESSION_TIMEOUT_MS } from "./config";
 import {
+  hasExistingSolanaWalletConnectSession,
   installSolanaWalletConnectConnectPatch,
+  peekExistingSolanaWalletConnectSession,
   setSilentWalletConnectConnect,
   WalletConnectSilentConnectError,
 } from "./walletconnect-connect";
@@ -94,6 +96,34 @@ describe("silent WalletConnect connect", () => {
       pending.catch(() => undefined);
       await vi.advanceTimersByTimeAsync(SOLANA_WC_SILENT_SESSION_TIMEOUT_MS);
       await expect(pending).rejects.toBeInstanceOf(WalletConnectSilentConnectError);
+      expect(initModal).not.toHaveBeenCalled();
+      expect(provider.connect).not.toHaveBeenCalled();
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+});
+
+describe("hasExistingSolanaWalletConnectSession", () => {
+  it("returns false when projectId is missing", async () => {
+    await expect(hasExistingSolanaWalletConnectSession({ projectId: "" })).resolves.toBe(false);
+  });
+
+  it("finds an existing Solana session without opening the WalletConnect modal", async () => {
+    const { wallet, initModal, provider } = createWallet(SOLANA_SESSION);
+    await expect(peekExistingSolanaWalletConnectSession(wallet)).resolves.toBe(true);
+    expect(initModal).not.toHaveBeenCalled();
+    expect(provider.connect).not.toHaveBeenCalled();
+  });
+
+  it("returns false when no session exists without opening the WalletConnect modal", async () => {
+    vi.useFakeTimers();
+    try {
+      const { wallet, initModal, provider } = createWallet();
+      const pending = peekExistingSolanaWalletConnectSession(wallet);
+      pending.catch(() => undefined);
+      await vi.advanceTimersByTimeAsync(SOLANA_WC_SILENT_SESSION_TIMEOUT_MS);
+      await expect(pending).resolves.toBe(false);
       expect(initModal).not.toHaveBeenCalled();
       expect(provider.connect).not.toHaveBeenCalled();
     } finally {
