@@ -7,7 +7,7 @@ import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectD
 import { useCreatePayrollPaymentMutation } from "@/hooks/use-single-payout-api";
 import { useContacts, type Contact } from "@/hooks/use-contacts";
 import { useOrganizationQuery } from "@/hooks/use-organization-api";
-import { useTeamMembersInfiniteQuery } from "@/hooks/use-team-api";
+import { useTeamMembersInfiniteQuery, useTeamMembersQuery } from "@/hooks/use-team-api";
 import useToast from "@/hooks/use-toast";
 import { isUser, organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
@@ -21,6 +21,7 @@ import { RecipientAddressField } from "../RecipientAddressField";
 import { RecipientsDialog } from "../RecipientsDialog";
 import { NotifyRecipientBar } from "../NotifyRecipientBar";
 import { TokenSelectButton } from "../TokenSelectButton";
+import { TEAM_PAGE_SIZE, TEAM_SEARCH_DEBOUNCE_MS } from "../team/config";
 import { AMOUNT_MAX_DECIMALS, MEMO_MAX_LENGTH, PAYOUT_RESULT_PATH } from "../../config";
 import {
   detectAddressChainKind,
@@ -29,6 +30,8 @@ import {
   payoutNetworkToken,
 } from "../../utils";
 import {
+  contactWalletSuggestions,
+  filterContactSuggestions,
   matchContact,
   matchPayNowMember,
   matchTeamMember,
@@ -36,6 +39,15 @@ import {
   teamMembersToContacts,
 } from "./utils";
 import { emailFieldError, enabledTeamWalletKinds, walletForChainKind } from "../team/utils";
+
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), delayMs);
+    return () => window.clearTimeout(timer);
+  }, [delayMs, value]);
+  return debounced;
+}
 
 export function SinglePayoutCard(props: {
   initialRecipient?: { id?: number; name: string; address: string; email?: string | null };
@@ -73,6 +85,8 @@ export function SinglePayoutCard(props: {
   );
 
   const [addressInput, setAddressInput] = useState(initialRecipient?.address ?? "");
+  const [selectedContact, setSelectedContact] = useState<Contact | null>(null);
+  const [suggestOpen, setSuggestOpen] = useState(false);
   const [amount, setAmount] = useState("");
   const [memo, setMemo] = useState("");
   const [destToken, setDestToken] = useState<IntentsToken | null>(null);
@@ -105,13 +119,65 @@ export function SinglePayoutCard(props: {
           initialRecipient.email,
         )
       : null;
-  const matched = payNowMatch
-    ?? (employee
-      ? matchContact(addressInput, contacts)
-      : matchTeamMember(addressInput, teamMembers));
   const destLockChainKind = detectAddressChainKind(addressInput);
   const destinationAddress = destLockChainKind ? addressInput.trim() : "";
   const amountDecimals = parsePositiveDecimal(amount, AMOUNT_MAX_DECIMALS);
+  const recipientQuery = addressInput.trim();
+  const recipientIsWallet = Boolean(detectAddressChainKind(recipientQuery));
+  const debouncedRecipientQuery = useDebouncedValue(recipientQuery, TEAM_SEARCH_DEBOUNCE_MS);
+  const debouncePending = recipientQuery !== debouncedRecipientQuery;
+  const searchEnabled = !employee && Boolean(debouncedRecipientQuery) && !recipientIsWallet;
+  const suggestQuery = useTeamMembersQuery({
+    page: 1,
+    pageSize: TEAM_PAGE_SIZE,
+    q: debouncedRecipientQuery,
+    enabled: searchEnabled,
+  });
+  const resolvedMember = payNowMatch
+    ?? (employee
+      ? matchContact(addressInput, contacts)
+      : matchTeamMember(addressInput, teamMembers)
+        ?? matchTeamMember(addressInput, suggestQuery.data?.list ?? []));
+  const matched = payNowMatch ?? selectedContact;
+  const suggestReady = !debouncePending && (employee || !searchEnabled || !suggestQuery.isFetching);
+  const suggestions = useMemo(() => {
+    const book = employee ? contacts : teamContacts;
+    if (!recipientQuery || recipientIsWallet) {
+      const rows = contactWalletSuggestions(book);
+      return recipientQuery
+        ? filterContactSuggestions(rows, recipientQuery)
+        : rows;
+    }
+    if (employee) {
+      return filterContactSuggestions(contactWalletSuggestions(contacts), recipientQuery);
+    }
+    if (debouncePending) return [];
+    return filterContactSuggestions(
+      contactWalletSuggestions(teamMembersToContacts(suggestQuery.data?.list ?? [])),
+      debouncedRecipientQuery,
+    );
+  }, [
+    contacts,
+    debouncePending,
+    debouncedRecipientQuery,
+    employee,
+    recipientIsWallet,
+    recipientQuery,
+    suggestQuery.data?.list,
+    teamContacts,
+  ]);
+  const suggestLoading = employee
+    ? contactsPending
+    : recipientQuery && !recipientIsWallet
+      ? debouncePending || Boolean(searchEnabled && suggestQuery.isFetching)
+      : teamQuery.isPending;
+  const addressError = suggestReady
+    && Boolean(recipientQuery)
+    && !recipientIsWallet
+    && !matched
+    && suggestions.length === 0
+    ? "Unrecognized address"
+    : null;
 
   useEffect(() => {
     if (!destToken || !destLockChainKind) return;
@@ -129,8 +195,8 @@ export function SinglePayoutCard(props: {
   }, [destLockChainKind, destToken, tokens]);
 
   useEffect(() => {
-    setNotifyEmail(matched?.email?.trim() ?? "");
-  }, [matched?.email, destinationAddress]);
+    setNotifyEmail((selectedContact ?? resolvedMember)?.email?.trim() ?? "");
+  }, [destinationAddress, resolvedMember?.email, selectedContact?.email]);
 
   const sending = createPayment.isPending || redirecting;
   const canSend = Boolean(
@@ -155,7 +221,9 @@ export function SinglePayoutCard(props: {
     const notification = prefsHydrated && notifyEnabled
       ? payrollPaymentNotification({ email: notifyEmail })
       : undefined;
-    const teamMemberId = employee ? undefined : teamMemberIdFromContact(matched);
+    const teamMemberId = employee
+      ? undefined
+      : teamMemberIdFromContact(selectedContact ?? resolvedMember);
     try {
       const payment = await createPayment.mutateAsync({
         amount: amountDecimals,
@@ -184,10 +252,25 @@ export function SinglePayoutCard(props: {
       <RecipientAddressField
         value={addressInput}
         matched={matched}
-        onChange={setAddressInput}
+        suggestions={suggestions}
+        suggestOpen={suggestOpen}
+        suggestLoading={suggestLoading}
+        addressError={addressError}
+        onSuggestOpenChange={setSuggestOpen}
+        onSelectSuggestion={(row) => {
+          setAddressInput(row.wallet);
+          setSelectedContact({ ...row.contact, wallet: row.wallet });
+          setSuggestOpen(false);
+        }}
+        onChange={(value) => {
+          setAddressInput(value);
+          setSelectedContact(null);
+        }}
         onClear={() => {
           setAddressInput("");
+          setSelectedContact(null);
           setDestToken(null);
+          setSuggestOpen(true);
         }}
         onOpenBook={() => setBookOpen(true)}
       />
@@ -280,6 +363,7 @@ export function SinglePayoutCard(props: {
           const wallet = contact.wallet;
           const kind = detectAddressChainKind(wallet);
           setAddressInput(wallet);
+          setSelectedContact({ ...contact, wallet });
           if (destToken && kind && destToken.chain.chainKind !== kind) {
             skipDestAutoFillRef.current = true;
             setDestToken(null);

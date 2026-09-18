@@ -72,6 +72,22 @@ describe("formatQuoteErrorMessage", () => {
       new Error("Ledger device: Locked device (0x5515)"),
     )).toBe("Unlock your Ledger device and open the Solana app.");
   });
+
+  it("maps a WalletConnect request-expired RPC error", () => {
+    expect(formatQuoteErrorMessage(
+      new Error(
+        "An unknown RPC error occurred. Request Arguments: chain: undefined (id: 42161) from: 0x02A884a8de00478Db4414Ca56F1D9F1cE36E935A Details: Request expired. Please try again. Version: viem@2.55.19",
+      ),
+    )).toBe("Wallet request expired. Confirm again in your wallet.");
+  });
+
+  it("maps a Solana insufficient-lamports simulation error", () => {
+    expect(formatQuoteErrorMessage(
+      new Error(
+        'Simulation failed. Message: Transaction simulation failed. Logs: [ "Transfer: insufficient lamports 920000, need 1488440" ]. Catch the `SendTransactionError` and call `getLogs()` on it for full details.',
+      ),
+    )).toBe("Insufficient SOL for fees. Add SOL and try again.");
+  });
 });
 
 describe("parsePayoutCallbackParams", () => {

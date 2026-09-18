@@ -1,6 +1,7 @@
 export const PHANTOM_SIGN_DISPLAY = "utf8";
 
 export const SOLANA_EXPIRED_MESSAGE = "Solana transaction expired. Confirm again to retry.";
+export const SOLANA_INSUFFICIENT_SOL_MESSAGE = "Insufficient SOL for fees. Add SOL and try again.";
 export const SOLANA_TRANSFER_FAILED_MESSAGE = "Solana transfer failed";
 export const SOLANA_MISSING_OUTPUTS_MESSAGE = "Missing Solana deposit outputs";
 export const SOLANA_OUTPUT_AMOUNT_MISMATCH_MESSAGE =

@@ -4,6 +4,11 @@ Newest first. Add an entry whenever you add or change a component under `src/com
 
 Format: one `## YYYY-MM-DD` heading per day, one `- **ComponentName:** what changed` bullet per component.
 
+## 2026-09-18
+
+- **Autocomplete:** Keyboard highlight (ArrowUp / ArrowDown, Enter to select). Active row uses `bg-black/5`. Optional `value` restores the highlight on reopen. `renderOption` now receives `(option, active)`.
+- **Autocomplete:** New typeahead panel. Controlled `open` / `onOpenChange`, caller-provided trigger `children`, portalled list with loading and empty states. Overlay-aware `z-index` matches Dropdown.
+
 ## 2026-09-16
 
 - **Toast:** Container `z-index` is `100000001` so a toast stays above the near-connect wallet popup.

@@ -24,5 +24,7 @@ export const SAFE_APPROVAL_PROPOSED_MESSAGE =
 export const SAFE_PROPOSAL_CONFIRM_MESSAGE = "Confirm this transaction in your Safe";
 export const SAFE_PROPOSAL_SUBMITTED_MESSAGE = "Transaction proposed to your Safe";
 export const SAFE_PROPOSAL_QUEUE_LINK_LABEL = "Review it in your Safe queue";
+export const SAFE_REQUEST_EXPIRED_MESSAGE =
+  "Wallet request expired. Confirm again in your wallet.";
 export const SAFE_CLIENT_GATEWAY_URL = "https://safe-client.safe.global";
 export const SAFE_PROPOSAL_POLL_MS = 15_000;
