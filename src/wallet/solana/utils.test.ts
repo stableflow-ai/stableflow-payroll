@@ -69,11 +69,41 @@ describe("openLedgerLiveWalletConnect", () => {
     vi.unstubAllGlobals();
   });
 
-  it("opens the Ledger Live WalletConnect deeplink", () => {
+  it("opens the Ledger Live WalletConnect deeplink without navigating", () => {
     const location = { href: "https://payroll.stableflow.ai/" };
-    vi.stubGlobal("window", { location });
+    const open = vi.fn(() => ({ closed: false }));
+    vi.stubGlobal("window", { location, open });
     const uri = "wc:topic@2?relay-protocol=irn&symKey=abc";
     openLedgerLiveWalletConnect(uri);
-    expect(location.href).toBe(`${LEDGER_LIVE_WC_DEEPLINK_PREFIX}${encodeURIComponent(uri)}`);
+    expect(open).toHaveBeenCalledWith(`${LEDGER_LIVE_WC_DEEPLINK_PREFIX}${encodeURIComponent(uri)}`);
+    expect(location.href).toBe("https://payroll.stableflow.ai/");
+  });
+
+  it("falls back to a hidden iframe when the popup is blocked", () => {
+    const uri = "wc:topic@2?relay-protocol=irn&symKey=abc";
+    const url = `${LEDGER_LIVE_WC_DEEPLINK_PREFIX}${encodeURIComponent(uri)}`;
+    const iframe = { style: { display: "" }, src: "", remove: vi.fn() };
+    const appendChild = vi.fn();
+    const scheduled: Array<() => void> = [];
+    vi.stubGlobal("window", {
+      open: () => null,
+      setTimeout: (handler: () => void) => {
+        scheduled.push(handler);
+        return 1;
+      },
+    });
+    vi.stubGlobal("document", {
+      createElement: () => iframe,
+      body: { appendChild },
+    });
+
+    openLedgerLiveWalletConnect(uri);
+
+    expect(iframe.style.display).toBe("none");
+    expect(iframe.src).toBe(url);
+    expect(appendChild).toHaveBeenCalledWith(iframe);
+    expect(iframe.remove).not.toHaveBeenCalled();
+    scheduled[0]?.();
+    expect(iframe.remove).toHaveBeenCalled();
   });
 });

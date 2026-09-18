@@ -23,7 +23,9 @@ export const LEDGER_CONNECT_USB_FAILED_MESSAGE = "Could not connect Ledger over 
 export const LEDGER_CONNECT_DIALOG_DELAY_MS = 200;
 
 export const LEDGER_LIVE_WC_DEEPLINK_PREFIX = "ledgerlive://wc?uri=";
+export const LEDGER_LIVE_WC_DEEPLINK_IFRAME_MS = 1_000;
 
 export const SOLANA_WC_SESSION_POLL_MS = 250;
+export const SOLANA_WC_SILENT_SESSION_TIMEOUT_MS = 2_000;
 export const SOLANA_WC_MAINNET_CHAIN = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
 export const SOLANA_WC_DEPRECATED_MAINNET_CHAIN = "solana:4sGjMW1sUnHzSxGspuhpqLDx6wiyjNtZ";

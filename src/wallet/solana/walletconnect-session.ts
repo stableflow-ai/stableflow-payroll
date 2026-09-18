@@ -1,4 +1,4 @@
-import { SOLANA_WC_SESSION_POLL_MS } from "./config";
+import { SOLANA_WC_SESSION_POLL_MS, SOLANA_WC_SILENT_SESSION_TIMEOUT_MS } from "./config";
 
 export class QRCodeModalError extends Error {
   constructor() {
@@ -19,6 +19,27 @@ export function hasSolanaAccount(session: unknown): session is WalletConnectSess
   if (!session || typeof session !== "object") return false;
   const accounts = (session as WalletConnectSession).namespaces?.solana?.accounts;
   return Array.isArray(accounts) && typeof accounts[0] === "string" && accounts[0].length > 0;
+}
+
+function sleep(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
+}
+
+export async function waitForExistingWalletConnectSession(
+  getSession: () => WalletConnectSession | undefined,
+  options?: { pollIntervalMs?: number; timeoutMs?: number },
+): Promise<WalletConnectSession | undefined> {
+  const pollIntervalMs = options?.pollIntervalMs ?? SOLANA_WC_SESSION_POLL_MS;
+  const timeoutMs = options?.timeoutMs ?? SOLANA_WC_SILENT_SESSION_TIMEOUT_MS;
+  const deadline = Date.now() + timeoutMs;
+  while (true) {
+    const current = getSession();
+    if (hasSolanaAccount(current)) return current;
+    if (Date.now() >= deadline) return undefined;
+    await sleep(pollIntervalMs);
+  }
 }
 
 export type WaitForWalletConnectSessionOptions = {

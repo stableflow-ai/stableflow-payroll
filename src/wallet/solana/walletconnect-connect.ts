@@ -5,6 +5,7 @@ import {
 } from "./config";
 import {
   hasSolanaAccount,
+  waitForExistingWalletConnectSession,
   waitForWalletConnectSession,
   type WalletConnectSession,
 } from "./walletconnect-session";
@@ -101,6 +102,12 @@ async function patchedConnect(this: WalletConnectWalletInternal) {
     return applySession(this, existing);
   }
   if (silentConnect) {
+    const session = await waitForExistingWalletConnectSession(
+      () => this._UniversalProvider?.session,
+    );
+    if (hasSolanaAccount(session)) {
+      return applySession(this, session);
+    }
     throw new WalletConnectSilentConnectError();
   }
 

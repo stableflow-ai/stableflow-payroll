@@ -6,6 +6,7 @@ import {
   type WalletName,
 } from "@solana/wallet-adapter-base";
 import {
+  getDerivationPath,
   LedgerWalletAdapter,
   WalletConnectWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
@@ -47,7 +48,9 @@ export class SolanaLedgerWalletAdapter extends BaseSignerWalletAdapter {
   icon = ledgerMeta.icon;
   readonly supportedTransactionVersions: ReadonlySet<TransactionVersion> = new Set(["legacy", 0]);
 
-  private readonly hid = new LedgerWalletAdapter();
+  private readonly hid = new LedgerWalletAdapter({
+    derivationPath: getDerivationPath(0),
+  });
   private readonly live: WalletConnectWalletAdapter;
   private inner: InnerAdapter | null = null;
   private _publicKey: PublicKey | null = null;
@@ -121,8 +124,12 @@ export class SolanaLedgerWalletAdapter extends BaseSignerWalletAdapter {
     cancelLedgerConnectChooser();
     const inner = this.inner;
     this.clearInner();
+    try {
+      if (inner) await inner.disconnect();
+    } catch {
+      // WalletConnect throws when the session is already gone.
+    }
     this.emit("disconnect");
-    if (inner) void inner.disconnect().catch(() => undefined);
   }
 
   async signTransaction<T extends Transaction | VersionedTransaction>(transaction: T): Promise<T> {
