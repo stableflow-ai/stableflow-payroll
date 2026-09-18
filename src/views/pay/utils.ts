@@ -6,6 +6,7 @@ import { isAddressValid, type WalletChainKind } from "@/utils";
 import { SAFE_REQUEST_EXPIRED_MESSAGE } from "@/wallet/evm/safe/config";
 import { SOLANA_INSUFFICIENT_SOL_MESSAGE } from "@/wallet/solana/config";
 import { solanaWalletErrorMessage } from "@/wallet/solana/utils";
+import { tronWalletErrorMessage } from "@/wallet/tron/utils";
 import { EMAIL_PATTERN, EXPORT_FILENAME_STAMP } from "./config";
 
 const USER_REJECTED_PATTERNS = [
@@ -150,6 +151,8 @@ export function formatQuoteErrorMessage(error: unknown, decimals = 6): string {
       : String(error ?? "");
   const text = raw || "Quote failed";
   const message = extractEmbeddedMessage(text) || text;
+  const tronMapped = tronWalletErrorMessage(message);
+  if (tronMapped) return tronMapped;
   const ledgerLocked = solanaWalletErrorMessage(message);
   if (ledgerLocked) return ledgerLocked;
   if (isUserRejectedError(message)) {

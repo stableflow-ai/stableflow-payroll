@@ -1,8 +1,13 @@
 import { describe, expect, it, vi } from "vitest";
 import { WALLET_CONNECTION_REJECTED_MESSAGE } from "../config";
-import { LEDGER_DEVICE_LOCKED_MESSAGE } from "./config";
+import {
+  LEDGER_BLIND_SIGN_MESSAGE,
+  LEDGER_CUSTOM_CONTRACT_MESSAGE,
+  LEDGER_DEVICE_LOCKED_MESSAGE,
+  LEDGER_TX_DATA_MESSAGE,
+} from "./config";
 import { LedgerConnectCancelledError } from "./ledger-choice";
-import { isTronSignOrSendError, reportTronWalletError } from "./utils";
+import { isTronSignOrSendError, reportTronWalletError, tronWalletErrorMessage } from "./utils";
 
 describe("isTronSignOrSendError", () => {
   it("matches Tron adapter sign errors by name", () => {
@@ -10,6 +15,24 @@ describe("isTronSignOrSendError", () => {
     error.name = "WalletSignTransactionError";
     expect(isTronSignOrSendError(error)).toBe(true);
     expect(isTronSignOrSendError(new Error("Locked device (0x5515)"))).toBe(false);
+  });
+});
+
+describe("tronWalletErrorMessage", () => {
+  it("maps Ledger setting codes to the matching copy", () => {
+    expect(tronWalletErrorMessage(
+      "WalletSignTransactionError: Ledger device: UNKNOWN_ERROR (0x6a8c)",
+    )).toBe(LEDGER_BLIND_SIGN_MESSAGE);
+    expect(tronWalletErrorMessage(
+      "WalletSignTransactionError: Ledger device: UNKNOWN_ERROR (0x6a8d)",
+    )).toBe(LEDGER_CUSTOM_CONTRACT_MESSAGE);
+    expect(tronWalletErrorMessage(
+      "WalletSignTransactionError: Ledger device: UNKNOWN_ERROR (0x6a8b)",
+    )).toBe(LEDGER_TX_DATA_MESSAGE);
+  });
+
+  it("returns null for other Ledger errors", () => {
+    expect(tronWalletErrorMessage("Ledger device: Locked device (0x5515)")).toBeNull();
   });
 });
 

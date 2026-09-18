@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "@/lib/api-error";
+import { LEDGER_BLIND_SIGN_MESSAGE } from "@/wallet/tron/config";
 import {
   detectAddressChainKind,
   formatQuoteErrorMessage,
@@ -71,6 +72,12 @@ describe("formatQuoteErrorMessage", () => {
     expect(formatQuoteErrorMessage(
       new Error("Ledger device: Locked device (0x5515)"),
     )).toBe("Unlock your Ledger device and open the Solana app.");
+  });
+
+  it("maps a Tron Ledger 0x6a8c contract error", () => {
+    expect(formatQuoteErrorMessage(
+      new Error("Ledger device: UNKNOWN_ERROR (0x6a8c)"),
+    )).toBe(LEDGER_BLIND_SIGN_MESSAGE);
   });
 
   it("maps a WalletConnect request-expired RPC error", () => {

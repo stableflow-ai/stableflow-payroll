@@ -2,6 +2,7 @@ import type { Adapter } from "@tronweb3/tronwallet-abstract-adapter";
 
 export type TronSigner = {
   address: string;
+  adapterName?: string;
   signTransaction: Adapter["signTransaction"];
 };
 

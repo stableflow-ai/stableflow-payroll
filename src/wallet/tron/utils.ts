@@ -1,7 +1,16 @@
 import { AdapterState } from "@tronweb3/tronwallet-abstract-adapter";
 import type { Wallet } from "@tronweb3/tronwallet-adapter-react-hooks";
 import { isWalletConnectionRejected, reportWalletConnectError } from "../connect-feedback";
-import { TRON_LEDGER_ADAPTER_NAME, TRON_WALLETCONNECT_ADAPTER_NAME } from "./config";
+import {
+  LEDGER_BLIND_SIGN_CODE,
+  LEDGER_BLIND_SIGN_MESSAGE,
+  LEDGER_CUSTOM_CONTRACT_CODE,
+  LEDGER_CUSTOM_CONTRACT_MESSAGE,
+  LEDGER_TX_DATA_CODE,
+  LEDGER_TX_DATA_MESSAGE,
+  TRON_LEDGER_ADAPTER_NAME,
+  TRON_WALLETCONNECT_ADAPTER_NAME,
+} from "./config";
 import {
   isLedgerConnectDialogOpen,
   LedgerConnectCancelledError,
@@ -30,6 +39,14 @@ function errorName(error: unknown): string {
 
 export function isTronSignOrSendError(error: unknown): boolean {
   return SIGN_ERROR_NAMES.has(errorName(error));
+}
+
+export function tronWalletErrorMessage(error: unknown): string | null {
+  const text = error instanceof Error ? error.message : String(error ?? "");
+  if (new RegExp(LEDGER_BLIND_SIGN_CODE, "i").test(text)) return LEDGER_BLIND_SIGN_MESSAGE;
+  if (new RegExp(LEDGER_CUSTOM_CONTRACT_CODE, "i").test(text)) return LEDGER_CUSTOM_CONTRACT_MESSAGE;
+  if (new RegExp(LEDGER_TX_DATA_CODE, "i").test(text)) return LEDGER_TX_DATA_MESSAGE;
+  return null;
 }
 
 export function reportTronWalletError(
