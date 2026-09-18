@@ -386,11 +386,11 @@ export function PaymentByFormCard(props: {
         });
       } catch (error) {
         confirmToast?.dismiss();
+        unmarkBatchConsumed(quoteBatchId);
         if (
           error instanceof Error
           && error.message === INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE
         ) {
-          unmarkBatchConsumed(quoteBatchId);
           if (!paymentStarted) {
             toast.fail({ title: INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE });
             void refetchQuote();

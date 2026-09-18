@@ -6,7 +6,9 @@ import { getTronWeb } from "@/lib/rpc/tron";
 import {
   TRON_CONFIRM_MAX_RETRIES,
   TRON_CONFIRM_RETRY_DELAY_MS,
+  TRON_CONFIRM_TIMEOUT_MESSAGE,
   TRON_FEE_LIMIT_SUN,
+  TRON_TX_FAILED_PREFIX,
 } from "./config";
 import { getTronSigner } from "./session";
 
@@ -62,21 +64,50 @@ function sleep(ms: number) {
   });
 }
 
-export async function waitForTronSuccess(txid: string): Promise<void> {
-  const tronWeb = getTronWeb();
-  for (let retryIndex = 0; retryIndex < TRON_CONFIRM_MAX_RETRIES; retryIndex++) {
-    await sleep(TRON_CONFIRM_RETRY_DELAY_MS);
-    const info = await tronWeb.trx.getTransactionInfo(txid) as {
-      id?: string;
-      result?: string;
-      receipt?: { result?: string };
-    };
-    if (!info?.id) continue;
-    const result = info.receipt?.result || info.result;
-    if (!result || result === "SUCCESS") return;
-    throw new Error(`Tron transaction failed: ${result}`);
+type TronTxInfo = {
+  id?: string;
+  result?: string;
+  receipt?: { result?: string };
+};
+
+function defaultGetTransactionInfo(txid: string): Promise<TronTxInfo> {
+  return getTronWeb().trx.getTransactionInfo(txid) as Promise<TronTxInfo>;
+}
+
+function isTronTxFailedError(error: unknown): boolean {
+  return error instanceof Error && error.message.startsWith(TRON_TX_FAILED_PREFIX);
+}
+
+export function isTronConfirmTimeout(error: unknown): boolean {
+  return error instanceof Error && error.message === TRON_CONFIRM_TIMEOUT_MESSAGE;
+}
+
+export async function waitForTronSuccess(
+  txid: string,
+  options?: {
+    getTransactionInfo?: (txid: string) => Promise<TronTxInfo | null | undefined>;
+    sleep?: (ms: number) => Promise<void>;
+    maxRetries?: number;
+    retryDelayMs?: number;
+  },
+): Promise<void> {
+  const getTransactionInfo = options?.getTransactionInfo ?? defaultGetTransactionInfo;
+  const wait = options?.sleep ?? sleep;
+  const maxRetries = options?.maxRetries ?? TRON_CONFIRM_MAX_RETRIES;
+  const retryDelayMs = options?.retryDelayMs ?? TRON_CONFIRM_RETRY_DELAY_MS;
+
+  for (let retryIndex = 0; retryIndex < maxRetries; retryIndex++) {
+    await wait(retryDelayMs);
+    try {
+      const info = await getTransactionInfo(txid);
+      const result = info?.receipt?.result;
+      if (result === "SUCCESS") return;
+      if (result) throw new Error(`${TRON_TX_FAILED_PREFIX}${result}`);
+    } catch (error) {
+      if (isTronTxFailedError(error)) throw error;
+    }
   }
-  throw new Error("Tron transaction confirmation timed out");
+  throw new Error(TRON_CONFIRM_TIMEOUT_MESSAGE);
 }
 
 export async function broadcastTronCallData(input: {

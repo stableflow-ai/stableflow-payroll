@@ -1,8 +1,52 @@
 import { AdapterState } from "@tronweb3/tronwallet-abstract-adapter";
 import type { Wallet } from "@tronweb3/tronwallet-adapter-react-hooks";
+import { isWalletConnectionRejected, reportWalletConnectError } from "../connect-feedback";
 import { TRON_LEDGER_ADAPTER_NAME, TRON_WALLETCONNECT_ADAPTER_NAME } from "./config";
+import {
+  isLedgerConnectDialogOpen,
+  LedgerConnectCancelledError,
+} from "./ledger-choice";
 
 const ALWAYS_VISIBLE = new Set([TRON_WALLETCONNECT_ADAPTER_NAME, TRON_LEDGER_ADAPTER_NAME]);
+
+const SIGN_ERROR_NAMES = new Set([
+  "WalletSignTransactionError",
+  "WalletSignMessageError",
+  "WalletSendTransactionError",
+]);
+
+type ConnectToast = {
+  fail: (params: { title: string }) => void;
+};
+
+function errorName(error: unknown): string {
+  if (!error || typeof error !== "object") return "";
+  if ("name" in error && typeof error.name === "string") return error.name;
+  if ("constructor" in error && error.constructor && typeof error.constructor.name === "string") {
+    return error.constructor.name;
+  }
+  return "";
+}
+
+export function isTronSignOrSendError(error: unknown): boolean {
+  return SIGN_ERROR_NAMES.has(errorName(error));
+}
+
+export function reportTronWalletError(
+  toast: ConnectToast,
+  error: unknown,
+  deselect: () => void,
+): void {
+  if (error instanceof LedgerConnectCancelledError) {
+    deselect();
+    return;
+  }
+  // Sign / send failures are toasted by the payment mutation.
+  if (isTronSignOrSendError(error)) return;
+  if (isLedgerConnectDialogOpen()) return;
+  reportWalletConnectError(toast, error);
+  if (isWalletConnectionRejected(error)) deselect();
+}
 
 export function visibleTronWallets(wallets: Wallet[]): Wallet[] {
   const detected = wallets.filter(

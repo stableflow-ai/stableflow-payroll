@@ -26,3 +26,20 @@ export async function readTrc20Balance(opts: {
     return 0n;
   }
 }
+
+export async function readTrc20Allowance(opts: {
+  tokenContract: string;
+  owner: string;
+  spender: string;
+}): Promise<bigint> {
+  const tronWeb = getTronWeb();
+  tronWeb.setAddress(opts.owner);
+  const contract = await tronWeb.contract().at(opts.tokenContract);
+  const raw = await contract.allowance(opts.owner, opts.spender).call();
+  if (raw == null) return 0n;
+  try {
+    return BigInt(raw.toString());
+  } catch {
+    return 0n;
+  }
+}

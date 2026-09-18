@@ -11,15 +11,19 @@ function TronWalletSelectModal({
   visible: boolean;
   onClose: () => void;
 }) {
-  const { wallets, select } = useWallet();
+  const { wallets, select, wallet, connected, connect } = useWallet();
   const [fadeIn, setFadeIn] = useState(false);
   const [render, setRender] = useState(false);
   const walletsList = useMemo(() => visibleTronWallets(wallets), [wallets]);
 
-  const onWalletClick = useCallback((wallet: Wallet) => {
-    select(wallet.adapter.name);
+  const onWalletClick = useCallback((next: Wallet) => {
     onClose();
-  }, [onClose, select]);
+    if (wallet?.adapter.name === next.adapter.name && !connected) {
+      void connect();
+      return;
+    }
+    select(next.adapter.name);
+  }, [connect, connected, onClose, select, wallet?.adapter.name]);
 
   useEffect(() => {
     if (visible) {

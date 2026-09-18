@@ -9,14 +9,18 @@
 import type { PayBatchSwapTransaction } from "@/types/payout";
 import { isNativeToken, type IntentsToken } from "@/stores/intents-tokens";
 import { broadcastBatchPayCallData } from "./broadcast-quick-pay";
+import { INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE } from "./config";
 import { executedBroadcast, type BroadcastResult } from "./types";
 import { broadcastNearActions } from "./near/transfer";
 import { buildSolanaDepositTx } from "./solana/build-deposit-tx";
 import { SOLANA_MISSING_OUTPUTS_MESSAGE } from "./solana/config";
 import { activeSquadsMode, sendViaSquads, sendViaSquadsSdk, solanaBroadcastResult } from "./solana/multisig";
 import { broadcastSolanaTransaction } from "./solana/transfer";
-import { broadcastTronCallData, waitForTronSuccess } from "./tron/transfer";
+import { readTrc20Allowance } from "./tron/balance";
+import { TRON_CONFIRM_TIMEOUT_MESSAGE } from "./tron/config";
+import { broadcastTronCallData, isTronConfirmTimeout, waitForTronSuccess } from "./tron/transfer";
 import { transferNativeZec } from "./zec/transfer";
+import { verifyPostApproveAllowance } from "./verify-post-approve-allowance";
 
 export async function broadcastBatchPayout(input: {
   token: IntentsToken;
@@ -68,12 +72,15 @@ async function broadcastTron(input: {
   token: IntentsToken;
   transaction: PayBatchSwapTransaction;
   amountIn: bigint;
+  requiredAmount?: bigint;
+  payer: string;
 }): Promise<BroadcastResult> {
   const tx = input.transaction;
   if (!tx.batch_contract?.trim() || !tx.callData?.trim()) {
     throw new Error("Missing batch transaction");
   }
   const native = isNativeToken(input.token);
+  let confirmTimedOut = false;
   for (const approval of tx.approvals ?? []) {
     if (!approval.trim()) continue;
     const tokenAddress = input.token.contractAddress?.trim();
@@ -83,7 +90,36 @@ async function broadcastTron(input: {
       callData: approval,
       callValue: 0n,
     });
-    await waitForTronSuccess(hash);
+    try {
+      await waitForTronSuccess(hash);
+    } catch (error) {
+      if (!isTronConfirmTimeout(error)) throw error;
+      confirmTimedOut = true;
+    }
+  }
+  if (!native) {
+    const tokenAddress = input.token.contractAddress?.trim();
+    if (!tokenAddress) throw new Error("Missing origin token contract");
+    try {
+      await verifyPostApproveAllowance({
+        requiredAmount: input.requiredAmount ?? input.amountIn,
+        readAllowance: () => readTrc20Allowance({
+          tokenContract: tokenAddress,
+          owner: input.payer,
+          spender: tx.batch_contract,
+        }),
+      });
+    } catch (error) {
+      if (
+        confirmTimedOut
+        && !(error instanceof Error && error.message === INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE)
+      ) {
+        throw new Error(TRON_CONFIRM_TIMEOUT_MESSAGE);
+      }
+      throw error;
+    }
+  } else if (confirmTimedOut) {
+    throw new Error(TRON_CONFIRM_TIMEOUT_MESSAGE);
   }
   return executedBroadcast(await broadcastTronCallData({
     contract: tx.batch_contract,
