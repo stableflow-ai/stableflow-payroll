@@ -60,11 +60,13 @@ export { resolveMultisigConfirmToast } from "./confirm";
 export {
   MULTISIG_FAILED_MESSAGE,
   MULTISIG_LISTEN_TITLE,
+  MULTISIG_QUOTE_EXPIRED_MESSAGE,
   MULTISIG_SIGNED_LABEL,
   MULTISIG_SUBMIT_FAILED_MESSAGE,
   MULTISIG_WATCH_STORAGE_KEY,
   txHashForSubmit,
 } from "./config";
+export { abortOnQuoteDeadline } from "./quote-deadline";
 export { MULTISIG_WATCH_STATUS } from "./types";
 export type { MultisigConfirmCopy, MultisigWatchSnapshot, MultisigWatchStatus } from "./types";
 export type { StoredPendingMultisig } from "./serialize";

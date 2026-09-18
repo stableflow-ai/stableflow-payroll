@@ -11,6 +11,7 @@ const session = {
   },
   quoteId: "q1",
   quoteBatchId: "b1",
+  deadline: "2026-09-18T12:00:00.000Z",
   title: "Payroll_Batch Payment 1",
   type: "payroll",
   formKey: "form-1",
@@ -28,6 +29,7 @@ describe("useMultisigWatchStore", () => {
     useMultisigWatchStore.getState().dismissListen(session.id);
     const live = useMultisigWatchStore.getState().watches[0];
     expect(live?.listenDismissed).toBe(true);
+    expect(live?.deadline).toBe("2026-09-18T12:00:00.000Z");
     expect(useMultisigWatchStore.getState().watches).toHaveLength(1);
   });
 
@@ -36,5 +38,12 @@ describe("useMultisigWatchStore", () => {
     useMultisigWatchStore.getState().dismissListen(session.id);
     useMultisigWatchStore.getState().removeWatch(session.id);
     expect(useMultisigWatchStore.getState().watches).toEqual([]);
+  });
+
+  it("keeps an older session that has no deadline", () => {
+    const { deadline, ...legacy } = session;
+    void deadline;
+    useMultisigWatchStore.getState().upsertWatch(legacy);
+    expect(useMultisigWatchStore.getState().watches[0]?.deadline).toBeUndefined();
   });
 });

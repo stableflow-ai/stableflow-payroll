@@ -12,8 +12,10 @@ import {
 } from "@/stores/multisig-watch-sessions";
 import {
   MULTISIG_FAILED_MESSAGE,
+  MULTISIG_QUOTE_EXPIRED_MESSAGE,
   MULTISIG_SUBMIT_FAILED_MESSAGE,
   MULTISIG_WATCH_STATUS,
+  abortOnQuoteDeadline,
   deserializePendingMultisig,
   txHashForSubmit,
   watchMultisigProposal,
@@ -64,6 +66,21 @@ export function useMultisigWatchHost() {
   }, []);
 }
 
+function dismissListenToast(sessionId: string, listenToasts: Map<string, ToastHandle>) {
+  listenToasts.get(sessionId)?.dismiss();
+  listenToasts.delete(sessionId);
+}
+
+function finishExpiredWatch(
+  sessionId: string,
+  toast: ReturnType<typeof useToast>,
+  listenToasts: Map<string, ToastHandle>,
+) {
+  dismissListenToast(sessionId, listenToasts);
+  toast.fail({ title: MULTISIG_QUOTE_EXPIRED_MESSAGE });
+  useMultisigWatchStore.getState().removeWatch(sessionId);
+}
+
 async function runWatch(
   session: MultisigWatchSession,
   controller: AbortController,
@@ -71,7 +88,16 @@ async function runWatch(
   listenToasts: Map<string, ToastHandle>,
 ) {
   const proposal = deserializePendingMultisig(session.proposal);
+  let expired = false;
+  const stopExpire = abortOnQuoteDeadline(session.deadline, () => {
+    expired = true;
+    if (!controller.signal.aborted) controller.abort();
+  });
   try {
+    if (expired) {
+      finishExpiredWatch(session.id, toast, listenToasts);
+      return;
+    }
     const result = await watchMultisigProposal(proposal, (snap) => {
       if (controller.signal.aborted) return;
       if (snap.status !== MULTISIG_WATCH_STATUS.Pending) return;
@@ -94,10 +120,7 @@ async function runWatch(
       existing.update({ text });
     }, controller.signal);
 
-    listenToasts.get(session.id)?.dismiss();
-    listenToasts.delete(session.id);
-    if (controller.signal.aborted) return;
-
+    dismissListenToast(session.id, listenToasts);
     if (result.status === MULTISIG_WATCH_STATUS.Success) {
       try {
         const submitted = await batchSubmit({
@@ -114,13 +137,24 @@ async function runWatch(
       } catch {
         toast.fail({ title: MULTISIG_SUBMIT_FAILED_MESSAGE });
       }
-    } else {
-      toast.fail({ title: MULTISIG_FAILED_MESSAGE });
+      useMultisigWatchStore.getState().removeWatch(session.id);
+      return;
     }
+    if (expired) {
+      finishExpiredWatch(session.id, toast, listenToasts);
+      return;
+    }
+    if (controller.signal.aborted) return;
+    toast.fail({ title: MULTISIG_FAILED_MESSAGE });
   } catch (error) {
+    if (expired) {
+      finishExpiredWatch(session.id, toast, listenToasts);
+      return;
+    }
     if (controller.signal.aborted) return;
     if (error instanceof DOMException && error.name === "AbortError") return;
   } finally {
+    stopExpire();
     if (!controller.signal.aborted) {
       useMultisigWatchStore.getState().removeWatch(session.id);
     }

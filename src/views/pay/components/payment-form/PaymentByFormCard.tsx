@@ -27,6 +27,7 @@ import { broadcastBatchPayout } from "@/wallet/broadcast-batch-payout";
 import { INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE } from "@/wallet/config";
 import { assertSafeOriginChain } from "@/wallet/evm/safe";
 import {
+  MULTISIG_QUOTE_EXPIRED_MESSAGE,
   isWatchablePendingMultisig,
   pendingMultisigSessionId,
   resolveMultisigConfirmToast,
@@ -408,11 +409,14 @@ export function PaymentByFormCard(props: {
             proposal: serializePendingMultisig(result),
             quoteId: quote.quoteId,
             quoteBatchId,
+            deadline: batch.deadline,
             title,
             type: detail?.type ?? "",
             formKey,
             listenDismissed: false,
           });
+        } else if (isPayrollBatchExpired(batch.deadline)) {
+          toast.fail({ title: MULTISIG_QUOTE_EXPIRED_MESSAGE });
         } else {
           try {
             const submitted = await batchSubmit({

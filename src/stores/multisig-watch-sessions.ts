@@ -32,6 +32,8 @@ export interface MultisigWatchSession {
   proposal: StoredPendingMultisig;
   quoteId: string;
   quoteBatchId: string;
+  /** ISO quote deadline. Absent on sessions restored from older builds. */
+  deadline?: string;
   title: string;
   type: string;
   formKey: string;

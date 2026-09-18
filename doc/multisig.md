@@ -39,9 +39,9 @@ Then register it in `watchMultisigProposal` (`src/wallet/multisig/watch.ts` via 
 
 Listen toast (`Waiting for multisig signatures`, optional `n / m signed`) is independent of the confirm toast. Closing it only sets `listenDismissed`; the watcher keeps running. Several batches each have their own session.
 
-On **success**, always `POST /v1/payroll/payouts/submit` with `tx_hash` set to the on-chain hash or `""`. Then `notifyBatchPayoutCommitSuccess` for the existing `Transactions are in progress...` poll. `tx_hash` is optional on the backend; empty string is allowed. On **failed**, toast `Multisig transaction failed` (auto-close) and do not submit.
+On **success**, always `POST /v1/payroll/payouts/submit` with `tx_hash` set to the on-chain hash or `""`. Then `notifyBatchPayoutCommitSuccess` for the existing `Transactions are in progress...` poll. `tx_hash` is optional on the backend; empty string is allowed. On **failed**, toast `Multisig transaction failed` (auto-close) and do not submit. If the quote `deadline` passes while still pending, stop the watch, toast `Quote expired`, and do not submit. Sessions restored from older builds without `deadline` keep polling.
 
-SquadsX has no vault transaction index: skip the watch, submit `tx_hash: ""` immediately.
+SquadsX has no vault transaction index: skip the watch, submit `tx_hash: ""` immediately unless the quote has already expired.
 
 ## Chain capability
 
