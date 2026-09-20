@@ -29,16 +29,16 @@ export function AuthShell({
   contentClassName?: string;
 }) {
   return (
-    <main className="flex min-h-svh flex-col md:flex-row">
+    <main className="flex min-h-svh flex-col-reverse md:flex-row">
       <aside
         className={cn(
-          "relative flex w-full shrink-0 flex-col overflow-hidden px-6 py-8 md:w-[min(870px,57.5%)] md:min-h-svh md:px-16 md:py-14 lg:px-20",
-          "bg-[url('/auth/brand-mark-vector.svg')] bg-no-repeat bg-[position:left_center] bg-[length:694px_auto]",
+          "relative flex justify-center items-center w-full shrink-0 flex-col overflow-hidden px-6 py-8 md:w-[min(870px,57.5%)] md:min-h-svh md:px-16 md:py-14 lg:px-20 xl:px-30 2xl:px-38",
+          "bg-[url('/auth/brand-mark-vector.svg')] bg-no-repeat bg-[position:left_10px] bg-[length:694px_auto]",
         )}
         style={{ backgroundColor: AUTH_BRAND_BG }}
       >
 
-        <div className="relative z-10 flex min-h-0 flex-1 flex-col">
+        <div className="relative z-10 flex flex-col pb-[50%]">
           <img
             src="/logo-white.svg"
             alt="Pay. Stableflow"
@@ -47,14 +47,14 @@ export function AuthShell({
             height={34}
           />
 
-          <h1 className="mt-10 max-w-[558px] font-montserrat text-[28px] font-semibold capitalize leading-tight text-white md:mt-16 md:text-[36px]">
+          <h1 className="mt-7 font-montserrat text-[28px] font-semibold capitalize leading-tight text-white md:mt-7 md:text-[36px]">
             Confidential Payments.
           </h1>
-          <p className="mt-3 max-w-[558px] font-montserrat text-[14px] font-normal leading-[1.5] text-white md:mt-4">
+          <p className="mt-1.5 font-montserrat text-[14px] font-normal leading-[1.5] text-white md:mt-1.5">
             Send across chains without creating a direct public link between sender and recipient.
           </p>
 
-          <ul className="mt-8 hidden flex-col gap-8 md:mt-10 md:flex">
+          <ul className="mt-8 flex-col gap-8 md:mt-9 flex">
             {FEATURES.map((feature) => {
               const Icon = FEATURE_ICONS[feature.icon];
               return (
@@ -69,22 +69,21 @@ export function AuthShell({
               );
             })}
           </ul>
-
-          <Link
-            to="/docs"
-            className="mt-8 inline-flex items-center font-montserrat text-sm font-normal text-white transition-opacity hover:opacity-70 md:mt-auto md:pt-10"
-          >
-            Docs
-          </Link>
         </div>
+        <Link
+          to="/docs"
+          className="absolute bottom-10.5 left-6 md:left-16 lg:left-20 xl:left-30 2xl:left-38 mt-8 inline-flex items-center font-montserrat text-sm font-normal text-white transition-opacity hover:opacity-70 md:mt-auto md:pt-10"
+        >
+          Docs
+        </Link>
       </aside>
 
       <section
-        className="relative flex flex-1 flex-col items-center justify-start px-4 py-10 sm:px-6 md:justify-center md:py-12"
+        className="relative flex flex-1 flex-col items-center justify-start px-4 sm:px-6 py-10 md:py-12 md:justify-center"
         style={{ backgroundColor: AUTH_PANEL_BG }}
       >
         <div className={cn("relative z-10 flex w-full flex-col items-center", contentClassName)}>
-          {panelTop ? <div className="mb-8 flex justify-center">{panelTop}</div> : null}
+          {panelTop ? <div className="mb-5 flex justify-center">{panelTop}</div> : null}
           {children}
         </div>
       </section>

@@ -103,8 +103,9 @@ export function RegisterView() {
           <button
             type="button"
             onClick={() => setStep(REGISTER_STEP.SignUp)}
-            className="self-start font-montserrat text-sm font-medium text-[#3f8afb] hover:text-[#3f8afb]/90"
+            className="self-start flex items-center gap-2 font-montserrat text-sm font-medium text-[#3f8afb] hover:text-[#3f8afb]/90"
           >
+            <Icon2Right className="text-[#606060] rotate-180" />
             Back
           </button>
           <h1 className="mt-6 font-montserrat text-xl font-semibold text-black">
@@ -133,6 +134,7 @@ export function RegisterView() {
             maxLength={ORGANIZATION_NAME_MAX_LENGTH}
             labelClassName={AUTH_ONBOARDING_LABEL_CLASS}
             inputClassName={AUTH_COMPACT_INPUT_CLASS}
+            className="mt-5"
           />
           <AuthField
             id="logo-url"
@@ -153,6 +155,7 @@ export function RegisterView() {
                 Optional
               </span>
             }
+            className="mt-5"
           />
 
           <Button
@@ -160,7 +163,7 @@ export function RegisterView() {
             size="xl"
             loading={registerMutation.isPending}
             disabled={Boolean(createOrganizationFormError(organizationName, logoUrl))}
-            className="mt-auto w-full"
+            className="mt-7.5 w-full"
           >
             Create Organization
           </Button>
@@ -171,11 +174,10 @@ export function RegisterView() {
 
   return (
     <AuthShell panelTop={<AuthBetaBanner />}>
+      <h1 className="text-center font-montserrat text-xl font-semibold text-black">
+        Create account
+      </h1>
       <form onSubmit={submitSignUp} className={AUTH_FORM_CLASS}>
-        <h1 className="text-center font-montserrat text-xl font-semibold text-black">
-          Create account
-        </h1>
-
         <AuthField
           id="name"
           label="Your name"
@@ -205,6 +207,7 @@ export function RegisterView() {
           placeholder="you@company.com"
           autoComplete="email"
           maxLength={EMAIL_MAX_LENGTH}
+          className="mt-5"
         />
         <AuthPasswordField
           id="password"
@@ -219,6 +222,7 @@ export function RegisterView() {
           placeholder={`${PASSWORD_MIN_LENGTH}–${PASSWORD_MAX_LENGTH} characters`}
           autoComplete="new-password"
           maxLength={PASSWORD_MAX_LENGTH}
+          className="mt-5"
         />
         <AuthPasswordField
           id="confirm-password"
@@ -237,6 +241,7 @@ export function RegisterView() {
           placeholder="Keep the same with the password"
           autoComplete="new-password"
           maxLength={PASSWORD_MAX_LENGTH}
+          className="mt-5"
         />
         <AuthField
           id="invite-code"
@@ -251,13 +256,14 @@ export function RegisterView() {
           placeholder="Invite code"
           autoComplete="off"
           maxLength={INVITE_CODE_MAX_LENGTH}
+          className="mt-5"
         />
 
         <Button
           type="submit"
           size="lg"
           disabled={Boolean(registerFormError(name, email, password, confirmPassword, inviteCode))}
-          className="mt-6 w-full"
+          className="mt-7.5 w-full"
         >
           Continue
         </Button>
@@ -269,7 +275,7 @@ export function RegisterView() {
             className={`inline-flex items-center ${AUTH_LINK_ACCENT_CLASS}`}
           >
             Sign in
-            <Icon2Right className="ml-1" />
+            <Icon2Right className="ml-1 text-[#606060]" />
           </Link>
         </p>
       </form>

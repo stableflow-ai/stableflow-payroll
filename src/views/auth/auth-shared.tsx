@@ -54,7 +54,7 @@ export function useTouchedFields() {
 function AuthFieldError({ id, error }: { id: string; error?: string | null }) {
   if (!error) return null;
   return (
-    <p id={`${id}-error`} className="mt-1.5 font-montserrat text-xs font-medium text-danger">
+    <p id={`${id}-error`} className="mt-1 font-montserrat text-xs font-medium text-danger">
       {error}
     </p>
   );
@@ -98,12 +98,12 @@ export function AuthField({
   className?: string;
 }) {
   return (
-    <div className={cn("mt-5", className)}>
+    <div className={cn("relative leading-[100%]", className)}>
       <label htmlFor={id} className={cn(AUTH_LABEL_CLASS, labelClassName)}>
         {label}
         {labelTrailing}
       </label>
-      <div className="relative mt-2.5">
+      <div className="relative mt-3">
         <input
           id={id}
           type={type}

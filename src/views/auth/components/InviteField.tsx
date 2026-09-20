@@ -15,7 +15,7 @@ export function InviteField(props: {
 }) {
   const { id, label, value, onChange, onBlur, optional, placeholder, maxLength, autoFocus, error } = props;
   return (
-    <div className="mt-6">
+    <div className="mt-5">
       <label htmlFor={id} className={AUTH_ONBOARDING_LABEL_CLASS}>
         {label}
         {optional ? (

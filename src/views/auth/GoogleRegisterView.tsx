@@ -27,6 +27,7 @@ import {
 } from "./config";
 import { postAuthPath } from "./return-to";
 import { useGoogleAuthPendingOrRedirect } from "./use-google-auth-pending";
+import { cn } from "@/lib/utils";
 
 const REGISTER_FIELDS = ["name", "inviteCode", "organizationName", "logoUrl"] as const;
 
@@ -83,14 +84,21 @@ export function GoogleRegisterView() {
 
   return (
     <AuthShell>
-      <form onSubmit={(event) => void submit(event)} className={AUTH_FORM_CLASS}>
-        <h1 className="text-center font-montserrat text-xl font-semibold text-black">
+      <div className="w-full max-w-[400px]">
+        <p className={`block ${AUTH_LINK_CLASS} text-left`}>
+          <Link to="/login" className={`inline-flex items-center ${AUTH_LINK_ACCENT_CLASS}`}>
+            <Icon2Right className="mr-1 rotate-180 text-[#606060]" />
+            Back
+          </Link>
+        </p>
+        <h1 className="text-left font-montserrat text-xl font-semibold text-black mt-5">
           Create account
         </h1>
-        <p className="mt-2.5 text-center font-montserrat text-sm font-normal text-[#606060]">
+        <p className="mt-2.5 text-left font-montserrat text-sm font-normal text-[#606060]">
           Finish registering this Google account as an organization admin.
         </p>
-
+      </div>
+      <form onSubmit={(event) => void submit(event)} className={cn(AUTH_FORM_CLASS, "mt-5")}>
         <AuthField
           id="google-name"
           label="Your name"
@@ -119,6 +127,7 @@ export function GoogleRegisterView() {
           placeholder="Invite code"
           autoComplete="off"
           maxLength={INVITE_CODE_MAX_LENGTH}
+          className="mt-5"
         />
         <AuthField
           id="google-organization-name"
@@ -132,6 +141,7 @@ export function GoogleRegisterView() {
           error={touched.organizationName ? organizationNameRuleError(organizationName) : null}
           autoComplete="organization"
           maxLength={ORGANIZATION_NAME_MAX_LENGTH}
+          className="mt-5"
         />
         <AuthField
           id="google-logo-url"
@@ -150,6 +160,7 @@ export function GoogleRegisterView() {
               Optional
             </span>
           }
+          className="mt-5"
         />
 
         <Button
@@ -157,17 +168,10 @@ export function GoogleRegisterView() {
           size="lg"
           loading={registerMutation.isPending}
           disabled={Boolean(googleAdminRegisterFormError(name, inviteCode, organizationName, logoUrl))}
-          className="mt-6 w-full"
+          className="mt-7.5 w-full"
         >
           Continue
         </Button>
-
-        <p className={`block ${AUTH_LINK_CLASS}`}>
-          <Link to="/login" className={`inline-flex items-center ${AUTH_LINK_ACCENT_CLASS}`}>
-            <Icon2Right className="mr-1 rotate-180" />
-            Back
-          </Link>
-        </p>
       </form>
     </AuthShell>
   );
