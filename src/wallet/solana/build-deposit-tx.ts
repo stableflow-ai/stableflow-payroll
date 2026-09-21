@@ -3,7 +3,7 @@
  */
 
 import {
-  createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
   createTransferInstruction,
   getAccount,
   getAssociatedTokenAddressSync,
@@ -11,6 +11,7 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import {
+  ComputeBudgetProgram,
   PublicKey,
   SystemProgram,
   TransactionInstruction,
@@ -22,14 +23,33 @@ import type { PayBatchSwapOutput } from "@/types/payout";
 import { getSolanaConnection } from "@/lib/rpc/solana";
 import {
   SOLANA_ATA_ALLOW_OWNER_OFF_CURVE,
+  SOLANA_ATA_CREATE_COMPUTE_UNITS,
+  SOLANA_COMPUTE_UNIT_HEADROOM,
+  SOLANA_MAX_COMPUTE_UNIT_LIMIT,
+  SOLANA_MIN_COMPUTE_UNIT_LIMIT,
   SOLANA_MISSING_OUTPUTS_MESSAGE,
   SOLANA_OUTPUT_AMOUNT_MISMATCH_MESSAGE,
+  SOLANA_SPL_TRANSFER_COMPUTE_UNITS,
 } from "./config";
 
 export type MergedDepositOutput = {
   address: string;
   amountRaw: bigint;
 };
+
+export function solanaDepositComputeUnitLimit(input: {
+  createAtaCount: number;
+  transferCount: number;
+}): number {
+  const estimated =
+    SOLANA_COMPUTE_UNIT_HEADROOM
+    + Math.max(0, input.createAtaCount) * SOLANA_ATA_CREATE_COMPUTE_UNITS
+    + Math.max(0, input.transferCount) * SOLANA_SPL_TRANSFER_COMPUTE_UNITS;
+  return Math.min(
+    SOLANA_MAX_COMPUTE_UNIT_LIMIT,
+    Math.max(SOLANA_MIN_COMPUTE_UNIT_LIMIT, estimated),
+  );
+}
 
 function parsePositiveAmountRaw(value: string): bigint {
   const trimmed = value.trim();
@@ -123,6 +143,7 @@ export async function buildSolanaDepositInstructions(input: {
     programId,
   );
   const instructions: TransactionInstruction[] = [];
+  let createAtaCount = 0;
   for (const row of rows) {
     const dest = new PublicKey(row.address);
     const { tokenAccount, createAta } = await destinationTokenAccount({
@@ -132,8 +153,9 @@ export async function buildSolanaDepositInstructions(input: {
       programId,
     });
     if (createAta) {
+      createAtaCount += 1;
       instructions.push(
-        createAssociatedTokenAccountInstruction(
+        createAssociatedTokenAccountIdempotentInstruction(
           input.payer,
           tokenAccount,
           dest,
@@ -153,7 +175,15 @@ export async function buildSolanaDepositInstructions(input: {
       ),
     );
   }
-  return instructions;
+  return [
+    ComputeBudgetProgram.setComputeUnitLimit({
+      units: solanaDepositComputeUnitLimit({
+        createAtaCount,
+        transferCount: rows.length,
+      }),
+    }),
+    ...instructions,
+  ];
 }
 
 export async function buildSolanaDepositTx(input: {

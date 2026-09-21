@@ -4,7 +4,7 @@ import { ApiError } from "@/lib/api-error";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import { isAddressValid, type WalletChainKind } from "@/utils";
 import { SAFE_REQUEST_EXPIRED_MESSAGE } from "@/wallet/evm/safe/config";
-import { SOLANA_INSUFFICIENT_SOL_MESSAGE } from "@/wallet/solana/config";
+import { SOLANA_COMPUTE_BUDGET_EXCEEDED_MESSAGE, SOLANA_INSUFFICIENT_SOL_MESSAGE } from "@/wallet/solana/config";
 import { solanaWalletErrorMessage } from "@/wallet/solana/utils";
 import { tronWalletErrorMessage } from "@/wallet/tron/utils";
 import { EMAIL_PATTERN, EXPORT_FILENAME_STAMP } from "./config";
@@ -170,6 +170,9 @@ export function formatQuoteErrorMessage(error: unknown, decimals = 6): string {
   if (/No liquidity available/i.test(message)) return "No liquidity available";
   if (/request expired/i.test(message)) return SAFE_REQUEST_EXPIRED_MESSAGE;
   if (/insufficient lamports/i.test(message)) return SOLANA_INSUFFICIENT_SOL_MESSAGE;
+  if (/exceeded CUs|computational budget exceeded|compute budget exceeded/i.test(message)) {
+    return SOLANA_COMPUTE_BUDGET_EXCEEDED_MESSAGE;
+  }
   if (/Cross-chain quote failed/i.test(message)) return "Quote failed";
   return message;
 }

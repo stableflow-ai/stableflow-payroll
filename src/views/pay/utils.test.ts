@@ -95,6 +95,20 @@ describe("formatQuoteErrorMessage", () => {
       ),
     )).toBe("Insufficient SOL for fees. Add SOL and try again.");
   });
+
+  it("maps a Solana compute-budget simulation error", () => {
+    expect(formatQuoteErrorMessage(
+      new Error(
+        "Simulation failed. Message: Transaction simulation failed. Logs: []. Catch the `SendTransactionError` and call `getLogs()` on it for full details.\nProgram failed to complete: exceeded CUs meter at BPF instruction",
+      ),
+    )).toBe("Solana transaction ran out of compute. Confirm again to retry.");
+  });
+
+  it("maps a Computational budget exceeded log line", () => {
+    expect(formatQuoteErrorMessage(
+      new Error("Transaction simulation failed: Computational budget exceeded"),
+    )).toBe("Solana transaction ran out of compute. Confirm again to retry.");
+  });
 });
 
 describe("parsePayoutCallbackParams", () => {

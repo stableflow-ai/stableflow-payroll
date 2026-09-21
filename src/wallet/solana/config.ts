@@ -2,11 +2,18 @@ export const PHANTOM_SIGN_DISPLAY = "utf8";
 
 export const SOLANA_EXPIRED_MESSAGE = "Solana transaction expired. Confirm again to retry.";
 export const SOLANA_INSUFFICIENT_SOL_MESSAGE = "Insufficient SOL for fees. Add SOL and try again.";
+export const SOLANA_COMPUTE_BUDGET_EXCEEDED_MESSAGE =
+  "Solana transaction ran out of compute. Confirm again to retry.";
 export const SOLANA_TRANSFER_FAILED_MESSAGE = "Solana transfer failed";
 export const SOLANA_MISSING_OUTPUTS_MESSAGE = "Missing Solana deposit outputs";
 export const SOLANA_OUTPUT_AMOUNT_MISMATCH_MESSAGE =
   "Solana deposit outputs do not match the quoted source amount";
 export const SOLANA_ATA_ALLOW_OWNER_OFF_CURVE = true;
+export const SOLANA_MIN_COMPUTE_UNIT_LIMIT = 200_000;
+export const SOLANA_MAX_COMPUTE_UNIT_LIMIT = 1_400_000;
+export const SOLANA_COMPUTE_UNIT_HEADROOM = 80_000;
+export const SOLANA_ATA_CREATE_COMPUTE_UNITS = 25_000;
+export const SOLANA_SPL_TRANSFER_COMPUTE_UNITS = 10_000;
 export const SOLANA_REBROADCAST_INTERVAL_MS = 2_000;
 export const SOLANA_REBROADCAST_MAX_DURATION_MS = 60_000;
 

@@ -3,7 +3,7 @@
  */
 
 import {
-  createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
   createTransferInstruction,
   getAccount,
   getAssociatedTokenAddressSync,
@@ -50,6 +50,29 @@ export function isExpiredBlockhashError(error: unknown): boolean {
   if (error instanceof TransactionExpiredBlockheightExceededError) return true;
   if (!(error instanceof Error)) return false;
   return /block height exceeded|blockhash not found|blockhash.*expired/i.test(error.message);
+}
+
+export async function readSolanaSendLogs(error: unknown): Promise<string[]> {
+  if (!error || typeof error !== "object") return [];
+  const getLogs = (error as { getLogs?: (connection?: Connection) => unknown }).getLogs;
+  if (typeof getLogs !== "function") return [];
+  try {
+    const result = await getLogs.call(error);
+    if (!Array.isArray(result)) return [];
+    return result.filter((line): line is string => typeof line === "string");
+  } catch {
+    // web3.js 1.98 getLogs() needs a Connection when logs were not cached.
+    return [];
+  }
+}
+
+export async function toSolanaBroadcastError(error: unknown): Promise<Error> {
+  if (isExpiredBlockhashError(error)) return new Error(SOLANA_EXPIRED_MESSAGE);
+  const logs = await readSolanaSendLogs(error);
+  const base = error instanceof Error ? error.message : String(error ?? SOLANA_TRANSFER_FAILED_MESSAGE);
+  const missing = logs.filter((line) => !base.includes(line));
+  if (!missing.length) return error instanceof Error ? error : new Error(base);
+  return new Error(`${base}\n${missing.join("\n")}`);
 }
 
 export async function refreshBlockhashIfUnsigned(
@@ -156,8 +179,7 @@ export async function broadcastSolanaTransaction(
   try {
     signature = await sendConnection.sendRawTransaction(rawTransaction, { skipPreflight: false });
   } catch (error) {
-    if (isExpiredBlockhashError(error)) throw new Error(SOLANA_EXPIRED_MESSAGE);
-    throw error;
+    throw await toSolanaBroadcastError(error);
   }
 
   await confirmSolanaSignature({
@@ -232,7 +254,7 @@ export async function transferSpl(input: {
     await getAccount(connection, toTokenAccount, "confirmed", programId);
   } catch {
     transaction.add(
-      createAssociatedTokenAccountInstruction(
+      createAssociatedTokenAccountIdempotentInstruction(
         signer.publicKey,
         toTokenAccount,
         toPubkey,
