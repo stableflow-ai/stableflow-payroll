@@ -4,6 +4,10 @@ Newest first. Add an entry whenever you add or change a component under `src/com
 
 Format: one `## YYYY-MM-DD` heading per day, one `- **ComponentName:** what changed` bullet per component.
 
+## 2026-09-20
+
+- **Card:** Narrow viewports use `rounded-[14px] p-4`; `md` and up keep `rounded-[20px] p-5`. Dialog, Drawer, and Table inherit the radius.
+
 ## 2026-09-19
 
 - **Dialog / Drawer:** Optional `elevated` places the overlay in the wallet-portal `z-index` band (`10000` plus the overlay stack offset) so Ledger connect dialogs stay above Pay Now and other app dialogs. Escape still follows the overlay stack.
