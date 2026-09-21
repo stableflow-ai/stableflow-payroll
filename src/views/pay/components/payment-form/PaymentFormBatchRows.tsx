@@ -43,7 +43,7 @@ export function PaymentFormBatchRows(props: {
               </p>
               <Button
                 size="md"
-                className="h-[50px] px-3 shrink-0 !text-sm"
+                className="w-[120px] whitespace-nowrap h-[50px] px-3 shrink-0 !text-sm"
                 disabled={payDisabled || paid || paying || !next}
                 onClick={() => onPay(row.quoteBatchId)}
               >

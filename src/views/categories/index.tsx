@@ -62,7 +62,6 @@ export function CategoriesDrawer(props: {
     try {
       await setEnabled(previewItem, true);
       const to = categoryPath(previewItem.category);
-      handleClose();
       onNavigate?.();
       navigate(to);
     } catch (error) {

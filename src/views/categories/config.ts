@@ -3,6 +3,7 @@ import {
   type OperationCatalogItem,
 } from "@/types/operation";
 
+export const CATEGORIES_PATH = "/categories";
 export const CATEGORIES_DRAWER_DESKTOP_QUERY = "(min-width: 768px)";
 
 export const CATEGORY_ID = {

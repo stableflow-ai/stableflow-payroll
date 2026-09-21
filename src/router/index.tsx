@@ -90,6 +90,7 @@ export const router = createBrowserRouter([
                 element: <PayLayout />,
                 children: [
                   { path: "/", element: <OverviewView /> },
+                  { path: "/categories", element: <OverviewView /> },
                   { path: "/pay", element: <SinglePayoutView /> },
                   { path: "/pay/form", element: <PaymentByFormView /> },
                   { path: "/pay/result", element: <PayoutResultView /> },

@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { IconArrowDown } from "@/components/icons/arrow-down";
 import { IconMore } from "@/components/icons/more";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
@@ -11,7 +11,7 @@ import { organizationName, userRole } from "@/lib/auth-role";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import { isOperationNavEnabled } from "@/types/operation";
-import { CategoriesDrawer } from "@/views/categories";
+import { CATEGORIES_PATH } from "@/views/categories/config";
 import { CountBadge } from "./CountBadge";
 import {
   isPayNavGroup,
@@ -69,7 +69,7 @@ function OperationsGroup(props: { item: PayNavGroupItem; onNavigate?: () => void
   const { pathname } = useLocation();
   const childActive = item.children.some((child) => isPayNavLeafActive(child, pathname));
   const [open, setOpen] = useState(true);
-  const [categoriesOpen, setCategoriesOpen] = useState(false);
+  const navigate = useNavigate();
   const Icon = item.icon;
   const expenseRequestCount = useExpenseOpenRequestsCountQuery().data?.count ?? 0;
 
@@ -91,7 +91,12 @@ function OperationsGroup(props: { item: PayNavGroupItem; onNavigate?: () => void
           <Icon className="size-3.5 shrink-0" />
           <span>{item.label}</span>
         </button>
-        <MoreCategoriesControl onClick={() => setCategoriesOpen(true)} />
+        <MoreCategoriesControl
+          onClick={() => {
+            navigate(CATEGORIES_PATH);
+            onNavigate?.();
+          }}
+        />
         <button
           type="button"
           onClick={toggleOpen}
@@ -130,11 +135,6 @@ function OperationsGroup(props: { item: PayNavGroupItem; onNavigate?: () => void
           })}
         </div>
       ) : null}
-      <CategoriesDrawer
-        open={categoriesOpen}
-        onClose={() => setCategoriesOpen(false)}
-        onNavigate={onNavigate}
-      />
     </div>
   );
 }

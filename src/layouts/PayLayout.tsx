@@ -1,5 +1,5 @@
 import { useCallback, useState, type ReactNode } from "react";
-import { Outlet, useLocation } from "react-router-dom";
+import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { IconMenu } from "@/components/icons";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { HeaderWalletCapsule } from "@/components/layout/HeaderWalletCapsule";
@@ -14,6 +14,8 @@ import { useExpenseOpenRequestsCountQuery } from "@/hooks/use-expense-api";
 import { useOperationCatalogQuery } from "@/hooks/use-operation-api";
 import { isUser, organizationName, userRole } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
+import { CategoriesDrawer } from "@/views/categories";
+import { CATEGORIES_PATH } from "@/views/categories/config";
 import { PaymentModeTabs } from "@/views/pay/components/PaymentModeTabs";
 import { RequestPaymentTabs } from "@/views/pay/components/request/RequestPaymentTabs";
 import { PayNav, PaySidebar } from "@/views/pay/components/PaySidebar";
@@ -31,6 +33,7 @@ export function PayLayout() {
   useExpenseOpenRequestsCountQuery();
   const catalogQuery = useOperationCatalogQuery();
   const { pathname } = useLocation();
+  const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const [headerExtra, setHeaderExtraState] = useState<ReactNode>(null);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -41,6 +44,16 @@ export function PayLayout() {
   const showRequestTabs = isRequestPaymentPath(pathname);
   const closeMenu = () => setMenuOpen(false);
   const orgName = organizationName(user) ?? "";
+  const categoriesOpen = pathname === CATEGORIES_PATH;
+
+  function closeCategories() {
+    const idx = (window.history.state as { idx?: number } | null)?.idx;
+    if (typeof idx === "number" && idx > 0) {
+      navigate(-1);
+      return;
+    }
+    navigate("/", { replace: true });
+  }
 
   return (
     <div className="flex h-svh flex-col overflow-hidden lg:flex-row">
@@ -110,6 +123,7 @@ export function PayLayout() {
       >
         <PayNav onNavigate={closeMenu} />
       </Drawer>
+      <CategoriesDrawer open={categoriesOpen} onClose={closeCategories} />
     </div>
   );
 }
