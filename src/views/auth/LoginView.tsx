@@ -58,7 +58,7 @@ export function LoginView() {
   return (
     <AuthShell panelTop={<AuthBetaBanner />}>
       <h1 className="text-center font-montserrat text-xl font-semibold text-black">
-        Welcome to Payroll. Stableflow
+        Welcome to Payouts. Stableflow
       </h1>
       <form onSubmit={(event) => void submit(event)} className={AUTH_FORM_CLASS}>
         <AuthField
@@ -115,7 +115,7 @@ export function LoginView() {
         <GoogleSignInSection returnTo={returnTo} />
 
         <p className={`block ${AUTH_LINK_CLASS}`}>
-          New to Payroll. Stableflow?{" "}
+          New to Payouts. Stableflow?{" "}
           <Link
             to={registerPathWithReturnTo(returnTo)}
             className={`inline-flex items-center ${AUTH_LINK_ACCENT_CLASS}`}

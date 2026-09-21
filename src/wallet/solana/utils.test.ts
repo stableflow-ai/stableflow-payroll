@@ -70,13 +70,13 @@ describe("openLedgerLiveWalletConnect", () => {
   });
 
   it("opens the Ledger Live WalletConnect deeplink without navigating", () => {
-    const location = { href: "https://payroll.stableflow.ai/" };
+    const location = { href: "https://payouts.stableflow.ai/" };
     const open = vi.fn(() => ({ closed: false }));
     vi.stubGlobal("window", { location, open });
     const uri = "wc:topic@2?relay-protocol=irn&symKey=abc";
     openLedgerLiveWalletConnect(uri);
     expect(open).toHaveBeenCalledWith(`${LEDGER_LIVE_WC_DEEPLINK_PREFIX}${encodeURIComponent(uri)}`);
-    expect(location.href).toBe("https://payroll.stableflow.ai/");
+    expect(location.href).toBe("https://payouts.stableflow.ai/");
   });
 
   it("falls back to a hidden iframe when the popup is blocked", () => {

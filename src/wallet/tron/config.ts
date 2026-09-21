@@ -1,4 +1,4 @@
-export const TRON_APP_NAME = "Stableflow Pay";
+export const TRON_APP_NAME = "Stableflow Payouts";
 
 export const TRON_FEE_LIMIT_SUN = 150_000_000;
 export const TRON_TX_EXPIRATION_MS = 10 * 60 * 1000;

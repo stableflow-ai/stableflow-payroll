@@ -104,7 +104,7 @@ export const DOCS_TOC_IDS = DOCS_TOC.flatMap((section) => [
 export type DocsTocId = (typeof DOCS_TOC_IDS)[number];
 
 export const DOCS_COPY = {
-  documentTitle: "Stableflow Payroll User Guide",
+  documentTitle: "Stableflow Payouts User Guide",
   back: "Back",
   contents: "Contents",
   backToTop: "Back to top",

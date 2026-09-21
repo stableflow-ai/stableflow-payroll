@@ -1,7 +1,7 @@
 export const metadata = {
-  name: "Stableflow Pay",
-  description: "Stableflow Pay: USDC and USDT payroll for global teams.",
+  name: "Stableflow Payouts",
+  description: "Stableflow Payouts: USDC and USDT payouts for global teams.",
   // origin must match your domain & subdomain
-  url: "https://payroll.stableflow.ai",
-  icons: ["https://payroll.stableflow.ai/logo.svg"]
+  url: "https://payouts.stableflow.ai",
+  icons: ["https://payouts.stableflow.ai/logo.svg"]
 };
