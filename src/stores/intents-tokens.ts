@@ -1,18 +1,22 @@
 /**
- * Cached 1Click supported tokens on registered chains.
- * Refresh every 30 minutes; persist to localStorage.
+ * Cached payroll config tokens and chains.
+ * Refresh via GET /v1/payroll/config; persist the last successful payload.
  */
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { FIXED_CHAINS, type ChainConfig } from "@/config/chains";
+import {
+  FIXED_CHAINS,
+  mergeApiChains,
+  setRuntimeChains,
+  type ChainConfig,
+} from "@/config/chains";
 import { tokenLogoUrl } from "@/lib/logo";
+import type { PayrollConfig, PayrollConfigToken } from "@/types/payroll-config";
 
-const ONE_CLICK_TOKENS_URL = "https://1click.chaindefuser.com/v0/tokens";
-const REFRESH_MS = 30 * 60 * 1000;
 const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
-export const PAYOUT_SYMBOLS = [
+export const FALLBACK_PAYOUT_SYMBOLS = [
   "USDC",
   "USDT",
   "DAI",
@@ -27,7 +31,10 @@ export const PAYOUT_SYMBOLS = [
   "RHEA",
 ] as const;
 
-export type PayoutSymbol = (typeof PAYOUT_SYMBOLS)[number];
+/** @deprecated Use getPayoutSymbols(). Kept as a fail-open list. */
+export const PAYOUT_SYMBOLS: string[] = [...FALLBACK_PAYOUT_SYMBOLS];
+
+export type PayoutSymbol = string;
 /** @deprecated Use PayoutSymbol. */
 export type StableSymbol = PayoutSymbol;
 
@@ -41,27 +48,27 @@ export interface IntentsToken {
   contractAddress: string | null;
   chain: ChainConfig;
   logo: string;
+  supportPayment: boolean;
+  supportReceive: boolean;
 }
 
-interface ProviderToken {
-  assetId: string;
-  decimals: number;
-  blockchain: string;
-  symbol: string;
-  price?: number;
-  contractAddress?: string | null;
-}
-
-const PAYOUT_SYMBOL_SET = new Set<string>(PAYOUT_SYMBOLS);
 export const WRAP_NEAR_CONTRACT = "wrap.near";
-export const WRAP_NEAR_ASSET_ID = "nep141:wrap.near";
+
+export function tokenAssetId(
+  network: string,
+  symbol: string,
+  contractAddress: string | null | undefined,
+): string {
+  const addr = String(contractAddress || "").trim();
+  return `${network}:${symbol}:${addr || "native"}`;
+}
 
 export function normalizeSymbol(symbol: string): PayoutSymbol | null {
-  const upper = String(symbol || "").toUpperCase();
+  const upper = String(symbol || "").trim().toUpperCase();
+  if (!upper) return null;
   if (upper === "USDT0") return "USDT";
   if (upper === "WNEAR") return "NEAR";
-  if (PAYOUT_SYMBOL_SET.has(upper)) return upper as PayoutSymbol;
-  return null;
+  return upper;
 }
 
 export function isNativeToken(token: Pick<IntentsToken, "contractAddress"> | null | undefined): boolean {
@@ -73,34 +80,34 @@ export function isNativeToken(token: Pick<IntentsToken, "contractAddress"> | nul
 }
 
 export function isNearWrappedGasToken(
-  token: Pick<IntentsToken, "blockchain" | "assetId" | "contractAddress"> | null | undefined,
+  token: Pick<IntentsToken, "blockchain" | "contractAddress"> | null | undefined,
 ): boolean {
   if (!token || token.blockchain !== "near") return false;
-  const assetId = String(token.assetId || "").trim().toLowerCase();
-  if (assetId === WRAP_NEAR_ASSET_ID) return true;
   return String(token.contractAddress || "").trim().toLowerCase() === WRAP_NEAR_CONTRACT;
 }
 
-export function filterTokens(raw: ProviderToken[]): IntentsToken[] {
-  const chainByCode = new Map(FIXED_CHAINS.map((c) => [c.blockchain, c]));
+export function mapConfigTokens(raw: PayrollConfigToken[], chains: ChainConfig[]): IntentsToken[] {
+  const chainByCode = new Map(chains.map((chain) => [chain.blockchain, chain]));
   const out: IntentsToken[] = [];
   for (const token of raw) {
-    const chain = chainByCode.get(token.blockchain);
+    const chain = chainByCode.get(token.network);
     if (!chain) continue;
     const symbol = normalizeSymbol(token.symbol);
     if (!symbol) continue;
-    if (symbol === "NEAR" && token.blockchain !== "near") continue;
     if (!Number.isInteger(token.decimals) || token.decimals < 0) continue;
+    const contractAddress = token.contractAddress.trim() || null;
     out.push({
-      assetId: token.assetId,
+      assetId: tokenAssetId(token.network, symbol, contractAddress),
       decimals: token.decimals,
-      blockchain: token.blockchain,
+      blockchain: token.network,
       symbol,
       providerSymbol: token.symbol,
       price: Number(token.price || 1),
-      contractAddress: token.contractAddress ?? null,
+      contractAddress,
       chain,
       logo: tokenLogoUrl(symbol),
+      supportPayment: token.supportPayment,
+      supportReceive: token.supportReceive,
     });
   }
   const hasNearWrap = out.some((token) => token.symbol === "NEAR" && isNearWrappedGasToken(token));
@@ -108,13 +115,30 @@ export function filterTokens(raw: ProviderToken[]): IntentsToken[] {
   return out.filter((token) => !(token.symbol === "NEAR" && token.blockchain === "near" && isNativeToken(token)));
 }
 
+export function uniquePayoutSymbols(tokens: IntentsToken[]): string[] {
+  const seen = new Set<string>();
+  const symbols: string[] = [];
+  for (const token of tokens) {
+    if (seen.has(token.symbol)) continue;
+    seen.add(token.symbol);
+    symbols.push(token.symbol);
+  }
+  return symbols;
+}
+
+export function getPayoutSymbols(): string[] {
+  const symbols = useIntentsTokensStore.getState().symbols;
+  return symbols.length > 0 ? symbols : [...FALLBACK_PAYOUT_SYMBOLS];
+}
+
 interface IntentsTokensState {
   tokens: IntentsToken[];
+  chains: ChainConfig[];
+  symbols: string[];
   fetchedAt: number | null;
   loading: boolean;
   error: string | null;
-  ensureFresh: () => Promise<void>;
-  refresh: (force?: boolean) => Promise<void>;
+  applyConfig: (config: PayrollConfig | null) => void;
   tokensForSymbol: (symbol: PayoutSymbol) => IntentsToken[];
   findByAssetId: (assetId: string) => IntentsToken | undefined;
   findByChainAndSymbol: (blockchain: string, symbol: PayoutSymbol) => IntentsToken | undefined;
@@ -124,50 +148,66 @@ export const useIntentsTokensStore = create<IntentsTokensState>()(
   persist(
     (set, get) => ({
       tokens: [],
+      chains: [],
+      symbols: [],
       fetchedAt: null,
       loading: false,
       error: null,
 
-      tokensForSymbol: (symbol) => get().tokens.filter((t) => t.symbol === symbol),
+      tokensForSymbol: (symbol) => get().tokens.filter((token) => token.symbol === symbol),
 
-      findByAssetId: (assetId) => get().tokens.find((t) => t.assetId === assetId),
+      findByAssetId: (assetId) => get().tokens.find((token) => token.assetId === assetId),
 
       findByChainAndSymbol: (blockchain, symbol) =>
-        get().tokens.find((t) => t.blockchain === blockchain && t.symbol === symbol),
+        get().tokens.find((token) => token.blockchain === blockchain && token.symbol === symbol),
 
-      ensureFresh: async () => {
-        const { fetchedAt, tokens } = get();
-        if (tokens.length > 0 && fetchedAt && Date.now() - fetchedAt < REFRESH_MS) return;
-        await get().refresh();
-      },
-
-      refresh: async (force = false) => {
-        const { fetchedAt, loading } = get();
-        if (loading) return;
-        if (!force && fetchedAt && Date.now() - fetchedAt < REFRESH_MS) return;
-        set({ loading: true, error: null });
-        try {
-          const res = await fetch(ONE_CLICK_TOKENS_URL);
-          if (!res.ok) throw new Error(`Tokens request failed (${res.status})`);
-          const data = (await res.json()) as ProviderToken[];
-          if (!Array.isArray(data)) throw new Error("Invalid tokens response");
+      applyConfig: (config) => {
+        if (config) {
+          const merged = mergeApiChains(config.chains);
+          const chains = merged.length > 0 ? merged : FIXED_CHAINS;
+          const tokens = mapConfigTokens(config.tokens, chains);
+          const symbols = uniquePayoutSymbols(tokens);
+          setRuntimeChains(chains);
+          PAYOUT_SYMBOLS.splice(0, PAYOUT_SYMBOLS.length, ...symbols);
           set({
-            tokens: filterTokens(data),
+            tokens,
+            chains,
+            symbols,
             fetchedAt: Date.now(),
             loading: false,
             error: null,
           });
-        } catch (error) {
-          set({
-            loading: false,
-            error: error instanceof Error ? error.message : "Failed to load tokens",
-          });
+          return;
         }
+        const cached = get();
+        if (cached.tokens.length > 0 && cached.chains.length > 0) {
+          setRuntimeChains(cached.chains);
+          PAYOUT_SYMBOLS.splice(0, PAYOUT_SYMBOLS.length, ...cached.symbols);
+          set({ loading: false, error: cached.error });
+          return;
+        }
+        setRuntimeChains(FIXED_CHAINS);
+        PAYOUT_SYMBOLS.splice(0, PAYOUT_SYMBOLS.length, ...FALLBACK_PAYOUT_SYMBOLS);
+        set({
+          loading: false,
+          error: "Failed to load config",
+        });
       },
     }),
     {
-      name: "stableflow-pay:intents-tokens:v2.6",
-      partialize: (s) => ({ tokens: s.tokens, fetchedAt: s.fetchedAt }),
+      name: "stableflow-pay:intents-tokens:v2-config",
+      partialize: (state) => ({
+        tokens: state.tokens,
+        chains: state.chains,
+        symbols: state.symbols,
+        fetchedAt: state.fetchedAt,
+      }),
+      onRehydrateStorage: () => (state) => {
+        if (state?.chains?.length) {
+          setRuntimeChains(state.chains);
+          PAYOUT_SYMBOLS.splice(0, PAYOUT_SYMBOLS.length, ...(state.symbols.length ? state.symbols : FALLBACK_PAYOUT_SYMBOLS));
+        }
+      },
     },
   ),
 );

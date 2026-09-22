@@ -3,16 +3,34 @@ import {
   effectiveNetPay,
   payablePayrollAdjustments,
   type Payable,
+  type PayableItem,
   type PayablePayRequest,
 } from "@/types/payable";
-import { isBatchOriginToken } from "../../batch-utils";
+import { isBatchOriginToken, type FindTokenByChainAndSymbol } from "../../batch-utils";
 import type {
   PayablePayQuote,
   PayablePayQuoteBatch,
   PayrollBatchPayment,
 } from "@/types/payout";
-import type { IntentsToken } from "@/stores/intents-tokens";
+import { normalizeSymbol, type IntentsToken } from "@/stores/intents-tokens";
 import { Big } from "@/utils";
+
+/** Destination-token decimals for 1Click EXACT_OUTPUT min amounts. First resolvable item wins. */
+export function payableDestinationDecimals(
+  items: readonly Pick<PayableItem, "network" | "symbol">[],
+  findByChainAndSymbol: FindTokenByChainAndSymbol,
+  fallback = 6,
+): number {
+  for (const item of items) {
+    const symbol = normalizeSymbol(item.symbol);
+    if (!symbol) continue;
+    const token = findByChainAndSymbol(item.network, symbol);
+    if (token && Number.isInteger(token.decimals) && token.decimals >= 0) {
+      return token.decimals;
+    }
+  }
+  return fallback;
+}
 
 export function payableItemIds(payable: Payable): number[] {
   return payable.items.map((item) => item.id);

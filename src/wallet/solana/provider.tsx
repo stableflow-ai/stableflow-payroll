@@ -4,7 +4,6 @@ import "@solana/wallet-adapter-react-ui/styles.css";
 import {
   PhantomWalletAdapter,
   SolflareWalletAdapter,
-  WalletConnectWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
 import { useMemo, type ReactNode } from "react";
 import { createSolanaHttpConnection, solanaPrimaryRpcUrl } from "@/lib/rpc/solana";
@@ -14,7 +13,10 @@ import { metadata } from "../metadata";
 import { LedgerConnectDialog } from "./LedgerConnectDialog";
 import { SolanaLedgerWalletAdapter } from "./ledger-adapter";
 import { reportSolanaWalletError } from "./utils";
-import { installSolanaWalletConnectConnectPatch } from "./walletconnect-connect";
+import {
+  installSolanaWalletConnectConnectPatch,
+  SolanaWalletConnectWalletAdapter,
+} from "./walletconnect-connect";
 
 installSolanaWalletConnectConnectPatch();
 
@@ -31,7 +33,7 @@ export function SolanaWalletProvider({ children }: { children: ReactNode }) {
           projectId: import.meta.env.VITE_WALLETCONNECT_PROJECT_ID || "",
         },
       }),
-      new WalletConnectWalletAdapter({
+      new SolanaWalletConnectWalletAdapter({
         network: WalletAdapterNetwork.Mainnet,
         options: {
           metadata,

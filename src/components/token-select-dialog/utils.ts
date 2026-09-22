@@ -1,9 +1,9 @@
-import type { ChainConfig } from "@/config/chains";
+import { getRuntimeChains, type ChainConfig } from "@/config/chains";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import type { WalletChainKind } from "@/utils";
 import { ALL_CHAIN_FILTER } from "./config";
 
-/** USD value of a token balance using `/v0/tokens` price. Unknown balance is -1 (sort last). */
+/** USD value of a token balance using config `price`. Unknown balance is -1 (sort last). */
 export function tokenBalanceUsd(
   token: Pick<IntentsToken, "price">,
   formatted: string | null | undefined,
@@ -52,26 +52,40 @@ export function chainHasBalance<T extends Pick<IntentsToken, "blockchain">>(
 
 export function visibleNetworkChips(
   available: ChainConfig[],
-  lastBlockchain: string | null,
+  recentBlockchains: readonly string[],
   slotCount: number,
+  pinnedBlockchain?: string | null,
 ): ChainConfig[] {
   const byCode = new Map(available.map((chain) => [chain.blockchain, chain]));
   const result: ChainConfig[] = [];
   const used = new Set<string>();
-  if (lastBlockchain) {
-    const last = byCode.get(lastBlockchain);
-    if (last) {
-      result.push(last);
-      used.add(last.blockchain);
-    }
-  }
-  for (const chain of available) {
-    if (result.length >= slotCount) break;
-    if (used.has(chain.blockchain)) continue;
+
+  function push(code: string | null | undefined) {
+    if (!code || used.has(code) || result.length >= slotCount) return;
+    const chain = byCode.get(code);
+    if (!chain) return;
     result.push(chain);
     used.add(chain.blockchain);
   }
+
+  push(pinnedBlockchain);
+  for (const code of recentBlockchains) push(code);
+  for (const chain of available) push(chain.blockchain);
   return result;
+}
+
+export function initialChainFilter(
+  lockChainKind: WalletChainKind | null | undefined,
+  recentBlockchains: readonly string[],
+  chains: readonly ChainConfig[] = getRuntimeChains(),
+): string {
+  if (!lockChainKind) return ALL_CHAIN_FILTER;
+  const matching = chains.filter((chain) => chain.chainKind === lockChainKind);
+  if (matching.length === 0) return ALL_CHAIN_FILTER;
+  for (const code of recentBlockchains) {
+    if (matching.some((chain) => chain.blockchain === code)) return code;
+  }
+  return matching[0].blockchain;
 }
 
 export function overflowNetworkCount(availableCount: number, visibleCount: number): number {

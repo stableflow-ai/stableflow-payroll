@@ -3,7 +3,7 @@
  */
 
 import {
-  createAssociatedTokenAccountInstruction,
+  createAssociatedTokenAccountIdempotentInstruction,
   createTransferInstruction,
   getAccount,
   getAssociatedTokenAddressSync,
@@ -21,6 +21,7 @@ import {
 import { Buffer } from "buffer";
 import { getActiveSolanaConnection, getSolanaConnection } from "@/lib/rpc/solana";
 import {
+  SOLANA_ATA_ALLOW_OWNER_OFF_CURVE,
   SOLANA_EXPIRED_MESSAGE,
   SOLANA_REBROADCAST_INTERVAL_MS,
   SOLANA_REBROADCAST_MAX_DURATION_MS,
@@ -49,6 +50,29 @@ export function isExpiredBlockhashError(error: unknown): boolean {
   if (error instanceof TransactionExpiredBlockheightExceededError) return true;
   if (!(error instanceof Error)) return false;
   return /block height exceeded|blockhash not found|blockhash.*expired/i.test(error.message);
+}
+
+export async function readSolanaSendLogs(error: unknown): Promise<string[]> {
+  if (!error || typeof error !== "object") return [];
+  const getLogs = (error as { getLogs?: (connection?: Connection) => unknown }).getLogs;
+  if (typeof getLogs !== "function") return [];
+  try {
+    const result = await getLogs.call(error);
+    if (!Array.isArray(result)) return [];
+    return result.filter((line): line is string => typeof line === "string");
+  } catch {
+    // web3.js 1.98 getLogs() needs a Connection when logs were not cached.
+    return [];
+  }
+}
+
+export async function toSolanaBroadcastError(error: unknown): Promise<Error> {
+  if (isExpiredBlockhashError(error)) return new Error(SOLANA_EXPIRED_MESSAGE);
+  const logs = await readSolanaSendLogs(error);
+  const base = error instanceof Error ? error.message : String(error ?? SOLANA_TRANSFER_FAILED_MESSAGE);
+  const missing = logs.filter((line) => !base.includes(line));
+  if (!missing.length) return error instanceof Error ? error : new Error(base);
+  return new Error(`${base}\n${missing.join("\n")}`);
 }
 
 export async function refreshBlockhashIfUnsigned(
@@ -136,7 +160,9 @@ export async function confirmSolanaSignature(params: {
   }
 }
 
-async function sendAndConfirm(transaction: Transaction | VersionedTransaction): Promise<string> {
+export async function broadcastSolanaTransaction(
+  transaction: Transaction | VersionedTransaction,
+): Promise<{ signature: string; signed: Transaction | VersionedTransaction }> {
   const signer = requireSigner();
   const connection = getSolanaConnection();
 
@@ -153,8 +179,7 @@ async function sendAndConfirm(transaction: Transaction | VersionedTransaction): 
   try {
     signature = await sendConnection.sendRawTransaction(rawTransaction, { skipPreflight: false });
   } catch (error) {
-    if (isExpiredBlockhashError(error)) throw new Error(SOLANA_EXPIRED_MESSAGE);
-    throw error;
+    throw await toSolanaBroadcastError(error);
   }
 
   await confirmSolanaSignature({
@@ -164,6 +189,11 @@ async function sendAndConfirm(transaction: Transaction | VersionedTransaction): 
     lastValidBlockHeight: latest?.lastValidBlockHeight,
   });
 
+  return { signature, signed };
+}
+
+async function sendAndConfirm(transaction: Transaction | VersionedTransaction): Promise<string> {
+  const { signature } = await broadcastSolanaTransaction(transaction);
   return signature;
 }
 
@@ -206,15 +236,25 @@ export async function transferSpl(input: {
   const toPubkey = new PublicKey(input.to);
   const mintInfo = await connection.getAccountInfo(mint);
   const programId = mintInfo?.owner.equals(TOKEN_2022_PROGRAM_ID) ? TOKEN_2022_PROGRAM_ID : TOKEN_PROGRAM_ID;
-  const fromTokenAccount = getAssociatedTokenAddressSync(mint, signer.publicKey, false, programId);
-  const toTokenAccount = getAssociatedTokenAddressSync(mint, toPubkey, false, programId);
+  const fromTokenAccount = getAssociatedTokenAddressSync(
+    mint,
+    signer.publicKey,
+    SOLANA_ATA_ALLOW_OWNER_OFF_CURVE,
+    programId,
+  );
+  const toTokenAccount = getAssociatedTokenAddressSync(
+    mint,
+    toPubkey,
+    SOLANA_ATA_ALLOW_OWNER_OFF_CURVE,
+    programId,
+  );
 
   const transaction = new Transaction();
   try {
     await getAccount(connection, toTokenAccount, "confirmed", programId);
   } catch {
     transaction.add(
-      createAssociatedTokenAccountInstruction(
+      createAssociatedTokenAccountIdempotentInstruction(
         signer.publicKey,
         toTokenAccount,
         toPubkey,

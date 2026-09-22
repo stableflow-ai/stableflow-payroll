@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { IconCheck } from "@/components/icons/check";
 import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { FLOATING_SIDE } from "@/components/ui/overlay/use-floating-position";
-import { FIXED_CHAINS, chainLabel, type ChainConfig } from "@/config/chains";
+import { getRuntimeChains, chainLabel, type ChainConfig } from "@/config/chains";
 import { chainLogoUrl } from "@/lib/logo";
 import { cn } from "@/lib/utils";
 import type { IntentsToken } from "@/stores/intents-tokens";
@@ -34,10 +34,11 @@ export function ChainPane({
   fundedBlockchains,
 }: ChainPaneProps) {
   const availableCodes = new Set(tokens.map((token) => token.blockchain));
-  const evmChains = FIXED_CHAINS.filter(
+  const runtimeChains = getRuntimeChains();
+  const evmChains = runtimeChains.filter(
     (chain) => chain.chainKind === "evm" && availableCodes.has(chain.blockchain),
   );
-  const nonEvmChains = FIXED_CHAINS.filter(
+  const nonEvmChains = runtimeChains.filter(
     (chain) => chain.chainKind !== "evm" && availableCodes.has(chain.blockchain),
   );
 

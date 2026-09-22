@@ -5,6 +5,13 @@ import { formatAmount } from "@/utils";
 import { payableKeyId, type Payable } from "@/types/payable";
 import { PaymentFormCategoryTag } from "./PaymentFormCategoryTag";
 
+export const PAYMENT_FORM_SELECT_PLACEHOLDER = "Select";
+
+export function paymentFormSelectTriggerLabel(forms: Payable[], value: string): string {
+  const form = forms.find((row) => payableKeyId(row.key) === value);
+  return form?.title ?? PAYMENT_FORM_SELECT_PLACEHOLDER;
+}
+
 function PaymentFormOptionRow(props: {
   form: Payable;
   selected: boolean;
@@ -41,11 +48,11 @@ export function PaymentFormSelect(props: {
   );
   return (
     <Dropdown
-      value={value || undefined}
+      value={value}
       onChange={onChange}
       disabled={disabled}
       loading={loading}
-      placeholder="Select"
+      placeholder={PAYMENT_FORM_SELECT_PLACEHOLDER}
       empty="No forms"
       className="w-full"
       triggerClassName="h-10 rounded-[8px] border-[#ebebeb]"

@@ -1,6 +1,6 @@
 # Project Structure
 
-Stableflow Pay is a Vite 8 + React 19 single-page app. Wallet providers for EVM, Near, Solana, Tron, and Zcash (Noir) are wired. The authenticated shell is a 220px Pay sidebar plus a content column; the released surface is Auth (`/login`, `/register`, `/invite/:orgId`, `/register/google`, `/invite/:orgId/google`), `/` (Overview), `/pay/*`, `/team`, `/history`, and `/setting` (including `/setting/slack/callback`). `/howitworks` and `/docs` are public pages.
+Stableflow Pay is a Vite 8 + React 19 single-page app. Wallet providers for EVM, Near, Solana, Tron, and Zcash (Noir) are wired. The authenticated shell is a 220px Pay sidebar plus a content column; the released surface is Auth (`/login`, `/register`, `/invite/:orgId`, `/register/google`, `/invite/:orgId/google`), `/` (Overview), `/pay/*`, `/categories`, `/team`, `/history`, and `/setting` (including `/setting/slack/callback`). `/howitworks` and `/docs` are public pages.
 
 Product areas, routes, and constraints: [product.md](product.md).
 
@@ -8,9 +8,9 @@ Product areas, routes, and constraints: [product.md](product.md).
 
 - **Runtime:** Vite 8 (Rolldown), React 19, TypeScript 5.9
 - **Styling:** Tailwind CSS 4 (`@tailwindcss/vite`, no `tailwind.config.js`), `cn()` (`clsx` + `tailwind-merge`), `class-variance-authority`
-- **State:** Zustand (cross-page client state), TanStack Query (server cache). The JWT session goes through `src/lib/auth-session.ts`; nothing else touches `localStorage` / `sessionStorage`.
+- **State:** Zustand (cross-page client state), TanStack Query (server cache). The JWT session goes through `src/lib/auth-session.ts`. Tab-scoped session data (Google auth pending, multisig watches) uses Zustand `persist` + `sessionStorage`; views do not read Web storage.
 - **Routing:** `react-router-dom` 7 (`createBrowserRouter`)
-- **Wallets:** RainbowKit + wagmi + viem (EVM), `@hot-labs/near-connect` (Near), `@solana/wallet-adapter` (Solana), `@tronweb3/tronwallet-adapters` (Tron), `@rhea-finance/zcash-wallet-adapter` (Zcash / Noir). Solana send is HTTP-only (the HMAC proxy has no WebSocket): unsigned transactions refresh `recentBlockhash` locally, stay on the RPC that issued it, and rebroadcast until confirmed or the blockhash expires.
+- **Wallets:** RainbowKit + wagmi + viem (EVM), `@hot-labs/near-connect` (Near), `@solana/wallet-adapter` (Solana), `@tronweb3/tronwallet-adapters` (Tron), `@rhea-finance/zcash-wallet-adapter` (Zcash / Noir). Solana send is HTTP-only (the HMAC proxy has no WebSocket): unsigned transactions refresh `recentBlockhash` locally, stay on the RPC that issued it, and rebroadcast until confirmed or the blockhash expires. Form SPL deposits prepend a compute-unit limit and create missing destination ATAs with the idempotent instruction.
 - **Other:** `motion` (animation), `recharts` (charts), `react-toastify` (toasts), `date-fns` (dates), `big.js` (amounts), `papaparse` (CSV), `exceljs` (Excel import templates)
 - **Tests:** Vitest (`src/**/*.test.ts`, `environment: "node"`). There is no ESLint or Prettier config; `pnpm check` and `pnpm test` are the quality gate.
 - **Path alias:** `@/` → `src/`
@@ -52,7 +52,8 @@ src/
   styles.css                   Tailwind entry + fonts + toast overrides
   shadcn-tailwind.css          theme variables and @theme inline
   router/                      route table (index.tsx) and guards (guards.tsx)
-  layouts/                     AppLayout, PayLayout
+    layouts/                   AppLayout, PayLayout, AppWatchLayout (root toast / execution host)
+    views/                       one folder per area; see product.md
     views/                       one folder per area; see product.md
     auth/                      login, register, create organization, invite register, reset password
     pay/                       overview, single, form, result, request, requests, history, team, setting
@@ -70,7 +71,8 @@ src/
     date-range-picker/         shared range picker
     token-select-dialog/       shared chain + token picker
     recipient-avatar/, you-pay/, WalletConnect.tsx
-    safe/                      SafeMultisigBadge, showSafeProposalToast
+    safe/                      SafeMultisigBadge (wraps MultisigBadge)
+    multisig/                  MultisigBadge, PayFromSquadSection, confirm / listen toasts
   api/                         one module per domain, thin wrappers over http()
   hooks/                       use-*-api.ts (TanStack Query) plus wallet/UI hooks
   types/                       request and response types per domain
@@ -81,9 +83,19 @@ src/
   config/                      chains.ts (chain registry, explorers, payer/batch flags)
   mocks/                       mock switchboard; see doc/mocks.md
   wallet/                      per-chain adapters, providers, transfer + broadcast
-    evm/safe/                  Safe proposal helpers (no execution poller):
+    evm/safe/                  Safe proposal helpers:
                                abi.ts, bundle.ts, config.ts, detect.ts, info.ts,
-                               send.ts, types.ts, use-safe-info.ts, use-safe-mode.ts
+                               send.ts, types.ts, use-safe-info.ts, use-safe-mode.ts, watch.ts
+    near/multisig/             SputnikDAO / Trezu helpers:
+                               config.ts, detect.ts, policy.ts, info.ts,
+                               proposal.ts, types.ts, use-near-dao-info.ts,
+                               use-near-multisig-mode.ts, watch.ts
+    solana/                    adapter, balance, transfer, session, build-deposit-tx.ts
+    solana/multisig/           SquadsX wrap + Squads SDK proposal helpers:
+                               access.ts, config.ts, detect.ts, info.ts, resolve.ts,
+                               result.ts, send.ts, send-sdk.ts, types.ts,
+                               use-squads-info.ts, use-squads-mode.ts, watch.ts
+    multisig/                  Cross-chain confirm toast + watch contract (doc/multisig.md)
 ```
 
 ## Where new code goes
@@ -110,15 +122,17 @@ src/
 | --- | --- | --- |
 | `auth.ts` | via `lib/auth-session.ts` | JWT `token` + `user`, `applySession`, `logout`; registers the 401 handler |
 | `wallet.ts` | no | Per-chain connection state, account, modal control, `signMessage` |
-| `intents-tokens.ts` | `persist` | 1Click token list, `PAYOUT_SYMBOLS`, `ensureFresh`, `findByChainAndSymbol` |
+| `intents-tokens.ts` | `persist` | Payroll config tokens/chains, last-success fail-open cache, `findByChainAndSymbol` |
 | `token-balances.ts` | no | Balance cache and fetch status per owner + asset |
 | `quick-pay-prefs.ts` | `persist` | Remembered single-payout preferences: last origin token and Notify Recipient switch |
-| `token-select-prefs.ts` | `persist` | Last token (`assetId`) and last specific network chosen in `TokenSelectDialog` |
+| `token-select-prefs.ts` | `persist` | Last pay token (`assetId`) and recent networks (MRU) chosen in `TokenSelectDialog` |
 | `batch-payout-commit-queue.ts` | `persist` | Unused retry queue for `POST /v1/payroll/payouts/submit` (Payment by Form submits once) |
 | `consumed-batches.ts` | `persist` | Spent payroll `quote_batch_id`s so the same deposit addresses are never broadcast twice; `unmarkConsumed` after an insufficient-approval failure that never sent the payout |
 | `nearintents-user-session.ts` | no | Near Intents session for confidential receive / withdraw |
 | `google-drive-session.ts` | `persist` (sessionStorage) | Google OAuth token for the Sheets importer |
 | `google-auth-pending.ts` | `persist` (sessionStorage) | Google `id_token` + profile while registering after code 10008 |
+| `squads-sdk.ts` | `persist` | Per-member Squads vault binding for the non-SquadsX SDK path |
+| `multisig-watch-sessions.ts` | `persist` (sessionStorage) | In-tab Safe / Trezu / Squads watch sessions plus in-flight execution polls |
 
 ## Import paths
 

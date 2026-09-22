@@ -28,6 +28,7 @@ export function LedgerConnectDialog() {
       open={state.open}
       onClose={cancelLedgerConnectChooser}
       title={LEDGER_CONNECT_DIALOG_TITLE}
+      elevated
       cardClassName="md:w-[417px] bg-[#10141f] text-white border-[0] shadow-[0px_8px_20px_rgba(0,0,0,0.6)]"
       titleClassName="text-white"
       closeClassName="text-white"

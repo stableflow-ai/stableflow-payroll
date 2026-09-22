@@ -3,8 +3,10 @@ import { useWalletModal as useSolanaWalletModal } from "@solana/wallet-adapter-r
 import { useCallback, useEffect, useMemo } from "react";
 import { isAddressValid } from "@/utils";
 import type { GeneratedIntent, IntentSignInput, IntentSignedPayload, UseWalletResult, WalletAccount } from "../types";
-import { payloadAsText } from "../intents-sign";
-import { setSolanaSigner } from "./session";
+import { payloadAsText, walletDoesNotSupportSigning } from "../intents-sign";
+import { isSquadsXAdapter } from "./multisig/detect";
+import { useSquadsMode } from "./multisig/use-squads-mode";
+import { setSolanaSigner, setSolanaWalletMeta } from "./session";
 import {
   createSolanaEmptyIntentBytes,
   formatSolanaSignedData,
@@ -18,20 +20,31 @@ export function useSolanaWallet(): UseWalletResult {
     connecting,
     disconnect,
     select,
+    wallet,
     signMessage: adapterSignMessage,
     signTransaction,
   } = useSolanaAdapter();
   const { setVisible, visible } = useSolanaWalletModal();
+  const { mode } = useSquadsMode();
+  const isSquadsX = mode === "squadsx";
   const address = publicKey?.toBase58() || null;
 
   useEffect(() => {
     if (!publicKey || !signTransaction) {
       setSolanaSigner(null);
+      setSolanaWalletMeta(null);
       return;
     }
     setSolanaSigner({ publicKey, signTransaction });
-    return () => setSolanaSigner(null);
-  }, [publicKey, signTransaction]);
+    setSolanaWalletMeta({
+      name: wallet?.adapter.name ?? "",
+      isSquadsX: isSquadsXAdapter(wallet?.adapter),
+    });
+    return () => {
+      setSolanaSigner(null);
+      setSolanaWalletMeta(null);
+    };
+  }, [publicKey, signTransaction, wallet]);
 
   const account = useMemo<WalletAccount | null>(() => {
     if (!address) return null;
@@ -55,6 +68,9 @@ export function useSolanaWallet(): UseWalletResult {
       if (!address) {
         throw new Error("[wallet:solana] No connected account to sign with.");
       }
+      if (isSquadsX) {
+        throw walletDoesNotSupportSigning("Solana");
+      }
       const message = createSolanaEmptyIntentBytes({
         signerId: input.signerId,
         deadlineMs: input.deadlineMs,
@@ -63,7 +79,7 @@ export function useSolanaWallet(): UseWalletResult {
       const signature = await signSolanaIntentsMessage(message, adapterSignMessage);
       return formatSolanaSignedData(signature, message, address);
     },
-    [adapterSignMessage, address],
+    [adapterSignMessage, address, isSquadsX],
   );
 
   const signGeneratedIntent = useCallback(
@@ -71,12 +87,15 @@ export function useSolanaWallet(): UseWalletResult {
       if (!address) {
         throw new Error("[wallet:solana] No connected account to sign with.");
       }
+      if (isSquadsX) {
+        throw walletDoesNotSupportSigning("Solana");
+      }
       const payload = payloadAsText(intent.payload);
       const message = new TextEncoder().encode(payload);
       const signature = await signSolanaIntentsMessage(message, adapterSignMessage);
       return formatSolanaSignedData(signature, message, address);
     },
-    [adapterSignMessage, address],
+    [adapterSignMessage, address, isSquadsX],
   );
 
   const isAddressValidFn = useCallback((value: string) => isAddressValid(value, "solana"), []);

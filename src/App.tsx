@@ -3,12 +3,14 @@ import { ToastContainer } from "react-toastify";
 import { useEffect } from "react";
 import { AUTH_SESSION_STORAGE_NAME } from "@/lib/auth-session";
 import { useProfileQuery } from "@/hooks/use-auth-api";
+import { usePayrollConfigQuery } from "@/hooks/use-payroll-config";
 /** Hydrates the session and registers HTTP 401 → logout. */
 import { useAuthStore } from "@/stores/auth";
 import { router } from "./router";
 
 function SessionBootstrap() {
   useProfileQuery();
+  usePayrollConfigQuery();
   useEffect(() => {
     const onStorage = (event: StorageEvent) => {
       if (event.key !== AUTH_SESSION_STORAGE_NAME) return;

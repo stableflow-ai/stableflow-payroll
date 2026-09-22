@@ -65,7 +65,7 @@ export function DocsView() {
   useEffect(() => {
     document.title = DOCS_COPY.documentTitle;
     return () => {
-      document.title = "Stableflow Pay";
+      document.title = "Stableflow Payouts";
     };
   }, []);
 

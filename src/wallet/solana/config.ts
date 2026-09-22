@@ -1,13 +1,33 @@
 export const PHANTOM_SIGN_DISPLAY = "utf8";
 
 export const SOLANA_EXPIRED_MESSAGE = "Solana transaction expired. Confirm again to retry.";
+export const SOLANA_INSUFFICIENT_SOL_MESSAGE = "Insufficient SOL for fees. Add SOL and try again.";
+export const SOLANA_COMPUTE_BUDGET_EXCEEDED_MESSAGE =
+  "Solana transaction ran out of compute. Confirm again to retry.";
 export const SOLANA_TRANSFER_FAILED_MESSAGE = "Solana transfer failed";
+export const SOLANA_MISSING_OUTPUTS_MESSAGE = "Missing Solana deposit outputs";
+export const SOLANA_OUTPUT_AMOUNT_MISMATCH_MESSAGE =
+  "Solana deposit outputs do not match the quoted source amount";
+export const SOLANA_ATA_ALLOW_OWNER_OFF_CURVE = true;
+export const SOLANA_MIN_COMPUTE_UNIT_LIMIT = 200_000;
+export const SOLANA_MAX_COMPUTE_UNIT_LIMIT = 1_400_000;
+export const SOLANA_COMPUTE_UNIT_HEADROOM = 80_000;
+export const SOLANA_ATA_CREATE_COMPUTE_UNITS = 25_000;
+export const SOLANA_SPL_TRANSFER_COMPUTE_UNITS = 10_000;
 export const SOLANA_REBROADCAST_INTERVAL_MS = 2_000;
 export const SOLANA_REBROADCAST_MAX_DURATION_MS = 60_000;
 
 export const LEDGER_DEVICE_LOCKED_CODE = "0x5515";
 export const LEDGER_DEVICE_LOCKED_MESSAGE =
   "Unlock your Ledger device and open the Solana app.";
+export const LEDGER_WRONG_APP_CODE = "0x6d02";
+export const LEDGER_WRONG_APP_PATTERN = "0x6d02|0x6d00|UNKNOWN_APDU";
+export const LEDGER_WRONG_APP_MESSAGE =
+  "Open the Solana app on your Ledger and wait until it says Application is ready, then retry.";
+export const LEDGER_HID_BUSY_PATTERN = "already open";
+export const LEDGER_HID_BUSY_MESSAGE =
+  "Ledger USB is already in use. Close Ledger Live, unplug the device, and retry.";
+export const LEDGER_USB_VENDOR_ID = 0x2c97;
 
 export const LEDGER_CONNECT_DIALOG_TITLE = "Connect Ledger";
 export const LEDGER_CONNECT_DIALOG_DESCRIPTION =
@@ -19,7 +39,9 @@ export const LEDGER_CONNECT_USB_FAILED_MESSAGE = "Could not connect Ledger over 
 export const LEDGER_CONNECT_DIALOG_DELAY_MS = 200;
 
 export const LEDGER_LIVE_WC_DEEPLINK_PREFIX = "ledgerlive://wc?uri=";
+export const LEDGER_LIVE_WC_DEEPLINK_IFRAME_MS = 1_000;
 
 export const SOLANA_WC_SESSION_POLL_MS = 250;
+export const SOLANA_WC_SILENT_SESSION_TIMEOUT_MS = 2_000;
 export const SOLANA_WC_MAINNET_CHAIN = "solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp";
 export const SOLANA_WC_DEPRECATED_MAINNET_CHAIN = "solana:4sGjMW1sUnHzSxGspuhpqLDx6wiyjNtZ";

@@ -36,6 +36,7 @@ export interface PayBatchSwapTransaction {
 export interface PayBatchSubmitParam {
   quote_id: string;
   quote_batch_id: string;
+  /** On-chain hash, or `""` when a watched multisig has none yet. */
   tx_hash: string;
 }
 

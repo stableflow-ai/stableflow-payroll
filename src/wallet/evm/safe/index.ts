@@ -4,6 +4,7 @@ export {
   SAFE_APPROVAL_PROPOSED_MESSAGE,
   SAFE_CHAIN_MISMATCH_MESSAGE,
   SAFE_CONNECTOR_ID,
+  SAFE_PROPOSAL_CONFIRM_MESSAGE,
   SAFE_PROPOSAL_QUEUE_LINK_LABEL,
   SAFE_PROPOSAL_SUBMITTED_MESSAGE,
   SAFE_TWO_STEP_APPROVAL_MESSAGE,
@@ -11,6 +12,7 @@ export {
 } from "./config";
 export { activeSafeMode, isSafeAccount, isSafeAppEnv } from "./detect";
 export { getSafeInfo } from "./info";
+export { snapshotFromSafeGatewayBody, watchSafeProposal, isSafeTxStatusTerminal } from "./watch";
 export {
   SafeApprovalProposedError,
   SafeAtomicUnsupportedError,

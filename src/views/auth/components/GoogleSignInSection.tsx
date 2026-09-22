@@ -95,16 +95,16 @@ export function GoogleSignInSection(props: {
 
   return (
     <>
-      <div className="mt-8 h-px w-full bg-[#E3E3E3]" />
+      <div className="mt-8.5 h-px w-full bg-[#E3E3E3]" />
       <p
         className={cn(
-          "mt-7 font-montserrat text-sm font-medium text-[#909090]",
+          "mt-7.5 font-montserrat text-sm font-medium text-[#909090]",
           orAlign === "center" && "text-center",
         )}
       >
         Or
       </p>
-      <div className="relative mt-7 h-[50px] w-full">
+      <div className="relative mt-3 h-[50px] w-full">
         <Button
           type="button"
           size="lg"
@@ -125,7 +125,7 @@ export function GoogleSignInSection(props: {
           )}
         />
       </div>
-      <div className="mt-8 h-px w-full bg-[#E3E3E3]" />
+      <div className="mt-7.5 h-px w-full bg-[#E3E3E3]" />
     </>
   );
 }

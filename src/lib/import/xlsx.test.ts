@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { FIXED_CHAINS } from "@/config/chains";
-import { PAYOUT_SYMBOLS } from "@/stores/intents-tokens";
+import { getRuntimeChains } from "@/config/chains";
+import { getPayoutSymbols } from "@/stores/intents-tokens";
 import type { DataValidation, Worksheet } from "exceljs";
 import { parseCsvString } from "./csv";
 import {
@@ -40,9 +40,9 @@ describe("buildImportTemplateWorkbook", () => {
     const sheet = workbook.getWorksheet(IMPORT_TEMPLATE_SHEET);
 
     expect(lists?.state).toBe("hidden");
-    expect(PAYOUT_SYMBOLS.map((_, index) => lists?.getCell(index + 1, 1).value)).toEqual([...PAYOUT_SYMBOLS]);
-    expect(FIXED_CHAINS.map((chain, index) => lists?.getCell(index + 1, 2).value)).toEqual(
-      FIXED_CHAINS.map((chain) => chain.blockchain),
+    expect(getPayoutSymbols().map((_, index) => lists?.getCell(index + 1, 1).value)).toEqual([...getPayoutSymbols()]);
+    expect(getRuntimeChains().map((chain, index) => lists?.getCell(index + 1, 2).value)).toEqual(
+      getRuntimeChains().map((chain) => chain.blockchain),
     );
 
     const model = validationModel(sheet);
@@ -50,9 +50,9 @@ describe("buildImportTemplateWorkbook", () => {
     const network = model[`E2:E${IMPORT_TEMPLATE_MAX_ROWS + 1}`];
     expect(token?.type).toBe("list");
     expect(token?.allowBlank).toBe(true);
-    expect(String(token?.formulae[0])).toBe(`Lists!$A$1:$A$${PAYOUT_SYMBOLS.length}`);
+    expect(String(token?.formulae[0])).toBe(`Lists!$A$1:$A$${getPayoutSymbols().length}`);
     expect(network?.type).toBe("list");
-    expect(String(network?.formulae[0])).toBe(`Lists!$B$1:$B$${FIXED_CHAINS.length}`);
+    expect(String(network?.formulae[0])).toBe(`Lists!$B$1:$B$${getRuntimeChains().length}`);
   });
 
   it("places expense dropdowns on the token and network columns", async () => {

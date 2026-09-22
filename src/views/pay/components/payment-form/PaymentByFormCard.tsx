@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { IconEmail, IconLock } from "@/components/icons";
 import { Button } from "@/components/ui/button/Button";
-import { BATCH_BLOCKCHAINS } from "@/config/chains";
+import { getBatchBlockchains } from "@/config/chains";
 import { batchSubmit } from "@/api/payout";
 import { queryKeys } from "@/api/query-keys";
 import { usePayOriginToken } from "@/hooks/use-pay-origin-token";
@@ -22,10 +22,18 @@ import useToast from "@/hooks/use-toast";
 import { organizationId } from "@/lib/auth-role";
 import { formatAmount, browserTimeZone } from "@/utils";
 import { cn } from "@/lib/utils";
-import { showSafeProposalToast } from "@/components/safe/safe-proposal-toast";
+import { showMultisigConfirmToast } from "@/components/multisig/multisig-proposal-toast";
 import { broadcastBatchPayout } from "@/wallet/broadcast-batch-payout";
 import { INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE } from "@/wallet/config";
 import { assertSafeOriginChain } from "@/wallet/evm/safe";
+import {
+  MULTISIG_QUOTE_EXPIRED_MESSAGE,
+  isWatchablePendingMultisig,
+  pendingMultisigSessionId,
+  resolveMultisigConfirmToast,
+  serializePendingMultisig,
+} from "@/wallet/multisig";
+import { useMultisigWatchStore } from "@/stores/multisig-watch-sessions";
 import type { BroadcastResult } from "@/wallet/types";
 import { assertNativeZecSpendable, zecSpendableGateMessage } from "@/wallet/zec/balance";
 import { ZCASH_TRANSPARENT_REFUND_MESSAGE } from "@/wallet/zec/config";
@@ -59,6 +67,7 @@ import { batchPayoutCommitTitle } from "./config";
 import {
   buildPayablePayRequest,
   nextUnpaidQuoteBatchId,
+  payableDestinationDecimals,
   payableItemIds,
   payableQuotePayments,
   payableQuoteSourceAmount,
@@ -92,7 +101,8 @@ export function PaymentByFormCard(props: {
   const user = useAuthStore((state) => state.user);
   const orgId = organizationId(user);
   const timezone = browserTimeZone();
-  const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
+  const findByChainAndSymbol = useIntentsTokensStore((s) => s.findByChainAndSymbol);
+  const runtimeChains = useIntentsTokensStore((s) => s.chains);
   const fetchOneBalance = useTokenBalancesStore((s) => s.fetchOne);
 
   const lockedForm = formLocked && formProp ? formProp : null;
@@ -126,10 +136,6 @@ export function PaymentByFormCard(props: {
   const notifyMutation = usePayableQuoteNotificationMutation();
 
   useEffect(() => {
-    void ensureFresh();
-  }, [ensureFresh]);
-
-  useEffect(() => {
     if (lockedForm) {
       setPickedId(payableKeyId(lockedForm.key));
       return;
@@ -151,9 +157,11 @@ export function PaymentByFormCard(props: {
   const formsFetching = lockedForm ? false : formsQuery.isFetching;
   const detail = lockedForm
     ?? (selectedKey ? findPayable(forms, selectedKey) : null);
+  const destDecimals = payableDestinationDecimals(detail?.items ?? [], findByChainAndSymbol);
   const lockedForms = formLocked ? (detail ? [detail] : []) : forms;
   const zcashBatchDisabled = (detail?.items.length ?? 0) > 1;
-  const { originToken, setOriginToken } = usePayOriginToken(BATCH_BLOCKCHAINS, {
+  const batchBlockchains = useMemo(() => getBatchBlockchains(), [runtimeChains]);
+  const { originToken, setOriginToken } = usePayOriginToken(batchBlockchains, {
     excludeBlockchains: zcashBatchDisabled ? ZCASH_DISABLED_BLOCKCHAINS : null,
     remember: false,
   });
@@ -234,12 +242,12 @@ export function PaymentByFormCard(props: {
       setPostedNotify(next);
     }).catch((error) => {
       if (cancelled) return;
-      toast.fail({ title: formatQuoteErrorMessage(error, 2) });
+      toast.fail({ title: formatQuoteErrorMessage(error, destDecimals) });
     });
     return () => {
       cancelled = true;
     };
-  }, [desiredNotification, quoteId]);
+  }, [desiredNotification, destDecimals, quoteId]);
   const batches = quote?.batches ?? [];
   const isSplit = batches.length > 1;
   const firstQuoteBatchId = batches[0]?.quoteBatchId ?? "";
@@ -266,7 +274,7 @@ export function PaymentByFormCard(props: {
   const quoteError = zecQuoteBlocked
     ? ZCASH_TRANSPARENT_REFUND_MESSAGE
     : quoteQuery.isError
-      ? formatQuoteErrorMessage(quoteQuery.error, 2)
+      ? formatQuoteErrorMessage(quoteQuery.error, destDecimals)
       : null;
   const quoting = Boolean(payBody) && (quoteStale || quoteQuery.isFetching) && !quoteError;
   const sourceAmount = quote ? payableQuoteSourceAmount(quote) : "0";
@@ -324,7 +332,7 @@ export function PaymentByFormCard(props: {
       if (originToken.chain.chainId != null) {
         await assertSafeOriginChain(originToken.chain.chainId);
       }
-      const payer = wallet.account.address;
+      const payer = quotePayer || wallet.account.address;
       const amountIn = BigInt(batch.totalSourceAmountRaw || "0");
       const remainingRaw = remainingSourceAmountRaw(
         batches,
@@ -362,6 +370,8 @@ export function PaymentByFormCard(props: {
       setSendingQuoteBatchId(quoteBatchId);
       setNotifyOpen(false);
       markBatchConsumed(quoteBatchId);
+      const confirmCopy = await resolveMultisigConfirmToast(originKind);
+      const confirmToast = confirmCopy ? showMultisigConfirmToast(toast, confirmCopy) : undefined;
       let result: BroadcastResult;
       try {
         result = await broadcastBatchPayout({
@@ -372,11 +382,12 @@ export function PaymentByFormCard(props: {
           payer,
         });
       } catch (error) {
+        confirmToast?.dismiss();
+        unmarkBatchConsumed(quoteBatchId);
         if (
           error instanceof Error
           && error.message === INSUFFICIENT_APPROVAL_AMOUNT_MESSAGE
         ) {
-          unmarkBatchConsumed(quoteBatchId);
           if (!paymentStarted) {
             toast.fail({ title: INSUFFICIENT_APPROVAL_REQUOTE_MESSAGE });
             void refetchQuote();
@@ -387,14 +398,39 @@ export function PaymentByFormCard(props: {
         }
         throw error;
       }
-      // A Safe proposal has no transaction hash, so there is nothing to commit,
-      // but the batch is spoken for: treat it like a paid batch so the flow moves
-      // on to the next one and only settles the form once every batch is proposed.
+      confirmToast?.dismiss();
       if (result.kind === "pending-multisig") {
-        showSafeProposalToast(toast, {
-          chainId: result.chainId,
-          safeAddress: result.safeAddress,
-        });
+        if (isWatchablePendingMultisig(result)) {
+          useMultisigWatchStore.getState().upsertWatch({
+            id: pendingMultisigSessionId(result),
+            proposal: serializePendingMultisig(result),
+            quoteId: quote.quoteId,
+            quoteBatchId,
+            deadline: batch.deadline,
+            title,
+            type: detail?.type ?? "",
+            formKey,
+            listenDismissed: false,
+          });
+        } else if (isPayrollBatchExpired(batch.deadline)) {
+          toast.fail({ title: MULTISIG_QUOTE_EXPIRED_MESSAGE });
+        } else {
+          try {
+            const submitted = await batchSubmit({
+              quote_id: quote.quoteId,
+              quote_batch_id: quoteBatchId,
+              tx_hash: "",
+            });
+            notifyBatchPayoutCommitSuccess({
+              executionId: submitted.executionId,
+              title,
+              type: detail?.type ?? "",
+              formKey,
+            });
+          } catch (error) {
+            toast.fail({ title: formatQuoteErrorMessage(error, destDecimals) });
+          }
+        }
         return quoteBatchId;
       }
       try {
@@ -410,7 +446,7 @@ export function PaymentByFormCard(props: {
           formKey,
         });
       } catch (error) {
-        toast.fail({ title: formatQuoteErrorMessage(error, 2) });
+        toast.fail({ title: formatQuoteErrorMessage(error, destDecimals) });
       }
       return quoteBatchId;
     },
@@ -429,6 +465,7 @@ export function PaymentByFormCard(props: {
       setPhase("done");
       void queryClient.removeQueries({ queryKey: [...queryKeys.payable.all, "pay"] });
       if (!formLocked) setPickedId("");
+      setOriginToken(null);
       setDetailsOpen(false);
       setNotifyOpen(false);
       setNetPayById({});
@@ -440,7 +477,7 @@ export function PaymentByFormCard(props: {
       setPhase("idle");
       setSendingQuoteBatchId(null);
       if (error instanceof BalanceGateError) return;
-      toast.fail({ title: formatQuoteErrorMessage(error, 2) });
+      toast.fail({ title: formatQuoteErrorMessage(error, destDecimals) });
     },
   });
 
@@ -564,13 +601,14 @@ export function PaymentByFormCard(props: {
           originToken={originToken}
           onOriginTokenChange={setOriginToken}
           tokenSelectDisabled={paymentStarted}
-          walletAddress={connectedAddress}
+          walletAddress={quotePayer || connectedAddress}
+          signerAddress={connectedAddress}
           walletConnected={wallet.isConnected}
           walletIcon={originKind === "evm" ? paymentWallet.walletInfo.icon : wallet.account?.icon}
           connecting={wallet.isConnecting}
           onConnectWallet={() => paymentWallet.connectWallet()}
           onDisconnectWallet={paymentStarted ? undefined : () => paymentWallet.disconnect()}
-          allowedBlockchains={BATCH_BLOCKCHAINS}
+          allowedBlockchains={batchBlockchains}
           disabledBlockchains={zcashBatchDisabled ? ZCASH_DISABLED_BLOCKCHAINS : null}
           disabledReason={zcashBatchDisabled ? ZCASH_BATCH_UNSUPPORTED_MESSAGE : undefined}
         />

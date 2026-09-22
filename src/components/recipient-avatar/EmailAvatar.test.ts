@@ -12,9 +12,10 @@ describe("email avatar", () => {
     expect(emailAvatarSeed("", "")).toBe("?");
   });
 
-  it("uses the name initial, then the email local part", () => {
+  it("uses the email local-part initial, then the name", () => {
+    expect(emailAvatarInitial("Ada Lovelace", "bob@example.com")).toBe("B");
     expect(emailAvatarInitial("Ada Lovelace", "ada@example.com")).toBe("A");
-    expect(emailAvatarInitial("  ", "ada@example.com")).toBe("A");
+    expect(emailAvatarInitial("Ada Lovelace", "  ")).toBe("A");
     expect(emailAvatarInitial("", "  ")).toBe("?");
   });
 

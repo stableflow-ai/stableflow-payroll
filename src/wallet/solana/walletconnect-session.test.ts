@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { QRCodeModalError, waitForWalletConnectSession } from "./walletconnect-session";
+import { QRCodeModalError, waitForExistingWalletConnectSession, waitForWalletConnectSession } from "./walletconnect-session";
 
 const SOLANA_SESSION = {
   namespaces: {
@@ -127,5 +127,41 @@ describe("waitForWalletConnectSession", () => {
     modal.emit(false);
     await expect(pending).resolves.toEqual(SOLANA_SESSION);
     expect(onDisplayUri).toHaveBeenCalledWith("wc:topic@2");
+  });
+});
+
+describe("waitForExistingWalletConnectSession", () => {
+  it("returns an existing Solana session immediately", async () => {
+    await expect(waitForExistingWalletConnectSession(() => SOLANA_SESSION)).resolves.toEqual(SOLANA_SESSION);
+  });
+
+  it("resolves when a session appears while polling", async () => {
+    vi.useFakeTimers();
+    try {
+      let session: typeof SOLANA_SESSION | undefined;
+      const pending = waitForExistingWalletConnectSession(() => session, {
+        pollIntervalMs: 50,
+        timeoutMs: 200,
+      });
+      session = SOLANA_SESSION;
+      await vi.advanceTimersByTimeAsync(50);
+      await expect(pending).resolves.toEqual(SOLANA_SESSION);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it("returns undefined when no session appears before timeout", async () => {
+    vi.useFakeTimers();
+    try {
+      const pending = waitForExistingWalletConnectSession(() => undefined, {
+        pollIntervalMs: 50,
+        timeoutMs: 100,
+      });
+      await vi.advanceTimersByTimeAsync(100);
+      await expect(pending).resolves.toBeUndefined();
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

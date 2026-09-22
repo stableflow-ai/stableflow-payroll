@@ -13,6 +13,7 @@ import {
   isExpiredBlockhashError,
   isUnsignedSolanaTransaction,
   refreshBlockhashIfUnsigned,
+  toSolanaBroadcastError,
 } from "./transfer";
 
 const PLACEHOLDER_BLOCKHASH = "11111111111111111111111111111111";
@@ -225,5 +226,33 @@ describe("confirmSolanaSignature", () => {
       skipPreflight: true,
       maxRetries: 0,
     });
+  });
+});
+
+describe("toSolanaBroadcastError", () => {
+  it("maps an expired blockhash to the retry copy", async () => {
+    const error = await toSolanaBroadcastError(
+      new Error("Transaction simulation failed: Blockhash not found"),
+    );
+    expect(error.message).toBe(SOLANA_EXPIRED_MESSAGE);
+  });
+
+  it("appends getLogs() lines that the wallet stripped from the message", async () => {
+    const error = new Error(
+      "Simulation failed. Message: Transaction simulation failed. Logs: []. Catch the `SendTransactionError` and call `getLogs()` on it for full details.",
+    );
+    (error as Error & { getLogs: () => Promise<string[]> }).getLogs = async () => [
+      "Program ATokenGPvbdGVxr1vhZbiqW5xWHZ5eFTNslJA8knL success",
+      "Program failed to complete: exceeded CUs meter at BPF instruction",
+    ];
+    const enriched = await toSolanaBroadcastError(error);
+    expect(enriched.message).toContain("exceeded CUs meter");
+    expect(enriched.message).toContain("ATokenGPvbdGVxr1vhZbiqW5xWHZ5eFTNslJA8knL success");
+  });
+
+  it("keeps the original error when getLogs() adds nothing new", async () => {
+    const error = new Error("Simulation failed");
+    (error as Error & { getLogs: () => Promise<string[]> }).getLogs = async () => [];
+    await expect(toSolanaBroadcastError(error)).resolves.toBe(error);
   });
 });

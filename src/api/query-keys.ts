@@ -38,6 +38,7 @@ export const queryKeys = {
   },
   payroll: {
     all: ["payroll"] as const,
+    config: ["payroll", "config"] as const,
     current: (organizationId: number, timezone: string) =>
       [...queryKeys.payroll.all, "current", organizationId, timezone] as const,
     totalPayout: (organizationId: number, period: string, timezone: string) =>

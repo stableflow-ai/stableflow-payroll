@@ -57,11 +57,10 @@ export function LoginView() {
 
   return (
     <AuthShell panelTop={<AuthBetaBanner />}>
+      <h1 className="text-center font-montserrat text-xl font-semibold text-black">
+        Welcome to Payouts. Stableflow
+      </h1>
       <form onSubmit={(event) => void submit(event)} className={AUTH_FORM_CLASS}>
-        <h1 className="text-center font-montserrat text-xl font-semibold text-black">
-          Welcome to Payroll. Stableflow
-        </h1>
-
         <AuthField
           id="email"
           label="Sign in by Email"
@@ -91,6 +90,7 @@ export function LoginView() {
           placeholder="At least 8 characters"
           autoComplete="current-password"
           maxLength={PASSWORD_MAX_LENGTH}
+          className="mt-5"
         />
 
         <button
@@ -107,7 +107,7 @@ export function LoginView() {
           size="lg"
           loading={loginMutation.isPending}
           disabled={Boolean(loginFormError(email, password))}
-          className="mt-6 w-full"
+          className="mt-7.5 w-full"
         >
           Sign in
         </Button>
@@ -115,13 +115,13 @@ export function LoginView() {
         <GoogleSignInSection returnTo={returnTo} />
 
         <p className={`block ${AUTH_LINK_CLASS}`}>
-          New to Pay. Stableflow?{" "}
+          New to Payouts. Stableflow?{" "}
           <Link
             to={registerPathWithReturnTo(returnTo)}
             className={`inline-flex items-center ${AUTH_LINK_ACCENT_CLASS}`}
           >
             Create an account
-            <Icon2Right className="ml-1" />
+            <Icon2Right className="ml-1 text-[#606060]" />
           </Link>
         </p>
       </form>

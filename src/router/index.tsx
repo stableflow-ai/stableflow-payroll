@@ -20,11 +20,15 @@ import { SinglePayoutView } from "@/views/pay/SinglePayoutView";
 import { TransactionHistoryView } from "@/views/pay/TransactionHistoryView";
 import { TeamView } from "@/views/pay/TeamView";
 import { AppLayout } from "@/layouts/AppLayout";
+import { AppWatchLayout } from "@/layouts/AppWatchLayout";
 import { PayLayout } from "@/layouts/PayLayout";
 import { CategoryDashboardView } from "@/views/categories/dashboard-view";
 import { RedirectEmployeeFromAdminPay, RedirectIfAuthed, RequireAuth } from "./guards";
 
 export const router = createBrowserRouter([
+  {
+    element: <AppWatchLayout />,
+    children: [
   {
     path: "/login",
     element: (
@@ -86,6 +90,7 @@ export const router = createBrowserRouter([
                 element: <PayLayout />,
                 children: [
                   { path: "/", element: <OverviewView /> },
+                  { path: "/categories", element: <OverviewView /> },
                   { path: "/pay", element: <SinglePayoutView /> },
                   { path: "/pay/form", element: <PaymentByFormView /> },
                   { path: "/pay/result", element: <PayoutResultView /> },
@@ -116,5 +121,7 @@ export const router = createBrowserRouter([
   {
     path: "*",
     element: <Navigate to="/" replace />,
+  },
+    ],
   },
 ]);

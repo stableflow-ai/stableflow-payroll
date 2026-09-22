@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import type { ChainConfig } from "@/config/chains";
 import {
   chainHasBalance,
+  initialChainFilter,
   overflowNetworkCount,
   matchesChainFilter,
   sortTokensForSelect,
@@ -17,7 +18,6 @@ function chain(blockchain: string, chainName = blockchain): ChainConfig {
     chainName,
     chainKind: blockchain === "near" || blockchain === "sol" ? blockchain === "near" ? "near" : "solana" : "evm",
     logo: "",
-    payerEnabled: true,
     batchEnabled: true,
     txExplorer: "/",
   };
@@ -106,28 +106,64 @@ describe("visibleNetworkChips", () => {
     chain("op", "Optimism"),
     chain("pol", "Polygon"),
     chain("near", "Near"),
+    chain("sol", "Solana"),
   ];
 
-  it("puts the last used chain first then fills registry order", () => {
-    expect(visibleNetworkChips(available, "near", NETWORK_CHIP_COUNT).map((item) => item.blockchain)).toEqual([
+  it("orders recent chains before registry fill", () => {
+    expect(visibleNetworkChips(available, ["near", "sol"], NETWORK_CHIP_COUNT).map((item) => item.blockchain)).toEqual([
+      "near",
+      "sol",
+      "eth",
+      "base",
+      "arb",
+    ]);
+  });
+
+  it("does not duplicate a recent chain", () => {
+    expect(visibleNetworkChips(available, ["eth"], 3).map((item) => item.blockchain)).toEqual([
+      "eth",
+      "base",
+      "arb",
+    ]);
+  });
+
+  it("ignores a recent chain that is not available", () => {
+    expect(visibleNetworkChips(available, ["tron"], 2).map((item) => item.blockchain)).toEqual(["eth", "base"]);
+  });
+
+  it("pins the selected chain first even when it is not recent", () => {
+    expect(visibleNetworkChips(available, ["near"], NETWORK_CHIP_COUNT, "sol").map((item) => item.blockchain)).toEqual([
+      "sol",
       "near",
       "eth",
       "base",
       "arb",
-      "op",
     ]);
   });
+});
 
-  it("does not duplicate the last used chain", () => {
-    expect(visibleNetworkChips(available, "eth", 3).map((item) => item.blockchain)).toEqual([
-      "eth",
-      "base",
-      "arb",
-    ]);
+describe("initialChainFilter", () => {
+  const chains = [
+    chain("eth", "Ethereum"),
+    chain("base", "Base"),
+    chain("sol", "Solana"),
+    chain("near", "Near"),
+  ];
+
+  it("returns All when unlocked", () => {
+    expect(initialChainFilter(null, ["sol"], chains)).toBe(ALL_CHAIN_FILTER);
   });
 
-  it("ignores a last chain that is not available", () => {
-    expect(visibleNetworkChips(available, "tron", 2).map((item) => item.blockchain)).toEqual(["eth", "base"]);
+  it("selects the only chain for a locked kind", () => {
+    expect(initialChainFilter("solana", ["eth"], chains)).toBe("sol");
+  });
+
+  it("prefers the most recent matching EVM chain", () => {
+    expect(initialChainFilter("evm", ["sol", "base", "eth"], chains)).toBe("base");
+  });
+
+  it("falls back to the first matching chain", () => {
+    expect(initialChainFilter("evm", ["sol", "near"], chains)).toBe("eth");
   });
 });
 

@@ -18,11 +18,11 @@ export function emailAvatarSeed(email: string, name = ""): string {
 }
 
 export function emailAvatarInitial(name: string, email: string): string {
-  const fromName = nameInitials(name);
-  if (fromName !== "?") return fromName.slice(0, 1);
   const local = email.trim().split("@")[0] ?? "";
-  const letter = local.trim().slice(0, 1);
-  return letter ? letter.toUpperCase() : "?";
+  const fromEmail = local.trim().slice(0, 1);
+  if (fromEmail) return fromEmail.toUpperCase();
+  const fromName = nameInitials(name);
+  return fromName === "?" ? "?" : fromName.slice(0, 1);
 }
 
 export function emailAvatarGradient(seed: string): string {

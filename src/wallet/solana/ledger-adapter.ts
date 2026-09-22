@@ -6,11 +6,12 @@ import {
   type WalletName,
 } from "@solana/wallet-adapter-base";
 import {
+  getDerivationPath,
   LedgerWalletAdapter,
   WalletConnectWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
 import type { PublicKey, Transaction, TransactionVersion, VersionedTransaction } from "@solana/web3.js";
-import { LEDGER_CONNECT_DIALOG_DELAY_MS } from "./config";
+import { LEDGER_CONNECT_DIALOG_DELAY_MS, LEDGER_USB_VENDOR_ID } from "./config";
 import {
   cancelLedgerConnectChooser,
   LedgerConnectCancelledError,
@@ -19,6 +20,7 @@ import {
 } from "./ledger-choice";
 import { openLedgerLiveWalletConnect } from "./utils";
 import {
+  hasExistingSolanaWalletConnectSession,
   setSilentWalletConnectConnect,
   setWalletConnectDisplayUriHandler,
 } from "./walletconnect-connect";
@@ -41,14 +43,40 @@ function sleep(ms: number) {
   });
 }
 
+type LedgerHidDevice = {
+  vendorId: number;
+  opened: boolean;
+  close: () => Promise<void>;
+};
+
+type LedgerHidNavigator = {
+  hid?: {
+    getDevices: () => Promise<LedgerHidDevice[]>;
+  };
+};
+
+async function closeOpenLedgerHidDevices(): Promise<void> {
+  const hid = (globalThis.navigator as LedgerHidNavigator | undefined)?.hid;
+  if (!hid?.getDevices) return;
+  const devices = await hid.getDevices();
+  await Promise.all(
+    devices
+      .filter((device) => device.vendorId === LEDGER_USB_VENDOR_ID && device.opened)
+      .map((device) => device.close().catch(() => undefined)),
+  );
+}
+
 export class SolanaLedgerWalletAdapter extends BaseSignerWalletAdapter {
   name = "Ledger" as WalletName<"Ledger">;
   url = ledgerMeta.url;
   icon = ledgerMeta.icon;
   readonly supportedTransactionVersions: ReadonlySet<TransactionVersion> = new Set(["legacy", 0]);
 
-  private readonly hid = new LedgerWalletAdapter();
+  private readonly hid = new LedgerWalletAdapter({
+    derivationPath: getDerivationPath(0),
+  });
   private readonly live: WalletConnectWalletAdapter;
+  private readonly liveOptions: WalletConnectAdapterConfig["options"];
   private inner: InnerAdapter | null = null;
   private _publicKey: PublicKey | null = null;
   private _connecting = false;
@@ -59,6 +87,7 @@ export class SolanaLedgerWalletAdapter extends BaseSignerWalletAdapter {
   constructor(config: WalletConnectAdapterConfig) {
     super();
     this.live = new WalletConnectWalletAdapter(config);
+    this.liveOptions = config.options;
   }
 
   get publicKey() {
@@ -78,6 +107,9 @@ export class SolanaLedgerWalletAdapter extends BaseSignerWalletAdapter {
     this.aborted = false;
     this._connecting = true;
     try {
+      if (!(await hasExistingSolanaWalletConnectSession(this.liveOptions))) {
+        throw new LedgerConnectCancelledError();
+      }
       setSilentWalletConnectConnect(true);
       try {
         await this.connectWith("live");
@@ -121,8 +153,12 @@ export class SolanaLedgerWalletAdapter extends BaseSignerWalletAdapter {
     cancelLedgerConnectChooser();
     const inner = this.inner;
     this.clearInner();
+    try {
+      if (inner) await inner.disconnect();
+    } catch {
+      // WalletConnect throws when the session is already gone.
+    }
     this.emit("disconnect");
-    if (inner) void inner.disconnect().catch(() => undefined);
   }
 
   async signTransaction<T extends Transaction | VersionedTransaction>(transaction: T): Promise<T> {
@@ -158,7 +194,8 @@ export class SolanaLedgerWalletAdapter extends BaseSignerWalletAdapter {
       setWalletConnectDisplayUriHandler(openLedgerLiveWalletConnect);
     }
     try {
-      await inner.connect();
+      if (choice === "usb") await this.connectUsbHid();
+      else await inner.connect();
     } finally {
       setWalletConnectDisplayUriHandler(null);
     }
@@ -172,6 +209,21 @@ export class SolanaLedgerWalletAdapter extends BaseSignerWalletAdapter {
     inner.on("disconnect", this.handleInnerDisconnect);
     inner.on("error", this.handleInnerError);
     this.emit("connect", this._publicKey);
+  }
+
+  private async connectUsbHid() {
+    try {
+      await this.hid.connect();
+    } catch {
+      await closeOpenLedgerHidDevices();
+      await sleep(LEDGER_CONNECT_DIALOG_DELAY_MS);
+      try {
+        await this.hid.connect();
+      } catch (retryError) {
+        await closeOpenLedgerHidDevices();
+        throw retryError;
+      }
+    }
   }
 
   private clearInner() {

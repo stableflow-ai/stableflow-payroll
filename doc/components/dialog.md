@@ -29,6 +29,7 @@ Nested dialogs stack: each open overlay takes the next z-index step above `1000`
 | `headerAction` | `ReactNode` | — | Control between the title and the close button |
 | `closeClassName` | `string` | — | Close button |
 | `closeIcon` | `ReactNode` | `IconClose` | Replace the default close glyph |
+| `elevated` | `boolean` | `false` | Visual `z-index` is `WALLET_PORTAL_Z_INDEX` plus the overlay stack offset, so wallet dialogs stay above Pay Now / TokenSelect. Escape still uses the overlay stack. |
 
 ## Example
 
@@ -45,6 +46,6 @@ import { Button } from "@/components/ui/button/Button";
 ## Notes
 
 - The panel is rendered in a portal on `document.body`, so it is never clipped by an ancestor's `overflow`.
-- Wallet SDK portals (RainbowKit, Near, Solana, Tron) sit at `WALLET_PORTAL_Z_INDEX` (`10000`), above every dialog layer. Do not raise a dialog past that.
+- Wallet SDK portals (RainbowKit, Near, Solana, Tron, including `.ledger-modal-*`) sit at `WALLET_PORTAL_Z_INDEX` (`10000`), above ordinary dialog layers. Pass `elevated` for in-app wallet dialogs (Ledger USB / Retry, Blind signing) so they sit in that same band.
 - Focus is not trapped inside the panel. If a dialog needs keyboard containment, add it to `OverlayPanel` and note it here.
 - Do not import `src/components/ui/overlay/` from feature code.

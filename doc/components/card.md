@@ -6,10 +6,10 @@ The surface primitive. A plain `<div>` with the product's panel styling, used di
 
 ## Defaults
 
-- `border-radius: 20px`
+- `border-radius: 14px` below `md`, `20px` from `md` up
 - `border: 1px solid #FFF`
 - `background: #FDFDFD`
-- `padding: 20px`
+- `padding: 16px` below `md`, `20px` from `md` up
 - `box-shadow: 0 0 20px 0 rgba(0,0,0,0.06)`
 
 ## Props

@@ -1,11 +1,12 @@
 import { useMemo, useState, type MouseEvent } from "react";
-import { SafeMultisigBadge } from "@/components/safe/SafeMultisigBadge";
+import { MultisigBadge } from "@/components/multisig/MultisigBadge";
 import { useConnectedWallets, useWallet } from "@/hooks/use-wallet";
 import { cn } from "@/lib/utils";
 import type { ChainKind } from "@/wallet/types";
 import { useSafeMode } from "@/wallet/evm/safe";
+import { useSquadsMode } from "@/wallet/solana/multisig";
 import { chainLabel, FIXED_CHAIN_KINDS } from "@/config/chains";
-
+import { PayFromSquadSection } from "@/components/multisig/PayFromSquadSection";
 
 export function WalletConnectDialog({
   onClose,
@@ -23,9 +24,10 @@ export function WalletConnectDialog({
   const wallet = useWallet(selectedKind);
   const address = wallet.account?.address || null;
   const safeApp = useSafeMode().mode === "app";
+  const squads = useSquadsMode();
 
   const kindHint = useMemo(() => {
-    if (selectedKind === "near") return "Connect HOT, Meteor, Intear, OKX, Ledger, NEAR Mobile, Nightly, or WalletConnect.";
+    if (selectedKind === "near") return "Connect HOT, Meteor, Intear, OKX, Ledger, NEAR Mobile, Nightly, Trezu, or WalletConnect.";
     if (selectedKind === "solana") return "Connect Phantom or Solflare.";
     if (selectedKind === "tron") return "Connect TronLink, OKX, or WalletConnect.";
     if (selectedKind === "zec") return "Connect Noir Wallet.";
@@ -104,7 +106,9 @@ export function WalletConnectDialog({
                   <p className="font-montserrat text-[14px] font-medium text-black">
                     Connected {chainLabel(selectedKind).toUpperCase()} wallet
                   </p>
-                  {selectedKind === "evm" ? <SafeMultisigBadge /> : null}
+                  {selectedKind === "evm" || selectedKind === "near" || selectedKind === "solana" ? (
+                    <MultisigBadge chainKind={selectedKind} />
+                  ) : null}
                 </div>
                 <p className="mt-3 break-all font-montserrat text-[14px] text-black">
                   {address}
@@ -112,6 +116,9 @@ export function WalletConnectDialog({
                 <p className="mt-2 font-montserrat text-[12px] leading-5 text-[#606060]">
                   This address is used when you pay from {chainLabel(selectedKind)}.
                 </p>
+                {selectedKind === "solana" && !squads.isSquadsX ? (
+                  <PayFromSquadSection visible />
+                ) : null}
               </div>
               {/* Inside the Safe App the connection is the host iframe, so there is
                   nothing this page can disconnect from. */}

@@ -59,7 +59,7 @@ import useToast from "@/hooks/use-toast";
 const toast = useToast();
 
 toast.success({ title: "Payment submitted" });
-toast.fail({ title: formatQuoteErrorMessage(error, 2) });
+toast.fail({ title: formatQuoteErrorMessage(error, destToken.decimals) });
 
 toast.success({
   title: "Paying to Andrew 0x541...8dc1",

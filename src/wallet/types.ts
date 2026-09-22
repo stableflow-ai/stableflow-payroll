@@ -81,7 +81,7 @@ export interface UseWalletResult {
 /**
  * Outcome of a broadcast.
  *
- * A Safe multisig proposal is accepted long before it is executed, so "the wallet
+ * A multisig proposal is accepted long before it is executed, so "the wallet
  * took it" and "there is a transaction hash" are separate events. Callers must
  * branch instead of assuming a hash they can submit to the backend.
  */
@@ -89,11 +89,27 @@ export type BroadcastResult =
   | { kind: "executed"; txHash: string }
   | {
       kind: "pending-multisig";
+      chainKind: "evm";
       /** Safe's own identifier. Not an on-chain hash yet. */
       safeTxHash: string;
       safeAddress: string;
       chainId: number;
+    }
+  | {
+      kind: "pending-multisig";
+      chainKind: "near";
+      proposalId: number;
+      daoId: string;
+    }
+  | {
+      kind: "pending-multisig";
+      chainKind: "solana";
+      vaultAddress: string;
+      multisigPda?: string;
+      transactionIndex?: bigint;
     };
+
+export type PendingMultisigBroadcast = Extract<BroadcastResult, { kind: "pending-multisig" }>;
 
 export function executedBroadcast(txHash: string): BroadcastResult {
   return { kind: "executed", txHash };
@@ -107,9 +123,36 @@ export function pendingMultisigBroadcast(result: {
 }): BroadcastResult {
   return {
     kind: "pending-multisig",
+    chainKind: "evm",
     safeTxHash: result.hash,
     safeAddress: result.safeAddress,
     chainId: result.chainId,
+  };
+}
+
+export function pendingNearMultisigBroadcast(result: {
+  proposalId: number;
+  daoId: string;
+}): BroadcastResult {
+  return {
+    kind: "pending-multisig",
+    chainKind: "near",
+    proposalId: result.proposalId,
+    daoId: result.daoId,
+  };
+}
+
+export function pendingSquadsMultisigBroadcast(result: {
+  vaultAddress: string;
+  multisigPda?: string;
+  transactionIndex?: bigint;
+}): BroadcastResult {
+  return {
+    kind: "pending-multisig",
+    chainKind: "solana",
+    vaultAddress: result.vaultAddress,
+    ...(result.multisigPda ? { multisigPda: result.multisigPda } : {}),
+    ...(result.transactionIndex != null ? { transactionIndex: result.transactionIndex } : {}),
   };
 }
 

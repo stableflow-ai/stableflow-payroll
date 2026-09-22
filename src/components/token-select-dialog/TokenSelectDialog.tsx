@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Icon2Right } from "@/components/icons/to-right";
 import { Dialog } from "@/components/ui/dialog/Dialog";
 import { useEnsureTokenBalances } from "@/hooks/use-token-balances";
-import { FIXED_CHAINS, getChainByBlockchain } from "@/config/chains";
+import { getRuntimeChains, getChainByBlockchain } from "@/config/chains";
 import type { ChainOwners } from "@/wallet";
 import { isNativeToken, useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
 import { useTokenBalancesStore } from "@/stores/token-balances";
@@ -13,6 +13,7 @@ import { ALL_CHAIN_FILTER, NETWORK_CHIP_COUNT, TOKEN_BALANCE_POLL_MS } from "./c
 import { TokenPane } from "./token-pane";
 import {
   chainHasBalance,
+  initialChainFilter,
   isBlockchainDisabled,
   isChainKindLocked,
   matchesChainFilter,
@@ -36,9 +37,11 @@ export interface TokenSelectDialogProps {
   balanceOwners?: ChainOwners;
   allowedBlockchains?: string[] | null;
   lockChainKind?: WalletChainKind | null;
+  rememberRecentToken?: boolean;
   excludeNative?: boolean;
   disabledBlockchains?: string[] | null;
   disabledReason?: string;
+  requireSupport?: "payment" | "receive";
   onSelect: (selection: TokenSelectSelection) => void;
 }
 
@@ -59,19 +62,20 @@ export function TokenSelectDialog({
   balanceOwners = {},
   allowedBlockchains = null,
   lockChainKind = null,
+  rememberRecentToken = false,
   excludeNative = false,
   disabledBlockchains = null,
   disabledReason,
+  requireSupport,
   onSelect,
 }: TokenSelectDialogProps) {
   const owners = showBalances ? balanceOwners : {};
-  const ensureFresh = useIntentsTokensStore((s) => s.ensureFresh);
   const tokens = useIntentsTokensStore((s) => s.tokens);
   const loading = useIntentsTokensStore((s) => s.loading);
   const getBalance = useTokenBalancesStore((s) => s.getBalance);
   const balanceEntries = useTokenBalancesStore((s) => s.balances);
   const lastAssetId = useTokenSelectPrefsStore((s) => s.lastAssetId);
-  const lastBlockchain = useTokenSelectPrefsStore((s) => s.lastBlockchain);
+  const recentBlockchains = useTokenSelectPrefsStore((s) => s.recentBlockchains);
   const setLastToken = useTokenSelectPrefsStore((s) => s.setLastToken);
   const setLastBlockchain = useTokenSelectPrefsStore((s) => s.setLastBlockchain);
   const [search, setSearch] = useState("");
@@ -80,11 +84,13 @@ export function TokenSelectDialog({
 
   useEffect(() => {
     if (!open) return;
-    void ensureFresh();
     setSearch("");
     setView("token");
-    setChainFilter(ALL_CHAIN_FILTER);
-  }, [open, ensureFresh]);
+    setChainFilter(initialChainFilter(
+      lockChainKind,
+      useTokenSelectPrefsStore.getState().recentBlockchains,
+    ));
+  }, [open, lockChainKind]);
 
   const allowed = useMemo(() => {
     if (!allowedBlockchains || allowedBlockchains.length === 0) return null;
@@ -95,9 +101,11 @@ export function TokenSelectDialog({
     return tokens.filter((token) => {
       if (allowed && !allowed.has(token.blockchain.toLowerCase())) return false;
       if (excludeNative && isNativeToken(token)) return false;
+      if (requireSupport === "payment" && !token.supportPayment) return false;
+      if (requireSupport === "receive" && !token.supportReceive) return false;
       return true;
     });
-  }, [tokens, allowed, excludeNative]);
+  }, [tokens, allowed, excludeNative, requireSupport]);
 
   useEnsureTokenBalances({
     owners,
@@ -108,12 +116,17 @@ export function TokenSelectDialog({
 
   const availableChains = useMemo(() => {
     const codes = new Set(scopedTokens.map((token) => token.blockchain));
-    return FIXED_CHAINS.filter((chain) => codes.has(chain.blockchain));
+    return getRuntimeChains().filter((chain) => codes.has(chain.blockchain));
   }, [scopedTokens]);
 
   const chips = useMemo(
-    () => visibleNetworkChips(availableChains, lastBlockchain, NETWORK_CHIP_COUNT),
-    [availableChains, lastBlockchain],
+    () => visibleNetworkChips(
+      availableChains,
+      recentBlockchains,
+      NETWORK_CHIP_COUNT,
+      chainFilter === ALL_CHAIN_FILTER ? null : chainFilter,
+    ),
+    [availableChains, recentBlockchains, chainFilter],
   );
 
   const overflowCount = overflowNetworkCount(availableChains.length, chips.length);
@@ -155,7 +168,8 @@ export function TokenSelectDialog({
   function handleSelectToken(token: IntentsToken) {
     if (isBlockchainDisabled(token.blockchain, disabledBlockchains)) return;
     if (isChainKindLocked(token.chain.chainKind, lockChainKind)) return;
-    setLastToken(token.assetId, token.blockchain);
+    if (rememberRecentToken) setLastToken(token.assetId, token.blockchain);
+    else setLastBlockchain(token.blockchain);
     onSelect({ token });
     onClose();
   }

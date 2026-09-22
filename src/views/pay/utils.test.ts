@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "@/lib/api-error";
+import { LEDGER_BLIND_SIGN_MESSAGE } from "@/wallet/tron/config";
 import {
   detectAddressChainKind,
   formatQuoteErrorMessage,
@@ -45,6 +46,16 @@ describe("formatQuoteErrorMessage", () => {
     );
   });
 
+  it("converts a RHEA Near minimum with destination decimals", () => {
+    const error = new ApiError(
+      "Amount is too low for bridge, try at least 16878800283555566203",
+      400,
+    );
+    expect(formatQuoteErrorMessage(error, 18)).toBe(
+      "Amount is too low for bridge, try at least 16.878800283555566203",
+    );
+  });
+
   it("maps a software-wallet rejection to the unified copy", () => {
     expect(formatQuoteErrorMessage(new Error("User rejected the request"))).toBe(
       "User rejected transaction",
@@ -61,6 +72,42 @@ describe("formatQuoteErrorMessage", () => {
     expect(formatQuoteErrorMessage(
       new Error("Ledger device: Locked device (0x5515)"),
     )).toBe("Unlock your Ledger device and open the Solana app.");
+  });
+
+  it("maps a Tron Ledger 0x6a8c contract error", () => {
+    expect(formatQuoteErrorMessage(
+      new Error("Ledger device: UNKNOWN_ERROR (0x6a8c)"),
+    )).toBe(LEDGER_BLIND_SIGN_MESSAGE);
+  });
+
+  it("maps a WalletConnect request-expired RPC error", () => {
+    expect(formatQuoteErrorMessage(
+      new Error(
+        "An unknown RPC error occurred. Request Arguments: chain: undefined (id: 42161) from: 0x02A884a8de00478Db4414Ca56F1D9F1cE36E935A Details: Request expired. Please try again. Version: viem@2.55.19",
+      ),
+    )).toBe("Wallet request expired. Confirm again in your wallet.");
+  });
+
+  it("maps a Solana insufficient-lamports simulation error", () => {
+    expect(formatQuoteErrorMessage(
+      new Error(
+        'Simulation failed. Message: Transaction simulation failed. Logs: [ "Transfer: insufficient lamports 920000, need 1488440" ]. Catch the `SendTransactionError` and call `getLogs()` on it for full details.',
+      ),
+    )).toBe("Insufficient SOL for fees. Add SOL and try again.");
+  });
+
+  it("maps a Solana compute-budget simulation error", () => {
+    expect(formatQuoteErrorMessage(
+      new Error(
+        "Simulation failed. Message: Transaction simulation failed. Logs: []. Catch the `SendTransactionError` and call `getLogs()` on it for full details.\nProgram failed to complete: exceeded CUs meter at BPF instruction",
+      ),
+    )).toBe("Solana transaction ran out of compute. Confirm again to retry.");
+  });
+
+  it("maps a Computational budget exceeded log line", () => {
+    expect(formatQuoteErrorMessage(
+      new Error("Transaction simulation failed: Computational budget exceeded"),
+    )).toBe("Solana transaction ran out of compute. Confirm again to retry.");
   });
 });
 

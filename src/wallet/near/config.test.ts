@@ -6,7 +6,7 @@ import {
 } from "./config";
 
 describe("NEAR connect wallet allowlist", () => {
-  it("keeps the eight product wallets", () => {
+  it("keeps the nine product wallets", () => {
     expect([...NEAR_CONNECT_WALLET_IDS]).toEqual([
       "hot-wallet",
       "meteor-wallet",
@@ -16,12 +16,14 @@ describe("NEAR connect wallet allowlist", () => {
       "near-mobile",
       "nightly-wallet",
       "wallet-connect",
+      "trezu-wallet",
     ]);
   });
 
   it("rejects wallets outside the allowlist", () => {
     expect(isAllowedNearConnectWalletId("mynearwallet")).toBe(false);
     expect(isAllowedNearConnectWalletId("hot-wallet")).toBe(true);
+    expect(isAllowedNearConnectWalletId("trezu-wallet")).toBe(true);
   });
 
   it("drops unlisted wallets from the connector lists", () => {

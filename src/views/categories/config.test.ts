@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  CATEGORIES_PATH,
   catalogToCategoryItem,
   categoryHistoryPath,
   categoryPath,
@@ -8,6 +9,7 @@ import {
   operationImportCsvFilename,
   payCategoryFromPath,
 } from "./config";
+import { isAdminOnlyPayPath, isPayShellPath } from "@/views/pay/config";
 
 describe("payCategoryFromPath", () => {
   it("reads API category segments and history", () => {
@@ -23,6 +25,16 @@ describe("payCategoryFromPath", () => {
     expect(categoryHistoryPath("office")).toBe("/pay/office/history");
     expect(operationImportCsvFilename("office")).toBe("office-import-template.xlsx");
     expect(operationImportCsvFilename("kolmkt")).toBe("kolmkt-import-template.xlsx");
+  });
+});
+
+describe("CATEGORIES_PATH", () => {
+  it("is an admin-only Pay shell route, not a /pay/:category segment", () => {
+    expect(CATEGORIES_PATH).toBe("/categories");
+    expect(isPayShellPath(CATEGORIES_PATH)).toBe(true);
+    expect(isAdminOnlyPayPath(CATEGORIES_PATH)).toBe(true);
+    expect(payCategoryFromPath(CATEGORIES_PATH)).toBeNull();
+    expect(isCategoryPath(CATEGORIES_PATH)).toBe(false);
   });
 });
 

@@ -144,8 +144,9 @@ export function GoogleInviteRegisterView() {
       <form onSubmit={(event) => void submit(event)} className={AUTH_ONBOARDING_FORM_CLASS}>
         <Link
           to={fallback}
-          className="self-start font-montserrat text-sm font-medium text-[#3f8afb] hover:text-[#3f8afb]/90"
+          className="self-start flex items-center gap-2 font-montserrat text-sm font-medium text-[#3f8afb] hover:text-[#3f8afb]/90"
         >
+          <Icon2Right className="rotate-180 text-[#606060]" />
           Back
         </Link>
         <p className="mt-6 font-montserrat text-xs font-medium text-[#909090]">
@@ -163,8 +164,8 @@ export function GoogleInviteRegisterView() {
             {pending.email || pending.name}
           </span>
         </div>
-        <h1 className="mt-8 font-montserrat text-xl font-semibold text-black">Profile Setting</h1>
-        <p className="mt-2.5 font-montserrat text-sm font-normal text-[#606060]">
+        <h1 className="mt-8 font-montserrat text-xl font-semibold text-black leading-[100%]">Profile Setting</h1>
+        <p className="mt-2.5 mb-5 font-montserrat text-sm font-normal text-[#606060] leading-[100%]">
           Set up a new account to start.
         </p>
 
@@ -181,7 +182,7 @@ export function GoogleInviteRegisterView() {
           size="xl"
           loading={registerMutation.isPending}
           disabled={Boolean(memberProfileError(memberInput, settings))}
-          className="mt-8 w-full"
+          className="mt-7.5 w-full"
         >
           Continue
         </Button>

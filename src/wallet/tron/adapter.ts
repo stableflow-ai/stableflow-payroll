@@ -21,6 +21,7 @@ export function useTronWallet(): UseWalletResult {
     disconnect,
     signMessage: adapterSignMessage,
     signTransaction,
+    wallet,
   } = useTronAdapter();
   const { setVisible, visible } = useTronWalletModal();
 
@@ -29,9 +30,13 @@ export function useTronWallet(): UseWalletResult {
       setTronSigner(null);
       return;
     }
-    setTronSigner({ address, signTransaction });
+    setTronSigner({
+      address,
+      adapterName: wallet?.adapter.name,
+      signTransaction,
+    });
     return () => setTronSigner(null);
-  }, [address, signTransaction]);
+  }, [address, signTransaction, wallet?.adapter.name]);
 
   const account = useMemo<WalletAccount | null>(() => {
     if (!address) return null;

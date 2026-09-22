@@ -22,6 +22,7 @@ import { AUTH_USER_ROLE, type AuthUserRole } from "@/types/auth";
 import { OPERATION_CATEGORY } from "@/types/operation";
 import { BONUS_HISTORY_PATH, BONUS_PATH } from "@/views/bonus/config";
 import {
+  CATEGORIES_PATH,
   categoryHistoryPath,
   categoryPath,
   isCategoryPath,
@@ -192,6 +193,7 @@ export const PAY_ADMIN_ONLY_PATHS = [
   EXPENSE_PATH,
   BONUS_PATH,
   TEAM_PATH,
+  CATEGORIES_PATH,
 ] as const;
 
 export const PAY_EMPLOYEE_ONLY_PATHS = [PAY_REQUEST_PATH, PAY_REQUESTS_PATH] as const;
@@ -217,7 +219,8 @@ export function isPayShellPath(pathname: string): boolean {
     pathname === TEAM_PATH ||
     pathname === HISTORY_PATH ||
     pathname === SETTING_PATH ||
-    pathname.startsWith(`${SETTING_PATH}/`)
+    pathname.startsWith(`${SETTING_PATH}/`) ||
+    pathname === CATEGORIES_PATH
   );
 }
 
@@ -282,6 +285,7 @@ export const PAY_ROUTE_TITLES: Record<string, string> = {
   [PAY_REQUEST_PATH]: "Request Payment",
   [PAY_REQUESTS_PATH]: "Requests",
   [SETTING_SLACK_CALLBACK_PATH]: "Connecting Slack",
+  [CATEGORIES_PATH]: "Overview",
 };
 
 export const PAYOUT_TABLE_COLUMNS =

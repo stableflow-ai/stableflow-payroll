@@ -3,6 +3,7 @@ import { PAYABLE_TYPE, type Payable } from "@/types/payable";
 import {
   buildPayablePayRequest,
   nextUnpaidQuoteBatchId,
+  payableDestinationDecimals,
   payableQuoteSourceAmount,
   remainingSourceAmountRaw,
   sumPayableNetPay,
@@ -320,5 +321,27 @@ describe("remainingSourceAmountRaw", () => {
         new Set(),
       ),
     ).toBe(10n);
+  });
+});
+
+describe("payableDestinationDecimals", () => {
+  it("uses the first resolvable destination token decimals", () => {
+    const findByChainAndSymbol = (blockchain: string, symbol: string) => (
+      blockchain === "near" && symbol === "RHEA"
+        ? { decimals: 18 } as never
+        : undefined
+    );
+    expect(
+      payableDestinationDecimals(
+        [{ network: "solana", symbol: "USDC" }, { network: "near", symbol: "RHEA" }],
+        findByChainAndSymbol,
+      ),
+    ).toBe(18);
+  });
+
+  it("falls back when the catalog has no match", () => {
+    expect(
+      payableDestinationDecimals([{ network: "near", symbol: "RHEA" }], () => undefined),
+    ).toBe(6);
   });
 });

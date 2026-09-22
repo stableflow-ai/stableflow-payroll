@@ -96,6 +96,6 @@ These are shared but live elsewhere on purpose. Update this list when that chang
 | Envelope field readers | `src/api/map.ts` | `asRecord`, `apiText`, `apiNumber` |
 | Date-range maths | `src/components/date-range-picker/utils.ts` | See [components/date-range-picker.md](components/date-range-picker.md) |
 | CSV parse / unparse | `src/lib/import/csv.ts` | `parseCsvFile`, `parseCsvString`, `unparseCsv` (Papa) |
-| Excel import templates | `src/lib/import/xlsx.ts` | `buildImportTemplateWorkbook`, `parseXlsxFile`, `parseImportFile` (ExcelJS). Token / network dropdowns use `PAYOUT_SYMBOLS` and `FIXED_CHAINS` blockchain codes. |
+| Excel import templates | `src/lib/import/xlsx.ts` | `buildImportTemplateWorkbook`, `parseXlsxFile`, `parseImportFile` (ExcelJS). Token / network dropdowns use `getPayoutSymbols()` and `getRuntimeChains()` blockchain codes. |
 | Download filename stamping | `src/views/pay/utils.ts` | `stampDownloadFilename` — Pay-specific for now |
 | Intents account ids | `src/lib/confidential/to-intents-account-id.ts` | Throws for Zcash (`zec`); native ZEC is not a Near Intents account |

@@ -47,6 +47,7 @@ export function Dialog(props: DialogProps) {
       mask={mask}
       maskClassName={maskClassName}
       closeOnMaskClick={closeOnMaskClick}
+      elevated={props.elevated}
     >
       <div className="pointer-events-none relative flex size-full items-center justify-center p-4">
         <motion.div

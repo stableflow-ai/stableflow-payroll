@@ -37,6 +37,66 @@ function memberWallets(member: TeamMember): string[] {
     .filter(Boolean);
 }
 
+function contactWallets(contact: Contact): string[] {
+  if (contact.wallets) {
+    return [
+      contact.wallets.evm,
+      contact.wallets.solana,
+      contact.wallets.near,
+      contact.wallets.tron,
+    ]
+      .map((value) => value.trim())
+      .filter(Boolean);
+  }
+  const wallet = contact.wallet.trim();
+  return wallet ? [wallet] : [];
+}
+
+export type RecipientSuggestion = {
+  id: string;
+  contact: Contact;
+  wallet: string;
+};
+
+export function contactWalletSuggestions(contacts: readonly Contact[]): RecipientSuggestion[] {
+  const rows: RecipientSuggestion[] = [];
+  for (const contact of contacts) {
+    const seen = new Set<string>();
+    for (const wallet of contactWallets(contact)) {
+      const key = wallet.toLowerCase();
+      if (seen.has(key)) continue;
+      seen.add(key);
+      rows.push({
+        id: `${contact.id}:${wallet}`,
+        contact: { ...contact, wallet },
+        wallet,
+      });
+    }
+  }
+  return rows;
+}
+
+export function filterContactSuggestions(
+  suggestions: readonly RecipientSuggestion[],
+  query: string,
+): RecipientSuggestion[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  return suggestions.filter((row) => (
+    row.contact.name.toLowerCase().includes(q)
+    || row.wallet.toLowerCase().includes(q)
+  ));
+}
+
+export function uniqueRecipientSuggestion(
+  suggestions: readonly RecipientSuggestion[],
+  total: number | null,
+): RecipientSuggestion | null {
+  if (suggestions.length !== 1) return null;
+  if (total != null && total !== 1) return null;
+  return suggestions[0] ?? null;
+}
+
 export function teamMemberIdFromContact(contact: Contact | null | undefined): number | undefined {
   if (!contact) return undefined;
   const id = Number(contact.id);

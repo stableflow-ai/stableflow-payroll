@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useRef, type ReactNode } from "react";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { getPayrollExecution } from "@/api/payout";
@@ -6,10 +6,8 @@ import { queryKeys } from "@/api/query-keys";
 import useToast, { type ToastHandle } from "@/hooks/use-toast";
 import { organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
-import {
-  onBatchPayoutCommitSuccess,
-  type BatchPayoutCommitSuccess,
-} from "@/stores/batch-payout-commit-queue";
+import { onBatchPayoutCommitSuccess } from "@/stores/batch-payout-commit-queue";
+import { useMultisigWatchStore } from "@/stores/multisig-watch-sessions";
 import {
   EXECUTION_POLL_INTERVAL_MS,
   EXECUTION_PROGRESS_TOAST_MS,
@@ -68,9 +66,7 @@ export function usePayoutExecutionPoll() {
   const queryClient = useQueryClient();
   const user = useAuthStore((state) => state.user);
   const orgId = organizationId(user);
-  const [active, setActive] = useState<BatchPayoutCommitSuccess[]>([]);
-  const activeRef = useRef(active);
-  activeRef.current = active;
+  const active = useMultisigWatchStore((state) => state.executions);
   const toastRef = useRef(toastApi);
   toastRef.current = toastApi;
   const navigateRef = useRef(navigate);
@@ -81,72 +77,77 @@ export function usePayoutExecutionPoll() {
   const itemToastRef = useRef<ToastHandle | null>(null);
 
   useEffect(() => {
-    function dismissOne(executionId: number, dismissToast: boolean) {
-      const meta = metaRef.current.get(executionId);
-      if (meta && dismissToast) {
-        meta.dismissing = true;
-        meta.toast.dismiss();
-      }
-      metaRef.current.delete(executionId);
-      setActive((prev) => prev.filter((row) => row.executionId !== executionId));
-    }
-
     function dismissItemToast() {
       itemToastRef.current?.dismiss();
       itemToastRef.current = null;
     }
 
-    function dismissAll(dismissToasts: boolean) {
-      for (const [executionId, meta] of metaRef.current) {
-        if (dismissToasts) {
-          meta.dismissing = true;
-          meta.toast.dismiss();
-        }
-        metaRef.current.delete(executionId);
-      }
-      if (dismissToasts) dismissItemToast();
-      setActive([]);
-    }
-
-    function handleView(executionId: number, type: string) {
-      navigateRef.current(executionHistoryPath(type));
-      dismissOne(executionId, true);
-    }
-
     const unsubscribe = onBatchPayoutCommitSuccess((result) => {
-      const current = activeRef.current;
+      const current = useMultisigWatchStore.getState().executions;
       const sameForm = Boolean(result.formKey)
         && current.length > 0
         && current[0]?.formKey === result.formKey;
-      if (!sameForm) dismissAll(true);
-      const handle = toastRef.current.info({
-        title: result.title || "Payment",
-        duration: false,
-        onClose: () => {
-          const meta = metaRef.current.get(result.executionId);
-          if (meta?.dismissing) return;
-          dismissOne(result.executionId, false);
-        },
-        text: progressText(0, 0, false, () => handleView(result.executionId, result.type)),
-      });
-      metaRef.current.set(result.executionId, {
-        toast: handle,
-        seen: new Set(),
-        dismissing: false,
-      });
-      setActive((prev) => {
-        if (sameForm && prev.some((row) => row.executionId === result.executionId)) {
-          return prev;
+      if (!sameForm) {
+        for (const [executionId, meta] of metaRef.current) {
+          meta.dismissing = true;
+          meta.toast.dismiss();
+          metaRef.current.delete(executionId);
         }
-        return sameForm ? [...prev, result] : [result];
-      });
+        dismissItemToast();
+      }
+      useMultisigWatchStore.getState().upsertExecution(result);
     });
 
     return () => {
       unsubscribe();
-      dismissAll(true);
+      for (const meta of metaRef.current.values()) {
+        meta.dismissing = true;
+        meta.toast.dismiss();
+      }
+      metaRef.current.clear();
+      dismissItemToast();
     };
   }, []);
+
+  useEffect(() => {
+    const activeIds = new Set(active.map((row) => row.executionId));
+    for (const [executionId, meta] of metaRef.current) {
+      if (activeIds.has(executionId) || meta.dismissing) continue;
+      meta.toast.dismiss();
+      metaRef.current.delete(executionId);
+    }
+
+    function handleView(executionId: number, type: string) {
+      navigateRef.current(executionHistoryPath(type));
+      const meta = metaRef.current.get(executionId);
+      if (meta) {
+        meta.dismissing = true;
+        meta.toast.dismiss();
+        metaRef.current.delete(executionId);
+      }
+      useMultisigWatchStore.getState().removeExecution(executionId);
+    }
+
+    for (const row of active) {
+      if (metaRef.current.has(row.executionId)) continue;
+      const handle = toastRef.current.info({
+        title: row.title || "Payment",
+        duration: false,
+        onClose: () => {
+          const meta = metaRef.current.get(row.executionId);
+          if (meta?.dismissing) return;
+          metaRef.current.delete(row.executionId);
+          useMultisigWatchStore.getState().removeExecution(row.executionId);
+        },
+        text: progressText(0, 0, false, () => handleView(row.executionId, row.type)),
+      });
+      metaRef.current.set(row.executionId, {
+        toast: handle,
+        seen: new Set(),
+        dismissing: false,
+      });
+    }
+  }, [active]);
 
   const queries = useQueries({
     queries: active.map((row) => ({
@@ -187,12 +188,13 @@ export function usePayoutExecutionPoll() {
           meta.dismissing = true;
           meta.toast.dismiss();
           metaRef.current.delete(row.executionId);
-          setActive((prev) => prev.filter((item) => item.executionId !== row.executionId));
+          useMultisigWatchStore.getState().removeExecution(row.executionId);
         }),
         ...(data.finished ? { duration: EXECUTION_PROGRESS_TOAST_MS } : {}),
       });
 
       if (data.finished) {
+        meta.dismissing = true;
         for (const queryKey of payoutStatusQueryKeys(type)) {
           void queryClientRef.current.invalidateQueries({ queryKey });
         }
@@ -201,7 +203,9 @@ export function usePayoutExecutionPoll() {
     }
     if (latestItem) replaceItemToast(toastRef.current, itemToastRef, latestItem);
     if (!finishedIds.length) return;
-    setActive((prev) => prev.filter((row) => !finishedIds.includes(row.executionId)));
+    for (const executionId of finishedIds) {
+      useMultisigWatchStore.getState().removeExecution(executionId);
+    }
   }, [active, queries]);
 }
 

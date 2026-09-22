@@ -162,8 +162,9 @@ export function InviteRegisterView() {
           <button
             type="button"
             onClick={() => setStep(INVITE_STEP.SignUp)}
-            className="self-start font-montserrat text-sm font-medium text-[#3f8afb] hover:text-[#3f8afb]/90"
+            className="self-start flex items-center gap-2 font-montserrat text-sm font-medium text-[#3f8afb] hover:text-[#3f8afb]/90"
           >
+            <Icon2Right className="rotate-180 text-[#606060]" />
             Back
           </button>
           <p className="mt-6 font-montserrat text-xs font-medium text-[#909090]">
@@ -180,7 +181,7 @@ export function InviteRegisterView() {
             <span className="font-montserrat text-sm font-normal text-black">{email.trim()}</span>
           </div>
           <h1 className="mt-8 font-montserrat text-xl font-semibold text-black">Profile Setting</h1>
-          <p className="mt-2.5 font-montserrat text-sm font-normal text-[#606060]">
+          <p className="mt-2.5 mb-5 font-montserrat text-sm font-normal text-[#606060]">
             Set up a new account to start.
           </p>
 
@@ -214,7 +215,7 @@ export function InviteRegisterView() {
                 settings,
               ),
             )}
-            className="mt-8 w-full"
+            className="mt-7.5 w-full"
           >
             Continue
           </Button>
@@ -225,20 +226,19 @@ export function InviteRegisterView() {
 
   return (
     <AuthShell>
+      <div className="flex flex-col items-center">
+        {preview.logo ? (
+          <img
+            src={preview.logo}
+            alt=""
+            className="h-8 min-w-8 max-w-24 shrink-0 object-contain"
+          />
+        ) : null}
+        <h1 className={cn("text-center font-montserrat text-xl font-semibold text-black", preview.logo && "mt-3")}>
+          Invites you to join {preview.name}
+        </h1>
+      </div>
       <form onSubmit={submitSignUp} className={AUTH_FORM_CLASS}>
-        <div className="flex flex-col items-center">
-          {preview.logo ? (
-            <img
-              src={preview.logo}
-              alt=""
-              className="h-8 min-w-8 max-w-24 shrink-0 object-contain"
-            />
-          ) : null}
-          <h1 className={cn("text-center font-montserrat text-xl font-semibold text-black", preview.logo && "mt-3")}>
-            Invites you to join {preview.name}
-          </h1>
-        </div>
-
         <AuthField
           id="email"
           label="Email"
@@ -268,6 +268,7 @@ export function InviteRegisterView() {
           placeholder="At least 8 characters"
           autoComplete="new-password"
           maxLength={PASSWORD_MAX_LENGTH}
+          className="mt-5"
         />
         <AuthPasswordField
           id="confirm-password"
@@ -286,24 +287,25 @@ export function InviteRegisterView() {
           placeholder="Keep the same with the new password"
           autoComplete="new-password"
           maxLength={PASSWORD_MAX_LENGTH}
+          className="mt-5"
         />
 
         <Button
           type="submit"
           size="lg"
           disabled={Boolean(inviteSignUpFormError(email, password, confirmPassword))}
-          className="mt-6 w-full"
+          className="mt-7.5 w-full"
         >
           Sign up
         </Button>
 
-        <GoogleSignInSection orAlign="center" orgId={orgId} />
+        <GoogleSignInSection orgId={orgId} />
 
         <p className={`block ${AUTH_LINK_CLASS}`}>
           Already have an account.{" "}
           <Link to="/login" className={`inline-flex items-center ${AUTH_LINK_ACCENT_CLASS}`}>
             Login
-            <Icon2Right className="ml-1" />
+            <Icon2Right className="ml-1 text-[#606060]" />
           </Link>
         </p>
       </form>
