@@ -1,7 +1,9 @@
 import { beforeEach, describe, expect, it } from "vitest";
 import {
+  MAX_RECENT_ASSETS,
   MAX_RECENT_BLOCKCHAINS,
   migrateTokenSelectPrefs,
+  rememberRecentAsset,
   rememberRecentBlockchain,
   useTokenSelectPrefsStore,
 } from "./token-select-prefs";
@@ -9,22 +11,33 @@ import {
 describe("token-select-prefs", () => {
   beforeEach(() => {
     useTokenSelectPrefsStore.setState({
-      lastAssetId: null,
+      recentAssetIds: [],
       recentBlockchains: [],
     });
   });
 
-  it("remembers the last selected token and prepends its chain", () => {
+  it("remembers the selected token first and prepends its chain", () => {
     useTokenSelectPrefsStore.getState().setLastToken("usdt-eth", "eth");
-    expect(useTokenSelectPrefsStore.getState().lastAssetId).toBe("usdt-eth");
+    expect(useTokenSelectPrefsStore.getState().recentAssetIds).toEqual(["usdt-eth"]);
     expect(useTokenSelectPrefsStore.getState().recentBlockchains).toEqual(["eth"]);
   });
 
-  it("keeps a chain MRU without clearing the token", () => {
+  it("keeps a chain MRU without clearing tokens", () => {
     useTokenSelectPrefsStore.getState().setLastToken("usdt-eth", "eth");
     useTokenSelectPrefsStore.getState().setLastBlockchain("near");
-    expect(useTokenSelectPrefsStore.getState().lastAssetId).toBe("usdt-eth");
+    expect(useTokenSelectPrefsStore.getState().recentAssetIds).toEqual(["usdt-eth"]);
     expect(useTokenSelectPrefsStore.getState().recentBlockchains).toEqual(["near", "eth"]);
+  });
+
+  it("moves a repeated token to the front and caps the list", () => {
+    const store = useTokenSelectPrefsStore.getState();
+    store.setLastToken("a", "eth");
+    store.setLastToken("b", "base");
+    store.setLastToken("c", "arb");
+    store.setLastToken("d", "op");
+    store.setLastToken("b", "base");
+    expect(useTokenSelectPrefsStore.getState().recentAssetIds).toEqual(["b", "d", "c"]);
+    expect(useTokenSelectPrefsStore.getState().recentAssetIds).toHaveLength(MAX_RECENT_ASSETS);
   });
 
   it("moves a repeated chain to the front", () => {
@@ -33,6 +46,12 @@ describe("token-select-prefs", () => {
     store.setLastBlockchain("eth");
     store.setLastBlockchain("sol");
     expect(useTokenSelectPrefsStore.getState().recentBlockchains).toEqual(["sol", "eth"]);
+  });
+});
+
+describe("rememberRecentAsset", () => {
+  it("drops empty ids", () => {
+    expect(rememberRecentAsset(["usdt-eth"], "  ")).toEqual(["usdt-eth"]);
   });
 });
 
@@ -51,20 +70,30 @@ describe("rememberRecentBlockchain", () => {
 });
 
 describe("migrateTokenSelectPrefs", () => {
-  it("lifts a single lastBlockchain into the MRU list", () => {
+  it("lifts a single last token and last chain from v0", () => {
     expect(migrateTokenSelectPrefs({ lastAssetId: "usdt-eth", lastBlockchain: "sol" }, 0)).toEqual({
-      lastAssetId: "usdt-eth",
+      recentAssetIds: ["usdt-eth"],
       recentBlockchains: ["sol"],
     });
   });
 
-  it("keeps v1 recentBlockchains", () => {
+  it("lifts v1 lastAssetId into the recent token list", () => {
     expect(migrateTokenSelectPrefs({
       lastAssetId: "usdt-eth",
       recentBlockchains: ["near", "sol"],
     }, 1)).toEqual({
-      lastAssetId: "usdt-eth",
+      recentAssetIds: ["usdt-eth"],
       recentBlockchains: ["near", "sol"],
+    });
+  });
+
+  it("keeps v2 lists and caps tokens", () => {
+    expect(migrateTokenSelectPrefs({
+      recentAssetIds: ["a", "b", "c", "d"],
+      recentBlockchains: ["near"],
+    }, 2)).toEqual({
+      recentAssetIds: ["a", "b", "c"],
+      recentBlockchains: ["near"],
     });
   });
 });

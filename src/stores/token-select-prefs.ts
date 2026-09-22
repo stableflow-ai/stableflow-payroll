@@ -2,14 +2,21 @@ import { create } from "zustand";
 import { persist } from "zustand/middleware";
 
 const TOKEN_SELECT_PREFS_STORAGE_KEY = "stableflow-pay:token-select-prefs:v1";
-const TOKEN_SELECT_PREFS_VERSION = 1;
+const TOKEN_SELECT_PREFS_VERSION = 2;
 export const MAX_RECENT_BLOCKCHAINS = 16;
+export const MAX_RECENT_ASSETS = 3;
 
 interface TokenSelectPrefsState {
-  lastAssetId: string | null;
+  recentAssetIds: string[];
   recentBlockchains: string[];
   setLastToken: (assetId: string, blockchain: string) => void;
   setLastBlockchain: (blockchain: string) => void;
+}
+
+export function rememberRecentAsset(recent: string[], assetId: string): string[] {
+  const id = assetId.trim();
+  if (!id) return recent;
+  return [id, ...recent.filter((item) => item !== id)].slice(0, MAX_RECENT_ASSETS);
 }
 
 export function rememberRecentBlockchain(recent: string[], blockchain: string): string[] {
@@ -21,35 +28,29 @@ export function rememberRecentBlockchain(recent: string[], blockchain: string): 
 export function migrateTokenSelectPrefs(
   persisted: unknown,
   version: number,
-): Pick<TokenSelectPrefsState, "lastAssetId" | "recentBlockchains"> {
+): Pick<TokenSelectPrefsState, "recentAssetIds" | "recentBlockchains"> {
   const state = (persisted ?? {}) as {
     lastAssetId?: string | null;
     lastBlockchain?: string | null;
+    recentAssetIds?: string[];
     recentBlockchains?: string[];
   };
-  const lastAssetId = state.lastAssetId ?? null;
-  if (version >= TOKEN_SELECT_PREFS_VERSION) {
-    return {
-      lastAssetId,
-      recentBlockchains: Array.isArray(state.recentBlockchains) ? state.recentBlockchains : [],
-    };
-  }
-  const last = typeof state.lastBlockchain === "string" && state.lastBlockchain
-    ? state.lastBlockchain
-    : null;
-  return {
-    lastAssetId,
-    recentBlockchains: last ? [last] : [],
-  };
+  const recentBlockchains = version >= 1
+    ? (Array.isArray(state.recentBlockchains) ? state.recentBlockchains : [])
+    : (typeof state.lastBlockchain === "string" && state.lastBlockchain ? [state.lastBlockchain] : []);
+  const recentAssetIds = version >= TOKEN_SELECT_PREFS_VERSION && Array.isArray(state.recentAssetIds)
+    ? state.recentAssetIds.filter((id) => typeof id === "string" && id.trim()).slice(0, MAX_RECENT_ASSETS)
+    : (typeof state.lastAssetId === "string" && state.lastAssetId ? [state.lastAssetId] : []);
+  return { recentAssetIds, recentBlockchains };
 }
 
 export const useTokenSelectPrefsStore = create<TokenSelectPrefsState>()(
   persist(
     (set) => ({
-      lastAssetId: null,
+      recentAssetIds: [],
       recentBlockchains: [],
-      setLastToken: (lastAssetId, blockchain) => set((state) => ({
-        lastAssetId,
+      setLastToken: (assetId, blockchain) => set((state) => ({
+        recentAssetIds: rememberRecentAsset(state.recentAssetIds, assetId),
         recentBlockchains: rememberRecentBlockchain(state.recentBlockchains, blockchain),
       })),
       setLastBlockchain: (blockchain) => set((state) => ({
@@ -61,7 +62,7 @@ export const useTokenSelectPrefsStore = create<TokenSelectPrefsState>()(
       version: TOKEN_SELECT_PREFS_VERSION,
       migrate: migrateTokenSelectPrefs,
       partialize: (state) => ({
-        lastAssetId: state.lastAssetId,
+        recentAssetIds: state.recentAssetIds,
         recentBlockchains: state.recentBlockchains,
       }),
     },

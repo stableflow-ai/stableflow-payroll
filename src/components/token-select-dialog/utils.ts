@@ -50,28 +50,36 @@ export function chainHasBalance<T extends Pick<IntentsToken, "blockchain">>(
   );
 }
 
-export function visibleNetworkChips(
-  available: ChainConfig[],
-  recentBlockchains: readonly string[],
-  slotCount: number,
-  pinnedBlockchain?: string | null,
-): ChainConfig[] {
-  const byCode = new Map(available.map((chain) => [chain.blockchain, chain]));
-  const result: ChainConfig[] = [];
-  const used = new Set<string>();
-
-  function push(code: string | null | undefined) {
-    if (!code || used.has(code) || result.length >= slotCount) return;
-    const chain = byCode.get(code);
-    if (!chain) return;
-    result.push(chain);
-    used.add(chain.blockchain);
+export function chainBalanceUsd<T extends Pick<IntentsToken, "blockchain">>(
+  blockchain: string,
+  tokens: T[],
+  getBalanceUsd: (token: T) => number,
+): number {
+  let total = 0;
+  for (const token of tokens) {
+    if (token.blockchain !== blockchain) continue;
+    const usd = getBalanceUsd(token);
+    if (usd > 0) total += usd;
   }
+  return total;
+}
 
-  push(pinnedBlockchain);
-  for (const code of recentBlockchains) push(code);
-  for (const chain of available) push(chain.blockchain);
-  return result;
+/** Funded chains first by total USD, then unfunded. Without balances, keep registry order. */
+export function sortChainsForSidebar<T extends Pick<IntentsToken, "blockchain">>(
+  chains: ChainConfig[],
+  tokens: T[],
+  options: {
+    showBalances: boolean;
+    getBalanceUsd: (token: T) => number;
+  },
+): ChainConfig[] {
+  if (!options.showBalances) return chains.slice();
+  return chains.slice().sort((left, right) => {
+    const leftUsd = chainBalanceUsd(left.blockchain, tokens, options.getBalanceUsd);
+    const rightUsd = chainBalanceUsd(right.blockchain, tokens, options.getBalanceUsd);
+    if (rightUsd !== leftUsd) return rightUsd - leftUsd;
+    return left.chainName.localeCompare(right.chainName);
+  });
 }
 
 export function initialChainFilter(
@@ -86,10 +94,6 @@ export function initialChainFilter(
     if (matching.some((chain) => chain.blockchain === code)) return code;
   }
   return matching[0].blockchain;
-}
-
-export function overflowNetworkCount(availableCount: number, visibleCount: number): number {
-  return Math.max(0, availableCount - visibleCount);
 }
 
 export function isBlockchainDisabled(
@@ -108,28 +112,74 @@ export function isChainKindLocked(
   return Boolean(lockChainKind && chainKind !== lockChainKind);
 }
 
-export function sortTokensForSelect<T extends {
-  assetId: string;
+const BALANCE_RANK_FUNDED = 0;
+const BALANCE_RANK_LOADING = 1;
+const BALANCE_RANK_EMPTY = 2;
+
+function tokenBalanceRank(usd: number, loading: boolean): number {
+  if (loading) return BALANCE_RANK_LOADING;
+  if (usd > 0) return BALANCE_RANK_FUNDED;
+  return BALANCE_RANK_EMPTY;
+}
+
+export function compareTokensBySymbol<T extends {
+  symbol: string;
+  chain: { chainName: string };
+}>(left: T, right: T): number {
+  return left.symbol.localeCompare(right.symbol) || left.chain.chainName.localeCompare(right.chain.chainName);
+}
+
+/** Positive USD first, then balances still loading, then zero or unknown. */
+export function sortTokensByBalance<T extends {
   symbol: string;
   chain: { chainName: string };
 }>(
   tokens: T[],
-  options: {
-    lastAssetId: string | null;
-    showBalances: boolean;
-    getBalanceUsd: (token: T) => number;
-  },
+  getBalanceUsd: (token: T) => number,
+  isLoading: (token: T) => boolean,
 ): T[] {
   return tokens.slice().sort((left, right) => {
-    const leftRecent = left.assetId === options.lastAssetId ? 0 : 1;
-    const rightRecent = right.assetId === options.lastAssetId ? 0 : 1;
-    if (leftRecent !== rightRecent) return leftRecent - rightRecent;
-    const bySymbol =
-      left.symbol.localeCompare(right.symbol) || left.chain.chainName.localeCompare(right.chain.chainName);
-    if (!options.showBalances) return bySymbol;
-    const leftUsd = options.getBalanceUsd(left);
-    const rightUsd = options.getBalanceUsd(right);
-    if (rightUsd !== leftUsd) return rightUsd - leftUsd;
-    return bySymbol;
+    const leftRank = tokenBalanceRank(getBalanceUsd(left), isLoading(left));
+    const rightRank = tokenBalanceRank(getBalanceUsd(right), isLoading(right));
+    if (leftRank !== rightRank) return leftRank - rightRank;
+    if (leftRank === BALANCE_RANK_FUNDED) {
+      const byUsd = getBalanceUsd(right) - getBalanceUsd(left);
+      if (byUsd !== 0) return byUsd;
+    }
+    return compareTokensBySymbol(left, right);
   });
+}
+
+export function sortTokensBySymbol<T extends {
+  symbol: string;
+  chain: { chainName: string };
+}>(tokens: T[]): T[] {
+  return tokens.slice().sort(compareTokensBySymbol);
+}
+
+export function positiveBalanceTokens<T extends {
+  symbol: string;
+  chain: { chainName: string };
+}>(
+  tokens: T[],
+  getBalanceUsd: (token: T) => number,
+): T[] {
+  return sortTokensByBalance(
+    tokens.filter((token) => getBalanceUsd(token) > 0),
+    getBalanceUsd,
+    () => false,
+  );
+}
+
+export function recentTokensInOrder<T extends { assetId: string }>(
+  tokens: T[],
+  recentAssetIds: readonly string[],
+): T[] {
+  const byId = new Map(tokens.map((token) => [token.assetId, token]));
+  const result: T[] = [];
+  for (const assetId of recentAssetIds) {
+    const token = byId.get(assetId);
+    if (token) result.push(token);
+  }
+  return result;
 }

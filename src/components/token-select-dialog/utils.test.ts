@@ -1,16 +1,19 @@
 import { describe, expect, it } from "vitest";
 import type { ChainConfig } from "@/config/chains";
 import {
+  chainBalanceUsd,
   chainHasBalance,
   initialChainFilter,
-  overflowNetworkCount,
   matchesChainFilter,
-  sortTokensForSelect,
+  positiveBalanceTokens,
+  recentTokensInOrder,
+  sortChainsForSidebar,
+  sortTokensByBalance,
+  sortTokensBySymbol,
   tokenBalanceUsd,
   tokenMatchesSearch,
-  visibleNetworkChips,
 } from "./utils";
-import { ALL_CHAIN_FILTER, NETWORK_CHIP_COUNT } from "./config";
+import { ALL_CHAIN_FILTER } from "./config";
 
 function chain(blockchain: string, chainName = blockchain): ChainConfig {
   return {
@@ -98,47 +101,41 @@ describe("matchesChainFilter", () => {
   });
 });
 
-describe("visibleNetworkChips", () => {
+describe("sortChainsForSidebar", () => {
   const available = [
     chain("eth", "Ethereum"),
     chain("base", "Base"),
-    chain("arb", "Arbitrum"),
-    chain("op", "Optimism"),
-    chain("pol", "Polygon"),
     chain("near", "Near"),
-    chain("sol", "Solana"),
   ];
+  const tokens = [
+    token("usdt-eth", "USDT", "Ethereum", { blockchain: "eth", price: 1 }),
+    token("usdc-base", "USDC", "Base", { blockchain: "base", price: 1 }),
+    token("eth-near", "ETH", "Near", { blockchain: "near", price: 1 }),
+  ];
+  const usd: Record<string, number> = { "usdt-eth": 10, "usdc-base": 50, "eth-near": 0 };
 
-  it("orders recent chains before registry fill", () => {
-    expect(visibleNetworkChips(available, ["near", "sol"], NETWORK_CHIP_COUNT).map((item) => item.blockchain)).toEqual([
-      "near",
-      "sol",
-      "eth",
-      "base",
-      "arb",
-    ]);
+  it("orders funded chains by USD and leaves unfunded last", () => {
+    const sorted = sortChainsForSidebar(available, tokens, {
+      showBalances: true,
+      getBalanceUsd: (item) => usd[item.assetId] ?? 0,
+    });
+    expect(sorted.map((item) => item.blockchain)).toEqual(["base", "eth", "near"]);
   });
 
-  it("does not duplicate a recent chain", () => {
-    expect(visibleNetworkChips(available, ["eth"], 3).map((item) => item.blockchain)).toEqual([
-      "eth",
-      "base",
-      "arb",
-    ]);
+  it("sums every positive token on the chain", () => {
+    expect(chainBalanceUsd("eth", [
+      token("a", "A", "Ethereum", { blockchain: "eth" }),
+      token("b", "B", "Ethereum", { blockchain: "eth" }),
+      token("c", "C", "Base", { blockchain: "base" }),
+    ], (item) => (item.assetId === "a" ? 4 : item.assetId === "b" ? -1 : 9))).toBe(4);
   });
 
-  it("ignores a recent chain that is not available", () => {
-    expect(visibleNetworkChips(available, ["tron"], 2).map((item) => item.blockchain)).toEqual(["eth", "base"]);
-  });
-
-  it("pins the selected chain first even when it is not recent", () => {
-    expect(visibleNetworkChips(available, ["near"], NETWORK_CHIP_COUNT, "sol").map((item) => item.blockchain)).toEqual([
-      "sol",
-      "near",
-      "eth",
-      "base",
-      "arb",
-    ]);
+  it("keeps registry order when balances are hidden", () => {
+    const sorted = sortChainsForSidebar(available, tokens, {
+      showBalances: false,
+      getBalanceUsd: () => 100,
+    });
+    expect(sorted.map((item) => item.blockchain)).toEqual(["eth", "base", "near"]);
   });
 });
 
@@ -167,13 +164,6 @@ describe("initialChainFilter", () => {
   });
 });
 
-describe("overflowNetworkCount", () => {
-  it("returns remaining chains after the visible chips", () => {
-    expect(overflowNetworkCount(15, 5)).toBe(10);
-    expect(overflowNetworkCount(3, 5)).toBe(0);
-  });
-});
-
 describe("chainHasBalance", () => {
   const tokens = [
     { blockchain: "eth" },
@@ -188,27 +178,74 @@ describe("chainHasBalance", () => {
   });
 });
 
-describe("sortTokensForSelect", () => {
+describe("sortTokensByBalance", () => {
   const usdtEth = token("usdt-eth", "USDT", "Ethereum");
   const usdcArb = token("usdc-arb", "USDC", "Arbitrum");
   const usdtNear = token("usdt-near", "USDT", "NEAR");
+  const zero = token("dai-eth", "DAI", "Ethereum");
+  const usd: Record<string, number> = {
+    "usdt-eth": 10,
+    "usdc-arb": 50,
+    "usdt-near": -1,
+    "dai-eth": 0,
+  };
 
-  it("pins the recently used token first", () => {
-    const sorted = sortTokensForSelect([usdcArb, usdtEth, usdtNear], {
-      lastAssetId: "usdt-near",
-      showBalances: false,
-      getBalanceUsd: () => -1,
-    });
-    expect(sorted.map((item) => item.assetId)).toEqual(["usdt-near", "usdc-arb", "usdt-eth"]);
+  it("orders funded, then loading, then zero or unknown", () => {
+    const sorted = sortTokensByBalance(
+      [zero, usdtNear, usdtEth, usdcArb],
+      (item) => usd[item.assetId] ?? -1,
+      (item) => item.assetId === "usdt-near",
+    );
+    expect(sorted.map((item) => item.assetId)).toEqual([
+      "usdc-arb",
+      "usdt-eth",
+      "usdt-near",
+      "dai-eth",
+    ]);
   });
 
-  it("sorts the rest by USD then symbol", () => {
-    const usd: Record<string, number> = { "usdt-eth": 10, "usdc-arb": 50, "usdt-near": 1 };
-    const sorted = sortTokensForSelect([usdtEth, usdcArb, usdtNear], {
-      lastAssetId: null,
-      showBalances: true,
-      getBalanceUsd: (item) => usd[item.assetId] ?? -1,
-    });
-    expect(sorted.map((item) => item.assetId)).toEqual(["usdc-arb", "usdt-eth", "usdt-near"]);
+  it("sorts by symbol when balances are not used", () => {
+    expect(sortTokensBySymbol([usdtNear, usdcArb, usdtEth]).map((item) => item.assetId)).toEqual([
+      "usdc-arb",
+      "usdt-eth",
+      "usdt-near",
+    ]);
+  });
+});
+
+describe("positiveBalanceTokens", () => {
+  const funded = token("usdt-eth", "USDT", "Ethereum");
+  const zero = token("dai-eth", "DAI", "Ethereum");
+
+  it("drops zero and unknown balances", () => {
+    const usd: Record<string, number> = { "usdt-eth": 10, "dai-eth": 0 };
+    expect(positiveBalanceTokens([zero, funded], (item) => usd[item.assetId] ?? -1).map((item) => item.assetId)).toEqual([
+      "usdt-eth",
+    ]);
+  });
+});
+
+describe("recentTokensInOrder", () => {
+  const tokens = [
+    token("usdt-eth", "USDT", "Ethereum"),
+    token("usdc-arb", "USDC", "Arbitrum"),
+    token("dai-eth", "DAI", "Ethereum"),
+  ];
+
+  it("follows most-recent-first and skips missing ids", () => {
+    expect(recentTokensInOrder(tokens, ["dai-eth", "missing", "usdt-eth"]).map((item) => item.assetId)).toEqual([
+      "dai-eth",
+      "usdt-eth",
+    ]);
+  });
+
+  it("all-search can match a token outside recent and funded lists", () => {
+    const usd: Record<string, number> = { "usdt-eth": 10, "usdc-arb": 0, "dai-eth": 0 };
+    const recent = recentTokensInOrder(tokens, ["usdt-eth"]);
+    const yours = positiveBalanceTokens(tokens, (item) => usd[item.assetId] ?? -1);
+    const searched = tokens.filter((item) => tokenMatchesSearch(item, "usdc"));
+    expect(recent.map((item) => item.assetId)).toEqual(["usdt-eth"]);
+    expect(yours.map((item) => item.assetId)).toEqual(["usdt-eth"]);
+    expect(searched.map((item) => item.assetId)).toEqual(["usdc-arb"]);
   });
 });
