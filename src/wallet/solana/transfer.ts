@@ -22,6 +22,7 @@ import { Buffer } from "buffer";
 import { getActiveSolanaConnection, getSolanaConnection } from "@/lib/rpc/solana";
 import {
   SOLANA_ATA_ALLOW_OWNER_OFF_CURVE,
+  SOLANA_ATA_INIT_FAILED_MESSAGE,
   SOLANA_EXPIRED_MESSAGE,
   SOLANA_REBROADCAST_INTERVAL_MS,
   SOLANA_REBROADCAST_MAX_DURATION_MS,
@@ -46,10 +47,18 @@ export function isUnsignedSolanaTransaction(tx: Transaction | VersionedTransacti
   return tx.signatures.every(({ signature }) => !hasAnySignature(signature));
 }
 
+const ATA_INIT_PATTERN = /failed to initialize the associated token account/i;
+
 export function isExpiredBlockhashError(error: unknown): boolean {
   if (error instanceof TransactionExpiredBlockheightExceededError) return true;
   if (!(error instanceof Error)) return false;
   return /block height exceeded|blockhash not found|blockhash.*expired/i.test(error.message);
+}
+
+export function isEmptySimulationMessage(message: string): boolean {
+  return /simulation failed/i.test(message)
+    && /transaction simulation failed/i.test(message)
+    && /logs:\s*\[\s*\]/i.test(message);
 }
 
 export async function readSolanaSendLogs(error: unknown): Promise<string[]> {
@@ -66,13 +75,53 @@ export async function readSolanaSendLogs(error: unknown): Promise<string[]> {
   }
 }
 
+function errorText(error: unknown): string {
+  return error instanceof Error ? error.message : String(error ?? "");
+}
+
+function hasFreshLogLines(message: string, logs: string[]): boolean {
+  return logs.some((line) => line.trim().length > 0 && !message.includes(line));
+}
+
 export async function toSolanaBroadcastError(error: unknown): Promise<Error> {
-  if (isExpiredBlockhashError(error)) return new Error(SOLANA_EXPIRED_MESSAGE);
   const logs = await readSolanaSendLogs(error);
-  const base = error instanceof Error ? error.message : String(error ?? SOLANA_TRANSFER_FAILED_MESSAGE);
+  const base = errorText(error) || SOLANA_TRANSFER_FAILED_MESSAGE;
+  const detail = [base, ...logs].join("\n");
+  if (ATA_INIT_PATTERN.test(detail)) return new Error(SOLANA_ATA_INIT_FAILED_MESSAGE);
+  if (isExpiredBlockhashError(error) || (isEmptySimulationMessage(base) && !hasFreshLogLines(base, logs))) {
+    return new Error(SOLANA_EXPIRED_MESSAGE);
+  }
   const missing = logs.filter((line) => !base.includes(line));
   if (!missing.length) return error instanceof Error ? error : new Error(base);
   return new Error(`${base}\n${missing.join("\n")}`);
+}
+
+async function isRetryablePreflightFailure(error: unknown): Promise<boolean> {
+  if (error instanceof Error && (
+    error.message === SOLANA_EXPIRED_MESSAGE
+    || error.message === SOLANA_TRANSFER_FAILED_MESSAGE
+    || error.message === SOLANA_ATA_INIT_FAILED_MESSAGE
+  )) {
+    return false;
+  }
+  if (isExpiredBlockhashError(error)) return true;
+  const logs = await readSolanaSendLogs(error);
+  const base = errorText(error);
+  const detail = [base, ...logs].join("\n");
+  if (ATA_INIT_PATTERN.test(detail)) return true;
+  return isEmptySimulationMessage(base) && !hasFreshLogLines(base, logs);
+}
+
+async function blockhashAlreadyExpired(
+  connection: Connection,
+  lastValidBlockHeight: number,
+): Promise<boolean> {
+  try {
+    const blockHeight = await connection.getBlockHeight("confirmed");
+    return blockHeight > lastValidBlockHeight;
+  } catch {
+    return false;
+  }
 }
 
 export async function refreshBlockhashIfUnsigned(
@@ -162,34 +211,58 @@ export async function confirmSolanaSignature(params: {
 
 export async function broadcastSolanaTransaction(
   transaction: Transaction | VersionedTransaction,
+  options?: {
+    rebuild?: () => Promise<Transaction | VersionedTransaction>;
+  },
 ): Promise<{ signature: string; signed: Transaction | VersionedTransaction }> {
   const signer = requireSigner();
   const connection = getSolanaConnection();
+  let current = transaction;
+  let rebuilt = false;
 
-  if (transaction instanceof Transaction && !transaction.feePayer) {
-    transaction.feePayer = signer.publicKey;
+  for (;;) {
+    if (current instanceof Transaction && !current.feePayer) {
+      current.feePayer = signer.publicKey;
+    }
+
+    const latest = await refreshBlockhashIfUnsigned(connection, current);
+    const sendConnection = getActiveSolanaConnection(connection);
+    const signed = await signer.signTransaction(current);
+    const rawTransaction = signed.serialize();
+
+    if (latest && await blockhashAlreadyExpired(sendConnection, latest.lastValidBlockHeight)) {
+      if (!rebuilt && options?.rebuild) {
+        current = await options.rebuild();
+        rebuilt = true;
+        continue;
+      }
+      throw new Error(SOLANA_EXPIRED_MESSAGE);
+    }
+
+    try {
+      const signature = await sendConnection.sendRawTransaction(rawTransaction, { skipPreflight: false });
+      await confirmSolanaSignature({
+        connection: sendConnection,
+        rawTransaction,
+        signature,
+        lastValidBlockHeight: latest?.lastValidBlockHeight,
+      });
+      return { signature, signed };
+    } catch (error) {
+      if (!rebuilt && options?.rebuild && await isRetryablePreflightFailure(error)) {
+        current = await options.rebuild();
+        rebuilt = true;
+        continue;
+      }
+      if (
+        error instanceof Error
+        && (error.message === SOLANA_EXPIRED_MESSAGE || error.message === SOLANA_TRANSFER_FAILED_MESSAGE)
+      ) {
+        throw error;
+      }
+      throw await toSolanaBroadcastError(error);
+    }
   }
-
-  const latest = await refreshBlockhashIfUnsigned(connection, transaction);
-  const sendConnection = getActiveSolanaConnection(connection);
-  const signed = await signer.signTransaction(transaction);
-  const rawTransaction = signed.serialize();
-
-  let signature: string;
-  try {
-    signature = await sendConnection.sendRawTransaction(rawTransaction, { skipPreflight: false });
-  } catch (error) {
-    throw await toSolanaBroadcastError(error);
-  }
-
-  await confirmSolanaSignature({
-    connection: sendConnection,
-    rawTransaction,
-    signature,
-    lastValidBlockHeight: latest?.lastValidBlockHeight,
-  });
-
-  return { signature, signed };
 }
 
 async function sendAndConfirm(transaction: Transaction | VersionedTransaction): Promise<string> {

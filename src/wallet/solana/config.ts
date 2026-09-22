@@ -1,6 +1,8 @@
 export const PHANTOM_SIGN_DISPLAY = "utf8";
 
 export const SOLANA_EXPIRED_MESSAGE = "Solana transaction expired. Confirm again to retry.";
+export const SOLANA_ATA_INIT_FAILED_MESSAGE =
+  "Could not create the Solana token account. Confirm again to retry.";
 export const SOLANA_INSUFFICIENT_SOL_MESSAGE = "Insufficient SOL for fees. Add SOL and try again.";
 export const SOLANA_COMPUTE_BUDGET_EXCEEDED_MESSAGE =
   "Solana transaction ran out of compute. Confirm again to retry.";

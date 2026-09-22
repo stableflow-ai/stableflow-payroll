@@ -135,15 +135,18 @@ async function broadcastSolana(input: {
   const outputs = input.transaction.outputs ?? [];
   if (!outputs.length) throw new Error(SOLANA_MISSING_OUTPUTS_MESSAGE);
   const native = isNativeToken(input.token);
-  const unsigned = await buildSolanaDepositTx({
+  const deposit = {
     payer: input.payer,
     mint: native ? null : input.token.contractAddress,
     outputs,
     totalSourceAmountRaw: input.amountIn,
-  });
+  };
+  const unsigned = await buildSolanaDepositTx(deposit);
   if (activeSquadsMode() === "squadsx") return sendViaSquads(unsigned);
   if (activeSquadsMode() === "sdk") return sendViaSquadsSdk(unsigned);
-  const { signature, signed } = await broadcastSolanaTransaction(unsigned);
+  const { signature, signed } = await broadcastSolanaTransaction(unsigned, {
+    rebuild: () => buildSolanaDepositTx(deposit),
+  });
   return solanaBroadcastResult({
     signature,
     signed,

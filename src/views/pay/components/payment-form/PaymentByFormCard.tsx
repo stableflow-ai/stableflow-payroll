@@ -521,7 +521,7 @@ export function PaymentByFormCard(props: {
     const target = quoteBatchId || firstQuoteBatchId;
     if (!target) return;
     if (target !== nextUnpaidQuoteBatchId(batches, paidQuoteBatchIds)) return;
-    void settleMutation.mutateAsync(target);
+    void settleMutation.mutateAsync(target).catch(() => undefined);
   }
 
   function handleNotifyEnabled(next: boolean) {
