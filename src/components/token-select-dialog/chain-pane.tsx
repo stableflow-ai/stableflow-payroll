@@ -10,6 +10,7 @@ import { isBlockchainDisabled, isChainKindLocked } from "./utils";
 
 export type ChainPaneProps = {
   chains: ChainConfig[];
+  fundedBlockchains: ReadonlySet<string>;
   onSelectFilter: (filter: string) => void;
   lockChainKind?: WalletChainKind | null;
   disabledBlockchains?: string[] | null;
@@ -22,6 +23,7 @@ function lockReason(lockChainKind: WalletChainKind): string {
 
 export function ChainPane({
   chains,
+  fundedBlockchains,
   onSelectFilter,
   lockChainKind = null,
   disabledBlockchains = null,
@@ -72,7 +74,12 @@ export function ChainPane({
                     disabled ? "cursor-not-allowed" : "cursor-pointer",
                   )}
                 >
-                  <img src={chainLogoUrl(chain.blockchain)} alt="" className="size-8 shrink-0 object-cover" />
+                  <span className="relative size-8 shrink-0">
+                    <img src={chainLogoUrl(chain.blockchain)} alt="" className="size-8 object-cover" />
+                    {fundedBlockchains.has(chain.blockchain) ? (
+                      <span className="absolute border border-white -top-0.5 -right-0.5 -md:top-1 -md:right-1 size-2 md:size-2.5 rounded-full bg-[#06f]" />
+                    ) : null}
+                  </span>
                   <span className="truncate font-montserrat text-sm font-medium text-black md:text-base">
                     {chain.chainName}
                   </span>

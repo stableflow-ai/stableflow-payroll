@@ -289,6 +289,7 @@ export function TokenSelectDialog({
             <div className="flex min-h-0 min-w-0 flex-1 flex-col pl-3 md:pl-4">
               <ChainPane
                 chains={sortedChains}
+                fundedBlockchains={fundedBlockchains}
                 onSelectFilter={handleSelectFilter}
                 lockChainKind={lockChainKind}
                 disabledBlockchains={disabledBlockchains}

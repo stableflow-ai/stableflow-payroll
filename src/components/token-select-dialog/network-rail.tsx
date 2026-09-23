@@ -91,7 +91,7 @@ export function NetworkRail({
                     className="size-6 object-cover md:size-8"
                   />
                   {fundedBlockchains.has(chain.blockchain) ? (
-                    <span className="absolute top-1 right-1 size-2 rounded-full bg-[#06f] md:top-1.5 md:right-1.5 md:size-2.5" />
+                    <span className="absolute top-1 right-1 size-2 border border-white rounded-full bg-[#06f] md:top-1 md:right-1 md:size-2.5" />
                   ) : null}
                 </button>,
               )}
