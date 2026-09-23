@@ -128,9 +128,9 @@ Paths are prefixed with `PAY_API_PREFIX` (`/v1/payroll`) or `NEARINTENTS_API_PRE
 
 | Method | Path | Auth | Body | Data | API | Hook |
 | --- | --- | --- | --- | --- | --- | --- |
-| GET | `/v1/payroll/config` | yes | — | `PayrollConfig` | `getPayrollConfig` | `usePayrollConfigQuery` |
+| GET | `/v1/pay/config` | no | — | `PayrollConfig` | `getPayrollConfig` | `usePayrollConfigQuery` |
 
-Authenticated. `usePayrollConfigQuery` is mounted in `App` `SessionBootstrap` (`enabled: Boolean(token)`, 30-minute `staleTime`). Success writes chains and tokens into `useIntentsTokensStore` and `setRuntimeChains`. Failure is fail-open: reuse the last persisted config when present, otherwise fall back to `FIXED_CHAINS` and `FALLBACK_PAYOUT_SYMBOLS`. Chains merge API `network` / `chain_id` / `chain_name` / `logo` / `explorer` / `batch_pay` with frontend `CHAIN_META` (`chainKind`, `safeShortName`). Unknown `network` values without a `chain_id` or `CHAIN_META` entry are skipped. `batchEnabled` comes from `batch_pay` (Zcash is `false` on the API). Origin pickers use every runtime chain; batch origin is `getBatchBlockchains()`. Token `assetId` is `` `${network}:${symbol}:${contract_address || "native"}` ``. `support_payment` filters origin tokens; `support_receive` filters destination tokens. `price` is USD display/sort only. There is no 1Click `GET /v0/tokens` catalog.
+Public. `usePayrollConfigQuery` is mounted in `App` `SessionBootstrap` (30-minute `staleTime`, no session required). Success writes chains and tokens into `useIntentsTokensStore` and `setRuntimeChains`. Failure is fail-open: reuse the last persisted config when present, otherwise fall back to `FIXED_CHAINS` and `FALLBACK_PAYOUT_SYMBOLS`. Chains merge API `network` / `chain_id` / `chain_name` / `logo` / `explorer` with frontend `CHAIN_META` (`chainKind`, `safeShortName`, `batchEnabled`). Unknown `network` values without a `chain_id` or `CHAIN_META` entry are skipped. `batchEnabled` comes from `CHAIN_META` (Zcash is `false`; a new chain with `chain_id` and no meta defaults to `true`). Origin pickers use every runtime chain; batch origin is `getBatchBlockchains()`. Token `assetId` is `` `${network}:${symbol}:${contract_address || "native"}` ``. `support_payment` filters origin tokens; `support_receive` filters destination tokens. `price` is USD display/sort only. There is no 1Click `GET /v0/tokens` catalog.
 
 ### Organizations — `src/api/organization.ts`, `src/types/organization.ts`, `src/hooks/use-admin-overview-api.ts`, `src/hooks/use-organization-api.ts`, `src/hooks/use-settings-api.ts`, `src/hooks/use-invite-api.ts`
 
@@ -395,7 +395,7 @@ All four pass `envelope: false`. They are called from `src/lib/confidential/` fo
 | `src/lib/query-client.ts` | `queryClient` (30s `staleTime`, 1 retry, no refetch on focus) |
 | `src/api/config.ts` | `PAY_API_PREFIX`, `NEARINTENTS_API_PREFIX` |
 | `src/api/query-keys.ts` | `queryKeys` factory |
-| `src/api/payroll-config.ts` | `GET /v1/payroll/config` chain and token catalog |
+| `src/api/payroll-config.ts` | Public `GET /v1/pay/config` chain and token catalog |
 | `src/api/payable.ts` | Payables list and salaries / expense / bonus / operations quote |
 | `src/api/payout.ts` | Hosted checkout create/get, payout submit, executions, payroll-batch mapping |
 | `src/api/map.ts` | `asRecord`, `apiText`, `apiNumber` |

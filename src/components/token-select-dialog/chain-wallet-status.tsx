@@ -16,7 +16,6 @@ export function ChainWalletStatus({ kind }: { kind: ChainKind }) {
   const toast = useToast();
   const safeApp = useSafeMode().mode === "app";
   const address = wallet.account?.address;
-  const icon = wallet.account?.icon;
   const hideDisconnect = kind === "evm" && safeApp;
 
   if (!address) {
@@ -27,7 +26,7 @@ export function ChainWalletStatus({ kind }: { kind: ChainKind }) {
           stop(event);
           wallet.connect();
         }}
-        className="shrink-0 cursor-pointer font-montserrat text-xs font-medium text-black hover:underline"
+        className="shrink-0 cursor-pointer font-montserrat text-xs font-medium text-[#3F8AFB] hover:underline"
       >
         {wallet.isConnecting ? "Connecting…" : "Connect"}
       </button>
@@ -36,9 +35,6 @@ export function ChainWalletStatus({ kind }: { kind: ChainKind }) {
 
   return (
     <div className="flex min-w-0 items-center gap-1" onClick={stop}>
-      {icon ? (
-        <img src={icon} alt="" className="size-3 shrink-0 rounded-[2px] object-cover" />
-      ) : null}
       <button
         type="button"
         onClick={async (event) => {

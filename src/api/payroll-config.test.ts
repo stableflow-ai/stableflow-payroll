@@ -10,7 +10,6 @@ describe("mapPayrollConfig", () => {
         chain_name: "Zcash",
         logo: "https://example.com/zec.png",
         explorer: "https://explorer.zcha.in/transactions/",
-        batch_pay: false,
       }],
       tokens: [{
         symbol: "NEAR",
@@ -28,7 +27,6 @@ describe("mapPayrollConfig", () => {
       chainName: "Zcash",
       logo: "https://example.com/zec.png",
       explorer: "https://explorer.zcha.in/transactions/",
-      batchPay: false,
     });
     expect(config.tokens[0]).toEqual({
       symbol: "NEAR",

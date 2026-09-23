@@ -1,7 +1,8 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog } from "@/components/ui/dialog/Dialog";
 import { SearchInput } from "@/components/ui/search-input/SearchInput";
 import { useEnsureTokenBalances } from "@/hooks/use-token-balances";
+import { useConnectedWallets } from "@/hooks/use-wallet";
 import { getRuntimeChains, getChainByBlockchain } from "@/config/chains";
 import type { ChainOwners } from "@/wallet";
 import { isNativeToken, useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
@@ -18,6 +19,8 @@ import {
   isBlockchainDisabled,
   isChainKindLocked,
   matchesChainFilter,
+  parsePopularTokens,
+  popularTokensForWallets,
   positiveBalanceTokens,
   recentTokensInOrder,
   sortChainsForSidebar,
@@ -28,6 +31,8 @@ import {
 } from "./utils";
 
 const SEARCH_INPUT_CLASS = "h-[36px] rounded-[18px] border-[#e3e3e3] bg-[#f6f6f6] text-sm placeholder:text-black/30";
+const POPULAR_TOKEN_REFS = parsePopularTokens(import.meta.env.VITE_POPULAR_TOKENS);
+const POPULAR_SECTION_TITLE = "Popular on your network";
 
 export interface TokenSelectSelection {
   token: IntentsToken;
@@ -75,12 +80,15 @@ export function TokenSelectDialog({
   onSelect,
 }: TokenSelectDialogProps) {
   const owners = showBalances ? balanceOwners : {};
+  const receivePicker = requireSupport === "receive";
+  const connectedOwners = useConnectedWallets();
+  const walletConnected = hasAnyOwner(connectedOwners);
+  const walletWasConnected = useRef<boolean | null>(null);
   const tokens = useIntentsTokensStore((s) => s.tokens);
   const loading = useIntentsTokensStore((s) => s.loading);
   const getBalance = useTokenBalancesStore((s) => s.getBalance);
   const balanceEntries = useTokenBalancesStore((s) => s.balances);
   const recentAssetIds = useTokenSelectPrefsStore((s) => s.recentAssetIds);
-  const recentBlockchains = useTokenSelectPrefsStore((s) => s.recentBlockchains);
   const setLastToken = useTokenSelectPrefsStore((s) => s.setLastToken);
   const setLastBlockchain = useTokenSelectPrefsStore((s) => s.setLastBlockchain);
   const [search, setSearch] = useState("");
@@ -90,12 +98,35 @@ export function TokenSelectDialog({
   useEffect(() => {
     if (!open) return;
     setSearch("");
-    setView("token");
-    setChainFilter(initialChainFilter(
-      lockChainKind,
-      useTokenSelectPrefsStore.getState().recentBlockchains,
-    ));
-  }, [open, lockChainKind]);
+    if (lockChainKind) {
+      setView("token");
+      setChainFilter(initialChainFilter(
+        lockChainKind,
+        useTokenSelectPrefsStore.getState().recentBlockchains,
+      ));
+      return;
+    }
+    if (receivePicker) {
+      setView("token");
+      setChainFilter(ALL_CHAIN_FILTER);
+    }
+  }, [open, lockChainKind, receivePicker]);
+
+  useEffect(() => {
+    if (!open) {
+      walletWasConnected.current = null;
+      return;
+    }
+    if (lockChainKind || receivePicker) {
+      walletWasConnected.current = walletConnected;
+      return;
+    }
+    const previous = walletWasConnected.current;
+    walletWasConnected.current = walletConnected;
+    if (previous !== null && previous === walletConnected) return;
+    setView(walletConnected ? "token" : "network");
+    setChainFilter(ALL_CHAIN_FILTER);
+  }, [open, lockChainKind, receivePicker, walletConnected]);
 
   const allowed = useMemo(() => {
     if (!allowedBlockchains || allowedBlockchains.length === 0) return null;
@@ -144,9 +175,10 @@ export function TokenSelectDialog({
   const sortedChains = useMemo(
     () => sortChainsForSidebar(availableChains, scopedTokens, {
       showBalances,
+      walletConnected,
       getBalanceUsd: (token) => tokenBalanceUsd(token, getBalance(ownerForToken(owners, token), token.assetId)?.formatted),
     }),
-    [availableChains, scopedTokens, showBalances, owners, getBalance, balanceEntries],
+    [availableChains, scopedTokens, showBalances, walletConnected, owners, getBalance, balanceEntries],
   );
 
   const fundedBlockchains = useMemo(() => {
@@ -161,6 +193,15 @@ export function TokenSelectDialog({
     }
     return funded;
   }, [availableChains, getBalance, owners, scopedTokens, showBalances, balanceEntries]);
+
+  const popularTokens = useMemo(
+    () => popularTokensForWallets(
+      scopedTokens,
+      POPULAR_TOKEN_REFS,
+      (kind) => Boolean(connectedOwners[kind]),
+    ),
+    [scopedTokens, connectedOwners],
+  );
 
   const newestAssetId = showBalances ? recentAssetIds[0] ?? null : null;
   const searchingAll = chainFilter === ALL_CHAIN_FILTER && search.trim().length > 0;
@@ -193,6 +234,9 @@ export function TokenSelectDialog({
       if (yours.length > 0) {
         next.push({ id: "yours", title: "Your Tokens", tokens: yours });
       }
+      if (popularTokens.length > 0) {
+        next.push({ id: "popular", title: POPULAR_SECTION_TITLE, tokens: popularTokens });
+      }
       return next;
     }
 
@@ -200,8 +244,13 @@ export function TokenSelectDialog({
       matchesChainFilter(token, chainFilter) && tokenMatchesSearch(token, search)
     ));
 
-    if (!showBalances && chainFilter === ALL_CHAIN_FILTER) {
-      return [{ id: "all", tokens: sortTokensBySymbol(matched) }];
+    if (!showBalances && chainFilter === ALL_CHAIN_FILTER && !search.trim()) {
+      const next: TokenListSection[] = [];
+      if (popularTokens.length > 0) {
+        next.push({ id: "popular", title: POPULAR_SECTION_TITLE, tokens: popularTokens });
+      }
+      next.push({ id: "all", tokens: sortTokensBySymbol(matched) });
+      return next;
     }
 
     const chainName = getChainByBlockchain(chainFilter)?.chainName ?? chainFilter;
@@ -223,6 +272,7 @@ export function TokenSelectDialog({
     walletKind,
     balanceEntries,
     owners,
+    popularTokens,
   ]);
 
   function handleSelectFilter(filter: string) {
@@ -279,6 +329,8 @@ export function TokenSelectDialog({
             chainFilter={chainFilter}
             chips={sortedChains}
             fundedBlockchains={fundedBlockchains}
+            walletConnected={walletConnected}
+            showAllLabel={receivePicker}
             lockChainKind={lockChainKind}
             disabledBlockchains={disabledBlockchains}
             disabledReason={disabledReason}
@@ -290,6 +342,7 @@ export function TokenSelectDialog({
               <ChainPane
                 chains={sortedChains}
                 fundedBlockchains={fundedBlockchains}
+                showWalletStatus={!receivePicker}
                 onSelectFilter={handleSelectFilter}
                 lockChainKind={lockChainKind}
                 disabledBlockchains={disabledBlockchains}
@@ -305,6 +358,7 @@ export function TokenSelectDialog({
                 selectedAssetId={selectedAssetId}
                 loading={loading || awaitingBalances}
                 showBalances={showBalances}
+                showWalletStatus={!receivePicker}
                 getBalance={balanceOf}
                 isBalanceLoading={loadingOf}
                 onSelectToken={handleSelectToken}

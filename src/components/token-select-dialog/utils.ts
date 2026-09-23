@@ -64,15 +64,95 @@ export function chainBalanceUsd<T extends Pick<IntentsToken, "blockchain">>(
   return total;
 }
 
-/** Funded chains first by total USD, then unfunded. Without balances, keep registry order. */
+/** Preferred sidebar order when no wallet is connected. Later config chains append after this list. */
+export const DISCONNECTED_CHAIN_ORDER = [
+  "near",
+  "sol",
+  "tron",
+  "eth",
+  "bsc",
+  "arb",
+  "base",
+  "pol",
+  "avax",
+  "op",
+  "bera",
+  "gnosis",
+  "xlayer",
+  "scroll",
+] as const;
+
+const DISCONNECTED_CHAIN_RANK = new Map<string, number>(
+  DISCONNECTED_CHAIN_ORDER.map((code, index) => [code, index]),
+);
+
+export type PopularTokenRef = {
+  blockchain: string;
+  symbol: string;
+};
+
+/** `blockchain:SYMBOL` entries separated by commas. Empty or invalid parts are skipped. */
+export function parsePopularTokens(raw: string | null | undefined): PopularTokenRef[] {
+  if (!raw?.trim()) return [];
+  const refs: PopularTokenRef[] = [];
+  for (const part of raw.split(",")) {
+    const trimmed = part.trim();
+    const colon = trimmed.indexOf(":");
+    if (colon <= 0 || colon >= trimmed.length - 1) continue;
+    const blockchain = trimmed.slice(0, colon).trim().toLowerCase();
+    const symbol = trimmed.slice(colon + 1).trim();
+    if (!blockchain || !symbol || symbol.includes(":")) continue;
+    refs.push({ blockchain, symbol: symbol.toUpperCase() });
+  }
+  return refs;
+}
+
+export function popularTokensForWallets<T extends {
+  blockchain: string;
+  symbol: string;
+  chain: { chainKind: WalletChainKind };
+}>(
+  tokens: T[],
+  configured: readonly PopularTokenRef[],
+  isChainConnected: (chainKind: WalletChainKind) => boolean,
+): T[] {
+  const result: T[] = [];
+  for (const ref of configured) {
+    const token = tokens.find((item) => (
+      item.blockchain === ref.blockchain && item.symbol.toUpperCase() === ref.symbol
+    ));
+    if (!token || !isChainConnected(token.chain.chainKind)) continue;
+    result.push(token);
+  }
+  return result;
+}
+
+/**
+ * No wallet: preferred chains first, then any other chain in the incoming order.
+ * A connected wallet with balances: funded chains first by total USD.
+ * A connected wallet without balances: keep registry order.
+ */
 export function sortChainsForSidebar<T extends Pick<IntentsToken, "blockchain">>(
   chains: ChainConfig[],
   tokens: T[],
   options: {
     showBalances: boolean;
+    walletConnected: boolean;
     getBalanceUsd: (token: T) => number;
   },
 ): ChainConfig[] {
+  if (!options.walletConnected) {
+    const tail = DISCONNECTED_CHAIN_ORDER.length;
+    return chains
+      .map((chain, index) => ({ chain, index }))
+      .sort((left, right) => {
+        const leftRank = DISCONNECTED_CHAIN_RANK.get(left.chain.blockchain) ?? tail;
+        const rightRank = DISCONNECTED_CHAIN_RANK.get(right.chain.blockchain) ?? tail;
+        if (leftRank !== rightRank) return leftRank - rightRank;
+        return left.index - right.index;
+      })
+      .map((item) => item.chain);
+  }
   if (!options.showBalances) return chains.slice();
   return chains.slice().sort((left, right) => {
     const leftUsd = chainBalanceUsd(left.blockchain, tokens, options.getBalanceUsd);

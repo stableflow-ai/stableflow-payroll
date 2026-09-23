@@ -5,6 +5,8 @@ import {
   chainHasBalance,
   initialChainFilter,
   matchesChainFilter,
+  parsePopularTokens,
+  popularTokensForWallets,
   positiveBalanceTokens,
   recentTokensInOrder,
   sortChainsForSidebar,
@@ -117,6 +119,7 @@ describe("sortChainsForSidebar", () => {
   it("orders funded chains by USD and leaves unfunded last", () => {
     const sorted = sortChainsForSidebar(available, tokens, {
       showBalances: true,
+      walletConnected: true,
       getBalanceUsd: (item) => usd[item.assetId] ?? 0,
     });
     expect(sorted.map((item) => item.blockchain)).toEqual(["base", "eth", "near"]);
@@ -133,9 +136,57 @@ describe("sortChainsForSidebar", () => {
   it("keeps registry order when balances are hidden", () => {
     const sorted = sortChainsForSidebar(available, tokens, {
       showBalances: false,
+      walletConnected: true,
       getBalanceUsd: () => 100,
     });
     expect(sorted.map((item) => item.blockchain)).toEqual(["eth", "base", "near"]);
+  });
+
+  it("puts preferred chains first and appends the rest in incoming order", () => {
+    const incoming = [
+      chain("zec", "Zcash"),
+      chain("eth", "Ethereum"),
+      chain("newchain", "New Chain"),
+      chain("near", "Near"),
+      chain("scroll", "Scroll"),
+    ];
+    const sorted = sortChainsForSidebar(incoming, [], {
+      showBalances: false,
+      walletConnected: false,
+      getBalanceUsd: () => 0,
+    });
+    expect(sorted.map((item) => item.blockchain)).toEqual(["near", "eth", "scroll", "zec", "newchain"]);
+  });
+});
+
+describe("parsePopularTokens", () => {
+  it("returns nothing when unset", () => {
+    expect(parsePopularTokens("")).toEqual([]);
+    expect(parsePopularTokens(undefined)).toEqual([]);
+  });
+
+  it("parses blockchain and symbol pairs and skips invalid parts", () => {
+    expect(parsePopularTokens(" eth:USDT, sol:usdc ,bad, tron:USDT, arb:USDT ")).toEqual([
+      { blockchain: "eth", symbol: "USDT" },
+      { blockchain: "sol", symbol: "USDC" },
+      { blockchain: "tron", symbol: "USDT" },
+      { blockchain: "arb", symbol: "USDT" },
+    ]);
+  });
+});
+
+describe("popularTokensForWallets", () => {
+  const tokens = [
+    { blockchain: "eth", symbol: "USDT", chain: { chainKind: "evm" as const } },
+    { blockchain: "sol", symbol: "USDC", chain: { chainKind: "solana" as const } },
+    { blockchain: "tron", symbol: "USDT", chain: { chainKind: "tron" as const } },
+    { blockchain: "arb", symbol: "USDT", chain: { chainKind: "evm" as const } },
+  ];
+  const configured = parsePopularTokens("eth:USDT,sol:USDC,tron:USDT,arb:USDT");
+
+  it("keeps configured order for connected chains only", () => {
+    const picked = popularTokensForWallets(tokens, configured, (kind) => kind === "evm");
+    expect(picked.map((item) => `${item.blockchain}:${item.symbol}`)).toEqual(["eth:USDT", "arb:USDT"]);
   });
 });
 

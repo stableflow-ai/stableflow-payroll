@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { IconAllNetworks } from "@/components/icons/all-networks";
+import { IconWallet } from "@/components/icons/wallet";
 import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { FLOATING_SIDE } from "@/components/ui/overlay/use-floating-position";
 import { chainLabel, type ChainConfig } from "@/config/chains";
@@ -14,6 +15,8 @@ export type NetworkRailProps = {
   chainFilter: string;
   chips: ChainConfig[];
   fundedBlockchains: ReadonlySet<string>;
+  walletConnected: boolean;
+  showAllLabel?: boolean;
   lockChainKind?: WalletChainKind | null;
   disabledBlockchains?: string[] | null;
   disabledReason?: string;
@@ -34,6 +37,8 @@ export function NetworkRail({
   chainFilter,
   chips,
   fundedBlockchains,
+  walletConnected,
+  showAllLabel = false,
   lockChainKind = null,
   disabledBlockchains = null,
   disabledReason,
@@ -51,14 +56,37 @@ export function NetworkRail({
 
   return (
     <div className="flex h-full w-[52px] shrink-0 flex-col items-center border-r border-[#e3e3e3] pr-2 md:w-[72px] md:pr-3">
-      <button
-        type="button"
-        aria-label="All"
-        onClick={() => onSelectFilter(ALL_CHAIN_FILTER)}
-        className={chipClass(view === "token" && chainFilter === ALL_CHAIN_FILTER, false)}
-      >
-        <span className="font-montserrat text-xs font-medium text-black md:text-sm">All</span>
-      </button>
+      {showAllLabel ? (
+        <button
+          type="button"
+          aria-label="All"
+          onClick={() => onSelectFilter(ALL_CHAIN_FILTER)}
+          className={chipClass(view === "token" && chainFilter === ALL_CHAIN_FILTER, false)}
+        >
+          <span className="font-montserrat text-xs font-medium text-black md:text-sm">All</span>
+        </button>
+      ) : (
+        <button
+          type="button"
+          aria-label="Wallet"
+          disabled={!walletConnected}
+          onClick={() => {
+            if (!walletConnected) return;
+            onSelectFilter(ALL_CHAIN_FILTER);
+          }}
+          className={walletConnected
+            ? chipClass(view === "token" && chainFilter === ALL_CHAIN_FILTER, false)
+            : "relative flex size-10 shrink-0 cursor-not-allowed items-center justify-center rounded-[12px] border border-solid border-transparent md:size-[50px]"}
+        >
+          {walletConnected ? (
+            <IconWallet className="size-4 text-black" />
+          ) : (
+            <span className="flex size-8 items-center justify-center rounded-[8px] bg-[#EFEFEF]">
+              <IconWallet className="size-4 text-[#9FA7BA]" />
+            </span>
+          )}
+        </button>
+      )}
       <div className="mt-2 flex min-h-0 w-full flex-1 flex-col items-center gap-2 overflow-y-auto">
         {chips.map((chain) => {
           const locked = isChainKindLocked(chain.chainKind, lockChainKind);

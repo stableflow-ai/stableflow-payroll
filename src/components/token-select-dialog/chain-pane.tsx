@@ -11,6 +11,7 @@ import { isBlockchainDisabled, isChainKindLocked } from "./utils";
 export type ChainPaneProps = {
   chains: ChainConfig[];
   fundedBlockchains: ReadonlySet<string>;
+  showWalletStatus?: boolean;
   onSelectFilter: (filter: string) => void;
   lockChainKind?: WalletChainKind | null;
   disabledBlockchains?: string[] | null;
@@ -24,6 +25,7 @@ function lockReason(lockChainKind: WalletChainKind): string {
 export function ChainPane({
   chains,
   fundedBlockchains,
+  showWalletStatus = true,
   onSelectFilter,
   lockChainKind = null,
   disabledBlockchains = null,
@@ -85,7 +87,7 @@ export function ChainPane({
                   </span>
                 </button>,
               )}
-              <ChainWalletStatus kind={chain.chainKind} />
+              {showWalletStatus ? <ChainWalletStatus kind={chain.chainKind} /> : null}
             </div>
           );
         })}

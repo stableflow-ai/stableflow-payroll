@@ -1,4 +1,3 @@
-import { PAY_API_PREFIX } from "@/api/config";
 import { apiNumber, apiText, asRecord } from "@/api/map";
 import { http } from "@/lib/http";
 import type { PayrollConfig, PayrollConfigChain, PayrollConfigToken } from "@/types/payroll-config";
@@ -21,7 +20,6 @@ function mapConfigChain(raw: unknown): PayrollConfigChain {
     chainName: apiText(row.chain_name ?? row.chainName),
     logo: apiText(row.logo),
     explorer: apiText(row.explorer),
-    batchPay: asBoolean(row.batch_pay ?? row.batchPay),
   };
 }
 
@@ -46,5 +44,5 @@ export function mapPayrollConfig(raw: unknown): PayrollConfig {
 }
 
 export async function getPayrollConfig(): Promise<PayrollConfig> {
-  return mapPayrollConfig(await http<unknown>(`${PAY_API_PREFIX}/config`));
+  return mapPayrollConfig(await http<unknown>("/v1/pay/config", { auth: false }));
 }

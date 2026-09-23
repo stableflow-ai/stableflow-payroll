@@ -1,4 +1,5 @@
 import { SearchInput } from "@/components/ui/search-input/SearchInput";
+import { Skeleton } from "@/components/ui/skeleton/Skeleton";
 import { chainLogoUrl } from "@/lib/logo";
 import { cn } from "@/lib/utils";
 import type { IntentsToken } from "@/stores/intents-tokens";
@@ -24,6 +25,7 @@ export type TokenPaneProps = {
   selectedAssetId?: string | null;
   loading: boolean;
   showBalances?: boolean;
+  showWalletStatus?: boolean;
   getBalance: (token: IntentsToken) => string | null | undefined;
   isBalanceLoading: (token: IntentsToken) => boolean;
   onSelectToken: (token: IntentsToken) => void;
@@ -38,6 +40,7 @@ export function TokenPane({
   selectedAssetId,
   loading,
   showBalances = false,
+  showWalletStatus = true,
   getBalance,
   isBalanceLoading,
   onSelectToken,
@@ -63,7 +66,7 @@ export function TokenPane({
             {section.title ? (
               <div className="mb-1 flex items-center justify-between gap-2 px-2 md:px-3.5">
                 <p className="min-w-0 truncate font-montserrat text-sm font-medium text-[#aaa]">{section.title}</p>
-                {section.walletKind ? <ChainWalletStatus kind={section.walletKind} /> : null}
+                {showWalletStatus && section.walletKind ? <ChainWalletStatus kind={section.walletKind} /> : null}
               </div>
             ) : null}
             {section.tokens.map((token) => (
@@ -81,13 +84,27 @@ export function TokenPane({
             ))}
           </section>
         ))}
-        {loading && !hasTokens ? (
-          <p className="px-1 py-4 font-montserrat text-[13px] text-[#606060]">Loading tokens…</p>
-        ) : null}
+        {loading && !hasTokens ? <TokenListSkeleton /> : null}
         {!loading && !hasTokens ? (
           <p className="px-1 py-4 font-montserrat text-[13px] text-[#606060]">No tokens found</p>
         ) : null}
       </div>
+    </div>
+  );
+}
+
+function TokenListSkeleton() {
+  return (
+    <div aria-hidden>
+      {Array.from({ length: 6 }, (_, index) => (
+        <div key={index} className="flex items-center gap-2.5 px-2 py-3 md:px-3.5">
+          <Skeleton className="size-8 shrink-0 rounded-full" />
+          <span className="flex min-w-0 flex-1 flex-col gap-1.5">
+            <Skeleton className="h-3.5 w-24" />
+            <Skeleton className="h-3 w-16" />
+          </span>
+        </div>
+      ))}
     </div>
   );
 }

@@ -1,6 +1,6 @@
 /**
  * Cached payroll config tokens and chains.
- * Refresh via GET /v1/payroll/config; persist the last successful payload.
+ * Refresh via GET /v1/pay/config; persist the last successful payload.
  */
 
 import { create } from "zustand";
