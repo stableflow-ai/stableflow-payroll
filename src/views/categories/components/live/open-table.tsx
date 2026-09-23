@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/Table";
+import { TableSkeletonRows } from "@/components/ui/table/TableSkeletonRows";
 import { chainDisplayName } from "@/config/chains";
 import { cn } from "@/lib/utils";
 import type { OperationOpenBatch } from "@/types/operation";
@@ -189,8 +190,9 @@ export function OperationOpenTable(props: {
   batches: OperationOpenBatch[];
   category: string;
   onPayNow: (form: Payable) => void;
+  loading?: boolean;
 }) {
-  const { batches, category, onPayNow } = props;
+  const { batches, category, onPayNow, loading = false } = props;
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
 
   function handleConfirmExternalLink() {
@@ -216,6 +218,9 @@ export function OperationOpenTable(props: {
           <TableHead>Amount</TableHead>
           <TableHead className="last:pr-4" />
         </TableHeader>
+        {loading ? (
+          <TableSkeletonRows cells={9} />
+        ) : (
         <TableBody className="mt-1 flex min-w-min flex-col gap-4">
           {batches.map((batch) => (
             <OperationBatchBlock
@@ -227,6 +232,7 @@ export function OperationOpenTable(props: {
             />
           ))}
         </TableBody>
+        )}
       </Table>
       <ExternalLinkConfirmDialog
         open={Boolean(pendingUrl)}

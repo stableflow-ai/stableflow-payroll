@@ -4,6 +4,11 @@ Newest first. Add an entry whenever you add or change a component under `src/com
 
 Format: one `## YYYY-MM-DD` heading per day, one `- **ComponentName:** what changed` bullet per component.
 
+## 2026-09-23
+
+- **Skeleton:** Pulse block (`#e8e8e8`) for a section that has not loaded yet.
+- **Table:** `TableSkeletonRows` renders 3 body rows inside an existing `Table`. Each cell is its own bar. Infinite-scroll footers stay on `IconLoading`.
+
 ## 2026-09-20
 
 - **Card:** Narrow viewports use `rounded-[14px] p-4`; `md` and up keep `rounded-[20px] p-5`. Dialog, Drawer, and Table inherit the radius.

@@ -189,7 +189,8 @@ export function TransactionHistoryView() {
         <HistoryTable
           rows={rows}
           showType={member}
-          empty={query.isLoading ? "Loading transactions…" : "No transactions"}
+          loading={query.isLoading}
+          empty="No transactions"
           toolbar={
             <div
               className={

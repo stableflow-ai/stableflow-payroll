@@ -1,4 +1,4 @@
-import { IconLoading } from "@/components/icons/loading";
+import { Skeleton } from "@/components/ui/skeleton/Skeleton";
 import { Card } from "@/components/ui/card/Card";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/utils";
@@ -73,9 +73,10 @@ export function StatsCard(props: StatsCardProps) {
   return (
     <Card className="grid grid-cols-1 gap-6 py-[22px] sm:grid-cols-2 sm:gap-8">
       {loading ? (
-        <div className="flex min-h-[88px] items-center justify-center sm:col-span-2">
-          <IconLoading className="size-5 animate-spin text-[#909090]" />
-        </div>
+        <>
+          <Skeleton className="h-[72px] w-full" />
+          <Skeleton className="h-[72px] w-full" />
+        </>
       ) : error ? (
         <p className="font-montserrat text-sm text-danger sm:col-span-2">{error}</p>
       ) : (

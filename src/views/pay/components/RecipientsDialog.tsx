@@ -9,6 +9,7 @@ import type { Contact } from "@/hooks/use-contacts";
 import { formatAddress, sameAddress } from "@/utils";
 import { detectAddressChainKind } from "../utils";
 import { IconLoading } from "@/components/icons";
+import { Skeleton } from "@/components/ui/skeleton/Skeleton";
 import {
   TEAM_WALLET_TAB_LABELS,
   walletForChainKind,
@@ -176,8 +177,10 @@ export function RecipientsDialog(props: {
             </>
           ) : (
             loading ? (
-              <div className="w-full py-8 flex justify-center items-center">
-                <IconLoading className="size-6 animate-spin text-[#909090]" />
+              <div className="flex w-full flex-col gap-3 py-4">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
               </div>
             ) : (
               <div className="w-full flex justify-center items-center py-8 font-montserrat text-sm text-[#909090] text-center">

@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/Table";
+import { TableSkeletonRows } from "@/components/ui/table/TableSkeletonRows";
 import { chainDisplayName, txExplorerUrl } from "@/config/chains";
 import { useRetryPayoutItem } from "@/hooks/use-single-payout-api";
 import { cn } from "@/lib/utils";
@@ -84,12 +85,14 @@ export function HistoryTable(props: {
   successPath: string;
   amountLabel?: string;
   descriptionLabel?: string;
+  loading?: boolean;
 }) {
   const {
     rows,
     successPath,
     amountLabel = "Expense",
     descriptionLabel = "Description / Receipt",
+    loading = false,
   } = props;
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
   const { retryItem, retryingId } = useRetryPayoutItem();
@@ -116,6 +119,9 @@ export function HistoryTable(props: {
           <TableHead>Amount</TableHead>
           <TableHead className="last:pr-4">Status</TableHead>
         </TableHeader>
+        {loading ? (
+          <TableSkeletonRows cells={8} />
+        ) : (
         <TableBody className="flex flex-col gap-4">
           {rows.map((row) => (
             <TableRow
@@ -150,6 +156,7 @@ export function HistoryTable(props: {
             </TableRow>
           ))}
         </TableBody>
+        )}
       </Table>
       <ExternalLinkConfirmDialog
         open={Boolean(pendingUrl)}

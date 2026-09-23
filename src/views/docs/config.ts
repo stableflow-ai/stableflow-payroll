@@ -57,8 +57,8 @@ export const DOCS_TOC: readonly DocsTocSection[] = [
     label: "4. Payments",
     children: [
       { id: "41-connect-a-wallet", label: "4.1 Connect a wallet" },
-      { id: "42-single-payment", label: "4.2 Single Payment" },
-      { id: "43-payment-by-form", label: "4.3 Payment by Form" },
+      { id: "42-single-payment", label: "4.2 Single Pay" },
+      { id: "43-payment-by-form", label: "4.3 Form Pay" },
       { id: "44-payment-result", label: "4.4 Payment result" },
       {
         id: "45-after-payment-and-batchlimits",

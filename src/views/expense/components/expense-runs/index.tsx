@@ -1,6 +1,5 @@
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import { IconLoading } from "@/components/icons/loading";
 import { IconPlus } from "@/components/icons/plus";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_VARIANT } from "@/components/ui/button/config";
@@ -24,6 +23,7 @@ import {
 import { ExpenseImportCsvButton } from "./ExpenseImportCsvButton";
 import { HistoryPanel } from "./HistoryPanel";
 import { OpenPanel } from "./OpenPanel";
+import { OpenTable } from "./OpenTable";
 import { RequestsPanel } from "./RequestsPanel";
 
 function TabLink(props: {
@@ -127,9 +127,7 @@ export function ExpenseRunsCard(props: {
       <Card className="mt-3 px-5 py-6 sm:px-8">
         {isOpenTab ? (
           openLoading ? (
-            <div className="flex min-h-[240px] items-center justify-center">
-              <IconLoading className="size-5 animate-spin text-[#909090]" />
-            </div>
+            <OpenTable batches={[]} onPayNow={onPayNow} loading />
           ) : openError ? (
             <p className="font-montserrat text-sm text-danger">{openError}</p>
           ) : (

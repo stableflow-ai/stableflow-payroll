@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/Table";
+import { TableSkeletonRows } from "@/components/ui/table/TableSkeletonRows";
 import { cn } from "@/lib/utils";
 import type { BonusPendingItem } from "@/types/bonus";
 import type { Payable } from "@/types/payable";
@@ -173,8 +174,9 @@ function BonusItemBlock(props: {
 export function PendingBonusTable(props: {
   items: BonusPendingItem[];
   onPayNow: (form: Payable) => void;
+  loading?: boolean;
 }) {
-  const { items, onPayNow } = props;
+  const { items, onPayNow, loading = false } = props;
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
 
   function handleConfirmExternalLink() {
@@ -199,6 +201,9 @@ export function PendingBonusTable(props: {
           <TableHead>Email</TableHead>
           <TableHead className="last:pr-4">Action</TableHead>
         </TableHeader>
+        {loading ? (
+          <TableSkeletonRows cells={8} />
+        ) : (
         <TableBody className="mt-1 flex min-w-min flex-col gap-4">
           {items.map((item) => (
             <BonusItemBlock
@@ -209,6 +214,7 @@ export function PendingBonusTable(props: {
             />
           ))}
         </TableBody>
+        )}
       </Table>
       <ExternalLinkConfirmDialog
         open={Boolean(pendingUrl)}

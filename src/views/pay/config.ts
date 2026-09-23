@@ -80,7 +80,7 @@ export const PAY_NAV_ITEMS: readonly PayNavItem[] = [
   { id: PAY_NAV_ID.Overview, label: "Overview", to: "/", icon: IconOverview },
   {
     id: PAY_NAV_ID.Payment,
-    label: "Payment",
+    label: "Pay",
     to: PAY_PATH,
     icon: IconPayment,
     match: [PAY_PATH, PAY_FORM_PATH],
@@ -199,8 +199,8 @@ export const PAY_ADMIN_ONLY_PATHS = [
 export const PAY_EMPLOYEE_ONLY_PATHS = [PAY_REQUEST_PATH, PAY_REQUESTS_PATH] as const;
 
 export const PAY_MODE_TABS = [
-  { label: "Single Payment", to: PAY_PATH },
-  { label: "Payment by Form", to: PAY_FORM_PATH },
+  { label: "Single Pay", to: PAY_PATH },
+  { label: "Form Pay", to: PAY_FORM_PATH },
 ] as const;
 
 export const PAY_REQUEST_TABS = [

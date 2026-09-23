@@ -2,7 +2,7 @@ import { type ReactNode } from "react";
 import { IconAlertCircle } from "@/components/icons/alert";
 import { IconCheck2 } from "@/components/icons/check";
 import { IconExportLink, IconOutLink } from "@/components/icons/link";
-import { IconLoading } from "@/components/icons/loading";
+import { Skeleton } from "@/components/ui/skeleton/Skeleton";
 import { IconPayroll } from "@/components/icons/payroll";
 import { IconPayoutPending } from "@/components/icons/payout-status";
 import { Button } from "@/components/ui/button/Button";
@@ -185,8 +185,24 @@ function HistoryDetailBody(props: {
       </div>
 
       {loading ? (
-        <div className="flex min-h-[240px] items-center justify-center">
-          <IconLoading className="size-5 animate-spin text-[#909090]" />
+        <div className="flex flex-col gap-3">
+          <div className={cn(PAYROLL_HISTORY_DETAIL_GRID, "px-4 pb-2")}>
+            {PAYROLL_HISTORY_DETAIL_COLUMNS.map((column) => (
+              <p
+                key={column.key}
+                className="font-montserrat text-sm font-medium capitalize text-[#aaa]"
+              >
+                {column.label}
+              </p>
+            ))}
+          </div>
+          {Array.from({ length: 3 }, (_, row) => (
+            <div key={row} className={cn(PAYROLL_HISTORY_DETAIL_GRID, "px-4")}>
+              {PAYROLL_HISTORY_DETAIL_COLUMNS.map((column) => (
+                <Skeleton key={column.key} className="h-4 w-full" />
+              ))}
+            </div>
+          ))}
         </div>
       ) : error ? (
         <p className="font-montserrat text-sm text-danger">{error}</p>

@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/Table";
+import { TableSkeletonRows } from "@/components/ui/table/TableSkeletonRows";
 import { Tooltip } from "@/components/ui/tooltip/Tooltip";
 import { cn } from "@/lib/utils";
 import useToast from "@/hooks/use-toast";
@@ -52,17 +53,19 @@ export function RequestsTable(props: {
         <TableHead>Paid Time</TableHead>
         <TableHead>Status</TableHead>
       </TableHeader>
-      <TableBody className="flex flex-col gap-3.5">
-        {loading && rows.length === 0 ? (
-          <p className="py-8 text-center font-montserrat text-sm text-[#909090]">Loading requests…</p>
-        ) : error && rows.length === 0 ? (
-          <p className="py-8 text-center font-montserrat text-sm text-danger">{error}</p>
-        ) : rows.length === 0 ? (
-          <p className="py-8 text-center font-montserrat text-sm text-[#909090]">No requests yet</p>
-        ) : (
-          rows.map((row) => <RequestRow key={row.id} row={row} />)
-        )}
-      </TableBody>
+      {loading && rows.length === 0 ? (
+        <TableSkeletonRows cells={6} />
+      ) : (
+        <TableBody className="flex flex-col gap-3.5">
+          {error && rows.length === 0 ? (
+            <p className="py-8 text-center font-montserrat text-sm text-danger">{error}</p>
+          ) : rows.length === 0 ? (
+            <p className="py-8 text-center font-montserrat text-sm text-[#909090]">No requests yet</p>
+          ) : (
+            rows.map((row) => <RequestRow key={row.id} row={row} />)
+          )}
+        </TableBody>
+      )}
     </Table>
   );
 }

@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/Table";
+import { TableSkeletonRows } from "@/components/ui/table/TableSkeletonRows";
 import { chainDisplayName } from "@/config/chains";
 import { formatAmount } from "@/utils";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";
@@ -57,8 +58,9 @@ function RowAction(props: {
 export function RequestsTable(props: {
   rows: ExpenseOpenRow[];
   onPayNow: (batchId: number) => void;
+  loading?: boolean;
 }) {
-  const { rows, onPayNow } = props;
+  const { rows, onPayNow, loading = false } = props;
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
 
   function handleConfirmExternalLink() {
@@ -82,6 +84,9 @@ export function RequestsTable(props: {
           <TableHead>Amount</TableHead>
           <TableHead className="last:pr-4" />
         </TableHeader>
+        {loading ? (
+          <TableSkeletonRows cells={7} />
+        ) : (
         <TableBody className="flex flex-col gap-4">
           {rows.map((row) => (
             <TableRow
@@ -119,6 +124,7 @@ export function RequestsTable(props: {
             </TableRow>
           ))}
         </TableBody>
+        )}
       </Table>
       <ExternalLinkConfirmDialog
         open={Boolean(pendingUrl)}

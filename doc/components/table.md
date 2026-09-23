@@ -72,3 +72,4 @@ import { PAYOUT_TABLE_COLUMNS } from "@/views/pay/config";
 - Do not wrap rows in `w-max`. That makes `fr` tracks grow with content and blocks `truncate`.
 - Overflowing cells need `min-w-0` (already on `TableCell`) plus `truncate` on the text node.
 - The empty state is the caller's job — render a placeholder inside `TableBody` when there are no rows.
+- First load: keep the header and render `TableSkeletonRows` with `cells` equal to the header cell count. Default is 3 rows, one bar per cell. Path: `src/components/ui/table/TableSkeletonRows.tsx`.

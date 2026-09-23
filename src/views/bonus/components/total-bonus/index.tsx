@@ -1,21 +1,20 @@
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
-  ReferenceArea,
+  ReferenceDot,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import { IconLoading } from "@/components/icons/loading";
+import { Skeleton } from "@/components/ui/skeleton/Skeleton";
 import { Card } from "@/components/ui/card/Card";
 import { Dropdown } from "@/components/ui/dropdown/Dropdown";
 import { cn } from "@/lib/utils";
 import type { BonusChartPoint } from "@/types/bonus";
 import { formatAmount, chartYTicks } from "@/utils";
 import {
-  BONUS_CHART_HIGHLIGHT_COLOR,
   BONUS_CHART_LINE_COLOR,
   BONUS_CHART_RANGE_OPTIONS,
   type BonusChartRange,
@@ -69,7 +68,7 @@ export function TotalBonusChart(props: {
   const isEmpty = !loading && points.every((point) => point.value === 0);
   const yTicks = chartYTicks(Math.max(0, ...points.map((point) => point.value)), 3);
   const yMax = yTicks[yTicks.length - 1] ?? 1;
-  const highlightedLabel = points.find((point) => point.highlighted)?.label;
+  const lastPoint = points.length > 0 ? points[points.length - 1] : null;
 
   return (
     <Card className="flex min-h-[454px] flex-col">
@@ -101,44 +100,26 @@ export function TotalBonusChart(props: {
       </div>
       <div className="mt-4 h-[320px]">
         {loading ? (
-          <div className="flex h-full items-center justify-center">
-            <IconLoading className="size-5 animate-spin text-[#909090]" />
-          </div>
+          <Skeleton className="h-full w-full" />
         ) : error ? (
           <div className="flex h-full items-center justify-center">
             <p className="font-montserrat text-sm text-danger">{error}</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={points} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-              <CartesianGrid stroke="#e3e3e3" />
+            <AreaChart data={points} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
               <defs>
-                <linearGradient id="bonusChartHighlight" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor={BONUS_CHART_HIGHLIGHT_COLOR} stopOpacity={0.2} />
-                  <stop offset="100%" stopColor={BONUS_CHART_HIGHLIGHT_COLOR} stopOpacity={0} />
+                <linearGradient id="bonusChartFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={BONUS_CHART_LINE_COLOR} stopOpacity={0.28} />
+                  <stop offset="100%" stopColor={BONUS_CHART_LINE_COLOR} stopOpacity={0} />
                 </linearGradient>
               </defs>
+              <CartesianGrid vertical={false} stroke="#e3e3e3" />
               <XAxis
                 dataKey="label"
                 axisLine={false}
                 tickLine={false}
-                tick={(tickProps) => {
-                  const { x, y, payload } = tickProps;
-                  const active = payload?.value === highlightedLabel;
-                  return (
-                    <text
-                      x={x}
-                      y={y}
-                      dy={12}
-                      textAnchor="middle"
-                      fill={active ? "#606060" : "#aaa"}
-                      fontSize={12}
-                      fontFamily="Montserrat"
-                    >
-                      {payload?.value}
-                    </text>
-                  );
-                }}
+                tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
               />
               <YAxis
                 axisLine={false}
@@ -149,14 +130,6 @@ export function TotalBonusChart(props: {
                 tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
                 width={48}
               />
-              {highlightedLabel ? (
-                <ReferenceArea
-                  x1={highlightedLabel}
-                  x2={highlightedLabel}
-                  fill="url(#bonusChartHighlight)"
-                  ifOverflow="extendDomain"
-                />
-              ) : null}
               <Tooltip
                 content={(tooltipProps) => (
                   <ChartTooltip
@@ -165,27 +138,29 @@ export function TotalBonusChart(props: {
                     label={tooltipProps.label}
                   />
                 )}
-                cursor={{ stroke: BONUS_CHART_LINE_COLOR, strokeWidth: 1, strokeDasharray: "4 4" }}
+                cursor={{ stroke: BONUS_CHART_LINE_COLOR, strokeWidth: 1 }}
               />
-              <Line
-                type="linear"
+              <Area
+                type="monotone"
                 dataKey="value"
                 stroke={BONUS_CHART_LINE_COLOR}
                 strokeWidth={2}
-                dot={{
-                  r: 6,
-                  fill: BONUS_CHART_LINE_COLOR,
-                  stroke: "#fff",
-                  strokeWidth: 2,
-                }}
-                activeDot={{
-                  r: 6,
-                  fill: BONUS_CHART_LINE_COLOR,
-                  stroke: "#fff",
-                  strokeWidth: 2,
-                }}
+                fill="url(#bonusChartFill)"
+                fillOpacity={1}
+                dot={false}
+                activeDot={{ r: 5, stroke: BONUS_CHART_LINE_COLOR, fill: "#fff", strokeWidth: 2 }}
               />
-            </LineChart>
+              {lastPoint ? (
+                <ReferenceDot
+                  x={lastPoint.label}
+                  y={lastPoint.value}
+                  r={5}
+                  fill="#fff"
+                  stroke={BONUS_CHART_LINE_COLOR}
+                  strokeWidth={2}
+                />
+              ) : null}
+            </AreaChart>
           </ResponsiveContainer>
         )}
       </div>

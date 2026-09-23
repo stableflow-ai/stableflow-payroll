@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/Table";
+import { TableSkeletonRows } from "@/components/ui/table/TableSkeletonRows";
 import { txExplorerUrl } from "@/config/chains";
 import { cn } from "@/lib/utils";
 import { formatAmount, formatDate } from "@/utils";
@@ -21,10 +22,11 @@ export function HistoryTable(props: {
   rows: HistoryItem[];
   empty: string;
   showType?: boolean;
+  loading?: boolean;
   toolbar?: ReactNode;
   footer?: ReactNode;
 }) {
-  const { rows, empty, showType = false, toolbar, footer } = props;
+  const { rows, empty, showType = false, loading = false, toolbar, footer } = props;
 
   return (
     <Table
@@ -44,7 +46,9 @@ export function HistoryTable(props: {
         <TableHead>Time</TableHead>
         <TableHead>Status</TableHead>
       </TableHeader>
-      {rows.length === 0 ? (
+      {loading ? (
+        <TableSkeletonRows cells={showType ? 10 : 9} />
+      ) : rows.length === 0 ? (
         <p className="py-8 text-center font-montserrat text-sm font-medium text-[#aaa]">{empty}</p>
       ) : (
         <TableBody>

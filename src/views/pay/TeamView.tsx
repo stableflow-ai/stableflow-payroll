@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table/Table";
+import { TableSkeletonRows } from "@/components/ui/table/TableSkeletonRows";
 import { useOrganizationQuery } from "@/hooks/use-organization-api";
 import { useTeamMemberMutations, useTeamMembersQuery, type TeamMember } from "@/hooks/use-team-api";
 import useToast from "@/hooks/use-toast";
@@ -137,10 +138,13 @@ export function TeamView() {
             </TableHead>
             <TableHead />
           </TableHeader>
+          {query.isPending && members.length === 0 ? (
+            <TableSkeletonRows cells={5} />
+          ) : (
           <TableBody>
             {members.length === 0 ? (
               <p className="py-8 text-center font-montserrat text-sm text-[#909090]">
-                {query.isPending ? "Loading team…" : "No members"}
+                No members
               </p>
             ) : (
               members.map((row) => {
@@ -178,6 +182,7 @@ export function TeamView() {
               })
             )}
           </TableBody>
+          )}
         </Table>
       )}
 

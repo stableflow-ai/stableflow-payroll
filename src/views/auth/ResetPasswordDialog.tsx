@@ -129,8 +129,6 @@ export function ResetPasswordDialog({
       open={open}
       onClose={onClose}
       title="Reset password"
-      titleClassName="w-full text-center"
-      closeClassName="hidden"
       cardClassName={RESET_PASSWORD_DIALOG_CARD_CLASS}
     >
       {variant === RESET_PASSWORD_VARIANT.Guest ? (

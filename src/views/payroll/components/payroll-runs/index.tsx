@@ -1,6 +1,6 @@
 import { IconPlus } from "@/components/icons/plus";
 import { IconExportLink } from "@/components/icons/link";
-import { IconLoading } from "@/components/icons/loading";
+import { Skeleton } from "@/components/ui/skeleton/Skeleton";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_VARIANT } from "@/components/ui/button/config";
 import { Card } from "@/components/ui/card/Card";
@@ -131,9 +131,7 @@ export function PayrollRunsCard(props: {
       </div>
       <Card className="mt-3 px-5 py-6 sm:px-8">
         {tabLoading ? (
-          <div className="flex min-h-[240px] items-center justify-center">
-            <IconLoading className="size-5 animate-spin text-[#909090]" />
-          </div>
+          <Skeleton className="h-[240px] w-full" />
         ) : tabError ? (
           <p className="font-montserrat text-sm text-danger">{tabError}</p>
         ) : tab === PAYROLL_TAB.Next ? (

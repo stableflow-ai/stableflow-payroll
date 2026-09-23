@@ -2,6 +2,7 @@ import { useEffect, useRef } from "react";
 import { IconAlertCircle } from "@/components/icons/alert";
 import { IconArrowDown } from "@/components/icons/arrow-down";
 import { IconLoading } from "@/components/icons/loading";
+import { Skeleton } from "@/components/ui/skeleton/Skeleton";
 import {
   IconPayoutFailed,
   IconPayoutPaid,
@@ -104,8 +105,10 @@ export function RecentPayoutsCard(props: {
         ) : null}
       </div>
       {loading ? (
-        <div className="flex flex-1 items-center justify-center">
-          <IconLoading className="size-5 animate-spin text-[#909090]" />
+        <div className="mt-4 flex flex-1 flex-col gap-3">
+          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-14 w-full" />
+          <Skeleton className="h-14 w-full" />
         </div>
       ) : error ? (
         <div className="flex flex-1 items-center justify-center">

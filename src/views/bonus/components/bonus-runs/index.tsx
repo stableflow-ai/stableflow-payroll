@@ -1,6 +1,6 @@
 import { NavLink } from "react-router-dom";
 import { IconExportLink } from "@/components/icons/link";
-import { IconLoading } from "@/components/icons/loading";
+import { Skeleton } from "@/components/ui/skeleton/Skeleton";
 import { IconPlus } from "@/components/icons/plus";
 import { Button } from "@/components/ui/button/Button";
 import { BUTTON_VARIANT } from "@/components/ui/button/config";
@@ -22,6 +22,7 @@ import { BonusImportCsvButton } from "./BonusImportCsvButton";
 import { CreateBonusEmpty } from "./CreateBonusEmpty";
 import { HistoryPanel } from "./HistoryPanel";
 import { PendingBonusPanel } from "./PendingBonusPanel";
+import { PendingBonusTable } from "./PendingBonusTable";
 
 function TabLink(props: {
   to: string;
@@ -144,9 +145,11 @@ export function BonusRunsCard(props: {
       </div>
       <Card className="mt-3 px-5 py-6 sm:px-8">
         {tabLoading ? (
-          <div className="flex min-h-[240px] items-center justify-center">
-            <IconLoading className="size-5 animate-spin text-[#909090]" />
-          </div>
+          isPendingTab ? (
+            <PendingBonusTable items={[]} onPayNow={onPayNow} loading />
+          ) : (
+            <Skeleton className="h-[240px] w-full" />
+          )
         ) : tabError ? (
           <p className="font-montserrat text-sm text-danger">{tabError}</p>
         ) : isPendingTab ? (

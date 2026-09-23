@@ -82,8 +82,8 @@ export function OperationHistoryPanel(props: { category: string }) {
         </Button>
       </div>
       {historyQuery.isLoading ? (
-        <div className="flex min-h-[280px] items-center justify-center">
-          <IconLoading className="size-5 animate-spin text-[#909090]" />
+        <div className="mt-5">
+          <HistoryTable rows={[]} successPath={categoryHistoryPath(category)} loading />
         </div>
       ) : historyQuery.isError ? (
         <p className="mt-5 font-montserrat text-sm text-danger">

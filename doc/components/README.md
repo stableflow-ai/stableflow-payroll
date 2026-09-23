@@ -13,6 +13,7 @@ Non-business primitives in `src/components/ui/`, plus shared widgets that severa
 | InputNumber | `src/components/ui/input-number/InputNumber.tsx` | [input-number.md](input-number.md) |
 | Pagination | `src/components/ui/pagination/Pagination.tsx` | [pagination.md](pagination.md) |
 | SearchInput | `src/components/ui/search-input/SearchInput.tsx` | [search-input.md](search-input.md) |
+| Skeleton | `src/components/ui/skeleton/Skeleton.tsx` | [skeleton.md](skeleton.md) |
 | Switch | `src/components/ui/switch/Switch.tsx` | [switch.md](switch.md) |
 | Table | `src/components/ui/table/Table.tsx` | [table.md](table.md) |
 | Toast | `src/components/ui/toast/Toast.tsx` | [toast.md](toast.md) |

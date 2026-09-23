@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { IconBack } from "@/components/icons/back";
-import { IconLoading } from "@/components/icons/loading";
+import { Skeleton } from "@/components/ui/skeleton/Skeleton";
 import { Button } from "@/components/ui/button/Button";
 import { Card } from "@/components/ui/card/Card";
 import { Drawer } from "@/components/ui/drawer/Drawer";
@@ -114,8 +114,10 @@ export function CategoriesDrawer(props: {
           }}
         />
       ) : catalogQuery.isLoading ? (
-        <div className="flex min-h-[240px] items-center justify-center">
-          <IconLoading className="size-5 animate-spin text-[#909090]" />
+        <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
+          <Skeleton className="h-[120px] w-full" />
+          <Skeleton className="h-[120px] w-full" />
+          <Skeleton className="h-[120px] w-full" />
         </div>
       ) : catalogQuery.isError ? (
         <p className="font-montserrat text-sm text-danger">
