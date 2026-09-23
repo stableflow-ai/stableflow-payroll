@@ -1,4 +1,3 @@
-export const AUTH_BRAND_BG = "#3F8AFB";
 export const AUTH_PANEL_BG = "#F6F6F6";
 
 export const AUTH_FORM_CLASS = "flex w-full max-w-[400px] flex-col mt-15";
@@ -34,9 +33,6 @@ export const REGISTER_STEP = {
   SignUp: 1,
   Organization: 2,
 } as const;
-
-export const AUTH_FEATURE_ICON_KEYS = ["lock", "shield", "node"] as const;
-export type AuthFeatureIconKey = (typeof AUTH_FEATURE_ICON_KEYS)[number];
 
 export const NAME_MAX_LENGTH = 50;
 export const ORGANIZATION_NAME_MAX_LENGTH = 50;

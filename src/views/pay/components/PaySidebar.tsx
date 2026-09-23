@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { IconArrowDown } from "@/components/icons/arrow-down";
 import { IconMore } from "@/components/icons/more";
+import { BrandGlow, BrandMark } from "@/components/layout/BrandMark";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { HEADER_ACCOUNT_MENU_VARIANT } from "@/components/layout/config";
 import { Tooltip } from "@/components/ui/tooltip/Tooltip";
@@ -166,9 +167,10 @@ export function PaySidebar() {
 
   return (
     <aside className="hidden shrink-0 flex-col lg:sticky lg:top-0 lg:flex lg:h-svh lg:w-[220px] lg:overflow-y-auto lg:border-r lg:border-black/10">
-      <div className="px-[21px] pt-5 pb-4">
-        <a href="/" className="inline-flex">
-          <img src="/logo.svg" alt="Stableflow Pay" className="h-[30px] w-auto" />
+      <div className="relative overflow-hidden px-[13px] pt-4 pb-4">
+        <BrandGlow />
+        <a href="/" className="relative inline-flex">
+          <BrandMark />
         </a>
         <p className="mt-3.5 font-montserrat text-xs font-medium text-[#909090]">
           {orgName}

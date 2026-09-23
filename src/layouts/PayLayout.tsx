@@ -1,6 +1,7 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { IconMenu } from "@/components/icons";
+import { BrandGlow, BrandMark } from "@/components/layout/BrandMark";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { HeaderWalletCapsule } from "@/components/layout/HeaderWalletCapsule";
 import { PayFooter } from "@/components/layout/PayFooter";
@@ -57,9 +58,10 @@ export function PayLayout() {
 
   return (
     <div className="flex h-svh flex-col overflow-hidden lg:flex-row">
-      <div className="flex shrink-0 items-center gap-3 border-b border-black/10 px-2 py-3 md:px-5 lg:hidden">
-        <a href="/" className="shrink-0">
-          <img src="/logo.svg" alt="Stableflow Pay" className="h-[30px] w-auto" />
+      <div className="relative flex shrink-0 items-center gap-3 overflow-hidden border-b border-black/10 px-2 py-3 md:px-5 lg:hidden">
+        <BrandGlow />
+        <a href="/" className="relative shrink-0">
+          <BrandMark />
         </a>
         <div className="flex justify-end items-center gap-3 flex-1">
           <div className="min-w-0">

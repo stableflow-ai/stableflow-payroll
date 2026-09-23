@@ -21,7 +21,7 @@ export function AuthBetaBanner() {
         <IconAlert className="h-[7px] w-[2px]" />
       </span>
       <span className="font-montserrat text-sm font-medium text-[#3f8afb]">
-        Payouts. Stableflow is currently in beta.
+        Payouts is currently in beta.
       </span>
     </div>
   );
