@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { IconQuestion } from "@/components/icons/question";
-import { Button } from "@/components/ui/button/Button";
-import { Card } from "@/components/ui/card/Card";
-import { InputNumber } from "@/components/ui/input-number/InputNumber";
-import { Tooltip } from "@/components/ui/tooltip/Tooltip";
-import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
+import { IconQuestion } from "@stableflow/pay-ui/icons/question";
+import { Button } from "@stableflow/pay-ui/button";
+import { Card } from "@stableflow/pay-ui/card";
+import { InputNumber } from "@stableflow/pay-ui/input-number";
+import { Tooltip } from "@stableflow/pay-ui/tooltip";
+import { TokenSelectDialog } from "@stableflow/pay-widgets/token-select";
 import {
   useCreatePayRequestMutation,
   usePaymentRequestDefaultAddressesQuery,
@@ -13,7 +13,7 @@ import { useConnectedWallets } from "@/hooks/use-wallet";
 import useToast from "@/hooks/use-toast";
 import { organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
-import type { IntentsToken } from "@/stores/intents-tokens";
+import { intentsTokenForSelection, type IntentsToken } from "@/stores/intents-tokens";
 import { getAddressPlaceholder } from "@/utils";
 import { TokenSelectButton } from "./components/TokenSelectButton";
 import { GenerateLinkDialog } from "./components/request/GenerateLinkDialog";
@@ -222,8 +222,11 @@ export function RequestPaymentView() {
         title="Receiving token"
         selectedAssetId={destToken?.assetId}
         lockChainKind={destLockChainKind}
-        requireSupport="receive"
-        onSelect={({ token }) => setDestToken(token)}
+        role="receiver"
+        onSelect={({ token }) => {
+          const next = intentsTokenForSelection(token);
+          if (next) setDestToken(next);
+        }}
       />
 
       <GenerateLinkDialog

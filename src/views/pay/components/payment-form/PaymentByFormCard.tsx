@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { IconEmail, IconLock } from "@/components/icons";
-import { Button } from "@/components/ui/button/Button";
+import { IconEmail } from "@stableflow/pay-ui/icons/email";
+import { IconLock } from "@stableflow/pay-ui/icons/lock";
+import { Button } from "@stableflow/pay-ui/button";
 import { getBatchBlockchains } from "@/config/chains";
 import { batchSubmit } from "@/api/payout";
 import { queryKeys } from "@/api/query-keys";

@@ -1,23 +1,21 @@
 import type { ComponentType } from "react";
-import {
-  IconBonus,
-  IconExpense,
-  IconExpenseUser,
-  IconGrants,
-  IconHistory,
-  IconKolMkt,
-  IconOffice,
-  IconOperations,
-  IconOtcTreasury,
-  IconOutsourcing,
-  IconOverview,
-  IconPayment,
-  IconPayroll,
-  IconProcurement,
-  IconSetting,
-  IconTeam,
-} from "@/components/icons";
-import type { IconProps } from "@/components/icons/types";
+import { IconBonus } from "@stableflow/pay-ui/icons/bonus";
+import { IconExpense } from "@stableflow/pay-ui/icons/expense";
+import { IconExpenseUser } from "@stableflow/pay-ui/icons/expense-user";
+import { IconGrants } from "@stableflow/pay-ui/icons/grants";
+import { IconHistory } from "@stableflow/pay-ui/icons/history";
+import { IconKolMkt } from "@stableflow/pay-ui/icons/kol-mkt";
+import { IconOffice } from "@stableflow/pay-ui/icons/office";
+import { IconOperations } from "@stableflow/pay-ui/icons/operations";
+import { IconOtcTreasury } from "@stableflow/pay-ui/icons/otc-treasury";
+import { IconOutsourcing } from "@stableflow/pay-ui/icons/outsourcing";
+import { IconOverview } from "@stableflow/pay-ui/icons/overview";
+import { IconPayment } from "@stableflow/pay-ui/icons/payment";
+import { IconPayroll } from "@stableflow/pay-ui/icons/payroll";
+import { IconProcurement } from "@stableflow/pay-ui/icons/procurement";
+import { IconSetting } from "@stableflow/pay-ui/icons/setting";
+import { IconTeam } from "@stableflow/pay-ui/icons/team";
+import type { IconProps } from "@stableflow/pay-ui/icons/types";
 import { AUTH_USER_ROLE, type AuthUserRole } from "@/types/auth";
 import { OPERATION_CATEGORY } from "@/types/operation";
 import { BONUS_HISTORY_PATH, BONUS_PATH } from "@/views/bonus/config";

@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
-import { IconAlertCircle } from "@/components/icons/alert";
-import { IconArrowDown } from "@/components/icons/arrow-down";
-import { IconCheck } from "@/components/icons/check";
-import { IconLoading } from "@/components/icons/loading";
-import { Skeleton } from "@/components/ui/skeleton/Skeleton";
-import { IconProcessing } from "@/components/icons/processing";
-import { Card } from "@/components/ui/card/Card";
+import { IconAlertCircle } from "@stableflow/pay-ui/icons/alert-circle";
+import { IconArrowDown } from "@stableflow/pay-ui/icons/arrow-down";
+import { IconCheck } from "@stableflow/pay-ui/icons/check";
+import { IconLoading } from "@stableflow/pay-ui/icons/loading";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
+import { IconProcessing } from "@stableflow/pay-ui/icons/processing";
+import { Card } from "@stableflow/pay-ui/card";
 import { chainDisplayName } from "@/config/chains";
 import { cn } from "@/lib/utils";
 import type { ExpenseRecentPayout } from "@/types/expense";

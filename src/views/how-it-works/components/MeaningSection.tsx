@@ -1,5 +1,5 @@
-import { IconCheck } from "@/components/icons/check";
-import { IconClose } from "@/components/icons/close";
+import { IconCheck } from "@stableflow/pay-ui/icons/check";
+import { IconClose } from "@stableflow/pay-ui/icons/close";
 
 const PROTECT_ITEMS = [
   "Direct sender ↔ recipient linkage",

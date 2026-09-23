@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { IconLogout } from "@/components/icons/logout";
+import { IconLogout } from "@stableflow/pay-ui/icons/logout";
 import { MultisigBadge } from "@/components/multisig/MultisigBadge";
-import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
+import { TokenSelectDialog } from "@stableflow/pay-widgets/token-select";
 import { formatAddress, formatAmount } from "@/utils";
 import { useSafeMode } from "@/wallet/evm/safe";
 import { cn } from "@/lib/utils";
-import type { IntentsToken } from "@/stores/intents-tokens";
+import { intentsTokenForSelection, type IntentsToken } from "@/stores/intents-tokens";
 import { useTokenBalance } from "@/hooks/use-token-balances";
 import { useTokenBalancesStore } from "@/stores/token-balances";
 import { useConnectedWallets } from "@/hooks/use-wallet";
@@ -149,20 +149,19 @@ export function YouPaySection(props: {
         onClose={() => setOriginDialogOpen(false)}
         title="Select Token"
         selectedAssetId={originToken?.assetId}
-        showBalances
-        rememberRecentToken
         balanceOwners={ownersForBalances}
         allowedBlockchains={allowedBlockchains}
         disabledBlockchains={disabledBlockchains}
         disabledReason={disabledReason}
-        requireSupport="payment"
         onSelect={({ token }) => {
-          onOriginTokenChange(token);
+          const next = intentsTokenForSelection(token);
+          if (!next) return;
+          onOriginTokenChange(next);
           setOriginDialogOpen(false);
-          const owner = token.chain.chainKind === "solana" && fund
+          const owner = next.chain.chainKind === "solana" && fund
             ? fund
-            : ownersForBalances[token.chain.chainKind];
-          if (owner) void fetchOneBalance(owner, token);
+            : ownersForBalances[next.chain.chainKind];
+          if (owner) void fetchOneBalance(owner, next);
         }}
       />
     </>

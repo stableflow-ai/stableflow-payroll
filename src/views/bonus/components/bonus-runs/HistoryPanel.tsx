@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import { IconLoading } from "@/components/icons/loading";
+import { IconLoading } from "@stableflow/pay-ui/icons/loading";
 import type { BonusHistoryItem } from "@/types/bonus";
 import { HistoryTable } from "@/views/expense/components/expense-runs/HistoryTable";
 import { BONUS_HISTORY_PATH } from "../../config";

@@ -1,9 +1,9 @@
-import { IconPlus } from "@/components/icons/plus";
-import { IconExportLink } from "@/components/icons/link";
-import { Skeleton } from "@/components/ui/skeleton/Skeleton";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_VARIANT } from "@/components/ui/button/config";
-import { Card } from "@/components/ui/card/Card";
+import { IconPlus } from "@stableflow/pay-ui/icons/plus";
+import { IconExportLink } from "@stableflow/pay-ui/icons/link";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_VARIANT } from "@stableflow/pay-ui/button";
+import { Card } from "@stableflow/pay-ui/card";
 import { cn } from "@/lib/utils";
 import type {
   PayrollHistoryRun,

@@ -1,5 +1,5 @@
-import { Skeleton } from "@/components/ui/skeleton/Skeleton";
-import { Card } from "@/components/ui/card/Card";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
+import { Card } from "@stableflow/pay-ui/card";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/utils";
 import { PAYROLL_CHANGE_UP_CLASS } from "../../config";

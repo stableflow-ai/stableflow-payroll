@@ -1,15 +1,8 @@
 import { useState } from "react";
-import { IconUp } from "@/components/icons/up";
-import { Button } from "@/components/ui/button/Button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table/Table";
-import { TableSkeletonRows } from "@/components/ui/table/TableSkeletonRows";
+import { IconUp } from "@stableflow/pay-ui/icons/up";
+import { Button } from "@stableflow/pay-ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@stableflow/pay-ui/table";
+import { TableSkeletonRows } from "@stableflow/pay-ui/table";
 import { chainDisplayName } from "@/config/chains";
 import { formatAmount } from "@/utils";
 import { PayoutRecipientCell } from "@/views/pay/components/payout-table/PayoutRecipientCell";

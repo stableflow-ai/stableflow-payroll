@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { IconAlertCircle } from "@/components/icons/alert";
+import { IconAlertCircle } from "@stableflow/pay-ui/icons/alert-circle";
 import { cn } from "@/lib/utils";
 
 export function DrawerFormField(props: {

@@ -1,6 +1,6 @@
-import { IconDownload } from "@/components/icons/download";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_VARIANT } from "@/components/ui/button/config";
+import { IconDownload } from "@stableflow/pay-ui/icons/download";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_VARIANT } from "@stableflow/pay-ui/button";
 import { cn } from "@/lib/utils";
 import { downloadImportCsvTemplate } from "./download-template";
 

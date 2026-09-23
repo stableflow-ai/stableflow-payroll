@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { IconArrowDown, IconMenu } from "@/components/icons";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_SIZE, BUTTON_VARIANT } from "@/components/ui/button/config";
-import { Drawer } from "@/components/ui/drawer/Drawer";
-import { DRAWER_SIDE } from "@/components/ui/drawer/config";
+import { IconArrowDown } from "@stableflow/pay-ui/icons/arrow-down";
+import { IconMenu } from "@stableflow/pay-ui/icons/menu";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_SIZE, BUTTON_VARIANT } from "@stableflow/pay-ui/button";
+import { Drawer } from "@stableflow/pay-ui/drawer";
+import { DRAWER_SIDE } from "@stableflow/pay-ui/drawer";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { DocsArticle } from "./components/DocsArticle";
 import { DocsTableOfContents } from "./components/DocsTableOfContents";

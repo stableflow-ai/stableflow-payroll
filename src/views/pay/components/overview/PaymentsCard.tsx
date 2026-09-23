@@ -10,8 +10,8 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Card } from "@/components/ui/card/Card";
-import { Dropdown } from "@/components/ui/dropdown/Dropdown";
+import { Card } from "@stableflow/pay-ui/card";
+import { Dropdown } from "@stableflow/pay-ui/dropdown";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/utils";
 import type { VolumePeriod } from "@/types/payout";

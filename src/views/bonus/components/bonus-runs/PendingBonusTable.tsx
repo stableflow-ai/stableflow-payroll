@@ -1,18 +1,11 @@
 import { useState } from "react";
-import { IconArrowDown } from "@/components/icons/arrow-down";
-import { IconProcessing } from "@/components/icons/processing";
-import { IconUp } from "@/components/icons/up";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_VARIANT } from "@/components/ui/button/config";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table/Table";
-import { TableSkeletonRows } from "@/components/ui/table/TableSkeletonRows";
+import { IconArrowDown } from "@stableflow/pay-ui/icons/arrow-down";
+import { IconProcessing } from "@stableflow/pay-ui/icons/processing";
+import { IconUp } from "@stableflow/pay-ui/icons/up";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_VARIANT } from "@stableflow/pay-ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@stableflow/pay-ui/table";
+import { TableSkeletonRows } from "@stableflow/pay-ui/table";
 import { cn } from "@/lib/utils";
 import type { BonusPendingItem } from "@/types/bonus";
 import type { Payable } from "@/types/payable";

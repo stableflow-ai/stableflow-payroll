@@ -1,6 +1,9 @@
 import type { ComponentType } from "react";
-import { IconBonus, IconOperations, IconPayroll, IconReimbursement } from "@/components/icons";
-import type { IconProps } from "@/components/icons/types";
+import { IconBonus } from "@stableflow/pay-ui/icons/bonus";
+import { IconOperations } from "@stableflow/pay-ui/icons/operations";
+import { IconPayroll } from "@stableflow/pay-ui/icons/payroll";
+import { IconReimbursement } from "@stableflow/pay-ui/icons/reimbursement";
+import type { IconProps } from "@stableflow/pay-ui/icons/types";
 import { OPERATION_CATEGORY } from "@/types/operation";
 import { PAYABLE_TYPE } from "@/types/payable";
 

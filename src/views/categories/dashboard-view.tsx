@@ -1,5 +1,5 @@
 import { Navigate, useParams } from "react-router-dom";
-import { Skeleton } from "@/components/ui/skeleton/Skeleton";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
 import { useOperationCatalogQuery } from "@/hooks/use-operation-api";
 import { CategoryAddPage } from "./components/category-add-page";
 import { CategoryPage } from "./components/category-page";

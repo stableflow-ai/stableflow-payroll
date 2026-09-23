@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button/Button";
-import { Drawer } from "@/components/ui/drawer/Drawer";
-import { DRAWER_SIDE } from "@/components/ui/drawer/config";
-import { InputNumber } from "@/components/ui/input-number/InputNumber";
+import { Button } from "@stableflow/pay-ui/button";
+import { Drawer } from "@stableflow/pay-ui/drawer";
+import { DRAWER_SIDE } from "@stableflow/pay-ui/drawer";
+import { InputNumber } from "@stableflow/pay-ui/input-number";
 import { chainDisplayName } from "@/config/chains";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import useToast from "@/hooks/use-toast";

@@ -10,14 +10,10 @@ Rules for humans and agents working in this repository. Anything committed to `s
 
 ## Public components
 
-- Shared, non-business UI lives in `src/components/ui/<component-name>/`.
-- Business widgets stay next to their feature (for example `src/views/pay/components/PaySidebar.tsx`) or in a named shared folder when several features use them (`src/components/token-select-dialog/`, `src/components/date-range-picker/`, `src/components/WalletConnect.tsx`). Do not put business logic in `src/components/ui/`.
-- Reuse existing public components. Do not duplicate Card, Dialog, Button, Table, and similar primitives.
-- Constants (enums, breakpoints, copy defaults) belong in a sibling `config.ts` using `UPPER_SNAKE_CASE`.
-- `src/components/ui/overlay/` is internal plumbing for Dialog, Drawer, Dropdown, and Tooltip. Do not import it from feature code.
-- After creating or changing a public component:
-  1. Update `doc/components/<name>.md` (props, examples, caveats).
-  2. Append an entry to `doc/components/CHANGELOG.md` so others can discover the change.
+- Shared, non-business UI is imported from `@stableflow/pay-ui/<name>`. Token select is imported from `@stableflow/pay-widgets/token-select`. Do not add local copies under `src/components/ui/` or `src/components/token-select-dialog/`.
+- Business widgets stay next to their feature (for example `src/views/pay/components/PaySidebar.tsx`) or in a named shared folder when several features use them (`src/components/WalletConnect.tsx`).
+- Overlay helpers (`DESKTOP_MEDIA_QUERY`, `FLOATING_SIDE`, `useFloatingPosition`) come from `@stableflow/pay-ui/overlay`.
+- After changing how this app uses a package component, update `doc/components/<name>.md` and append an entry to `doc/components/CHANGELOG.md`.
 
 ## Shared utils
 
@@ -35,14 +31,8 @@ Rules for humans and agents working in this repository. Anything committed to `s
 
 ## Icons
 
-One pattern only. Do not mix `public/` SVGs, a separate `svgs/` folder, and inline markup.
-
-- Figma UI glyphs live only in `src/components/icons/<kebab-name>.tsx`.
-- Each file is a React component: `IconProps` from `./types` (`className`, `style`), inline SVG, `stroke="currentColor"` or `fill="currentColor"`, named export `IconXxx`, re-exported from `src/components/icons/index.tsx`.
-- A file may export more than one glyph when they belong together (`up.tsx` exports `IconUp` and `IconBatchUp`).
-- Before adding an icon, read `src/components/icons/index.tsx` and the matching file. If Figma names differ, compare `path` / `viewBox`. Do not duplicate.
-- **Forbidden:** `src/components/icons/svgs/`, `src/components/icons/assets/`, UI icons under `public/`, new inline SVGs in pages or feature components, third-party icon packs (lucide and similar).
-- Prefer existing icons over drawing new glyphs.
+- Icons are imported from `@stableflow/pay-ui/icons/<name>`. Do not copy them into this repo.
+- **Forbidden:** UI icons under `public/`, new inline SVGs in pages or feature components, third-party icon packs (lucide and similar).
 
 ## Static assets (logo and page art)
 
@@ -56,7 +46,7 @@ One pattern only. Do not mix `public/` SVGs, a separate `svgs/` folder, and inli
 ## Responsive
 
 - There is no separate mobile design. Adapt the desktop frame. Do not invent a separate mobile visual system.
-- Narrow viewport is below `768px` (Tailwind `md`), matching `DESKTOP_MEDIA_QUERY` in `src/components/ui/overlay/config.ts`.
+- Narrow viewport is below `768px` (Tailwind `md`), matching `DESKTOP_MEDIA_QUERY` from `@stableflow/pay-ui/overlay`.
 - [Dialog](components/dialog.md) already falls back to a bottom [Drawer](components/drawer.md) below that breakpoint. Use Drawer for menus and filter panels too. Do not build a second mobile nav.
 - The Pay sidebar collapses to a horizontal scroller below `lg`; the app header exposes a second nav row below `md`. Follow those patterns instead of adding a new one.
 - Tables may scroll horizontally. Do not invent a second information architecture for narrow screens unless the user has approved it.
@@ -75,7 +65,7 @@ One pattern only. Do not mix `public/` SVGs, a separate `svgs/` folder, and inli
 
 - Cross-page client state lives in Zustand stores under `src/stores/`. See the store table in [project-structure.md](project-structure.md).
 - The JWT session (`token` + `user`) is the one exception to "stores own their own persistence": it is read and written by `src/lib/auth-session.ts` under the key `stableflow-pay.session`, and `useAuthStore` hydrates from it on first import. Go through `getStoredSession` / `setStoredSession` / `clearStoredSession` / `getAuthToken`; never touch that key directly.
-- Every other store that must survive a reload uses Zustand `persist` (`batch-payout-commit-queue`, `intents-tokens`, `quick-pay-prefs`, `token-select-prefs`, `google-drive-session`, `google-auth-pending`, `squads-sdk`, `multisig-watch-sessions`).
+- Every other store that must survive a reload uses Zustand `persist` (`batch-payout-commit-queue`, `intents-tokens`, `quick-pay-prefs`, `google-drive-session`, `google-auth-pending`, `squads-sdk`, `multisig-watch-sessions`). Recent token choices are stored by `@stableflow/pay-widgets` under `stableflow-pay:token-select-prefs:v1`.
 - Do not read or write `localStorage` / `sessionStorage` from features, pages, or hooks, and do not add another storage wrapper.
 - Server lists, details, and quotes stay in TanStack Query. Do not copy them into Zustand.
 - Page-local UI (dialog open, input value, wizard step) uses component `useState`. Do not lift it into a store.

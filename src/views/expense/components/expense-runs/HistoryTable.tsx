@@ -1,16 +1,9 @@
 import { useState } from "react";
-import { IconCheck2 } from "@/components/icons/check";
-import { IconOutLink } from "@/components/icons/link";
-import { IconPayoutPending } from "@/components/icons/payout-status";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table/Table";
-import { TableSkeletonRows } from "@/components/ui/table/TableSkeletonRows";
+import { IconCheck } from "@stableflow/pay-ui/icons/check";
+import { IconOutLink } from "@stableflow/pay-ui/icons/link";
+import { IconPayoutPending } from "@stableflow/pay-ui/icons/payout-status";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@stableflow/pay-ui/table";
+import { TableSkeletonRows } from "@stableflow/pay-ui/table";
 import { chainDisplayName, txExplorerUrl } from "@/config/chains";
 import { useRetryPayoutItem } from "@/hooks/use-single-payout-api";
 import { cn } from "@/lib/utils";
@@ -61,7 +54,7 @@ function StatusCell(props: {
 
   return (
     <span className={cn("inline-flex items-center gap-1.5", EXPENSE_HISTORY_PAID_CLASS)}>
-      <IconCheck2 className="size-3.5 shrink-0" />
+      <IconCheck className="size-3.5 shrink-0" />
       Paid
       {explorerUrl ? (
         <a

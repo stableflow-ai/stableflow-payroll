@@ -8,20 +8,13 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { IconArrowDown } from "@/components/icons/arrow-down";
-import { IconCopy } from "@/components/icons/copy";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_VARIANT } from "@/components/ui/button/config";
-import { Card } from "@/components/ui/card/Card";
-import { Dropdown } from "@/components/ui/dropdown/Dropdown";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table/Table";
+import { IconArrowDown } from "@stableflow/pay-ui/icons/arrow-down";
+import { IconCopy } from "@stableflow/pay-ui/icons/copy";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_VARIANT } from "@stableflow/pay-ui/button";
+import { Card } from "@stableflow/pay-ui/card";
+import { Dropdown } from "@stableflow/pay-ui/dropdown";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@stableflow/pay-ui/table";
 import { cn } from "@/lib/utils";
 import {
   CATEGORY_DASHBOARD_CHART_LINE_COLOR,

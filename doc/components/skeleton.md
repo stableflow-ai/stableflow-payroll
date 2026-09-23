@@ -1,13 +1,9 @@
 # Skeleton
 
-Path: `src/components/ui/skeleton/Skeleton.tsx`
+Import from `@stableflow/pay-ui/skeleton`. The component lives in the published package. Do not add a local copy under `src/components`.
 
-Pulse block for a section that has not loaded yet. Colour matches the Overview page skeleton (`#e8e8e8`).
+```ts
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
+```
 
-## Props
-
-| Prop | Type | Default | Notes |
-| --- | --- | --- | --- |
-| `className` | `string` | — | Set height and width. The bar is `block`, `animate-pulse`, `rounded-[8px]`. |
-
-Table first loads use [TableSkeletonRows](table.md) inside an existing `Table`, not this bar alone.
+Props and behavior are defined by `@stableflow/pay-ui`. `src/styles.css` must keep the Tailwind `@source` scan of the package `dist` folders, or the component classes are omitted from the build.

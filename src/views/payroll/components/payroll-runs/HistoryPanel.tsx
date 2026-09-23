@@ -1,13 +1,10 @@
 import { useEffect, useRef, useState } from "react";
-import { IconAlertCircle } from "@/components/icons/alert";
-import { IconExportLink } from "@/components/icons/link";
-import { IconLoading } from "@/components/icons/loading";
-import {
-  IconPayoutPaid,
-  IconPayoutPending
-} from "@/components/icons/payout-status";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_VARIANT } from "@/components/ui/button/config";
+import { IconAlertCircle } from "@stableflow/pay-ui/icons/alert-circle";
+import { IconExportLink } from "@stableflow/pay-ui/icons/link";
+import { IconLoading } from "@stableflow/pay-ui/icons/loading";
+import { IconPayoutPaid, IconPayoutPending } from "@stableflow/pay-ui/icons/payout-status";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_VARIANT } from "@stableflow/pay-ui/button";
 import { usePayrollHistoryDetailExportMutation } from "@/hooks/use-payroll-api";
 import useToast from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";

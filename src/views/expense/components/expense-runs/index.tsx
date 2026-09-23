@@ -1,9 +1,9 @@
 import type { ReactNode } from "react";
 import { NavLink } from "react-router-dom";
-import { IconPlus } from "@/components/icons/plus";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_VARIANT } from "@/components/ui/button/config";
-import { Card } from "@/components/ui/card/Card";
+import { IconPlus } from "@stableflow/pay-ui/icons/plus";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_VARIANT } from "@stableflow/pay-ui/button";
+import { Card } from "@stableflow/pay-ui/card";
 import { useExpenseOpenRequestsCountQuery } from "@/hooks/use-expense-api";
 import { cn } from "@/lib/utils";
 import type { ExpenseDraftRow, ExpenseOpenList } from "@/types/expense";

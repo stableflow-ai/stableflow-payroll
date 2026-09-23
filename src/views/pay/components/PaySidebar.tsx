@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { IconArrowDown } from "@/components/icons/arrow-down";
-import { IconMore } from "@/components/icons/more";
+import { IconArrowDown } from "@stableflow/pay-ui/icons/arrow-down";
+import { IconMore } from "@stableflow/pay-ui/icons/more";
 import { BrandGlow, BrandMark } from "@/components/layout/BrandMark";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { HEADER_ACCOUNT_MENU_VARIANT } from "@/components/layout/config";
-import { Tooltip } from "@/components/ui/tooltip/Tooltip";
+import { Tooltip } from "@stableflow/pay-ui/tooltip";
 import { useExpenseOpenRequestsCountQuery } from "@/hooks/use-expense-api";
 import { useOperationCatalogQuery } from "@/hooks/use-operation-api";
 import { organizationName, userRole } from "@/lib/auth-role";

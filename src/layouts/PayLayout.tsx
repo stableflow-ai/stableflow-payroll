@@ -1,6 +1,6 @@
 import { useCallback, useState, type ReactNode } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { IconMenu } from "@/components/icons";
+import { IconMenu } from "@stableflow/pay-ui/icons/menu";
 import { BrandGlow, BrandMark } from "@/components/layout/BrandMark";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { HeaderWalletCapsule } from "@/components/layout/HeaderWalletCapsule";
@@ -9,8 +9,8 @@ import {
   HEADER_ACCOUNT_MENU_VARIANT,
   HEADER_ACCOUNT_TRIGGER_LABEL,
 } from "@/components/layout/config";
-import { Drawer } from "@/components/ui/drawer/Drawer";
-import { DRAWER_SIDE } from "@/components/ui/drawer/config";
+import { Drawer } from "@stableflow/pay-ui/drawer";
+import { DRAWER_SIDE } from "@stableflow/pay-ui/drawer";
 import { useExpenseOpenRequestsCountQuery } from "@/hooks/use-expense-api";
 import { useOperationCatalogQuery } from "@/hooks/use-operation-api";
 import { isUser, organizationName, userRole } from "@/lib/auth-role";

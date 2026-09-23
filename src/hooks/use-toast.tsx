@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 import { toast, type Id } from "react-toastify";
-import Toast, { ToastType } from "@/components/ui/toast/Toast";
+import { Toast, ToastType } from "@stableflow/pay-ui/toast";
 
 const TOAST_POSITION = "bottom-right" as const;
 const TOAST_CLASSNAME = "decash-toast decash-toast-bottom-right";

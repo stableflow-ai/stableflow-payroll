@@ -1,15 +1,8 @@
 import type { ReactNode } from "react";
-import { IconLink, IconOutLink } from "@/components/icons/link";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table/Table";
-import { TableSkeletonRows } from "@/components/ui/table/TableSkeletonRows";
-import { Tooltip } from "@/components/ui/tooltip/Tooltip";
+import { IconLink, IconOutLink } from "@stableflow/pay-ui/icons/link";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@stableflow/pay-ui/table";
+import { TableSkeletonRows } from "@stableflow/pay-ui/table";
+import { Tooltip } from "@stableflow/pay-ui/tooltip";
 import { cn } from "@/lib/utils";
 import useToast from "@/hooks/use-toast";
 import { formatAmount, formatAddress, formatDate } from "@/utils";

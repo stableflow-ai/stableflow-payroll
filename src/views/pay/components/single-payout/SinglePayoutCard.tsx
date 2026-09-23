@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { IconQuestion } from "@/components/icons/question";
-import { Button } from "@/components/ui/button/Button";
-import { InputNumber } from "@/components/ui/input-number/InputNumber";
-import { Tooltip } from "@/components/ui/tooltip/Tooltip";
-import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
+import { IconQuestion } from "@stableflow/pay-ui/icons/question";
+import { Button } from "@stableflow/pay-ui/button";
+import { InputNumber } from "@stableflow/pay-ui/input-number";
+import { Tooltip } from "@stableflow/pay-ui/tooltip";
+import { TokenSelectDialog } from "@stableflow/pay-widgets/token-select";
 import { useCreatePayrollPaymentMutation } from "@/hooks/use-single-payout-api";
 import { useContacts, type Contact } from "@/hooks/use-contacts";
 import { useOrganizationQuery } from "@/hooks/use-organization-api";
@@ -11,7 +11,7 @@ import { useTeamMembersInfiniteQuery, useTeamMembersQuery } from "@/hooks/use-te
 import useToast from "@/hooks/use-toast";
 import { isUser, organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
-import { useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
+import { intentsTokenForSelection, useIntentsTokensStore, type IntentsToken } from "@/stores/intents-tokens";
 import { useQuickPayPrefsStore } from "@/stores/quick-pay-prefs";
 import type { TeamMemberWallets } from "@/types/team";
 import { payrollPaymentNotification } from "@/types/payout";
@@ -335,11 +335,13 @@ export function SinglePayoutCard(props: {
         title="Recipient token"
         selectedAssetId={destToken?.assetId}
         lockChainKind={memberWallets ? undefined : destLockChainKind}
-        requireSupport="receive"
+        role="receiver"
         onSelect={({ token }) => {
-          setDestToken(token);
+          const next = intentsTokenForSelection(token);
+          if (!next) return;
+          setDestToken(next);
           if (memberWallets) {
-            setAddressInput(walletForChainKind(memberWallets, token.chain.chainKind));
+            setAddressInput(walletForChainKind(memberWallets, next.chain.chainKind));
           }
         }}
       />

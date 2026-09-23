@@ -1,14 +1,14 @@
 import { type ReactNode } from "react";
-import { IconAlertCircle } from "@/components/icons/alert";
-import { IconCheck2 } from "@/components/icons/check";
-import { IconExportLink, IconOutLink } from "@/components/icons/link";
-import { Skeleton } from "@/components/ui/skeleton/Skeleton";
-import { IconPayroll } from "@/components/icons/payroll";
-import { IconPayoutPending } from "@/components/icons/payout-status";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_SIZE, BUTTON_VARIANT } from "@/components/ui/button/config";
-import { Drawer } from "@/components/ui/drawer/Drawer";
-import { DRAWER_SIDE } from "@/components/ui/drawer/config";
+import { IconAlertCircle } from "@stableflow/pay-ui/icons/alert-circle";
+import { IconCheck } from "@stableflow/pay-ui/icons/check";
+import { IconExportLink, IconOutLink } from "@stableflow/pay-ui/icons/link";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
+import { IconPayroll } from "@stableflow/pay-ui/icons/payroll";
+import { IconPayoutPending } from "@stableflow/pay-ui/icons/payout-status";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_SIZE, BUTTON_VARIANT } from "@stableflow/pay-ui/button";
+import { Drawer } from "@stableflow/pay-ui/drawer";
+import { DRAWER_SIDE } from "@stableflow/pay-ui/drawer";
 import { chainDisplayName, txExplorerUrl } from "@/config/chains";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import {
@@ -342,7 +342,7 @@ function HistoryDetailStatus(props: {
         PAYROLL_HISTORY_DETAIL_PAID_CLASS
       )}
     >
-      <IconCheck2 className="size-3.5 shrink-0" />
+      <IconCheck className="size-3.5 shrink-0" />
       Paid
       {explorerUrl ? (
         <a

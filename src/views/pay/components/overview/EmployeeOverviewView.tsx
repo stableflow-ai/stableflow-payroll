@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Card } from "@/components/ui/card/Card";
+import { Card } from "@stableflow/pay-ui/card";
 import {
   useMemberOverviewPayoutQuery,
   useMemberOverviewQuery,

@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { RecipientAvatar } from "@/components/recipient-avatar/RecipientAvatar";
-import { IconDelete } from "@/components/icons/delete";
-import { IconPen } from "@/components/icons/pen";
-import { IconPlus } from "@/components/icons/plus";
-import { Button } from "@/components/ui/button/Button";
-import { Dialog } from "@/components/ui/dialog/Dialog";
+import { IconDelete } from "@stableflow/pay-ui/icons/delete";
+import { IconPen } from "@stableflow/pay-ui/icons/pen";
+import { IconPlus } from "@stableflow/pay-ui/icons/plus";
+import { Button } from "@stableflow/pay-ui/button";
+import { Dialog } from "@stableflow/pay-ui/dialog";
 import type { Contact } from "@/hooks/use-contacts";
 import { formatAddress, sameAddress } from "@/utils";
 import { detectAddressChainKind } from "../utils";
-import { IconLoading } from "@/components/icons";
-import { Skeleton } from "@/components/ui/skeleton/Skeleton";
+import { IconLoading } from "@stableflow/pay-ui/icons/loading";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
 import {
   TEAM_WALLET_TAB_LABELS,
   walletForChainKind,

@@ -1,4 +1,4 @@
-import { Switch } from "@/components/ui/switch/Switch";
+import { Switch } from "@stableflow/pay-ui/switch";
 import { cn } from "@/lib/utils";
 import type { ReactNode } from "react";
 

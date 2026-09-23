@@ -1,9 +1,9 @@
 import { useWallet as useSolanaAdapter } from "@solana/wallet-adapter-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_SIZE, BUTTON_VARIANT } from "@/components/ui/button/config";
-import { Dialog } from "@/components/ui/dialog/Dialog";
-import { Switch } from "@/components/ui/switch/Switch";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_SIZE, BUTTON_VARIANT } from "@stableflow/pay-ui/button";
+import { Dialog } from "@stableflow/pay-ui/dialog";
+import { Switch } from "@stableflow/pay-ui/switch";
 import useToast from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
 import { useSquadsSdkStore } from "@/stores/squads-sdk";

@@ -1,8 +1,8 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button/Button";
-import { Skeleton } from "@/components/ui/skeleton/Skeleton";
-import { Icon2Right } from "@/components/icons/to-right";
+import { Button } from "@stableflow/pay-ui/button";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
+import { Icon2Right } from "@stableflow/pay-ui/icons/to-right";
 import { useGoogleRegisterMutation } from "@/hooks/use-auth-api";
 import useToast from "@/hooks/use-toast";
 import { useGoogleAuthPendingStore } from "@/stores/google-auth-pending";

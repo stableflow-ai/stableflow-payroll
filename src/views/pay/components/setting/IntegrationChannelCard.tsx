@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
-import { Dropdown } from "@/components/ui/dropdown/Dropdown";
-import { Switch } from "@/components/ui/switch/Switch";
+import { Dropdown } from "@stableflow/pay-ui/dropdown";
+import { Switch } from "@stableflow/pay-ui/switch";
 import type { ChannelConfig } from "@/hooks/use-settings-api";
 import { cn } from "@/lib/utils";
 import { FIELD_REQUIREMENT_OPTIONS } from "./config";

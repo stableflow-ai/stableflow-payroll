@@ -8,9 +8,9 @@ import {
   XAxis,
   YAxis,
 } from "recharts";
-import { Skeleton } from "@/components/ui/skeleton/Skeleton";
-import { Card } from "@/components/ui/card/Card";
-import { Dropdown } from "@/components/ui/dropdown/Dropdown";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
+import { Card } from "@stableflow/pay-ui/card";
+import { Dropdown } from "@stableflow/pay-ui/dropdown";
 import { cn } from "@/lib/utils";
 import { chartYTicks, formatAmount } from "@/utils";
 import type { PayrollChartPoint } from "@/types/payroll";

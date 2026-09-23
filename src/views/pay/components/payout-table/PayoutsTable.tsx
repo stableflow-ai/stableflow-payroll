@@ -1,11 +1,4 @@
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table/Table";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@stableflow/pay-ui/table";
 import { chainDisplayName } from "@/config/chains";
 import { formatAmount, formatDate } from "@/utils";
 import { PAYOUT_TABLE_COLUMNS } from "../../config";

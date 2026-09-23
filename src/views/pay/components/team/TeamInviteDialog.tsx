@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { IconCopy } from "@/components/icons/copy";
-import { Button } from "@/components/ui/button/Button";
-import { Dialog } from "@/components/ui/dialog/Dialog";
+import { IconCopy } from "@stableflow/pay-ui/icons/copy";
+import { Button } from "@stableflow/pay-ui/button";
+import { Dialog } from "@stableflow/pay-ui/dialog";
 import useToast from "@/hooks/use-toast";
 
 export function TeamInviteDialog(props: {

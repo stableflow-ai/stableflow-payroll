@@ -1,4 +1,4 @@
-import { Dialog } from "@/components/ui/dialog/Dialog";
+import { Dialog } from "@stableflow/pay-ui/dialog";
 import type { TeamMemberWallets } from "@/types/team";
 import { memberDisplayWallet } from "../team/utils";
 import { SinglePayoutCard } from "./SinglePayoutCard";

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Card } from "@/components/ui/card/Card";
+import { Card } from "@stableflow/pay-ui/card";
 import { usePayablesQuery } from "@/hooks/use-payable-api";
 import useToast from "@/hooks/use-toast";
 import { findExpensePayable } from "@/types/payable";

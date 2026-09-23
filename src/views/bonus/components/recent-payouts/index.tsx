@@ -1,14 +1,10 @@
 import { useEffect, useRef } from "react";
-import { IconAlertCircle } from "@/components/icons/alert";
-import { IconArrowDown } from "@/components/icons/arrow-down";
-import { IconLoading } from "@/components/icons/loading";
-import { Skeleton } from "@/components/ui/skeleton/Skeleton";
-import {
-  IconPayoutFailed,
-  IconPayoutPaid,
-  IconPayoutPending,
-} from "@/components/icons/payout-status";
-import { Card } from "@/components/ui/card/Card";
+import { IconAlertCircle } from "@stableflow/pay-ui/icons/alert-circle";
+import { IconArrowDown } from "@stableflow/pay-ui/icons/arrow-down";
+import { IconLoading } from "@stableflow/pay-ui/icons/loading";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
+import { IconPayoutFailed, IconPayoutPaid, IconPayoutPending } from "@stableflow/pay-ui/icons/payout-status";
+import { Card } from "@stableflow/pay-ui/card";
 import { chainDisplayName } from "@/config/chains";
 import { cn } from "@/lib/utils";
 import type { BonusRecentPayout } from "@/types/bonus";

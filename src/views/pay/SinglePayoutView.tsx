@@ -1,4 +1,4 @@
-import { Card } from "@/components/ui/card/Card";
+import { Card } from "@stableflow/pay-ui/card";
 import { SinglePayoutCard } from "./components/single-payout/SinglePayoutCard";
 
 export function SinglePayoutView() {

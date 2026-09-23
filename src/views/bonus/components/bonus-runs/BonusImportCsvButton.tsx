@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { IconArrowDown } from "@/components/icons/arrow-down";
-import { IconImportFile } from "@/components/icons/import-file";
-import { Button, type ButtonProps } from "@/components/ui/button/Button";
-import { BUTTON_VARIANT } from "@/components/ui/button/config";
+import { IconArrowDown } from "@stableflow/pay-ui/icons/arrow-down";
+import { IconImportFile } from "@stableflow/pay-ui/icons/import-file";
+import { Button, type ButtonProps } from "@stableflow/pay-ui/button";
+import { BUTTON_VARIANT } from "@stableflow/pay-ui/button";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import useToast from "@/hooks/use-toast";
 import { isGoogleImportConfigured } from "@/lib/google/config";

@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_SIZE } from "@/components/ui/button/config";
-import { Card } from "@/components/ui/card/Card";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_SIZE } from "@stableflow/pay-ui/button";
+import { Card } from "@stableflow/pay-ui/card";
 import {
   useUpdateMemberProfileMutation,
   useUpdateProfileMutation,

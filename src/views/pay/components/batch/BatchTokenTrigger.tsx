@@ -1,4 +1,4 @@
-import { IconArrowDown } from "@/components/icons/arrow-down";
+import { IconArrowDown } from "@stableflow/pay-ui/icons/arrow-down";
 import { cn } from "@/lib/utils";
 import type { IntentsToken } from "@/stores/intents-tokens";
 import { formatTokenNetwork } from "../../batch-utils";

@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@source "../node_modules/@stableflow/pay-ui/dist";
+@source "../node_modules/@stableflow/pay-widgets/dist";
 @import "tw-animate-css";
 @import "./shadcn-tailwind.css";
 @import "@fontsource/montserrat/400.css";

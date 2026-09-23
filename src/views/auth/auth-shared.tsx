@@ -1,7 +1,8 @@
 import type { ReactNode } from "react";
 import { useState } from "react";
 import { ApiError } from "@/lib/api-error";
-import { IconAlert, IconEye, IconEyeHidden } from "@/components/icons";
+import { IconAlert } from "@stableflow/pay-ui/icons/alert";
+import { IconEye, IconEyeHidden } from "@stableflow/pay-ui/icons/eye";
 import { cn } from "@/lib/utils";
 import {
   AUTH_COMPACT_INPUT_CLASS,
