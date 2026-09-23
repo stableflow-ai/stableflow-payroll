@@ -1,5 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
+  clickOrganizationHighPriority,
   getOrganizationHighPriority,
   getOrganizationOverview,
   getOrganizationPayout,
@@ -7,6 +8,7 @@ import {
 import { queryKeys } from "@/api/query-keys";
 import { organizationId } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
+import type { OrganizationHighPriorityCategory } from "@/types/organization";
 import type { VolumePeriod } from "@/types/payout";
 import { browserTimeZone } from "@/utils";
 
@@ -55,5 +57,26 @@ export function useOrganizationHighPriorityQuery() {
         timezone,
       }),
     enabled,
+  });
+}
+
+export function useClickOrganizationHighPriorityMutation() {
+  const queryClient = useQueryClient();
+  const { orgId } = useOrganizationScope();
+  return useMutation({
+    mutationFn: (category: OrganizationHighPriorityCategory) => {
+      if (orgId == null) {
+        return Promise.reject(new Error("Organization is missing"));
+      }
+      return clickOrganizationHighPriority({
+        category,
+        organizationId: orgId,
+      });
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({
+        queryKey: [...queryKeys.organization.all, "high-priority"],
+      });
+    },
   });
 }

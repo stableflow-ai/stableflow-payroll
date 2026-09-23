@@ -2,6 +2,7 @@ export const ORGANIZATION_HIGH_PRIORITY_CATEGORY = {
   Payroll: "payroll",
   PayFailed: "payFailed",
   PaymentRequest: "requests",
+  Join: "join",
 } as const;
 
 export type OrganizationHighPriorityCategory =
@@ -56,8 +57,14 @@ export interface OrganizationPayoutPoint {
 
 export interface OrganizationHighPriorityItem {
   category: OrganizationHighPriorityCategory;
+  subCategory: string;
   title: string;
   description: string;
+}
+
+export interface ClickOrganizationHighPriorityBody {
+  category: OrganizationHighPriorityCategory;
+  organizationId: number;
 }
 
 export interface OrganizationAddressSettings {

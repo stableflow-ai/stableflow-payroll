@@ -11,6 +11,7 @@ import {
   defaultAddressSettings,
   defaultNotificationSettings,
   type ChannelConfig,
+  type ClickOrganizationHighPriorityBody,
   type IntegrationSettings,
   type OrganizationAddressSettings,
   type OrganizationFieldStatus,
@@ -85,6 +86,7 @@ function mapHighPriorityItem(raw: unknown): OrganizationHighPriorityItem | null 
   if (!HIGH_PRIORITY_CATEGORIES.has(category)) return null;
   return {
     category: category as OrganizationHighPriorityCategory,
+    subCategory: apiText(row.sub_category ?? row.subCategory).trim(),
     title: apiText(row.title).trim(),
     description: apiText(row.description).trim(),
   };
@@ -291,6 +293,16 @@ export async function getOrganizationPayout(params: {
     }),
     params.period,
   );
+}
+
+export async function clickOrganizationHighPriority(body: ClickOrganizationHighPriorityBody) {
+  await http<void>(`${PAY_API_PREFIX}/organizations/high-priority/click`, {
+    method: "POST",
+    body: {
+      category: body.category,
+      organization_id: body.organizationId,
+    },
+  });
 }
 
 export async function getOrganizationHighPriority(params: {

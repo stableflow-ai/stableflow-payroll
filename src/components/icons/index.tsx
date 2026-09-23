@@ -63,3 +63,4 @@ export * from "./import-file";
 export * from "./receipt";
 export * from "./payout-status";
 export * from "./expense";
+export * from "./member";

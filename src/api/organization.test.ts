@@ -69,25 +69,40 @@ describe("mapOrganizationHighPriorityItems", () => {
     expect(
       mapOrganizationHighPriorityItems([
         { category: "payroll", title: "September payroll", description: "3 items" },
-        { category: "payFailed", title: "Transaction Failed", description: "August · 2 failed" },
-        { category: "requests", title: "2 Payment Requests", description: "September" },
+        {
+          category: "payFailed",
+          sub_category: "payroll",
+          title: "Transaction Failed",
+          description: "August · 2 failed",
+        },
+        { category: "requests", subCategory: "expense", title: "2 Payment Requests", description: "September" },
+        { category: "join", sub_category: "", title: "2 Team Member Joined", description: "Jimmy Self 1, jmg2" },
         { category: "other", title: "Other", description: "May" },
       ]),
     ).toEqual([
       {
         category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.Payroll,
+        subCategory: "",
         title: "September payroll",
         description: "3 items",
       },
       {
         category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed,
+        subCategory: "payroll",
         title: "Transaction Failed",
         description: "August · 2 failed",
       },
       {
         category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest,
+        subCategory: "expense",
         title: "2 Payment Requests",
         description: "September",
+      },
+      {
+        category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.Join,
+        subCategory: "",
+        title: "2 Team Member Joined",
+        description: "Jimmy Self 1, jmg2",
       },
     ]);
   });
