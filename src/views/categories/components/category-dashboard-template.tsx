@@ -1,26 +1,20 @@
 import { useState } from "react";
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
+  ReferenceDot,
   ResponsiveContainer,
   XAxis,
   YAxis,
 } from "recharts";
-import { IconArrowDown } from "@/components/icons/arrow-down";
-import { IconCopy } from "@/components/icons/copy";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_VARIANT } from "@/components/ui/button/config";
-import { Card } from "@/components/ui/card/Card";
-import { Dropdown } from "@/components/ui/dropdown/Dropdown";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table/Table";
+import { IconArrowDown } from "@stableflow/pay-ui/icons/arrow-down";
+import { IconCopy } from "@stableflow/pay-ui/icons/copy";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_VARIANT } from "@stableflow/pay-ui/button";
+import { Card } from "@stableflow/pay-ui/card";
+import { Dropdown } from "@stableflow/pay-ui/dropdown";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@stableflow/pay-ui/table";
 import { cn } from "@/lib/utils";
 import {
   CATEGORY_DASHBOARD_CHART_LINE_COLOR,
@@ -40,14 +34,14 @@ export function CategoryDashboardTemplate(props: {
   onBack?: () => void;
   onAdd?: () => void;
 }) {
-  const { samplePayment, groupedPayment, chartHighlightLabel, onBack, onAdd } = props;
+  const { samplePayment, groupedPayment, onBack, onAdd } = props;
   const [tab, setTab] = useState<CategoryDashboardTab>(CATEGORY_DASHBOARD_TAB.Payments);
 
   return (
     <div className="flex min-h-full flex-col gap-4">
       <StatsRow />
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(240px,298px)]">
-        <TotalPaymentChart highlightLabel={chartHighlightLabel} />
+        <TotalPaymentChart />
         <RecentPayouts />
       </div>
       <div className="mt-4">
@@ -121,9 +115,10 @@ function StatColumn(props: { label: string; value: string }) {
   );
 }
 
-function TotalPaymentChart(props: { highlightLabel?: string }) {
-  const { highlightLabel } = props;
+function TotalPaymentChart() {
+  const points = [...CATEGORY_DASHBOARD_CHART_POINTS];
   const yMax = CATEGORY_DASHBOARD_CHART_Y_TICKS[CATEGORY_DASHBOARD_CHART_Y_TICKS.length - 1];
+  const lastPoint = points.length > 0 ? points[points.length - 1] : null;
 
   return (
     <Card className="flex h-[300px] flex-col">
@@ -141,32 +136,19 @@ function TotalPaymentChart(props: { highlightLabel?: string }) {
       </div>
       <div className="mt-2 min-h-0 flex-1">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart
-            data={[...CATEGORY_DASHBOARD_CHART_POINTS]}
-            margin={{ top: 8, right: 12, left: 0, bottom: 0 }}
-          >
-            <CartesianGrid stroke="#e3e3e3" />
+          <AreaChart data={points} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
+            <defs>
+              <linearGradient id="categoryDashboardChartFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor={CATEGORY_DASHBOARD_CHART_LINE_COLOR} stopOpacity={0.28} />
+                <stop offset="100%" stopColor={CATEGORY_DASHBOARD_CHART_LINE_COLOR} stopOpacity={0} />
+              </linearGradient>
+            </defs>
+            <CartesianGrid vertical={false} stroke="#e3e3e3" />
             <XAxis
               dataKey="label"
               axisLine={false}
               tickLine={false}
-              tick={(tickProps) => {
-                const { x, y, payload } = tickProps;
-                const active = payload?.value === highlightLabel;
-                return (
-                  <text
-                    x={x}
-                    y={y}
-                    dy={12}
-                    textAnchor="middle"
-                    fill={active ? "#606060" : "#aaa"}
-                    fontSize={12}
-                    fontFamily="Montserrat"
-                  >
-                    {payload?.value}
-                  </text>
-                );
-              }}
+              tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
             />
             <YAxis
               axisLine={false}
@@ -177,19 +159,32 @@ function TotalPaymentChart(props: { highlightLabel?: string }) {
               tick={{ fill: "#aaa", fontSize: 12, fontFamily: "Montserrat" }}
               width={48}
             />
-            <Line
-              type="linear"
+            <Area
+              type="monotone"
               dataKey="value"
               stroke={CATEGORY_DASHBOARD_CHART_LINE_COLOR}
-              strokeWidth={1.6}
-              dot={{
-                r: 4,
-                fill: CATEGORY_DASHBOARD_CHART_LINE_COLOR,
-                stroke: "#fff",
+              strokeWidth={2}
+              fill="url(#categoryDashboardChartFill)"
+              fillOpacity={1}
+              dot={false}
+              activeDot={{
+                r: 5,
+                stroke: CATEGORY_DASHBOARD_CHART_LINE_COLOR,
+                fill: "#fff",
                 strokeWidth: 2,
               }}
             />
-          </LineChart>
+            {lastPoint ? (
+              <ReferenceDot
+                x={lastPoint.label}
+                y={lastPoint.value}
+                r={5}
+                fill="#fff"
+                stroke={CATEGORY_DASHBOARD_CHART_LINE_COLOR}
+                strokeWidth={2}
+              />
+            ) : null}
+          </AreaChart>
         </ResponsiveContainer>
       </div>
     </Card>

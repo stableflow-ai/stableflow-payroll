@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button/Button";
-import { Dialog } from "@/components/ui/dialog/Dialog";
+import { Button } from "@stableflow/pay-ui/button";
+import { Dialog } from "@stableflow/pay-ui/dialog";
 
 export function ExternalLinkConfirmDialog(props: {
   open: boolean;

@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
-import { IconExportLink } from "@/components/icons/link";
-import { DateRangePicker } from "@/components/date-range-picker/DateRangePicker";
-import { DATE_RANGE_PRESET } from "@/components/date-range-picker/config";
-import { lastNDaysRange, rangeToUnixSeconds } from "@/components/date-range-picker/utils";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_SIZE, BUTTON_VARIANT } from "@/components/ui/button/config";
-import { Dropdown } from "@/components/ui/dropdown/Dropdown";
-import { Pagination } from "@/components/ui/pagination/Pagination";
-import { SearchInput } from "@/components/ui/search-input/SearchInput";
+import { IconExportLink } from "@stableflow/pay-ui/icons/link";
+import { DateRangePicker } from "@stableflow/pay-ui/date-range-picker";
+import { DATE_RANGE_PRESET } from "@stableflow/pay-ui/date-range-picker";
+import { lastNDaysRange, rangeToUnixSeconds } from "@stableflow/pay-ui/date-range-picker";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_SIZE, BUTTON_VARIANT } from "@stableflow/pay-ui/button";
+import { Dropdown } from "@stableflow/pay-ui/dropdown";
+import { Pagination } from "@stableflow/pay-ui/pagination";
+import { SearchInput } from "@stableflow/pay-ui/search-input";
 import { getRuntimeChains } from "@/config/chains";
 import { useExportHistoryMutation, useHistoryQuery } from "@/hooks/use-history-api";
 import useToast from "@/hooks/use-toast";
@@ -189,7 +189,8 @@ export function TransactionHistoryView() {
         <HistoryTable
           rows={rows}
           showType={member}
-          empty={query.isLoading ? "Loading transactions…" : "No transactions"}
+          loading={query.isLoading}
+          empty="No transactions"
           toolbar={
             <div
               className={

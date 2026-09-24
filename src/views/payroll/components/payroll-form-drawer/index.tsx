@@ -1,22 +1,22 @@
 import { useEffect, useState } from "react";
-import { IconDelete } from "@/components/icons/delete";
-import { IconExportLink } from "@/components/icons/link";
-import { IconPlus } from "@/components/icons/plus";
-import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_SIZE, BUTTON_VARIANT } from "@/components/ui/button/config";
-import { Dialog } from "@/components/ui/dialog/Dialog";
-import { Drawer } from "@/components/ui/drawer/Drawer";
-import { DRAWER_SIDE } from "@/components/ui/drawer/config";
-import { Dropdown } from "@/components/ui/dropdown/Dropdown";
-import { InputNumber } from "@/components/ui/input-number/InputNumber";
+import { IconDelete } from "@stableflow/pay-ui/icons/delete";
+import { IconExportLink } from "@stableflow/pay-ui/icons/link";
+import { IconPlus } from "@stableflow/pay-ui/icons/plus";
+import { TokenSelectDialog } from "@stableflow/pay-widgets/token-select";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_SIZE, BUTTON_VARIANT } from "@stableflow/pay-ui/button";
+import { Dialog } from "@stableflow/pay-ui/dialog";
+import { Drawer } from "@stableflow/pay-ui/drawer";
+import { DRAWER_SIDE } from "@stableflow/pay-ui/drawer";
+import { Dropdown } from "@stableflow/pay-ui/dropdown";
+import { InputNumber } from "@stableflow/pay-ui/input-number";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import {
   PAYROLL_IMPORT_DAY_TYPE,
   type PayrollImportDayType
 } from "@/types/payroll";
-import { useIntentsTokensStore } from "@/stores/intents-tokens";
+import { intentsTokenForSelection, useIntentsTokensStore } from "@/stores/intents-tokens";
 import { amountError } from "@/views/pay/batch-utils";
 import { BatchTokenTrigger } from "@/views/pay/components/batch/BatchTokenTrigger";
 import { DrawerFormField, DrawerFormFooter } from "@/views/pay/components/drawer-form-field";
@@ -306,10 +306,12 @@ export function PayrollFormDrawer(props: {
         title="Prefer token"
         selectedAssetId={destRow?.token?.assetId}
         lockChainKind={destRow?.chainKind}
-        requireSupport="receive"
+        role="receiver"
         onSelect={({ token }) => {
           if (!destRowId) return;
-          patchRow(destRowId, { token });
+          const next = intentsTokenForSelection(token);
+          if (!next) return;
+          patchRow(destRowId, { token: next });
           setDestRowId(null);
         }}
       />

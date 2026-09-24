@@ -1,4 +1,3 @@
-import { IconLoading } from "@/components/icons/loading";
 import { useExpenseOpenRequestsQuery } from "@/hooks/use-expense-api";
 import type { Payable } from "@/types/payable";
 import { expenseBatchToPayable, findExpenseOpenBatch } from "@/views/pay/components/payment-form/from-source";
@@ -26,11 +25,7 @@ export function RequestsPanel(props: { onPayNow: (form: Payable) => void }) {
   const total = formatSplitUsd(list.total);
 
   if (requestsQuery.isLoading) {
-    return (
-      <div className="flex min-h-[240px] items-center justify-center">
-        <IconLoading className="size-5 animate-spin text-[#909090]" />
-      </div>
-    );
+    return <RequestsTable rows={[]} onPayNow={() => undefined} loading />;
   }
 
   if (requestsQuery.isError) {

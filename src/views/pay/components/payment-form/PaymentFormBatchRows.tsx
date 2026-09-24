@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button/Button";
+import { Button } from "@stableflow/pay-ui/button";
 import { formatAmount } from "@/utils";
 import type { PayablePayQuoteBatch } from "@/types/payout";
 import { AMOUNT_MAX_DECIMALS } from "../../config";

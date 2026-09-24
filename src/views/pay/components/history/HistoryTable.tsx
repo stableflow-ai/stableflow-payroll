@@ -1,13 +1,7 @@
 import type { ReactNode } from "react";
-import { Icon2Right } from "@/components/icons/to-right";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table/Table";
+import { Icon2Right } from "@stableflow/pay-ui/icons/to-right";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@stableflow/pay-ui/table";
+import { TableSkeletonRows } from "@stableflow/pay-ui/table";
 import { txExplorerUrl } from "@/config/chains";
 import { cn } from "@/lib/utils";
 import { formatAmount, formatDate } from "@/utils";
@@ -21,10 +15,11 @@ export function HistoryTable(props: {
   rows: HistoryItem[];
   empty: string;
   showType?: boolean;
+  loading?: boolean;
   toolbar?: ReactNode;
   footer?: ReactNode;
 }) {
-  const { rows, empty, showType = false, toolbar, footer } = props;
+  const { rows, empty, showType = false, loading = false, toolbar, footer } = props;
 
   return (
     <Table
@@ -44,7 +39,9 @@ export function HistoryTable(props: {
         <TableHead>Time</TableHead>
         <TableHead>Status</TableHead>
       </TableHeader>
-      {rows.length === 0 ? (
+      {loading ? (
+        <TableSkeletonRows cells={showType ? 10 : 9} />
+      ) : rows.length === 0 ? (
         <p className="py-8 text-center font-montserrat text-sm font-medium text-[#aaa]">{empty}</p>
       ) : (
         <TableBody>

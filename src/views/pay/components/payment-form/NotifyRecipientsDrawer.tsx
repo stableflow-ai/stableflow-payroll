@@ -1,7 +1,7 @@
-import { IconCheck } from "@/components/icons";
-import { Drawer } from "@/components/ui/drawer/Drawer";
-import { DRAWER_SIDE } from "@/components/ui/drawer/config";
-import { Switch } from "@/components/ui/switch/Switch";
+import { IconCheck } from "@stableflow/pay-ui/icons/check";
+import { Drawer } from "@stableflow/pay-ui/drawer";
+import { DRAWER_SIDE } from "@stableflow/pay-ui/drawer";
+import { Switch } from "@stableflow/pay-ui/switch";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
 import type { PayableItem } from "@/types/payable";

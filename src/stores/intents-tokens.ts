@@ -1,12 +1,13 @@
 /**
  * Cached payroll config tokens and chains.
- * Refresh via GET /v1/payroll/config; persist the last successful payload.
+ * Refresh via GET /v1/pay/config; persist the last successful payload.
  */
 
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import {
   FIXED_CHAINS,
+  getChainByBlockchain,
   mergeApiChains,
   setRuntimeChains,
   type ChainConfig,
@@ -211,3 +212,22 @@ export const useIntentsTokensStore = create<IntentsTokensState>()(
     },
   ),
 );
+
+export function intentsTokenForSelection(token: {
+  assetId: string;
+  decimals: number;
+  blockchain: string;
+  symbol: string;
+  providerSymbol: string;
+  price: number;
+  contractAddress: string | null;
+  logo: string;
+  supportPayment: boolean;
+  supportReceive: boolean;
+}): IntentsToken | null {
+  const found = useIntentsTokensStore.getState().findByAssetId(token.assetId);
+  if (found) return found;
+  const chain = getChainByBlockchain(token.blockchain);
+  if (!chain) return null;
+  return { ...token, chain };
+}

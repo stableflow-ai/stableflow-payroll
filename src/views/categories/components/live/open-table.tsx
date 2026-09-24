@@ -1,15 +1,9 @@
 import { useState } from "react";
-import { IconArrowDown } from "@/components/icons/arrow-down";
-import { IconUp } from "@/components/icons/up";
-import { Button } from "@/components/ui/button/Button";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table/Table";
+import { IconArrowDown } from "@stableflow/pay-ui/icons/arrow-down";
+import { IconUp } from "@stableflow/pay-ui/icons/up";
+import { Button } from "@stableflow/pay-ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@stableflow/pay-ui/table";
+import { TableSkeletonRows } from "@stableflow/pay-ui/table";
 import { chainDisplayName } from "@/config/chains";
 import { cn } from "@/lib/utils";
 import type { OperationOpenBatch } from "@/types/operation";
@@ -189,8 +183,9 @@ export function OperationOpenTable(props: {
   batches: OperationOpenBatch[];
   category: string;
   onPayNow: (form: Payable) => void;
+  loading?: boolean;
 }) {
-  const { batches, category, onPayNow } = props;
+  const { batches, category, onPayNow, loading = false } = props;
   const [pendingUrl, setPendingUrl] = useState<string | null>(null);
 
   function handleConfirmExternalLink() {
@@ -216,6 +211,9 @@ export function OperationOpenTable(props: {
           <TableHead>Amount</TableHead>
           <TableHead className="last:pr-4" />
         </TableHeader>
+        {loading ? (
+          <TableSkeletonRows cells={9} />
+        ) : (
         <TableBody className="mt-1 flex min-w-min flex-col gap-4">
           {batches.map((batch) => (
             <OperationBatchBlock
@@ -227,6 +225,7 @@ export function OperationOpenTable(props: {
             />
           ))}
         </TableBody>
+        )}
       </Table>
       <ExternalLinkConfirmDialog
         open={Boolean(pendingUrl)}

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_SIZE } from "@/components/ui/button/config";
-import { Card } from "@/components/ui/card/Card";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_SIZE } from "@stableflow/pay-ui/button";
+import { Card } from "@stableflow/pay-ui/card";
 import { useOrganizationQuery, useUpdateOrganizationMutation } from "@/hooks/use-organization-api";
 import useToast from "@/hooks/use-toast";
 import { organizationLogo, organizationName } from "@/lib/auth-role";

@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { DateRangePicker } from "@/components/date-range-picker/DateRangePicker";
-import { DATE_RANGE_PRESET } from "@/components/date-range-picker/config";
-import { lastNDaysRange, rangeToUnixSeconds } from "@/components/date-range-picker/utils";
-import { IconExportLink } from "@/components/icons/link";
-import { IconLoading } from "@/components/icons/loading";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_VARIANT } from "@/components/ui/button/config";
-import { SearchInput } from "@/components/ui/search-input/SearchInput";
+import { DateRangePicker } from "@stableflow/pay-ui/date-range-picker";
+import { DATE_RANGE_PRESET } from "@stableflow/pay-ui/date-range-picker";
+import { lastNDaysRange, rangeToUnixSeconds } from "@stableflow/pay-ui/date-range-picker";
+import { IconExportLink } from "@stableflow/pay-ui/icons/link";
+import { IconLoading } from "@stableflow/pay-ui/icons/loading";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_VARIANT } from "@stableflow/pay-ui/button";
+import { SearchInput } from "@stableflow/pay-ui/search-input";
 import {
   useExpenseHistoryExportMutation,
   useExpenseHistoryInfiniteQuery,
@@ -102,8 +102,8 @@ export function HistoryPanel() {
         </Button>
       </div>
       {historyQuery.isLoading ? (
-        <div className="flex min-h-[280px] items-center justify-center">
-          <IconLoading className="size-5 animate-spin text-[#909090]" />
+        <div className="mt-5">
+          <HistoryTable rows={[]} successPath={EXPENSE_HISTORY_PATH} loading />
         </div>
       ) : historyQuery.isError ? (
         <p className="mt-5 font-montserrat text-sm text-danger">

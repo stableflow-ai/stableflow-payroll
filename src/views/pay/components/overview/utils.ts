@@ -1,11 +1,13 @@
 import { format, subDays, subMonths, subWeeks } from "date-fns";
 import { chartYTicks, formatAmount, niceCeil } from "@/utils";
 import {
+  ORGANIZATION_HIGH_PRIORITY_CATEGORY,
   type OrganizationHighPriorityItem,
   type OrganizationPayoutPoint,
 } from "@/types/organization";
 import { VOLUME_PERIOD, type VolumePeriod } from "@/types/payout";
 import type { MemberOverviewPayoutPoint } from "@/types/overview";
+import { executionHistoryPath } from "@/views/pay/execution-poll/utils";
 import {
   ADMIN_CHART_PLOT_RIGHT_MARGIN,
   ADMIN_CHART_X_TICK_CHAR_PX,
@@ -68,6 +70,13 @@ export type AdminHighPriorityItem = {
   to: string;
 };
 
+function highPriorityPath(item: OrganizationHighPriorityItem): string {
+  if (item.category === ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed) {
+    return executionHistoryPath(item.subCategory);
+  }
+  return HIGH_PRIORITY_PATH[item.category];
+}
+
 export function highPriorityDisplayItems(
   items: OrganizationHighPriorityItem[],
 ): AdminHighPriorityItem[] {
@@ -76,7 +85,7 @@ export function highPriorityDisplayItems(
     kind: item.category,
     title: item.title,
     subtitle: item.description,
-    to: HIGH_PRIORITY_PATH[item.category],
+    to: highPriorityPath(item),
   }));
 }
 

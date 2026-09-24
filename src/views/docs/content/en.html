@@ -39,8 +39,8 @@ while payment by form is signed in the app.</p>
 <td>Workspace funds at a glance, trend charts, and recent activity</td>
 </tr>
 <tr>
-<td>Payment</td>
-<td>Payment</td>
+<td>Pay</td>
+<td>Pay</td>
 <td>Start a single payment, or a batch payment from a form</td>
 </tr>
 <tr>
@@ -260,7 +260,7 @@ Profile)</strong></p>
 <p><strong>Admin</strong></p>
 <ul>
 <li>Overview</li>
-<li>Payment</li>
+<li>Pay</li>
 <li>Operations: Payroll, Expense, Bonus, plus enabled categories
 (Office, Procurement, and so on)</li>
 <li>Team</li>
@@ -270,7 +270,7 @@ Profile)</strong></p>
 <p><strong>Member</strong></p>
 <ul>
 <li>Overview</li>
-<li>Payment (single payment only — no Payment by Form tabs)</li>
+<li>Pay (single payment only — no Form Pay tabs)</li>
 <li>Expenses: Request Payment, Requests</li>
 <li>History</li>
 <li>Settings (Profile only)</li>
@@ -293,8 +293,8 @@ History (failed payouts).</li>
 </ol>
 <hr />
 <h2 id="4-payments"><span class="sec-num">4</span> <span class="sec-title">Payments</span></h2>
-<p>Payment offers two modes: <strong>Single Payment</strong> and
-<strong>Payment by Form</strong>. The former suits one-off payments with
+<p>Pay offers two modes: <strong>Single Pay</strong> and
+<strong>Form Pay</strong>. The former suits one-off payments with
 information you already have; the latter suits cases where payment
 details are collected or entered through an on-page form. Which one to
 use should follow your organization's process and the fields the page
@@ -319,9 +319,9 @@ Berachain, and others in the registry</li>
 shielded Unified (<code>u1</code>); refund is transparent
 (<code>t1</code> / <code>t3</code>)</li>
 </ul>
-<p><strong>Single Payment (<code>/pay</code>) does not use a wallet in
+<p><strong>Single Pay (<code>/pay</code>) does not use a wallet in
 this app.</strong> Submit opens hosted checkout.</p>
-<p><strong>Payment by Form and Pay Now on Payroll / Expense / Bonus /
+<p><strong>Form Pay and Pay Now on Payroll / Expense / Bonus /
 Operations</strong> need a wallet that matches You Pay, and you sign
 here.</p>
 <p>Zcash:</p>
@@ -335,15 +335,15 @@ in Noir Wallet. Wait until it is spendable, then retry.</em></li>
 <code>u1</code> for <strong>ZEC</strong>. Sapling <code>zs1</code> is
 rejected.</li>
 </ul>
-<h3 id="42-single-payment"><span class="sub-num">4.2</span> <span class="sub-title">Single Payment</span></h3>
+<h3 id="42-single-payment"><span class="sub-num">4.2</span> <span class="sub-title">Single Pay</span></h3>
 <figure>
-<img src="/docs/admin-payment.png" alt="Admin Single Payment">
-<figcaption aria-hidden="true">Admin Single Payment</figcaption>
+<img src="/docs/admin-payment.png" alt="Admin Single Pay">
+<figcaption aria-hidden="true">Admin Single Pay</figcaption>
 </figure>
 <p>Admins can switch between two modes:</p>
 <ul>
-<li><strong>Single Payment</strong> → <code>/pay</code></li>
-<li><strong>Payment by Form</strong> → <code>/pay/form</code></li>
+<li><strong>Single Pay</strong> → <code>/pay</code></li>
+<li><strong>Form Pay</strong> → <code>/pay/form</code></li>
 </ul>
 <p>Members do not see the tabs.</p>
 <p>A single payment starts by entering a recipient <strong>wallet
@@ -378,12 +378,12 @@ email while the switch is on blocks send.</li>
 <p>Submitting jumps to hosted checkout to complete the payment.</p>
 <p><strong>Pay Now</strong> in a Team row starts a single payment too:
 name and wallets prefilled, address still editable.</p>
-<h3 id="43-payment-by-form"><span class="sub-num">4.3</span> <span class="sub-title">Payment by Form</span></h3>
+<h3 id="43-payment-by-form"><span class="sub-num">4.3</span> <span class="sub-title">Form Pay</span></h3>
 <p>Admin only.</p>
 <figure>
 <img src="/docs/admin-payment-form.png"
-alt="Admin Payment by Form">
-<figcaption aria-hidden="true">Admin Payment by Form</figcaption>
+alt="Admin Form Pay">
+<figcaption aria-hidden="true">Admin Form Pay</figcaption>
 </figure>
 <p>Depending on your business needs, first manage the scenario forms
 under Operations — for example, import and manage a Payroll form. Then
@@ -488,7 +488,7 @@ template, or enter the form by hand.</p>
 1 and 31 mean first / last day).</p>
 <p><strong>Save</strong> stays on Next Payroll. <strong>Edit</strong>
 can change rows, add rows, and delete ids.</p>
-<p><strong>Pay Now</strong> opens Payment by Form titled
+<p><strong>Pay Now</strong> opens Form Pay titled
 <code>{Month} Payroll</code>, carrying the current Net Pay. Before
 payday the button reads <strong>Not payday yet</strong> and does not
 open.</p>
@@ -768,7 +768,7 @@ single payments and submit payment requests.</p>
 Sidebar</a>.</p>
 <h3 id="92-member-flows"><span class="sub-num">9.2</span> <span class="sub-title">Member flows</span></h3>
 <p>Members join via invite (see <a href="#24-join-by-invite-member">2.4
-Join by invite</a>). After sign-in the sidebar is Overview, Payment,
+Join by invite</a>). After sign-in the sidebar is Overview, Pay,
 Expenses, History, Settings.</p>
 <p><strong>9.2.1 Member Overview</strong></p>
 <p>Greeting <em>Hi! {name}</em>.</p>
@@ -788,16 +788,16 @@ purple; Daily / Weekly / Monthly</li>
 <li><strong>Recent Payments</strong> (up to 5): Type, Purpose (memo),
 link to History</li>
 </ul>
-<p><strong>9.2.2 Member Single Payment</strong></p>
+<p><strong>9.2.2 Member Single Pay</strong></p>
 <figure>
 <img src="/docs/member-payment.png"
-alt="Member payment (no Payment by Form tabs)">
-<figcaption aria-hidden="true">Member payment (no Payment by Form
+alt="Member payment (no Form Pay tabs)">
+<figcaption aria-hidden="true">Member payment (no Form Pay
 tabs)</figcaption>
 </figure>
 <p>Same single-pay card as admin, except:</p>
 <ul>
-<li>No Payment by Form tabs</li>
+<li>No Form Pay tabs</li>
 <li>Address book is a <strong>personal</strong> contact list (create /
 edit / delete)</li>
 <li>Still hosted checkout</li>
@@ -898,7 +898,7 @@ Profile only.</p>
 operations categories or Team</li>
 <li>Cannot enable or disable operations categories, or change
 organization settings</li>
-<li>The Single Payment address book is your own contacts, not the full
+<li>The Single Pay address book is your own contacts, not the full
 team list</li>
 <li>A request link is only paid once an admin actually pays it</li>
 </ul>
@@ -965,7 +965,7 @@ team list</li>
 </thead>
 <tbody>
 <tr>
-<td>Single Payment</td>
+<td>Single Pay</td>
 <td>Admin or member</td>
 <td>Hosted checkout</td>
 </tr>
@@ -975,7 +975,7 @@ team list</li>
 <td>Same</td>
 </tr>
 <tr>
-<td>Payment by Form / business Pay Now</td>
+<td>Form Pay / business Pay Now</td>
 <td>Admin only</td>
 <td>Connect and sign in the app</td>
 </tr>

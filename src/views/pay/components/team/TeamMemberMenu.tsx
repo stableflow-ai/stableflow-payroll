@@ -1,14 +1,10 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { IconMore } from "@/components/icons/more";
-import { IconPay } from "@/components/icons/pay";
-import { IconPen } from "@/components/icons/pen";
-import { IconRemove } from "@/components/icons/remove";
-import {
-  FLOATING_ALIGN,
-  FLOATING_SIDE,
-  useFloatingPosition,
-} from "@/components/ui/overlay/use-floating-position";
+import { IconMore } from "@stableflow/pay-ui/icons/more";
+import { IconPay } from "@stableflow/pay-ui/icons/pay";
+import { IconPen } from "@stableflow/pay-ui/icons/pen";
+import { IconRemove } from "@stableflow/pay-ui/icons/remove";
+import { FLOATING_ALIGN, FLOATING_SIDE, useFloatingPosition } from "@stableflow/pay-ui/overlay";
 import { cn } from "@/lib/utils";
 
 export function TeamMemberMenu(props: {

@@ -4,7 +4,6 @@ export interface PayrollConfigChain {
   chainName: string;
   logo: string;
   explorer: string;
-  batchPay: boolean;
 }
 
 export interface PayrollConfigToken {

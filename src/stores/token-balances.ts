@@ -1,6 +1,5 @@
 import { formatUnits } from "viem";
 import type { Address } from "viem";
-import { TOKEN_BALANCE_POLL_MS } from "@/components/token-select-dialog/config";
 import { isAddressValid } from "@/utils";
 import type { ChainKind, ChainOwners } from "@/wallet";
 import { isNativeToken, isNearWrappedGasToken, type IntentsToken } from "@/stores/intents-tokens";
@@ -10,6 +9,8 @@ import { readNativeSolBalance, readSplBalance } from "@/wallet/solana/balance";
 import { readNativeTrxBalance, readTrc20Balance } from "@/wallet/tron/balance";
 import { readNativeZecBalance } from "@/wallet/zec/balance";
 import { create } from "zustand";
+
+const TOKEN_BALANCE_POLL_MS = 60_000;
 
 export type TokenBalanceStatus = "idle" | "loading" | "success" | "error";
 

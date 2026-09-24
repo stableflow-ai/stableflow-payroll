@@ -1,6 +1,6 @@
-import { IconCheck2 } from "@/components/icons/check";
-import { IconOutLink } from "@/components/icons/link";
-import { IconLoading } from "@/components/icons/loading";
+import { IconCheck } from "@stableflow/pay-ui/icons/check";
+import { IconOutLink } from "@stableflow/pay-ui/icons/link";
+import { IconLoading } from "@stableflow/pay-ui/icons/loading";
 import { cn } from "@/lib/utils";
 
 export const PAYOUT_ROW_STATUS = {
@@ -77,7 +77,7 @@ export function PayoutStatusCell(props: {
 
   return (
     <span className="inline-flex w-full items-center gap-1.5 text-[#769400]">
-      <IconCheck2 className="shrink-0 text-[#769400]" />
+      <IconCheck className="shrink-0 text-[#769400]" />
       <span>Complete</span>
       <span className="ml-auto">
         <ExplorerLink href={explorerUrl} />

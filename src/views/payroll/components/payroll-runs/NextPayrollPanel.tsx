@@ -1,16 +1,9 @@
-import { IconPen } from "@/components/icons/pen";
-import { IconUp } from "@/components/icons/up";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_VARIANT } from "@/components/ui/button/config";
-import { InputNumber } from "@/components/ui/input-number/InputNumber";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table/Table";
+import { IconPen } from "@stableflow/pay-ui/icons/pen";
+import { IconUp } from "@stableflow/pay-ui/icons/up";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_VARIANT } from "@stableflow/pay-ui/button";
+import { InputNumber } from "@stableflow/pay-ui/input-number";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@stableflow/pay-ui/table";
 import { chainDisplayName } from "@/config/chains";
 import { DATE_FORMAT, formatAmount, formatDate } from "@/utils";
 import type { PayrollNextRun } from "@/mocks/payroll";

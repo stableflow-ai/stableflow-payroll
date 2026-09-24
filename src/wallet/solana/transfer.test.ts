@@ -3,18 +3,28 @@ import {
   Transaction,
   TransactionExpiredBlockheightExceededError,
   TransactionMessage,
+  VersionedMessage,
   VersionedTransaction,
   type Connection,
 } from "@solana/web3.js";
-import { describe, expect, it, vi } from "vitest";
-import { SOLANA_EXPIRED_MESSAGE, SOLANA_TRANSFER_FAILED_MESSAGE } from "./config";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { getSolanaConnection } from "@/lib/rpc/solana";
+import { SOLANA_ATA_INIT_FAILED_MESSAGE, SOLANA_EXPIRED_MESSAGE, SOLANA_TRANSFER_FAILED_MESSAGE } from "./config";
+import { setSolanaSigner } from "./session";
 import {
+  broadcastSolanaTransaction,
   confirmSolanaSignature,
+  isEmptySimulationMessage,
   isExpiredBlockhashError,
   isUnsignedSolanaTransaction,
   refreshBlockhashIfUnsigned,
   toSolanaBroadcastError,
 } from "./transfer";
+
+vi.mock("@/lib/rpc/solana", () => ({
+  getSolanaConnection: vi.fn(),
+  getActiveSolanaConnection: vi.fn((connection: Connection) => connection),
+}));
 
 const PLACEHOLDER_BLOCKHASH = "11111111111111111111111111111111";
 const FRESH_BLOCKHASH = "FreshBlockhash111111111111111111111111111";
@@ -102,6 +112,21 @@ describe("refreshBlockhashIfUnsigned", () => {
 
     expect(latest?.blockhash).toBe(FRESH_BLOCKHASH);
     expect(tx.message.recentBlockhash).toBe(FRESH_BLOCKHASH);
+  });
+
+  it("writes the refreshed blockhash into the serialized versioned message", async () => {
+    const blockhash = Keypair.generate().publicKey.toBase58();
+    const connection = mockConnection({
+      getLatestBlockhash: vi.fn(async () => ({
+        blockhash,
+        lastValidBlockHeight: 100,
+      })),
+    });
+    const tx = unsignedVersioned();
+    await refreshBlockhashIfUnsigned(connection, tx);
+
+    const decoded = VersionedMessage.deserialize(tx.message.serialize());
+    expect(decoded.recentBlockhash).toBe(blockhash);
   });
 
   it("does not mutate a signed legacy transaction", async () => {
@@ -250,9 +275,112 @@ describe("toSolanaBroadcastError", () => {
     expect(enriched.message).toContain("ATokenGPvbdGVxr1vhZbiqW5xWHZ5eFTNslJA8knL success");
   });
 
+  it("maps an empty-log simulation failure to the retry copy", async () => {
+    const error = await toSolanaBroadcastError(
+      new Error(
+        "Simulation failed. Message: Transaction simulation failed. Logs: []. Catch the `SendTransactionError` and call `getLogs()` on it for full details.",
+      ),
+    );
+    expect(error.message).toBe(SOLANA_EXPIRED_MESSAGE);
+    expect(isEmptySimulationMessage(
+      "Simulation failed. Message: Transaction simulation failed. Logs: []. Catch the `SendTransactionError` and call `getLogs()` on it for full details.",
+    )).toBe(true);
+  });
+
+  it("maps an associated-token initialization failure to a short retry copy", async () => {
+    const error = await toSolanaBroadcastError(
+      new Error("Simulation failed. Message: Transaction simulation failed. Logs: [\"failed to initialize the associated token account\"]."),
+    );
+    expect(error.message).toBe(SOLANA_ATA_INIT_FAILED_MESSAGE);
+  });
+
   it("keeps the original error when getLogs() adds nothing new", async () => {
     const error = new Error("Simulation failed");
     (error as Error & { getLogs: () => Promise<string[]> }).getLogs = async () => [];
     await expect(toSolanaBroadcastError(error)).resolves.toBe(error);
+  });
+});
+
+const EMPTY_SIMULATION_MESSAGE = "Simulation failed. Message: Transaction simulation failed. Logs: []. Catch the `SendTransactionError` and call `getLogs()` on it for full details.";
+
+describe("broadcastSolanaTransaction", () => {
+  const payer = Keypair.generate();
+
+  afterEach(() => {
+    setSolanaSigner(null);
+  });
+
+  function connectionFor(input: {
+    blockHeights: number[];
+    sendRawTransaction: ReturnType<typeof vi.fn>;
+  }) {
+    const blockhash = Keypair.generate().publicKey.toBase58();
+    let heightIndex = 0;
+    const connection = mockConnection({
+      getLatestBlockhash: vi.fn(async () => ({
+        blockhash,
+        lastValidBlockHeight: 100,
+      })),
+      getBlockHeight: vi.fn(async () => input.blockHeights[Math.min(heightIndex++, input.blockHeights.length - 1)]),
+      getSignatureStatuses: vi.fn(async () => ({
+        value: [{ err: null, confirmationStatus: "confirmed" }],
+      })),
+      sendRawTransaction: input.sendRawTransaction,
+    });
+    vi.mocked(getSolanaConnection).mockReturnValue(connection);
+    setSolanaSigner({
+      publicKey: payer.publicKey,
+      signTransaction: async (tx) => tx,
+    });
+    return connection;
+  }
+
+  it("rebuilds and signs once when the blockhash expires before send", async () => {
+    const sendRawTransaction = vi.fn(async () => "sig");
+    const rebuild = vi.fn(async () => unsignedVersioned());
+    connectionFor({ blockHeights: [101, 50], sendRawTransaction });
+
+    await expect(broadcastSolanaTransaction(unsignedVersioned(), { rebuild })).resolves.toMatchObject({
+      signature: "sig",
+    });
+
+    expect(rebuild).toHaveBeenCalledTimes(1);
+    expect(sendRawTransaction).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not rebuild a second time when the replacement also expires", async () => {
+    const sendRawTransaction = vi.fn(async () => "sig");
+    const rebuild = vi.fn(async () => unsignedVersioned());
+    connectionFor({ blockHeights: [101, 101], sendRawTransaction });
+
+    await expect(broadcastSolanaTransaction(unsignedVersioned(), { rebuild })).rejects.toThrow(SOLANA_EXPIRED_MESSAGE);
+    expect(rebuild).toHaveBeenCalledTimes(1);
+    expect(sendRawTransaction).not.toHaveBeenCalled();
+  });
+
+  it("rebuilds once after an empty-log simulation failure and then surfaces the expired copy", async () => {
+    const sendRawTransaction = vi.fn(async () => {
+      throw new Error(EMPTY_SIMULATION_MESSAGE);
+    });
+    const rebuild = vi.fn(async () => unsignedVersioned());
+    connectionFor({ blockHeights: [50], sendRawTransaction });
+
+    await expect(broadcastSolanaTransaction(unsignedVersioned(), { rebuild })).rejects.toThrow(SOLANA_EXPIRED_MESSAGE);
+    expect(rebuild).toHaveBeenCalledTimes(1);
+    expect(sendRawTransaction).toHaveBeenCalledTimes(2);
+  });
+
+  it("rebuilds once after an associated-token initialization failure", async () => {
+    const sendRawTransaction = vi.fn(async () => {
+      throw new Error("failed to initialize the associated token account");
+    });
+    const rebuild = vi.fn(async () => unsignedVersioned());
+    connectionFor({ blockHeights: [50], sendRawTransaction });
+
+    await expect(broadcastSolanaTransaction(unsignedVersioned(), { rebuild })).rejects.toThrow(
+      SOLANA_ATA_INIT_FAILED_MESSAGE,
+    );
+    expect(rebuild).toHaveBeenCalledTimes(1);
+    expect(sendRawTransaction).toHaveBeenCalledTimes(2);
   });
 });

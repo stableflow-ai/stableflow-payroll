@@ -1,7 +1,7 @@
-import { IconDownload } from "@/components/icons/download";
-import { IconPlus } from "@/components/icons/plus";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_VARIANT } from "@/components/ui/button/config";
+import { IconDownload } from "@stableflow/pay-ui/icons/download";
+import { IconPlus } from "@stableflow/pay-ui/icons/plus";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_VARIANT } from "@stableflow/pay-ui/button";
 import { downloadImportCsvTemplate } from "@/views/pay/components/import-csv/download-template";
 import type { ExpenseDraftRow } from "@/types/expense";
 import { IMPORT_CSV_TEMPLATE, IMPORT_CSV_TEMPLATE_FILENAME } from "../../config";

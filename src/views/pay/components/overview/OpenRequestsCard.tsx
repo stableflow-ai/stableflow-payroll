@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
-import { Icon2Right } from "@/components/icons/to-right";
-import { Card } from "@/components/ui/card/Card";
+import { Icon2Right } from "@stableflow/pay-ui/icons/to-right";
+import { Card } from "@stableflow/pay-ui/card";
 import { formatDate } from "@/utils";
 import type { MemberOpenRequest } from "@/types/overview";
 import { OVERVIEW_PENDING_COLOR } from "./config";

@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { IconCheck2 } from "@/components/icons/check";
-import { IconLoading } from "@/components/icons/loading";
-import { Card } from "@/components/ui/card/Card";
+import { IconCheck } from "@stableflow/pay-ui/icons/check";
+import { IconLoading } from "@stableflow/pay-ui/icons/loading";
+import { Card } from "@stableflow/pay-ui/card";
 import {
   useSlackOAuthMutation,
   useUpdateNotificationSettingsMutation,
@@ -95,7 +95,7 @@ export function SlackCallbackView() {
     <Card className="mx-auto flex w-full max-w-[560px] flex-col items-center px-6 py-8 text-center sm:px-8">
       {status === "success" ? (
         <span className="inline-flex size-12 items-center justify-center rounded-full bg-[#769400]/10">
-          <IconCheck2 className="size-5 text-[#769400]" />
+          <IconCheck className="size-5 text-[#769400]" />
         </span>
       ) : status === "working" ? (
         <span className="inline-flex size-12 items-center justify-center rounded-full bg-[#6284F5]/10">

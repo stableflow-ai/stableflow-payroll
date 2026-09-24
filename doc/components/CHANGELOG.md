@@ -1,8 +1,15 @@
 # Component Changelog
 
-Newest first. Add an entry whenever you add or change a component under `src/components/ui/` or a shared widget documented in [README.md](README.md).
+Newest first. Add an entry when this app's usage of `@stableflow/pay-ui`, `@stableflow/pay-widgets`, or a local widget documented in [README.md](README.md) changes.
 
 Format: one `## YYYY-MM-DD` heading per day, one `- **ComponentName:** what changed` bullet per component.
+
+## 2026-09-23
+
+- **pay-ui:** Shared components, overlay helpers, and package icons now import from `@stableflow/pay-ui` subpaths. Token select imports `@stableflow/pay-widgets/token-select` through `PayWidgetsRoot`. Local copies of those components, icons, and `token-select-prefs` are removed.
+- **Icons:** `IconAlertCircle` imports `@stableflow/pay-ui/icons/alert-circle`. `IconMember` imports `@stableflow/pay-ui/icons/member`. `IconCheck` imports `@stableflow/pay-ui/icons/check`. This app has no local icon components.
+- **Skeleton:** Pulse block (`#e8e8e8`) for a section that has not loaded yet.
+- **Table:** `TableSkeletonRows` renders 3 body rows inside an existing `Table`. Each cell is its own bar. Infinite-scroll footers stay on `IconLoading`.
 
 ## 2026-09-20
 

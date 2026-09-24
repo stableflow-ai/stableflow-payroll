@@ -1,4 +1,4 @@
-import { Dialog } from "@/components/ui/dialog/Dialog";
+import { Dialog } from "@stableflow/pay-ui/dialog";
 import type { Payable } from "@/types/payable";
 import { payableKeyId } from "@/types/payable";
 import { PaymentByFormCard } from "./PaymentByFormCard";

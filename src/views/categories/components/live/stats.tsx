@@ -1,5 +1,5 @@
-import { IconLoading } from "@/components/icons/loading";
-import { Card } from "@/components/ui/card/Card";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
+import { Card } from "@stableflow/pay-ui/card";
 import { cn } from "@/lib/utils";
 import { formatAmount } from "@/utils";
 
@@ -67,9 +67,10 @@ export function OperationStatsCard(props: {
   return (
     <Card className="grid grid-cols-1 gap-6 px-10 py-[22px] sm:grid-cols-2 sm:gap-8">
       {loading ? (
-        <div className="flex min-h-[88px] items-center justify-center sm:col-span-2">
-          <IconLoading className="size-5 animate-spin text-[#909090]" />
-        </div>
+        <>
+          <Skeleton className="h-[72px] w-full" />
+          <Skeleton className="h-[72px] w-full" />
+        </>
       ) : error ? (
         <p className="font-montserrat text-sm text-danger sm:col-span-2">{error}</p>
       ) : (

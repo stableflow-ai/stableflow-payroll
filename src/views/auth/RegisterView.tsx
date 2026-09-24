@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Button } from "@/components/ui/button/Button";
-import { Icon2Right } from "@/components/icons/to-right";
+import { Button } from "@stableflow/pay-ui/button";
+import { Icon2Right } from "@stableflow/pay-ui/icons/to-right";
 import { useRegisterMutation } from "@/hooks/use-auth-api";
 import useToast from "@/hooks/use-toast";
 import { AuthShell } from "./AuthShell";

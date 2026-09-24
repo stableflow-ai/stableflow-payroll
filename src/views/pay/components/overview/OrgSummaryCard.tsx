@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { EmailAvatar } from "@/components/recipient-avatar/EmailAvatar";
 import { nameInitials } from "@/components/recipient-avatar/RecipientAvatar";
-import { Card } from "@/components/ui/card/Card";
+import { Card } from "@stableflow/pay-ui/card";
 import { organizationLogo, organizationName } from "@/lib/auth-role";
 import { useAuthStore } from "@/stores/auth";
 import { OVERVIEW_LINK_CLASS } from "./config";

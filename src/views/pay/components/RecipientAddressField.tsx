@@ -1,8 +1,8 @@
 import { RecipientAvatar } from "@/components/recipient-avatar/RecipientAvatar";
-import { Autocomplete, type AutocompleteOption } from "@/components/ui/autocomplete/Autocomplete";
-import { IconBook } from "@/components/icons/book";
-import { IconClose } from "@/components/icons/close";
-import { IconSearch } from "@/components/icons/search";
+import { Autocomplete, type AutocompleteOption } from "@stableflow/pay-ui/autocomplete";
+import { IconBook } from "@stableflow/pay-ui/icons/book";
+import { IconClose } from "@stableflow/pay-ui/icons/close";
+import { IconSearch } from "@stableflow/pay-ui/icons/search";
 import type { Contact } from "@/hooks/use-contacts";
 import { formatAddress } from "@/utils";
 import type { RecipientSuggestion } from "./single-payout/utils";

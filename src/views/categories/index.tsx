@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { IconBack } from "@/components/icons/back";
-import { IconLoading } from "@/components/icons/loading";
-import { Button } from "@/components/ui/button/Button";
-import { Card } from "@/components/ui/card/Card";
-import { Drawer } from "@/components/ui/drawer/Drawer";
-import { DRAWER_SIDE } from "@/components/ui/drawer/config";
-import { Switch } from "@/components/ui/switch/Switch";
+import { IconBack } from "@stableflow/pay-ui/icons/back";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
+import { Button } from "@stableflow/pay-ui/button";
+import { Card } from "@stableflow/pay-ui/card";
+import { Drawer } from "@stableflow/pay-ui/drawer";
+import { DRAWER_SIDE } from "@stableflow/pay-ui/drawer";
+import { Switch } from "@stableflow/pay-ui/switch";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { useOperationCatalogQuery } from "@/hooks/use-operation-api";
 import useToast from "@/hooks/use-toast";
@@ -114,8 +114,10 @@ export function CategoriesDrawer(props: {
           }}
         />
       ) : catalogQuery.isLoading ? (
-        <div className="flex min-h-[240px] items-center justify-center">
-          <IconLoading className="size-5 animate-spin text-[#909090]" />
+        <div className="grid grid-cols-1 gap-x-5 gap-y-4 md:grid-cols-2">
+          <Skeleton className="h-[120px] w-full" />
+          <Skeleton className="h-[120px] w-full" />
+          <Skeleton className="h-[120px] w-full" />
         </div>
       ) : catalogQuery.isError ? (
         <p className="font-montserrat text-sm text-danger">

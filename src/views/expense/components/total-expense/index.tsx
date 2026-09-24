@@ -1,15 +1,16 @@
 import {
+  Area,
+  AreaChart,
   CartesianGrid,
-  Line,
-  LineChart,
+  ReferenceDot,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts";
-import { IconLoading } from "@/components/icons/loading";
-import { Card } from "@/components/ui/card/Card";
-import { Dropdown } from "@/components/ui/dropdown/Dropdown";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
+import { Card } from "@stableflow/pay-ui/card";
+import { Dropdown } from "@stableflow/pay-ui/dropdown";
 import { cn } from "@/lib/utils";
 import type { ExpenseChartPoint } from "@/types/expense";
 import { formatAmount, chartYTicks } from "@/utils";
@@ -69,6 +70,7 @@ export function TotalExpenseChart(props: {
   const isEmpty = !loading && points.every((point) => point.value === 0);
   const yTicks = chartYTicks(Math.max(0, ...points.map((point) => point.value)), 3);
   const yMax = yTicks[yTicks.length - 1] ?? 1;
+  const lastPoint = points.length > 0 ? points[points.length - 1] : null;
 
   return (
     <Card className="flex min-h-[454px] flex-col">
@@ -100,17 +102,21 @@ export function TotalExpenseChart(props: {
       </div>
       <div className="mt-4 h-[320px]">
         {loading ? (
-          <div className="flex h-full items-center justify-center">
-            <IconLoading className="size-5 animate-spin text-[#909090]" />
-          </div>
+          <Skeleton className="h-full w-full" />
         ) : error ? (
           <div className="flex h-full items-center justify-center">
             <p className="font-montserrat text-sm text-danger">{error}</p>
           </div>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={points} margin={{ top: 8, right: 12, left: 0, bottom: 0 }}>
-              <CartesianGrid stroke="#e3e3e3" />
+            <AreaChart data={points} margin={{ top: 8, right: 12, left: 0, bottom: 4 }}>
+              <defs>
+                <linearGradient id="expenseChartFill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor={EXPENSE_CHART_LINE_COLOR} stopOpacity={0.28} />
+                  <stop offset="100%" stopColor={EXPENSE_CHART_LINE_COLOR} stopOpacity={0} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid vertical={false} stroke="#e3e3e3" />
               <XAxis
                 dataKey="label"
                 axisLine={false}
@@ -134,31 +140,29 @@ export function TotalExpenseChart(props: {
                     label={tooltipProps.label}
                   />
                 )}
-                cursor={{
-                  stroke: EXPENSE_CHART_LINE_COLOR,
-                  strokeWidth: 1,
-                  strokeDasharray: "4 4",
-                }}
+                cursor={{ stroke: EXPENSE_CHART_LINE_COLOR, strokeWidth: 1 }}
               />
-              <Line
-                type="linear"
+              <Area
+                type="monotone"
                 dataKey="value"
                 stroke={EXPENSE_CHART_LINE_COLOR}
                 strokeWidth={2}
-                dot={{
-                  r: 6,
-                  fill: EXPENSE_CHART_LINE_COLOR,
-                  stroke: "#fff",
-                  strokeWidth: 2,
-                }}
-                activeDot={{
-                  r: 6,
-                  fill: EXPENSE_CHART_LINE_COLOR,
-                  stroke: "#fff",
-                  strokeWidth: 2,
-                }}
+                fill="url(#expenseChartFill)"
+                fillOpacity={1}
+                dot={false}
+                activeDot={{ r: 5, stroke: EXPENSE_CHART_LINE_COLOR, fill: "#fff", strokeWidth: 2 }}
               />
-            </LineChart>
+              {lastPoint ? (
+                <ReferenceDot
+                  x={lastPoint.label}
+                  y={lastPoint.value}
+                  r={5}
+                  fill="#fff"
+                  stroke={EXPENSE_CHART_LINE_COLOR}
+                  strokeWidth={2}
+                />
+              ) : null}
+            </AreaChart>
           </ResponsiveContainer>
         )}
       </div>

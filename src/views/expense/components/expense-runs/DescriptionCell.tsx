@@ -1,4 +1,4 @@
-import { Tooltip } from "@/components/ui/tooltip/Tooltip";
+import { Tooltip } from "@stableflow/pay-ui/tooltip";
 import { LinkifiedText } from "./LinkifiedText";
 
 export function DescriptionCell(props: {

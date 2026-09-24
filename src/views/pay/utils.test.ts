@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ApiError } from "@/lib/api-error";
 import { LEDGER_BLIND_SIGN_MESSAGE } from "@/wallet/tron/config";
+import { SOLANA_ATA_INIT_FAILED_MESSAGE, SOLANA_EXPIRED_MESSAGE } from "@/wallet/solana/config";
 import {
   detectAddressChainKind,
   formatQuoteErrorMessage,
@@ -108,6 +109,20 @@ describe("formatQuoteErrorMessage", () => {
     expect(formatQuoteErrorMessage(
       new Error("Transaction simulation failed: Computational budget exceeded"),
     )).toBe("Solana transaction ran out of compute. Confirm again to retry.");
+  });
+
+  it("maps an empty-log Solana simulation failure to the expired copy", () => {
+    expect(formatQuoteErrorMessage(
+      new Error(
+        "Simulation failed. Message: Transaction simulation failed. Logs: []. Catch the `SendTransactionError` and call `getLogs()` on it for full details.",
+      ),
+    )).toBe(SOLANA_EXPIRED_MESSAGE);
+  });
+
+  it("maps an associated-token initialization failure to a short retry copy", () => {
+    expect(formatQuoteErrorMessage(
+      new Error("Program log: failed to initialize the associated token account"),
+    )).toBe(SOLANA_ATA_INIT_FAILED_MESSAGE);
   });
 });
 

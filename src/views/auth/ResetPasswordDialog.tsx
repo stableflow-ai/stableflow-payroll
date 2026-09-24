@@ -1,7 +1,7 @@
 import { type FormEvent, useEffect, useState } from "react";
-import { Button } from "@/components/ui/button/Button";
-import { Dialog } from "@/components/ui/dialog/Dialog";
-import { Icon2Right } from "@/components/icons/to-right";
+import { Button } from "@stableflow/pay-ui/button";
+import { Dialog } from "@stableflow/pay-ui/dialog";
+import { Icon2Right } from "@stableflow/pay-ui/icons/to-right";
 import {
   useChangePasswordMutation,
   useResetPasswordMutation,
@@ -129,8 +129,6 @@ export function ResetPasswordDialog({
       open={open}
       onClose={onClose}
       title="Reset password"
-      titleClassName="w-full text-center"
-      closeClassName="hidden"
       cardClassName={RESET_PASSWORD_DIALOG_CARD_CLASS}
     >
       {variant === RESET_PASSWORD_VARIANT.Guest ? (

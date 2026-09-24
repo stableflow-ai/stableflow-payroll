@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button/Button";
-import { Dialog } from "@/components/ui/dialog/Dialog";
+import { Button } from "@stableflow/pay-ui/button";
+import { Dialog } from "@stableflow/pay-ui/dialog";
 import type { Contact } from "@/hooks/use-contacts";
 import { detectAddressChainKind, isValidEmail } from "../utils";
 import { CONTACT_NAME_MAX_LENGTH, EMAIL_MAX_LENGTH } from "../config";

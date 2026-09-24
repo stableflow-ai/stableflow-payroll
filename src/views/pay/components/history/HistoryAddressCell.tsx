@@ -1,5 +1,5 @@
-import { IconCopy } from "@/components/icons/copy";
-import { IconOutLink } from "@/components/icons/link";
+import { IconCopy } from "@stableflow/pay-ui/icons/copy";
+import { IconOutLink } from "@stableflow/pay-ui/icons/link";
 import useToast from "@/hooks/use-toast";
 import { formatAddress } from "@/utils";
 

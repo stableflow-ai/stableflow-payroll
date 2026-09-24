@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from "react";
-import { IconFieldError } from "@/components/icons/field-error";
-import { Button } from "@/components/ui/button/Button";
-import { Dialog } from "@/components/ui/dialog/Dialog";
+import { IconFieldError } from "@stableflow/pay-ui/icons/field-error";
+import { Button } from "@stableflow/pay-ui/button";
+import { Dialog } from "@stableflow/pay-ui/dialog";
 import { cn } from "@/lib/utils";
 import type { TeamMember, TeamMemberWrite } from "@/hooks/use-team-api";
 import {

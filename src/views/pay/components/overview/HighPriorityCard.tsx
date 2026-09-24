@@ -1,13 +1,18 @@
 import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
-import { IconAlertCircle } from "@/components/icons/alert";
-import { IconArrowDown } from "@/components/icons/arrow-down";
-import { IconCalendar } from "@/components/icons/calendar";
-import { IconRequest } from "@/components/icons/request";
-import { Icon2Right } from "@/components/icons/to-right";
-import { Card } from "@/components/ui/card/Card";
+import { IconAlertCircle } from "@stableflow/pay-ui/icons/alert-circle";
+import { IconArrowDown } from "@stableflow/pay-ui/icons/arrow-down";
+import { IconCalendar } from "@stableflow/pay-ui/icons/calendar";
+import { IconMember } from "@stableflow/pay-ui/icons/member";
+import { IconRequest } from "@stableflow/pay-ui/icons/request";
+import { Icon2Right } from "@stableflow/pay-ui/icons/to-right";
+import { Card } from "@stableflow/pay-ui/card";
+import { useClickOrganizationHighPriorityMutation } from "@/hooks/use-admin-overview-api";
+import { organizationId } from "@/lib/auth-role";
 import { cn } from "@/lib/utils";
+import { useAuthStore } from "@/stores/auth";
 import { ORGANIZATION_HIGH_PRIORITY_CATEGORY } from "@/types/organization";
+import { HISTORY_TAB_ANCHOR_ID } from "@/views/pay/history-tab";
 import type { AdminHighPriorityItem } from "./utils";
 
 function kindIcon(kind: AdminHighPriorityItem["kind"]): ReactNode {
@@ -25,6 +30,13 @@ function kindIcon(kind: AdminHighPriorityItem["kind"]): ReactNode {
       </span>
     );
   }
+  if (kind === ORGANIZATION_HIGH_PRIORITY_CATEGORY.Join) {
+    return (
+      <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#877AFF]/20 text-[#877AFF]">
+        <IconMember className="size-4" />
+      </span>
+    );
+  }
   return (
     <span className="inline-flex size-8 shrink-0 items-center justify-center rounded-full bg-[#E43222]/15 text-[#E43222]">
       <IconAlertCircle className="size-4" />
@@ -34,9 +46,11 @@ function kindIcon(kind: AdminHighPriorityItem["kind"]): ReactNode {
 
 export function HighPriorityCard(props: { items: AdminHighPriorityItem[] }) {
   const { items } = props;
+  const orgId = organizationId(useAuthStore((state) => state.user));
+  const clickMutation = useClickOrganizationHighPriorityMutation();
 
   return (
-    <Card className="flex min-h-[540px] flex-col">
+    <Card className="flex min-h-[540px] min-w-0 flex-col overflow-hidden">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-montserrat text-base font-medium capitalize text-black">
           High Priority
@@ -59,8 +73,13 @@ export function HighPriorityCard(props: { items: AdminHighPriorityItem[] }) {
             <Link
               key={item.id}
               to={item.to}
+              state={{ scrollTo: HISTORY_TAB_ANCHOR_ID }}
+              onClick={() => {
+                if (orgId == null) return;
+                clickMutation.mutate(item.kind);
+              }}
               className={cn(
-                "flex items-center gap-2.5 border-b border-black/10 py-4 last:border-b-0",
+                "flex min-w-0 items-center gap-2.5 border-b border-black/10 py-4 last:border-b-0",
               )}
             >
               {kindIcon(item.kind)}

@@ -1,6 +1,6 @@
 /**
  * Chain registry for Stableflow Pay payments.
- * Runtime lists come from GET /v1/payroll/config; this file keeps UI metadata
+ * Runtime lists come from GET /v1/pay/config; this file keeps UI metadata
  * and a fail-open fallback.
  */
 
@@ -30,25 +30,27 @@ export interface ChainConfig {
 interface ChainMeta {
   chainKind: ChainKind;
   safeShortName?: string;
+  /** Batch origin. The pay config API does not send this. */
+  batchEnabled: boolean;
 }
 
 /** Frontend-only fields the config API does not send. */
 export const CHAIN_META: Record<string, ChainMeta> = {
-  eth: { chainKind: "evm", safeShortName: "eth" },
-  base: { chainKind: "evm", safeShortName: "base" },
-  arb: { chainKind: "evm", safeShortName: "arb1" },
-  op: { chainKind: "evm", safeShortName: "oeth" },
-  pol: { chainKind: "evm", safeShortName: "matic" },
-  bsc: { chainKind: "evm", safeShortName: "bnb" },
-  avax: { chainKind: "evm", safeShortName: "avax" },
-  gnosis: { chainKind: "evm", safeShortName: "gno" },
-  scroll: { chainKind: "evm", safeShortName: "scr" },
-  xlayer: { chainKind: "evm" },
-  bera: { chainKind: "evm" },
-  near: { chainKind: "near" },
-  sol: { chainKind: "solana" },
-  tron: { chainKind: "tron" },
-  zec: { chainKind: "zec" },
+  eth: { chainKind: "evm", safeShortName: "eth", batchEnabled: true },
+  base: { chainKind: "evm", safeShortName: "base", batchEnabled: true },
+  arb: { chainKind: "evm", safeShortName: "arb1", batchEnabled: true },
+  op: { chainKind: "evm", safeShortName: "oeth", batchEnabled: true },
+  pol: { chainKind: "evm", safeShortName: "matic", batchEnabled: true },
+  bsc: { chainKind: "evm", safeShortName: "bnb", batchEnabled: true },
+  avax: { chainKind: "evm", safeShortName: "avax", batchEnabled: true },
+  gnosis: { chainKind: "evm", safeShortName: "gno", batchEnabled: true },
+  scroll: { chainKind: "evm", safeShortName: "scr", batchEnabled: true },
+  xlayer: { chainKind: "evm", batchEnabled: true },
+  bera: { chainKind: "evm", batchEnabled: true },
+  near: { chainKind: "near", batchEnabled: true },
+  sol: { chainKind: "solana", batchEnabled: true },
+  tron: { chainKind: "tron", batchEnabled: true },
+  zec: { chainKind: "zec", batchEnabled: false },
 };
 
 /** Fail-open fallback when config has never loaded. */
@@ -67,7 +69,7 @@ export const FIXED_CHAINS: ChainConfig[] = [
   { blockchain: "near", chainName: "Near", chainKind: "near", logo: chainLogoUrl("near"), batchEnabled: true, txExplorer: "https://nearblocks.io/txns/" },
   { blockchain: "sol", chainName: "Solana", chainKind: "solana", logo: chainLogoUrl("sol"), batchEnabled: true, txExplorer: "https://solscan.io/tx/" },
   { blockchain: "tron", chainName: "Tron", chainKind: "tron", logo: chainLogoUrl("tron"), batchEnabled: true, txExplorer: "https://tronscan.org/#/transaction/" },
-  { blockchain: "zec", chainName: "Zcash", chainKind: "zec", logo: chainLogoUrl("zec"), batchEnabled: true, txExplorer: "https://explorer.zcha.in/transactions/" },
+  { blockchain: "zec", chainName: "Zcash", chainKind: "zec", logo: chainLogoUrl("zec"), batchEnabled: false, txExplorer: "https://explorer.zcha.in/transactions/" },
 ];
 
 export const PAYOUT_NETWORKS = new Set(FIXED_CHAINS.map((c) => c.chainName));
@@ -159,7 +161,6 @@ export function mergeApiChain(input: {
   chainName: string;
   logo: string;
   explorer: string;
-  batchPay?: boolean;
 }): ChainConfig | null {
   const network = input.network.trim();
   if (!network) return null;
@@ -175,7 +176,7 @@ export function mergeApiChain(input: {
     chainKind,
     chainId,
     logo: input.logo.trim() || chainLogoUrl(network),
-    batchEnabled: input.batchPay ?? true,
+    batchEnabled: meta?.batchEnabled ?? true,
     txExplorer: input.explorer.trim(),
     safeShortName: meta?.safeShortName,
   };
@@ -187,7 +188,6 @@ export function mergeApiChains(rows: Array<{
   chainName: string;
   logo: string;
   explorer: string;
-  batchPay?: boolean;
 }>): ChainConfig[] {
   const out: ChainConfig[] = [];
   for (const row of rows) {

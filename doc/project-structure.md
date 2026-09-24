@@ -64,12 +64,8 @@ src/
     how-it-works/              public marketing page
     docs/                      public user guide (`/docs`)
   components/
-    ui/                        public primitives (see doc/components/README.md)
-    ui/overlay/                internal overlay plumbing, do not import from features
-    icons/                     inline SVG React components, barrel in index.tsx
     layout/                    AppHeader, HeaderAccountMenu, HeaderWalletCapsule
-    date-range-picker/         shared range picker
-    token-select-dialog/       shared chain + token picker
+    pay-widgets-root.tsx       PayWidgetsProvider data boundary
     recipient-avatar/, you-pay/, WalletConnect.tsx
     safe/                      SafeMultisigBadge (wraps MultisigBadge)
     multisig/                  MultisigBadge, PayFromSquadSection, confirm / listen toasts
@@ -106,9 +102,9 @@ src/
 | Component used by one page | `src/views/<area>/components/<Name>.tsx` |
 | Constants for one page | `src/views/<area>/config.ts` |
 | Helpers for one page | `src/views/<area>/utils.ts` |
-| Shared non-business primitive | `src/components/ui/<name>/<Name>.tsx` + `config.ts` |
+| Shared non-business primitive | `@stableflow/pay-ui/<name>` (see doc/components/README.md) |
 | Shared business widget | `src/components/<widget-name>/` |
-| Icon | `src/components/icons/<kebab>.tsx` + export from `index.tsx` |
+| Icon | `@stableflow/pay-ui/icons/<name>` |
 | Backend call | `src/api/<domain>.ts` (see [api.md](api.md)) |
 | Query / mutation hook | `src/hooks/use-<domain>-api.ts` |
 | Request / response type | `src/types/<domain>.ts` |
@@ -125,7 +121,6 @@ src/
 | `intents-tokens.ts` | `persist` | Payroll config tokens/chains, last-success fail-open cache, `findByChainAndSymbol` |
 | `token-balances.ts` | no | Balance cache and fetch status per owner + asset |
 | `quick-pay-prefs.ts` | `persist` | Remembered single-payout preferences: last origin token and Notify Recipient switch |
-| `token-select-prefs.ts` | `persist` | Last pay token (`assetId`) and recent networks (MRU) chosen in `TokenSelectDialog` |
 | `batch-payout-commit-queue.ts` | `persist` | Unused retry queue for `POST /v1/payroll/payouts/submit` (Payment by Form submits once) |
 | `consumed-batches.ts` | `persist` | Spent payroll `quote_batch_id`s so the same deposit addresses are never broadcast twice; `unmarkConsumed` after an insufficient-approval failure that never sent the payout |
 | `nearintents-user-session.ts` | no | Near Intents session for confidential receive / withdraw |
@@ -137,10 +132,9 @@ src/
 ## Import paths
 
 ```ts
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_SIZE, BUTTON_VARIANT } from "@/components/ui/button/config";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table/Table";
-import { IconClose } from "@/components/icons";
+import { Button, BUTTON_SIZE, BUTTON_VARIANT } from "@stableflow/pay-ui/button";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@stableflow/pay-ui/table";
+import { IconClose } from "@stableflow/pay-ui/icons/close";
 import { formatAmount, formatAddress } from "@/utils";
 import { cn } from "@/lib/utils";
 ```

@@ -1,5 +1,5 @@
-import { IconCopy } from "@/components/icons/copy";
-import { Tooltip } from "@/components/ui/tooltip/Tooltip";
+import { IconCopy } from "@stableflow/pay-ui/icons/copy";
+import { Tooltip } from "@stableflow/pay-ui/tooltip";
 import useToast from "@/hooks/use-toast";
 import { formatAddress } from "@/utils";
 

@@ -1,5 +1,5 @@
-import { IconCheck } from "@/components/icons";
-import { Dropdown } from "@/components/ui/dropdown/Dropdown";
+import { IconCheck } from "@stableflow/pay-ui/icons/check";
+import { Dropdown } from "@stableflow/pay-ui/dropdown";
 import { useOperationCatalogQuery } from "@/hooks/use-operation-api";
 import { formatAmount } from "@/utils";
 import { payableKeyId, type Payable } from "@/types/payable";

@@ -1,5 +1,5 @@
 import { Navigate, useParams } from "react-router-dom";
-import { IconLoading } from "@/components/icons/loading";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
 import { useOperationCatalogQuery } from "@/hooks/use-operation-api";
 import { CategoryAddPage } from "./components/category-add-page";
 import { CategoryPage } from "./components/category-page";
@@ -19,11 +19,7 @@ export function CategoryDashboardView() {
   }
 
   if (catalogQuery.isLoading) {
-    return (
-      <div className="flex min-h-[360px] items-center justify-center">
-        <IconLoading className="size-5 animate-spin text-[#909090]" />
-      </div>
-    );
+    return <Skeleton className="h-[360px] w-full" />;
   }
 
   if (catalogQuery.isError) {

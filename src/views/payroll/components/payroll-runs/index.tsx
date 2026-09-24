@@ -1,9 +1,9 @@
-import { IconPlus } from "@/components/icons/plus";
-import { IconExportLink } from "@/components/icons/link";
-import { IconLoading } from "@/components/icons/loading";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_VARIANT } from "@/components/ui/button/config";
-import { Card } from "@/components/ui/card/Card";
+import { IconPlus } from "@stableflow/pay-ui/icons/plus";
+import { IconExportLink } from "@stableflow/pay-ui/icons/link";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_VARIANT } from "@stableflow/pay-ui/button";
+import { Card } from "@stableflow/pay-ui/card";
 import { cn } from "@/lib/utils";
 import type {
   PayrollHistoryRun,
@@ -131,9 +131,7 @@ export function PayrollRunsCard(props: {
       </div>
       <Card className="mt-3 px-5 py-6 sm:px-8">
         {tabLoading ? (
-          <div className="flex min-h-[240px] items-center justify-center">
-            <IconLoading className="size-5 animate-spin text-[#909090]" />
-          </div>
+          <Skeleton className="h-[240px] w-full" />
         ) : tabError ? (
           <p className="font-montserrat text-sm text-danger">{tabError}</p>
         ) : tab === PAYROLL_TAB.Next ? (

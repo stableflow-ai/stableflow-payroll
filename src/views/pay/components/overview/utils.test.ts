@@ -1,6 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { ORGANIZATION_HIGH_PRIORITY_CATEGORY } from "@/types/organization";
 import { VOLUME_PERIOD } from "@/types/payout";
+import { BONUS_HISTORY_PATH } from "@/views/bonus/config";
+import { EXPENSE_HISTORY_PATH, EXPENSE_REQUESTS_PATH } from "@/views/expense/config";
+import { TEAM_PATH } from "@/views/pay/config";
+import { PAYROLL_HISTORY_PATH } from "@/views/payroll/config";
 import { CHART_METRIC, HIGH_PRIORITY_PATH } from "./config";
 import {
   adminChartPoints,
@@ -54,18 +58,51 @@ describe("highPriorityDisplayItems", () => {
       highPriorityDisplayItems([
         {
           category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.Payroll,
+          subCategory: "",
           title: "September payroll",
           description: "3 items",
         },
         {
           category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest,
+          subCategory: "",
           title: "2 Payment Requests",
           description: "August",
         },
         {
           category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed,
+          subCategory: "",
           title: "Transaction Failed",
           description: "July · 4 failed",
+        },
+        {
+          category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed,
+          subCategory: "payroll",
+          title: "Payroll Failed",
+          description: "September",
+        },
+        {
+          category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed,
+          subCategory: "expense",
+          title: "Expense Failed",
+          description: "September",
+        },
+        {
+          category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed,
+          subCategory: "bonus",
+          title: "Bonus Failed",
+          description: "September",
+        },
+        {
+          category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed,
+          subCategory: "office",
+          title: "Office Failed",
+          description: "September",
+        },
+        {
+          category: ORGANIZATION_HIGH_PRIORITY_CATEGORY.Join,
+          subCategory: "",
+          title: "2 Team Member Joined",
+          description: "Jimmy Self 1, jmg2",
         },
       ]),
     ).toEqual([
@@ -81,7 +118,7 @@ describe("highPriorityDisplayItems", () => {
         kind: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest,
         title: "2 Payment Requests",
         subtitle: "August",
-        to: HIGH_PRIORITY_PATH[ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest],
+        to: EXPENSE_REQUESTS_PATH,
       },
       {
         id: "hp-payFailed-2",
@@ -89,6 +126,41 @@ describe("highPriorityDisplayItems", () => {
         title: "Transaction Failed",
         subtitle: "July · 4 failed",
         to: HIGH_PRIORITY_PATH[ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed],
+      },
+      {
+        id: "hp-payFailed-3",
+        kind: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed,
+        title: "Payroll Failed",
+        subtitle: "September",
+        to: PAYROLL_HISTORY_PATH,
+      },
+      {
+        id: "hp-payFailed-4",
+        kind: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed,
+        title: "Expense Failed",
+        subtitle: "September",
+        to: EXPENSE_HISTORY_PATH,
+      },
+      {
+        id: "hp-payFailed-5",
+        kind: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed,
+        title: "Bonus Failed",
+        subtitle: "September",
+        to: BONUS_HISTORY_PATH,
+      },
+      {
+        id: "hp-payFailed-6",
+        kind: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PayFailed,
+        title: "Office Failed",
+        subtitle: "September",
+        to: "/pay/office/history",
+      },
+      {
+        id: "hp-join-7",
+        kind: ORGANIZATION_HIGH_PRIORITY_CATEGORY.Join,
+        title: "2 Team Member Joined",
+        subtitle: "Jimmy Self 1, jmg2",
+        to: TEAM_PATH,
       },
     ]);
   });

@@ -5,11 +5,11 @@
  */
 import type { ReactNode } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { IconCheck2 } from "@/components/icons/check";
-import { IconLoading } from "@/components/icons/loading";
-import { IconOutLink } from "@/components/icons/link";
-import { Button } from "@/components/ui/button/Button";
-import { Card } from "@/components/ui/card/Card";
+import { IconCheck } from "@stableflow/pay-ui/icons/check";
+import { IconLoading } from "@stableflow/pay-ui/icons/loading";
+import { IconOutLink } from "@stableflow/pay-ui/icons/link";
+import { Button } from "@stableflow/pay-ui/button";
+import { Card } from "@stableflow/pay-ui/card";
 import { chainDisplayName, txExplorerUrl } from "@/config/chains";
 import { usePayrollPaymentQuery } from "@/hooks/use-single-payout-api";
 import { DATE_FORMAT, formatAddress, formatDate } from "@/utils";
@@ -64,7 +64,7 @@ export function PayoutResultView() {
       <div className="flex flex-col items-center text-center">
         {succeeded ? (
           <span className="inline-flex size-12 items-center justify-center rounded-full bg-[#769400]/10">
-            <IconCheck2 className="size-5 text-[#769400]" />
+            <IconCheck className="size-5 text-[#769400]" />
           </span>
         ) : (
           <span className="inline-flex size-12 items-center justify-center rounded-full bg-[#6284F5]/10">

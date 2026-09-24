@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { IconEmail } from "@/components/icons";
-import { Card } from "@/components/ui/card/Card";
+import { IconEmail } from "@stableflow/pay-ui/icons/email";
+import { Card } from "@stableflow/pay-ui/card";
 import {
   integrationSettingsFromOrganization,
   statusFromChannelConfig,

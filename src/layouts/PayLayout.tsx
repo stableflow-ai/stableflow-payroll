@@ -1,6 +1,7 @@
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
-import { IconMenu } from "@/components/icons";
+import { IconMenu } from "@stableflow/pay-ui/icons/menu";
+import { BrandGlow, BrandMark } from "@/components/layout/BrandMark";
 import { HeaderAccountMenu } from "@/components/layout/HeaderAccountMenu";
 import { HeaderWalletCapsule } from "@/components/layout/HeaderWalletCapsule";
 import { PayFooter } from "@/components/layout/PayFooter";
@@ -8,8 +9,8 @@ import {
   HEADER_ACCOUNT_MENU_VARIANT,
   HEADER_ACCOUNT_TRIGGER_LABEL,
 } from "@/components/layout/config";
-import { Drawer } from "@/components/ui/drawer/Drawer";
-import { DRAWER_SIDE } from "@/components/ui/drawer/config";
+import { Drawer } from "@stableflow/pay-ui/drawer";
+import { DRAWER_SIDE } from "@stableflow/pay-ui/drawer";
 import { useExpenseOpenRequestsCountQuery } from "@/hooks/use-expense-api";
 import { useOperationCatalogQuery } from "@/hooks/use-operation-api";
 import { isUser, organizationName, userRole } from "@/lib/auth-role";
@@ -19,6 +20,7 @@ import { CATEGORIES_PATH } from "@/views/categories/config";
 import { PaymentModeTabs } from "@/views/pay/components/PaymentModeTabs";
 import { RequestPaymentTabs } from "@/views/pay/components/request/RequestPaymentTabs";
 import { PayNav, PaySidebar } from "@/views/pay/components/PaySidebar";
+import { HISTORY_TAB_ANCHOR_ID, scrollHistoryTabIntoView } from "@/views/pay/history-tab";
 import {
   isPayModePath,
   isRequestPaymentPath,
@@ -32,7 +34,14 @@ export interface PayLayoutOutletContext {
 export function PayLayout() {
   useExpenseOpenRequestsCountQuery();
   const catalogQuery = useOperationCatalogQuery();
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
+  useEffect(() => {
+    const state = location.state as { scrollTo?: string } | null;
+    if (state?.scrollTo !== HISTORY_TAB_ANCHOR_ID) return;
+    const frame = requestAnimationFrame(() => scrollHistoryTabIntoView());
+    return () => cancelAnimationFrame(frame);
+  }, [location.key, location.state]);
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const [headerExtra, setHeaderExtraState] = useState<ReactNode>(null);
@@ -57,9 +66,10 @@ export function PayLayout() {
 
   return (
     <div className="flex h-svh flex-col overflow-hidden lg:flex-row">
-      <div className="flex shrink-0 items-center gap-3 border-b border-black/10 px-2 py-3 md:px-5 lg:hidden">
-        <a href="/" className="shrink-0">
-          <img src="/logo.svg" alt="Stableflow Pay" className="h-[30px] w-auto" />
+      <div className="relative flex shrink-0 items-center gap-3 overflow-hidden border-b border-black/10 px-2 py-3 md:px-5 lg:hidden">
+        <BrandGlow />
+        <a href="/" className="relative shrink-0">
+          <BrandMark />
         </a>
         <div className="flex justify-end items-center gap-3 flex-1">
           <div className="min-w-0">

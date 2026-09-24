@@ -1,7 +1,7 @@
 import { type FormEvent, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Button } from "@/components/ui/button/Button";
-import { Icon2Right } from "@/components/icons/to-right";
+import { Button } from "@stableflow/pay-ui/button";
+import { Icon2Right } from "@stableflow/pay-ui/icons/to-right";
 import { useLoginMutation } from "@/hooks/use-auth-api";
 import useToast from "@/hooks/use-toast";
 import { AuthShell } from "./AuthShell";
@@ -58,7 +58,7 @@ export function LoginView() {
   return (
     <AuthShell panelTop={<AuthBetaBanner />}>
       <h1 className="text-center font-montserrat text-xl font-semibold text-black">
-        Welcome to Payouts. Stableflow
+        Welcome to Stableflow | Payouts
       </h1>
       <form onSubmit={(event) => void submit(event)} className={AUTH_FORM_CLASS}>
         <AuthField
@@ -115,7 +115,8 @@ export function LoginView() {
         <GoogleSignInSection returnTo={returnTo} />
 
         <p className={`block ${AUTH_LINK_CLASS}`}>
-          New to Payouts. Stableflow?{" "}
+          <span className="font-normal">New to Stableflow | </span>
+          <span className="font-semibold">Payouts</span>?{" "}
           <Link
             to={registerPathWithReturnTo(returnTo)}
             className={`inline-flex items-center ${AUTH_LINK_ACCENT_CLASS}`}

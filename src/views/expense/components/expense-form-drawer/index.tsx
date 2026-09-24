@@ -1,15 +1,15 @@
 import { useEffect, useState } from "react";
-import { IconDelete } from "@/components/icons/delete";
-import { IconPlus } from "@/components/icons/plus";
-import { TokenSelectDialog } from "@/components/token-select-dialog/TokenSelectDialog";
-import { Button } from "@/components/ui/button/Button";
-import { BUTTON_VARIANT } from "@/components/ui/button/config";
-import { Drawer } from "@/components/ui/drawer/Drawer";
-import { DRAWER_SIDE } from "@/components/ui/drawer/config";
-import { InputNumber } from "@/components/ui/input-number/InputNumber";
+import { IconDelete } from "@stableflow/pay-ui/icons/delete";
+import { IconPlus } from "@stableflow/pay-ui/icons/plus";
+import { TokenSelectDialog } from "@stableflow/pay-widgets/token-select";
+import { Button } from "@stableflow/pay-ui/button";
+import { BUTTON_VARIANT } from "@stableflow/pay-ui/button";
+import { Drawer } from "@stableflow/pay-ui/drawer";
+import { DRAWER_SIDE } from "@stableflow/pay-ui/drawer";
+import { InputNumber } from "@stableflow/pay-ui/input-number";
 import { useMediaQuery } from "@/hooks/use-media-query";
 import { cn } from "@/lib/utils";
-import { useIntentsTokensStore } from "@/stores/intents-tokens";
+import { intentsTokenForSelection, useIntentsTokensStore } from "@/stores/intents-tokens";
 import { EXPENSE_IMPORT_LIMITS, type ExpenseDraftRow, type ExpenseImportItem } from "@/types/expense";
 import { amountError } from "@/views/pay/batch-utils";
 import { BatchTokenTrigger } from "@/views/pay/components/batch/BatchTokenTrigger";
@@ -198,10 +198,12 @@ export function ExpenseFormDrawer(props: {
         title="Prefer token"
         selectedAssetId={destRow?.token?.assetId}
         lockChainKind={destRow?.chainKind}
-        requireSupport="receive"
+        role="receiver"
         onSelect={({ token }) => {
           if (!destRowId) return;
-          patchRow(destRowId, { token });
+          const next = intentsTokenForSelection(token);
+          if (!next) return;
+          patchRow(destRowId, { token: next });
           setDestRowId(null);
         }}
       />

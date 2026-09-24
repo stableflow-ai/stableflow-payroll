@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import { RecipientAvatar } from "@/components/recipient-avatar/RecipientAvatar";
-import { IconDelete } from "@/components/icons/delete";
-import { IconPen } from "@/components/icons/pen";
-import { IconPlus } from "@/components/icons/plus";
-import { Button } from "@/components/ui/button/Button";
-import { Dialog } from "@/components/ui/dialog/Dialog";
+import { IconDelete } from "@stableflow/pay-ui/icons/delete";
+import { IconPen } from "@stableflow/pay-ui/icons/pen";
+import { IconPlus } from "@stableflow/pay-ui/icons/plus";
+import { Button } from "@stableflow/pay-ui/button";
+import { Dialog } from "@stableflow/pay-ui/dialog";
 import type { Contact } from "@/hooks/use-contacts";
 import { formatAddress, sameAddress } from "@/utils";
 import { detectAddressChainKind } from "../utils";
-import { IconLoading } from "@/components/icons";
+import { IconLoading } from "@stableflow/pay-ui/icons/loading";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
 import {
   TEAM_WALLET_TAB_LABELS,
   walletForChainKind,
@@ -176,8 +177,10 @@ export function RecipientsDialog(props: {
             </>
           ) : (
             loading ? (
-              <div className="w-full py-8 flex justify-center items-center">
-                <IconLoading className="size-6 animate-spin text-[#909090]" />
+              <div className="flex w-full flex-col gap-3 py-4">
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
+                <Skeleton className="h-12 w-full" />
               </div>
             ) : (
               <div className="w-full flex justify-center items-center py-8 font-montserrat text-sm text-[#909090] text-center">

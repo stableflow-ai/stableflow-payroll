@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Pagination } from "@/components/ui/pagination/Pagination";
+import { Pagination } from "@stableflow/pay-ui/pagination";
 import { usePaymentRequestsQuery } from "@/hooks/use-request-payment";
 import { RequestsTable } from "./components/request/RequestsTable";
 import { REQUESTS_PAGE_SIZE } from "./config";

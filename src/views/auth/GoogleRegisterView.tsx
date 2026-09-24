@@ -1,7 +1,8 @@
 import { type FormEvent, useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button/Button";
-import { Icon2Right } from "@/components/icons/to-right";
+import { Button } from "@stableflow/pay-ui/button";
+import { Skeleton } from "@stableflow/pay-ui/skeleton";
+import { Icon2Right } from "@stableflow/pay-ui/icons/to-right";
 import { useGoogleRegisterMutation } from "@/hooks/use-auth-api";
 import useToast from "@/hooks/use-toast";
 import { useGoogleAuthPendingStore } from "@/stores/google-auth-pending";
@@ -77,7 +78,11 @@ export function GoogleRegisterView() {
   if (!ready) {
     return (
       <AuthShell>
-        <p className="text-center font-montserrat text-sm text-[#909090]">Loading…</p>
+        <div className="w-full max-w-[400px]" aria-busy="true" aria-label="Loading">
+          <Skeleton className="mx-auto h-8 w-48" />
+          <Skeleton className="mt-6 h-12 w-full" />
+          <Skeleton className="mt-4 h-12 w-full" />
+        </div>
       </AuthShell>
     );
   }

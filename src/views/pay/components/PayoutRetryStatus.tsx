@@ -1,7 +1,7 @@
-import { IconAlert } from "@/components/icons/alert";
-import { IconUp } from "@/components/icons/up";
-import { Button } from "@/components/ui/button/Button";
-import { Tooltip } from "@/components/ui/tooltip/Tooltip";
+import { IconAlert } from "@stableflow/pay-ui/icons/alert";
+import { IconUp } from "@stableflow/pay-ui/icons/up";
+import { Button } from "@stableflow/pay-ui/button";
+import { Tooltip } from "@stableflow/pay-ui/tooltip";
 import { cn } from "@/lib/utils";
 import {
   payoutRetryCopy,

@@ -6,6 +6,7 @@ import { useProfileQuery } from "@/hooks/use-auth-api";
 import { usePayrollConfigQuery } from "@/hooks/use-payroll-config";
 /** Hydrates the session and registers HTTP 401 → logout. */
 import { useAuthStore } from "@/stores/auth";
+import { PayWidgetsRoot } from "@/components/pay-widgets-root";
 import { router } from "./router";
 
 function SessionBootstrap() {
@@ -24,7 +25,7 @@ function SessionBootstrap() {
 
 export default function App() {
   return (
-    <>
+    <PayWidgetsRoot>
       <SessionBootstrap />
       <RouterProvider router={router} />
       <ToastContainer
@@ -38,6 +39,6 @@ export default function App() {
         pauseOnFocusLoss
         closeButton={false}
       />
-    </>
+    </PayWidgetsRoot>
   );
 }

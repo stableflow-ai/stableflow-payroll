@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button/Button";
-import { Dialog } from "@/components/ui/dialog/Dialog";
-import { BUTTON_SIZE, BUTTON_VARIANT } from "@/components/ui/button/config";
+import { Button } from "@stableflow/pay-ui/button";
+import { Dialog } from "@stableflow/pay-ui/dialog";
+import { BUTTON_SIZE, BUTTON_VARIANT } from "@stableflow/pay-ui/button";
 import {
   LEDGER_CONNECT_DIALOG_DESCRIPTION,
   LEDGER_CONNECT_DIALOG_TITLE,
