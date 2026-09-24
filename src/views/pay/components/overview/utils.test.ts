@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ORGANIZATION_HIGH_PRIORITY_CATEGORY } from "@/types/organization";
 import { VOLUME_PERIOD } from "@/types/payout";
 import { BONUS_HISTORY_PATH } from "@/views/bonus/config";
-import { EXPENSE_HISTORY_PATH } from "@/views/expense/config";
+import { EXPENSE_HISTORY_PATH, EXPENSE_REQUESTS_PATH } from "@/views/expense/config";
 import { TEAM_PATH } from "@/views/pay/config";
 import { PAYROLL_HISTORY_PATH } from "@/views/payroll/config";
 import { CHART_METRIC, HIGH_PRIORITY_PATH } from "./config";
@@ -118,7 +118,7 @@ describe("highPriorityDisplayItems", () => {
         kind: ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest,
         title: "2 Payment Requests",
         subtitle: "August",
-        to: HIGH_PRIORITY_PATH[ORGANIZATION_HIGH_PRIORITY_CATEGORY.PaymentRequest],
+        to: EXPENSE_REQUESTS_PATH,
       },
       {
         id: "hp-payFailed-2",

@@ -1,4 +1,4 @@
-import { useCallback, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
 import { IconMenu } from "@stableflow/pay-ui/icons/menu";
 import { BrandGlow, BrandMark } from "@/components/layout/BrandMark";
@@ -20,6 +20,7 @@ import { CATEGORIES_PATH } from "@/views/categories/config";
 import { PaymentModeTabs } from "@/views/pay/components/PaymentModeTabs";
 import { RequestPaymentTabs } from "@/views/pay/components/request/RequestPaymentTabs";
 import { PayNav, PaySidebar } from "@/views/pay/components/PaySidebar";
+import { HISTORY_TAB_ANCHOR_ID, scrollHistoryTabIntoView } from "@/views/pay/history-tab";
 import {
   isPayModePath,
   isRequestPaymentPath,
@@ -33,7 +34,14 @@ export interface PayLayoutOutletContext {
 export function PayLayout() {
   useExpenseOpenRequestsCountQuery();
   const catalogQuery = useOperationCatalogQuery();
-  const { pathname } = useLocation();
+  const location = useLocation();
+  const { pathname } = location;
+  useEffect(() => {
+    const state = location.state as { scrollTo?: string } | null;
+    if (state?.scrollTo !== HISTORY_TAB_ANCHOR_ID) return;
+    const frame = requestAnimationFrame(() => scrollHistoryTabIntoView());
+    return () => cancelAnimationFrame(frame);
+  }, [location.key, location.state]);
   const navigate = useNavigate();
   const user = useAuthStore((state) => state.user);
   const [headerExtra, setHeaderExtraState] = useState<ReactNode>(null);

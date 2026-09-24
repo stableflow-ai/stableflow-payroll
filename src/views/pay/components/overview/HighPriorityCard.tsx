@@ -12,6 +12,7 @@ import { organizationId } from "@/lib/auth-role";
 import { cn } from "@/lib/utils";
 import { useAuthStore } from "@/stores/auth";
 import { ORGANIZATION_HIGH_PRIORITY_CATEGORY } from "@/types/organization";
+import { HISTORY_TAB_ANCHOR_ID } from "@/views/pay/history-tab";
 import type { AdminHighPriorityItem } from "./utils";
 
 function kindIcon(kind: AdminHighPriorityItem["kind"]): ReactNode {
@@ -72,6 +73,7 @@ export function HighPriorityCard(props: { items: AdminHighPriorityItem[] }) {
             <Link
               key={item.id}
               to={item.to}
+              state={{ scrollTo: HISTORY_TAB_ANCHOR_ID }}
               onClick={() => {
                 if (orgId == null) return;
                 clickMutation.mutate(item.kind);

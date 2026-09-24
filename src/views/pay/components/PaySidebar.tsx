@@ -166,8 +166,8 @@ export function PaySidebar() {
   const orgName = organizationName(user) ?? "";
 
   return (
-    <aside className="hidden shrink-0 flex-col lg:sticky lg:top-0 lg:flex lg:h-svh lg:w-[220px] lg:overflow-y-auto lg:border-r lg:border-black/10">
-      <div className="relative overflow-hidden px-[13px] pt-4 pb-4">
+    <aside className="hidden shrink-0 flex-col lg:sticky lg:top-0 lg:flex lg:h-svh lg:w-[220px] lg:overflow-hidden lg:border-r lg:border-black/10">
+      <div className="relative shrink-0 overflow-hidden px-[13px] pt-4 pb-4">
         <BrandGlow />
         <a href="/" className="relative inline-flex">
           <BrandMark />
@@ -179,8 +179,10 @@ export function PaySidebar() {
           <HeaderAccountMenu variant={HEADER_ACCOUNT_MENU_VARIANT.Sidebar} />
         </div>
       </div>
-      <div className="h-px w-full bg-black/10" />
-      <PayNav className="flex-1 px-2.5 py-5" />
+      <div className="h-px w-full shrink-0 bg-black/10" />
+      <div className="min-h-0 flex-1 overflow-y-auto">
+        <PayNav className="px-2.5 py-5" />
+      </div>
     </aside>
   );
 }
